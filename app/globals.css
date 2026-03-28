@@ -1,0 +1,248 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Cabinet Grotesk font - loaded via local files or Fontsource */
+@font-face {
+  font-family: 'Cabinet Grotesk';
+  src: url('/fonts/CabinetGrotesk-Variable.woff2') format('woff2');
+  font-weight: 100 900;
+  font-display: swap;
+  font-style: normal;
+}
+
+/* Fallback if variable font isn't available */
+@font-face {
+  font-family: 'Cabinet Grotesk';
+  src: local('Cabinet Grotesk'), local('CabinetGrotesk-Regular');
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Cabinet Grotesk';
+  src: local('Cabinet Grotesk Bold'), local('CabinetGrotesk-Bold');
+  font-weight: 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Cabinet Grotesk';
+  src: local('Cabinet Grotesk Medium'), local('CabinetGrotesk-Medium');
+  font-weight: 500;
+  font-display: swap;
+}
+
+@layer base {
+  :root {
+    --background: 250 250 250;
+    --foreground: 24 24 27;
+    --muted: 244 244 245;
+    --muted-foreground: 113 113 122;
+    --accent: 37 99 235;
+    --accent-foreground: 255 255 255;
+    --border: 228 228 231;
+    --input: 228 228 231;
+    --ring: 37 99 235;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 9 9 11;
+    --foreground: 250 250 250;
+    --muted: 39 39 42;
+    --muted-foreground: 161 161 170;
+    --accent: 37 99 235;
+    --accent-foreground: 255 255 255;
+    --border: 39 39 42;
+    --input: 39 39 42;
+    --ring: 37 99 235;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-zinc-800;
+  }
+
+  body {
+    @apply bg-zinc-950 text-zinc-50 antialiased;
+    font-family: 'Cabinet Grotesk', system-ui, -apple-system, sans-serif;
+    font-feature-settings: 'cv01', 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+
+  /* Light mode */
+  body.light {
+    @apply bg-zinc-50 text-zinc-900;
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-zinc-700 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-zinc-600;
+  }
+
+  /* Selection */
+  ::selection {
+    @apply bg-accent/30;
+  }
+}
+
+@layer components {
+  /* Skeleton loading animation */
+  .skeleton {
+    @apply bg-zinc-800 animate-pulse rounded;
+  }
+
+  /* Focus ring */
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-zinc-950;
+  }
+
+  /* Glass effect */
+  .glass {
+    @apply bg-zinc-900/80 backdrop-blur-xl border border-zinc-800;
+  }
+
+  /* Card hover effect */
+  .card-hover {
+    @apply transition-all duration-200 hover:bg-zinc-800/50 hover:border-zinc-700;
+  }
+
+  /* Subtle border */
+  .subtle-border {
+    @apply border border-zinc-800/50;
+  }
+
+  /* Command bar input */
+  .command-input {
+    @apply w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3
+           text-zinc-100 placeholder:text-zinc-500
+           focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent
+           transition-all duration-200;
+  }
+
+  /* Button variants */
+  .btn-primary {
+    @apply bg-accent hover:bg-accent/90 text-white font-medium
+           px-4 py-2 rounded-lg transition-colors duration-200
+           focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-zinc-950;
+  }
+
+  .btn-secondary {
+    @apply bg-zinc-800 hover:bg-zinc-700 text-zinc-100 font-medium
+           px-4 py-2 rounded-lg transition-colors duration-200
+           focus:outline-none focus:ring-2 focus:ring-zinc-600 focus:ring-offset-2 focus:ring-offset-zinc-950;
+  }
+
+  .btn-ghost {
+    @apply hover:bg-zinc-800 text-zinc-400 hover:text-zinc-100
+           px-3 py-2 rounded-lg transition-colors duration-200;
+  }
+
+  /* Priority indicators */
+  .priority-urgent {
+    @apply border-l-4 border-l-red-500;
+  }
+
+  .priority-high {
+    @apply border-l-4 border-l-orange-500;
+  }
+
+  .priority-medium {
+    @apply border-l-4 border-l-zinc-500;
+  }
+
+  .priority-low {
+    @apply border-l-4 border-l-emerald-500;
+  }
+
+  /* Task card */
+  .task-card {
+    @apply bg-zinc-900/50 border border-zinc-800 rounded-lg p-4
+           cursor-pointer transition-all duration-200
+           hover:bg-zinc-800/50 hover:border-zinc-700;
+  }
+
+  /* Tag pill */
+  .tag-pill {
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs
+           bg-zinc-800 text-zinc-400;
+  }
+
+  /* Person pill */
+  .person-pill {
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs
+           bg-accent/10 text-accent;
+  }
+}
+
+@layer utilities {
+  /* Breathing animation */
+  .animate-breathe {
+    animation: breathe 3s ease-in-out infinite;
+  }
+
+  @keyframes breathe {
+    0%, 100% {
+      opacity: 0.8;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+
+  /* Fade in up */
+  .animate-fade-in-up {
+    animation: fadeInUp 0.4s ease-out;
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Slide in right */
+  .animate-slide-in-right {
+    animation: slideInRight 0.3s ease-out;
+  }
+
+  @keyframes slideInRight {
+    from {
+      opacity: 0;
+      transform: translateX(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  /* Text gradient */
+  .text-gradient {
+    @apply bg-gradient-to-r from-zinc-100 to-zinc-400 bg-clip-text text-transparent;
+  }
+
+  /* Accent gradient */
+  .accent-gradient {
+    @apply bg-gradient-to-r from-accent to-blue-400;
+  }
+}
