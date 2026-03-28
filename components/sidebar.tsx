@@ -13,6 +13,7 @@ import {
   Menu,
   X,
   Sparkles,
+  Download,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useUIStore, useUserStore, useTaskStore } from '@/lib/store'
@@ -24,6 +25,7 @@ const navigation = [
   { name: 'Upcoming', href: '/upcoming', icon: Calendar },
   { name: 'All Tasks', href: '/all', icon: Inbox },
   { name: 'Done', href: '/done', icon: CheckCircle2 },
+  { name: 'Import', href: '/import', icon: Download },
 ]
 
 export function Sidebar() {
