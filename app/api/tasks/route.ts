@@ -36,21 +36,23 @@ export async function POST(request: Request) {
       tags,
     } = body
 
-    const { data: task, error } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const db = supabase as any
+    const { data: task, error } = await db
       .from('tasks')
       .insert({
         user_id: user.id,
         title,
-        raw_input,
-        priority,
-        due_date,
-        context,
-        source,
-        action_type,
-        estimated_minutes,
-        energy_level,
-        people,
-        tags,
+        raw_input: raw_input ?? null,
+        priority: priority ?? 'medium',
+        due_date: due_date ?? null,
+        context: context ?? null,
+        source: source ?? 'manual',
+        action_type: action_type ?? 'manual',
+        estimated_minutes: estimated_minutes ?? null,
+        energy_level: energy_level ?? null,
+        people: people ?? null,
+        tags: tags ?? null,
         status: 'todo',
       })
       .select()

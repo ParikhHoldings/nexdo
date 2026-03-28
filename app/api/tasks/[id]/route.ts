@@ -37,11 +37,13 @@ export async function PATCH(
       updates.completed_at = null
     }
 
-    const { data: task, error } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const db = supabase as any
+    const { data: task, error } = await db
       .from('tasks')
       .update(updates)
       .eq('id', id)
-      .eq('user_id', user.id) // Ownership check
+      .eq('user_id', user.id)
       .select()
       .single()
 
@@ -95,11 +97,13 @@ export async function DELETE(
   try {
     const { id } = await params
 
-    const { error } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const db = supabase as any
+    const { error } = await db
       .from('tasks')
       .delete()
       .eq('id', id)
-      .eq('user_id', user.id) // Ownership check
+      .eq('user_id', user.id)
 
     if (error) {
       console.error('Error deleting task:', error)

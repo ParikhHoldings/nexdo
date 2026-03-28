@@ -24,7 +24,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Get the user's profile
-    const { data: profileData } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: profileData } = await (supabase as any)
       .from('profiles')
       .select('stripe_customer_id')
       .eq('id', user.id)
@@ -46,7 +47,8 @@ export async function POST(request: NextRequest) {
       customerId = customer.id
 
       // Save the customer ID to the profile
-      await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase as any)
         .from('profiles')
         .update({ stripe_customer_id: customerId })
         .eq('id', user.id)

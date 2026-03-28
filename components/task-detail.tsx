@@ -394,7 +394,7 @@ export function TaskDetail() {
                         </span>
                       </div>
                       <AgentResult
-                        output={task.agent_output as AgentOutput}
+                        output={task.agent_output as unknown as AgentOutput}
                         actionType={task.action_type}
                       />
                     </div>
