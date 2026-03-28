@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, Sparkles, Loader2, Command } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useTaskStore } from '@/lib/store'
+import { createClient } from '@/lib/supabase/client'
 import type { Task, ParsedTask } from '@/lib/database.types'
 
 interface TaskInputProps {
@@ -74,8 +75,46 @@ export function TaskInput({ onTaskCreated }: TaskInputProps) {
         parsedTask = await response.json()
       }
 
-      // Create the task
-      const newTask: Task = {
+      // Check if user is authenticated and save to Supabase
+      const supabase = createClient()
+      let savedTask: Task | null = null
+
+      if (supabase) {
+        try {
+          const { data: { user } } = await supabase.auth.getUser()
+
+          if (user) {
+            // Save to Supabase via API
+            const saveResponse = await fetch('/api/tasks', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                title: parsedTask.title,
+                raw_input: rawInput,
+                priority: parsedTask.priority,
+                due_date: parsedTask.due_date,
+                context: parsedTask.context,
+                source: 'manual',
+                action_type: parsedTask.action_type,
+                estimated_minutes: parsedTask.estimated_minutes,
+                energy_level: parsedTask.energy_level,
+                people: parsedTask.people,
+                tags: parsedTask.tags,
+              }),
+            })
+
+            if (saveResponse.ok) {
+              savedTask = await saveResponse.json()
+            }
+          }
+        } catch (error) {
+          console.error('Error saving to Supabase:', error)
+          // Fall through to local creation
+        }
+      }
+
+      // Use saved task from API or create local task for demo mode
+      const newTask: Task = savedTask || {
         id: crypto.randomUUID(),
         user_id: 'demo-user',
         title: parsedTask.title,

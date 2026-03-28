@@ -34,10 +34,39 @@ function SettingsContent() {
   const [copied, setCopied] = useState(false)
   const [apiKey, setApiKey] = useState(profile?.api_key || '')
 
+  // Notification preferences state
+  const defaultNotifications = [
+    { id: 'daily_briefing', title: 'Daily Briefing', description: 'Receive your morning briefing via email', enabled: true },
+    { id: 'task_reminders', title: 'Task Reminders', description: 'Get notified about upcoming due dates', enabled: true },
+    { id: 'agent_completions', title: 'Agent Completions', description: 'Notification when an agent finishes a task', enabled: false },
+    { id: 'weekly_summary', title: 'Weekly Summary', description: 'Weekly productivity report', enabled: true },
+  ]
+
+  const [notifications, setNotifications] = useState(() => {
+    if (typeof window === 'undefined') return defaultNotifications
+    try {
+      const saved = localStorage.getItem('nexdo_notifications')
+      return saved ? JSON.parse(saved) : defaultNotifications
+    } catch {
+      return defaultNotifications
+    }
+  })
+
+  const toggleNotification = (id: string) => {
+    const updated = notifications.map((n: typeof defaultNotifications[0]) =>
+      n.id === id ? { ...n, enabled: !n.enabled } : n
+    )
+    setNotifications(updated)
+    localStorage.setItem('nexdo_notifications', JSON.stringify(updated))
+  }
+
   // Profile form state
   const [fullName, setFullName] = useState(profile?.full_name || '')
   const [timezone, setTimezone] = useState(profile?.timezone || 'America/Chicago')
   const [isSaving, setIsSaving] = useState(false)
+  const [saveSuccess, setSaveSuccess] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
+  const [apiKeySuccess, setApiKeySuccess] = useState(false)
 
   const handleCopyApiKey = () => {
     if (apiKey) {
@@ -47,17 +76,54 @@ function SettingsContent() {
     }
   }
 
-  const handleGenerateApiKey = () => {
-    const newKey = generateApiKey()
-    setApiKey(newKey)
-    // In production, save to Supabase
+  const handleGenerateApiKey = async () => {
+    setApiKeySuccess(false)
+    try {
+      const response = await fetch('/api/profile/api-key', {
+        method: 'POST',
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        setApiKey(result.api_key)
+        setApiKeySuccess(true)
+        setTimeout(() => setApiKeySuccess(false), 3000)
+      } else {
+        console.error('Failed to generate API key')
+      }
+    } catch (error) {
+      console.error('Error generating API key:', error)
+    }
   }
 
   const handleSaveProfile = async () => {
     setIsSaving(true)
-    // In production, save to Supabase
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    setIsSaving(false)
+    setSaveSuccess(false)
+    setSaveError(null)
+
+    try {
+      const response = await fetch('/api/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          full_name: fullName,
+          timezone,
+          work_type: 'other',
+        }),
+      })
+
+      if (response.ok) {
+        setSaveSuccess(true)
+        setTimeout(() => setSaveSuccess(false), 3000)
+      } else {
+        setSaveError('Failed to save profile')
+      }
+    } catch (error) {
+      console.error('Error saving profile:', error)
+      setSaveError('Failed to save profile')
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const handleUpgrade = async (plan: string) => {
@@ -173,9 +239,17 @@ function SettingsContent() {
                 </div>
               </div>
 
-              <Button onClick={handleSaveProfile} isLoading={isSaving}>
-                Save Changes
-              </Button>
+              <div className="flex items-center gap-3">
+                <Button onClick={handleSaveProfile} isLoading={isSaving}>
+                  Save Changes
+                </Button>
+                {saveSuccess && (
+                  <span className="text-sm text-emerald-400">Saved!</span>
+                )}
+                {saveError && (
+                  <span className="text-sm text-red-400">{saveError}</span>
+                )}
+              </div>
             </div>
 
             <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 space-y-4">
@@ -266,6 +340,10 @@ function SettingsContent() {
                 Use this key to authenticate API requests. Keep it secret!
               </p>
 
+              {apiKeySuccess && (
+                <p className="text-sm text-emerald-400">New key generated</p>
+              )}
+
               <div className="flex gap-2">
                 <Input
                   type="password"
@@ -332,30 +410,9 @@ function SettingsContent() {
             </h2>
 
             <div className="space-y-4">
-              {[
-                {
-                  title: 'Daily Briefing',
-                  description: 'Receive your morning briefing via email',
-                  enabled: true,
-                },
-                {
-                  title: 'Task Reminders',
-                  description: 'Get notified about upcoming due dates',
-                  enabled: true,
-                },
-                {
-                  title: 'Agent Completions',
-                  description: 'Notification when an agent finishes a task',
-                  enabled: false,
-                },
-                {
-                  title: 'Weekly Summary',
-                  description: 'Weekly productivity report',
-                  enabled: true,
-                },
-              ].map((notification) => (
+              {notifications.map((notification: typeof defaultNotifications[0]) => (
                 <div
-                  key={notification.title}
+                  key={notification.id}
                   className="flex items-center justify-between py-3 border-b border-zinc-800 last:border-0"
                 >
                   <div>
@@ -367,6 +424,7 @@ function SettingsContent() {
                     </p>
                   </div>
                   <button
+                    onClick={() => toggleNotification(notification.id)}
                     className={cn(
                       'relative w-10 h-5 rounded-full transition-colors',
                       notification.enabled ? 'bg-accent' : 'bg-zinc-700'

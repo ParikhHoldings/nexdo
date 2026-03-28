@@ -9,6 +9,7 @@ interface TaskState {
   isDetailOpen: boolean
   isLoading: boolean
   error: string | null
+  isAuthenticated: boolean
 
   // Actions
   setTasks: (tasks: Task[]) => void
@@ -20,14 +21,16 @@ interface TaskState {
   closeDetail: () => void
   setLoading: (loading: boolean) => void
   setError: (error: string | null) => void
+  setAuthenticated: (val: boolean) => void
 }
 
-export const useTaskStore = create<TaskState>((set) => ({
+export const useTaskStore = create<TaskState>((set, get) => ({
   tasks: [],
   selectedTask: null,
   isDetailOpen: false,
   isLoading: false,
   error: null,
+  isAuthenticated: false,
 
   setTasks: (tasks) => set({ tasks }),
 
@@ -36,7 +39,8 @@ export const useTaskStore = create<TaskState>((set) => ({
       tasks: [task, ...state.tasks],
     })),
 
-  updateTask: (id, updates) =>
+  updateTask: (id, updates) => {
+    // Optimistic update
     set((state) => ({
       tasks: state.tasks.map((t) =>
         t.id === id
@@ -57,14 +61,33 @@ export const useTaskStore = create<TaskState>((set) => ({
         state.selectedTask?.id === id
           ? { ...state.selectedTask, ...updates }
           : state.selectedTask,
-    })),
+    }))
 
-  deleteTask: (id) =>
+    // Persist to Supabase if authenticated
+    const { isAuthenticated } = get()
+    if (isAuthenticated) {
+      fetch(`/api/tasks/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates),
+      }).catch(console.error)
+    }
+  },
+
+  deleteTask: (id) => {
+    // Optimistic update
     set((state) => ({
       tasks: state.tasks.filter((t) => t.id !== id),
       selectedTask: state.selectedTask?.id === id ? null : state.selectedTask,
       isDetailOpen: state.selectedTask?.id === id ? false : state.isDetailOpen,
-    })),
+    }))
+
+    // Persist to Supabase if authenticated
+    const { isAuthenticated } = get()
+    if (isAuthenticated) {
+      fetch(`/api/tasks/${id}`, { method: 'DELETE' }).catch(console.error)
+    }
+  },
 
   selectTask: (task) => set({ selectedTask: task, isDetailOpen: !!task }),
 
@@ -75,6 +98,8 @@ export const useTaskStore = create<TaskState>((set) => ({
   setLoading: (loading) => set({ isLoading: loading }),
 
   setError: (error) => set({ error }),
+
+  setAuthenticated: (val) => set({ isAuthenticated: val }),
 }))
 
 interface UserState {

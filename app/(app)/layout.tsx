@@ -12,7 +12,7 @@ export default function AppLayout({
 }: {
   children: React.ReactNode
 }) {
-  const { setTasks } = useTaskStore()
+  const { setTasks, setAuthenticated } = useTaskStore()
   const { setProfile, setLoading } = useUserStore()
 
   useEffect(() => {
@@ -25,6 +25,9 @@ export default function AppLayout({
           const { data: { user } } = await supabase.auth.getUser()
 
           if (user) {
+            // User is authenticated
+            setAuthenticated(true)
+
             // Load profile
             const { data: profile } = await supabase
               .from('profiles')
@@ -48,6 +51,7 @@ export default function AppLayout({
             }
           } else {
             // Use demo data if not authenticated
+            setAuthenticated(false)
             setTasks(getDemoTasks())
             setProfile({
               id: 'demo-user',
@@ -66,10 +70,12 @@ export default function AppLayout({
         } catch (error) {
           console.error('Error loading data:', error)
           // Fall back to demo data
+          setAuthenticated(false)
           setTasks(getDemoTasks())
         }
       } else {
         // Supabase not configured, use demo data
+        setAuthenticated(false)
         setTasks(getDemoTasks())
         setProfile({
           id: 'demo-user',
@@ -90,7 +96,7 @@ export default function AppLayout({
     }
 
     loadData()
-  }, [setTasks, setProfile, setLoading])
+  }, [setTasks, setProfile, setLoading, setAuthenticated])
 
   return (
     <div className="flex h-screen bg-zinc-950">
