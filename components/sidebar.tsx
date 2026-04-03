@@ -14,6 +14,7 @@ import {
   X,
   Sparkles,
   Download,
+  Plug,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useUIStore, useUserStore, useTaskStore } from '@/lib/store'
@@ -122,6 +123,19 @@ export function Sidebar() {
 
         {/* Settings */}
         <div className="p-4 space-y-2 border-t border-zinc-800">
+          <Link
+            href="/settings/mcp"
+            className={cn(
+              'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors',
+              pathname === '/settings/mcp'
+                ? 'bg-accent/10 text-accent'
+                : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
+            )}
+          >
+            <Plug className="h-5 w-5" />
+            {!sidebarCollapsed && <span className="font-medium">Connect AI</span>}
+          </Link>
+
           <Link
             href="/settings"
             className={cn(
