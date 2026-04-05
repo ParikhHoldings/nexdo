@@ -13,6 +13,7 @@ function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const redirect = searchParams.get('redirect') || '/today'
+  const isDemoModeAvailable = !process.env.NEXT_PUBLIC_SUPABASE_URL
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -112,27 +113,31 @@ function LoginForm() {
             </Button>
           </form>
 
-          {/* Divider */}
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-zinc-800" />
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-zinc-950 text-zinc-500">or</span>
-            </div>
-          </div>
+          {isDemoModeAvailable && (
+            <>
+              {/* Divider */}
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-zinc-800" />
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-zinc-950 text-zinc-500">or</span>
+                </div>
+              </div>
 
-          {/* Demo mode */}
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full"
-            size="lg"
-            onClick={handleDemoMode}
-          >
-            <Sparkles className="mr-2 h-4 w-4 text-accent" />
-            Try demo mode
-          </Button>
+              {/* Demo mode */}
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                size="lg"
+                onClick={handleDemoMode}
+              >
+                <Sparkles className="mr-2 h-4 w-4 text-accent" />
+                Try demo mode
+              </Button>
+            </>
+          )}
 
           {/* Sign up link */}
           <p className="text-center text-sm text-zinc-400">

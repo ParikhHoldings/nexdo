@@ -87,37 +87,22 @@ export default function LandingPage() {
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
-              href="/today"
+              href="/auth/login"
               className="w-full sm:w-auto bg-zinc-800 hover:bg-zinc-700 text-zinc-100 font-medium px-8 py-3 rounded-lg transition-colors flex items-center justify-center gap-2"
             >
               <Play className="h-4 w-4" />
-              Try Demo
+              Sign in to your workspace
             </Link>
           </div>
 
-          {/* Social proof */}
-          <div className="mt-12 flex items-center justify-center gap-8">
-            <div className="flex -space-x-2">
+          {/* Product trust */}
+          <div className="mt-12 inline-flex items-center gap-3 rounded-full border border-zinc-800 bg-zinc-900/60 px-4 py-2 text-sm text-zinc-400">
+            <div className="flex items-center gap-1 text-amber-400">
               {[1, 2, 3, 4, 5].map((i) => (
-                <div
-                  key={i}
-                  className="w-8 h-8 rounded-full bg-zinc-700 border-2 border-zinc-900"
-                />
+                <Star key={i} className="h-4 w-4 fill-amber-400" />
               ))}
             </div>
-            <div className="text-left">
-              <div className="flex items-center gap-1">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <Star
-                    key={i}
-                    className="h-4 w-4 text-amber-400 fill-amber-400"
-                  />
-                ))}
-              </div>
-              <p className="text-sm text-zinc-400">
-                Loved by 2,000+ power users
-              </p>
-            </div>
+            <span>Built for founders, operators, and AI-native teams.</span>
           </div>
         </div>
 
@@ -396,7 +381,7 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <PricingTable />
+          <PricingTable showCurrentPlan={false} />
         </div>
       </section>
 

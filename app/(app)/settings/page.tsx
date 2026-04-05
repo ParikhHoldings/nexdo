@@ -67,6 +67,8 @@ function SettingsContent() {
   const [saveSuccess, setSaveSuccess] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [apiKeySuccess, setApiKeySuccess] = useState(false)
+  const [billingError, setBillingError] = useState<string | null>(null)
+  const [isManagingBilling, setIsManagingBilling] = useState(false)
 
   const handleCopyApiKey = () => {
     if (apiKey) {
@@ -128,10 +130,11 @@ function SettingsContent() {
 
   const handleUpgrade = async (plan: string) => {
     if (plan === 'team') {
-      // Contact sales
       window.open('mailto:sales@nexdo.ai?subject=Team Plan Inquiry', '_blank')
       return
     }
+
+    setBillingError(null)
 
     try {
       const response = await fetch('/api/stripe/checkout', {
@@ -140,12 +143,44 @@ function SettingsContent() {
         body: JSON.stringify({ plan }),
       })
 
-      const { url } = await response.json()
-      if (url) {
-        window.location.href = url
+      const result = await response.json()
+
+      if (!response.ok || !result.url) {
+        throw new Error(result.error || 'Unable to start checkout right now.')
       }
+
+      window.location.href = result.url
     } catch (error) {
       console.error('Error creating checkout session:', error)
+      setBillingError(
+        error instanceof Error ? error.message : 'Unable to start checkout right now.'
+      )
+    }
+  }
+
+  const handleManageSubscription = async () => {
+    setIsManagingBilling(true)
+    setBillingError(null)
+
+    try {
+      const response = await fetch('/api/stripe/portal', {
+        method: 'POST',
+      })
+
+      const result = await response.json()
+
+      if (!response.ok || !result.url) {
+        throw new Error(result.error || 'Unable to open billing portal right now.')
+      }
+
+      window.location.href = result.url
+    } catch (error) {
+      console.error('Error opening billing portal:', error)
+      setBillingError(
+        error instanceof Error ? error.message : 'Unable to open billing portal right now.'
+      )
+    } finally {
+      setIsManagingBilling(false)
     }
   }
 
@@ -307,12 +342,20 @@ function SettingsContent() {
                   </p>
                 </div>
                 {profile?.subscription_tier !== 'free' && (
-                  <Button variant="outline" size="sm">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleManageSubscription}
+                    isLoading={isManagingBilling}
+                  >
                     <ExternalLink className="h-4 w-4 mr-2" />
                     Manage Subscription
                   </Button>
                 )}
               </div>
+              {billingError && (
+                <p className="mt-4 text-sm text-red-400">{billingError}</p>
+              )}
             </div>
 
             <PricingTable

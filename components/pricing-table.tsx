@@ -9,6 +9,7 @@ import { PLAN_LIMITS } from '@/lib/stripe'
 interface PricingTableProps {
   currentPlan?: string
   onSelectPlan?: (plan: string) => void
+  showCurrentPlan?: boolean
 }
 
 const plans = [
@@ -52,7 +53,11 @@ const plans = [
   },
 ]
 
-export function PricingTable({ currentPlan = 'free', onSelectPlan }: PricingTableProps) {
+export function PricingTable({
+  currentPlan,
+  onSelectPlan,
+  showCurrentPlan = true,
+}: PricingTableProps) {
   const [isAnnual, setIsAnnual] = useState(false)
 
   const handleSelect = (planKey: string) => {
@@ -102,12 +107,13 @@ export function PricingTable({ currentPlan = 'free', onSelectPlan }: PricingTabl
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {plans.map((plan) => {
           const Icon = plan.icon
-          const isCurrentPlan = currentPlan === plan.key
-          const displayPrice = plan.price
-            ? isAnnual
-              ? Math.round(plan.price * 0.8)
-              : plan.price
-            : null
+          const isCurrentPlan = showCurrentPlan && currentPlan === plan.key
+          const displayPrice =
+            typeof plan.price === 'number'
+              ? isAnnual && plan.price > 0
+                ? Math.round(plan.price * 0.8)
+                : plan.price
+              : null
 
           return (
             <div
