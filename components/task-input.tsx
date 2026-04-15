@@ -6,6 +6,7 @@ import { Plus, Sparkles, Loader2, Command } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useTaskStore } from '@/lib/store'
 import { createClient } from '@/lib/supabase/client'
+import { useToast } from '@/components/ui/toast'
 import type { Task, ParsedTask } from '@/lib/database.types'
 
 interface TaskInputProps {
@@ -18,6 +19,7 @@ export function TaskInput({ onTaskCreated }: TaskInputProps) {
   const [isFocused, setIsFocused] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const { addTask } = useTaskStore()
+  const toast = useToast()
 
   // Global keyboard shortcut: Cmd+K to focus
   useEffect(() => {
@@ -69,10 +71,31 @@ export function TaskInput({ onTaskCreated }: TaskInputProps) {
         })
 
         if (!response.ok) {
-          throw new Error('Failed to parse task')
+          // Let the user know AI parsing failed so they aren't confused
+          // when a task lands without a due date / people / tags.
+          const payload = await response.json().catch(() => ({}))
+          if (response.status === 429) {
+            toast.error(
+              'AI parsing is rate-limited right now.',
+              'Your task was saved without AI enrichment.'
+            )
+          } else if (response.status !== 401) {
+            toast.info('AI parsing unavailable', payload?.message || 'Saved your task as-is.')
+          }
+          parsedTask = {
+            title: taskInput.slice(0, 120),
+            due_date: null,
+            priority: 'medium',
+            context: null,
+            people: [],
+            tags: [],
+            action_type: 'manual',
+            estimated_minutes: null,
+            energy_level: null,
+          }
+        } else {
+          parsedTask = await response.json()
         }
-
-        parsedTask = await response.json()
       }
 
       // Check if user is authenticated and save to Supabase
@@ -105,11 +128,31 @@ export function TaskInput({ onTaskCreated }: TaskInputProps) {
 
             if (saveResponse.ok) {
               savedTask = await saveResponse.json()
+            } else if (saveResponse.status === 402) {
+              // Quota exhausted — surface an actionable upgrade prompt.
+              const payload = await saveResponse.json().catch(() => ({}))
+              toast.push({
+                kind: 'error',
+                title: 'Monthly limit reached',
+                message: payload?.message || 'Upgrade to create more tasks.',
+                action: { label: 'Upgrade plan', href: '/settings' },
+              })
+              return
+            } else if (saveResponse.status === 400) {
+              const payload = await saveResponse.json().catch(() => ({}))
+              toast.error(
+                'Could not save task',
+                payload?.errors?.[0]?.message || payload?.error || 'Validation failed.'
+              )
+              return
+            } else if (saveResponse.status !== 401) {
+              toast.error('Could not save task', 'Please try again.')
             }
           }
         } catch (error) {
           console.error('Error saving to Supabase:', error)
-          // Fall through to local creation
+          toast.error('Could not save task', 'Check your connection and try again.')
+          // Fall through to local creation for demo users.
         }
       }
 

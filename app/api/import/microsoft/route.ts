@@ -5,6 +5,18 @@ import type { TaskInsert } from '@/lib/database.types'
 
 export async function POST(request: Request) {
   try {
+    const supabase = await createClient()
+    if (!supabase) {
+      return NextResponse.json({ error: 'Supabase not configured' }, { status: 503 })
+    }
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    const userId = user.id
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const dbClient = supabase as any
+
     const body = await request.json()
     const { access_token } = body
 
@@ -33,20 +45,6 @@ export async function POST(request: Request) {
 
     const listsData = await listsResponse.json()
     const lists = listsData.value || []
-
-    // Get authenticated user
-    const supabase = await createClient()
-    let userId = 'demo-user'
-    let dbClient = null
-
-    if (supabase) {
-      const { data: { user }, error: authError } = await supabase.auth.getUser()
-      if (!authError && user) {
-        userId = user.id
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        dbClient = supabase as any
-      }
-    }
 
     // Fetch tasks from each list
     const allTasks: TaskInsert[] = []

@@ -3,9 +3,23 @@
 import { useEffect } from 'react'
 import { Sidebar } from '@/components/sidebar'
 import { TaskDetail } from '@/components/task-detail'
+import { ToastProvider } from '@/components/ui'
+import { SidebarSkeleton, TaskListSkeleton } from '@/components/ui/skeleton'
 import { useTaskStore, useUserStore } from '@/lib/store'
 import { getDemoTasks } from '@/lib/tasks'
 import { createClient } from '@/lib/supabase/client'
+
+/**
+ * Detects the user's local IANA timezone so demo tasks and briefings
+ * don't pretend everyone is in Chicago. Falls back gracefully.
+ */
+function detectTimezone(): string {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+  } catch {
+    return 'UTC'
+  }
+}
 
 export default function AppLayout({
   children,
@@ -13,22 +27,20 @@ export default function AppLayout({
   children: React.ReactNode
 }) {
   const { setTasks, setAuthenticated } = useTaskStore()
-  const { setProfile, setLoading } = useUserStore()
+  const { setProfile, setLoading, isLoading } = useUserStore()
 
   useEffect(() => {
     const loadData = async () => {
       const supabase = createClient()
+      const timezone = detectTimezone()
 
       if (supabase) {
-        // Try to load user profile and tasks from Supabase
         try {
           const { data: { user } } = await supabase.auth.getUser()
 
           if (user) {
-            // User is authenticated
             setAuthenticated(true)
 
-            // Load profile
             const { data: profile } = await supabase
               .from('profiles')
               .select('*')
@@ -39,7 +51,6 @@ export default function AppLayout({
               setProfile(profile)
             }
 
-            // Load tasks
             const { data: tasks } = await supabase
               .from('tasks')
               .select('*')
@@ -50,13 +61,13 @@ export default function AppLayout({
               setTasks(tasks)
             }
           } else {
-            // Use demo data if not authenticated
+            // Logged-out visitors see demo data so they can explore the app.
             setAuthenticated(false)
             setTasks(getDemoTasks())
             setProfile({
               id: 'demo-user',
               full_name: 'Demo User',
-              timezone: 'America/Chicago',
+              timezone,
               work_type: null,
               subscription_tier: 'free',
               stripe_customer_id: null,
@@ -69,18 +80,16 @@ export default function AppLayout({
           }
         } catch (error) {
           console.error('Error loading data:', error)
-          // Fall back to demo data
           setAuthenticated(false)
           setTasks(getDemoTasks())
         }
       } else {
-        // Supabase not configured, use demo data
         setAuthenticated(false)
         setTasks(getDemoTasks())
         setProfile({
           id: 'demo-user',
           full_name: 'Demo User',
-          timezone: 'America/Chicago',
+          timezone,
           work_type: null,
           subscription_tier: 'free',
           stripe_customer_id: null,
@@ -99,12 +108,26 @@ export default function AppLayout({
   }, [setTasks, setProfile, setLoading, setAuthenticated])
 
   return (
-    <div className="flex h-screen bg-zinc-950">
-      <Sidebar />
-      <main className="flex-1 overflow-hidden">
-        <div className="h-full overflow-y-auto">{children}</div>
-      </main>
-      <TaskDetail />
-    </div>
+    <ToastProvider>
+      <div className="flex h-screen bg-zinc-950">
+        {isLoading ? <SidebarSkeleton /> : <Sidebar />}
+        <main className="flex-1 overflow-hidden">
+          <div className="h-full overflow-y-auto">
+            {isLoading ? (
+              <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+                <div className="mb-8 space-y-3">
+                  <div className="h-8 w-40 bg-zinc-800/50 rounded-md animate-pulse" />
+                  <div className="h-4 w-64 bg-zinc-800/30 rounded-md animate-pulse" />
+                </div>
+                <TaskListSkeleton count={4} />
+              </div>
+            ) : (
+              children
+            )}
+          </div>
+        </main>
+        <TaskDetail />
+      </div>
+    </ToastProvider>
   )
 }
