@@ -111,6 +111,15 @@ function LoginForm() {
               Sign in
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
+
+            <div className="text-right">
+              <Link
+                href="/auth/reset"
+                className="text-sm text-zinc-400 hover:text-zinc-200"
+              >
+                Forgot password?
+              </Link>
+            </div>
           </form>
 
           {isDemoModeAvailable && (

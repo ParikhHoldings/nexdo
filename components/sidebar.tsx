@@ -32,7 +32,7 @@ const navigation = [
 export function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
-  const { theme, toggleTheme, sidebarCollapsed, toggleSidebar } = useUIStore()
+  const { theme, toggleTheme, sidebarCollapsed, toggleSidebar, setSidebarCollapsed } = useUIStore()
   const { profile, isAuthenticated } = useUserStore()
   const { tasks } = useTaskStore()
 
@@ -48,6 +48,14 @@ export function Sidebar() {
       await supabase.auth.signOut()
     }
     router.push('/')
+  }
+
+  // On mobile, close the sidebar after the user taps a navigation link.
+  // We rely on matchMedia rather than window size to avoid SSR hazards.
+  const handleMobileNavTap = () => {
+    if (typeof window !== 'undefined' && window.matchMedia('(max-width: 1023px)').matches) {
+      setSidebarCollapsed(true)
+    }
   }
 
   return (
@@ -98,6 +106,7 @@ export function Sidebar() {
               <Link
                 key={item.name}
                 href={item.href}
+                onClick={handleMobileNavTap}
                 className={cn(
                   'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors',
                   isActive
@@ -125,6 +134,7 @@ export function Sidebar() {
         <div className="p-4 space-y-2 border-t border-zinc-800">
           <Link
             href="/settings/mcp"
+            onClick={handleMobileNavTap}
             className={cn(
               'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors',
               pathname === '/settings/mcp'
@@ -138,6 +148,7 @@ export function Sidebar() {
 
           <Link
             href="/settings"
+            onClick={handleMobileNavTap}
             className={cn(
               'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors',
               pathname === '/settings'
@@ -168,7 +179,12 @@ export function Sidebar() {
 
         {/* User */}
         <div className="p-4 border-t border-zinc-800">
-          <div className="flex items-center gap-3">
+          <div
+            className={cn(
+              'flex items-center gap-3',
+              sidebarCollapsed && 'lg:flex-col lg:gap-2'
+            )}
+          >
             <div className="w-9 h-9 rounded-full bg-zinc-700 flex items-center justify-center flex-shrink-0">
               <span className="text-sm font-medium text-zinc-300">
                 {profile?.full_name?.charAt(0) || 'D'}
@@ -184,11 +200,22 @@ export function Sidebar() {
                 </p>
               </div>
             )}
-            {isAuthenticated && !sidebarCollapsed && (
+            {/*
+              Sign-out should always be reachable once authenticated. Prior
+              to this change the button disappeared when the sidebar
+              collapsed on desktop and was unreachable on mobile when the
+              sidebar was closed. Now we render an icon-only variant in
+              collapsed state and always show the full button when expanded.
+            */}
+            {isAuthenticated && (
               <button
                 onClick={handleLogout}
-                className="p-2 hover:bg-zinc-800 rounded-lg transition-colors"
+                className={cn(
+                  'hover:bg-zinc-800 rounded-lg transition-colors',
+                  sidebarCollapsed ? 'p-2' : 'p-2'
+                )}
                 title="Sign out"
+                aria-label="Sign out"
               >
                 <LogOut className="h-4 w-4 text-zinc-400" />
               </button>

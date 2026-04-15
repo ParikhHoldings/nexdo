@@ -1,5 +1,10 @@
 import { NextResponse } from 'next/server'
 
+// Resolved at request time so preview deploys and prod share one spec.
+const SERVER_URL = (
+  process.env.NEXT_PUBLIC_APP_URL || 'https://nexdo.ai'
+).replace(/\/$/, '')
+
 // OpenAPI 3.0 spec for ChatGPT Actions
 const openApiSpec = {
   openapi: '3.0.0',
@@ -10,8 +15,8 @@ const openApiSpec = {
   },
   servers: [
     {
-      url: 'https://nexdo-web-staging.up.railway.app',
-      description: 'Production server',
+      url: SERVER_URL,
+      description: 'Nexdo API',
     },
   ],
   paths: {
@@ -462,11 +467,15 @@ const openApiSpec = {
   },
 }
 
+// ChatGPT fetches the OpenAPI spec from a browser context, so CORS must
+// permit the request. We keep this public (the spec is not sensitive),
+// but tighten CORS on the action endpoints themselves separately.
 export async function GET() {
   return NextResponse.json(openApiSpec, {
     headers: {
       'Content-Type': 'application/json',
       'Access-Control-Allow-Origin': '*',
+      'Cache-Control': 'public, max-age=300',
     },
   })
 }

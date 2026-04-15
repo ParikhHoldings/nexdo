@@ -54,7 +54,10 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // Redirect authenticated users away from auth pages
+  // Redirect authenticated users away from auth pages. We intentionally
+  // exclude /auth/update-password and /auth/reset so a user who is mid
+  // password-recovery (Supabase creates a recovery session) isn't bounced
+  // off the page before they can set a new password.
   const isAuthRoute =
     request.nextUrl.pathname.startsWith('/auth/login') ||
     request.nextUrl.pathname.startsWith('/auth/signup')
