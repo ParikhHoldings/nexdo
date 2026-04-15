@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import {
   ArrowLeft,
@@ -15,12 +15,30 @@ import {
 import { Button } from '@/components/ui/button'
 import { useUserStore } from '@/lib/store'
 
-const MCP_SERVER_URL = 'https://nexdo-web-staging.up.railway.app/api/mcp'
-const OPENAPI_URL = 'https://nexdo-web-staging.up.railway.app/api/mcp/openapi'
+/**
+ * Resolve the public origin for the MCP URLs shown to users. We prefer the
+ * env-provided NEXT_PUBLIC_APP_URL (set in prod), and fall back to the
+ * current window origin so preview deploys "just work".
+ */
+function resolvePublicOrigin(): string {
+  const envUrl = process.env.NEXT_PUBLIC_APP_URL
+  if (envUrl) return envUrl.replace(/\/$/, '')
+  if (typeof window !== 'undefined') return window.location.origin
+  return ''
+}
 
 export default function MCPSettingsPage() {
   const { profile } = useUserStore()
   const apiKey = profile?.api_key || ''
+
+  const [origin, setOrigin] = useState<string>(() => resolvePublicOrigin())
+  useEffect(() => {
+    // After hydration, make sure we use the actual window origin if no env is set.
+    setOrigin(resolvePublicOrigin())
+  }, [])
+
+  const MCP_SERVER_URL = origin ? `${origin}/api/mcp` : '/api/mcp'
+  const OPENAPI_URL = origin ? `${origin}/api/mcp/openapi` : '/api/mcp/openapi'
 
   const [copiedUrl, setCopiedUrl] = useState(false)
   const [copiedKey, setCopiedKey] = useState(false)

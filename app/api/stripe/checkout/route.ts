@@ -57,6 +57,18 @@ export async function POST(request: NextRequest) {
     // Get the correct price ID
     const actualPriceId = priceId || (plan === 'pro' ? PRICE_IDS.pro : PRICE_IDS.power)
 
+    // Guard against running with placeholder env. Failing fast here is far
+    // better than sending the user to Stripe with an invalid price id.
+    if (!actualPriceId || actualPriceId.includes('placeholder')) {
+      console.error('Stripe price id not configured for plan:', plan)
+      return NextResponse.json(
+        {
+          error: 'Billing is not configured yet. Please contact support.',
+        },
+        { status: 503 }
+      )
+    }
+
     // Create the checkout session
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
     const session = await createCheckoutSession(
