@@ -42,6 +42,13 @@ Read-only MCP smoke:
 NEXDO_API_KEY=nxd_... npm run smoke:mcp -- --url=https://your-deploy.example
 ```
 
+Optional scoped-key smoke. Provide a key with only `tasks:read` and `briefing:read`
+to verify write tools are hidden from `tools/list` and rejected with 403:
+
+```bash
+NEXDO_API_KEY=nxd_full_or_read_key NEXDO_READONLY_API_KEY=nxd_readonly... npm run smoke:mcp -- --url=https://your-deploy.example
+```
+
 Write smoke that creates and completes a disposable task:
 
 ```bash

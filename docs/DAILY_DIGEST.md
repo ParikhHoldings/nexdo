@@ -11,6 +11,7 @@
 - Added `npm run smoke:stripe` for Stripe account, price, Checkout, and Customer Portal verification.
 - Added `npm run smoke:supabase` for real Supabase schema/auth/RLS/task/audit/quota/rate-limit verification.
 - Added `npm run smoke:mcp` for authenticated MCP/API-key verification against a real deployment.
+- Expanded MCP smoke coverage so an optional read-only scoped key can verify write tools are hidden and denied.
 - Exposed agent metadata fields in MCP create/update tools so agent-created tasks can carry source identifiers and external references.
 - Added scoped API key permissions, scope-filtered MCP tool listings, REST/JSON-RPC scope enforcement, and an agent action audit table/migration.
 - Added rate limiting to API key rotation for scoped MCP/API keys.

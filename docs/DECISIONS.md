@@ -1,5 +1,15 @@
 # Decisions
 
+## 2026-05-16 - MCP smoke must verify least-privilege keys
+### Decision
+`npm run smoke:mcp` supports an optional read-only API key to verify scoped keys hide write tools and reject write calls.
+
+### Why
+Agent readiness depends on least-privilege behavior, not just full-access happy paths.
+
+### Impact
+Real MCP verification should include both a normal key and a read-only scoped key before external agent use.
+
 ## 2026-05-16 - Quota read probes must not write audit noise
 ### Decision
 `increment_usage` keeps its quantity-0 reset/read behavior, but skips counter increments and `usage_events` writes when quantity is zero.

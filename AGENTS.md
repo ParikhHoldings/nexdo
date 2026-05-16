@@ -81,6 +81,10 @@ Production environment, Supabase migrations, OpenAI provider calls, Stripe test-
 - Supabase provider smoke: `npm run smoke:supabase`
 - MCP provider smoke: `npm run smoke:mcp`
 
+`npm run smoke:mcp` accepts `NEXDO_API_KEY` for normal checks, optional
+`NEXDO_READONLY_API_KEY` for scoped read-only denial checks, and `-- --write`
+for disposable task creation/idempotency checks.
+
 Use the smallest relevant verification. For docs-only changes, a diff review is usually enough. For code changes, prefer `npm run lint`, `npm run typecheck`, and `npm run build` when dependencies and environment allow it. For launch-facing app behavior, run `npm run test:e2e` as well. If a check cannot run, record why and add a follow-up task.
 
 ## Environment
