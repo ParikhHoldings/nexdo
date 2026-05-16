@@ -169,7 +169,7 @@ Acceptance gate:
 Current evidence:
 - API-key generation and validation are Power/team gated.
 - Hashed key storage and key hints exist.
-- `/settings/mcp` includes scope-aware setup and activity surfaces.
+- `/settings/mcp` includes prerequisite- and scope-aware setup, disabled no-key connection testing, full-key guidance, and activity surfaces.
 - `/api/mcp/events` filters activity by the authenticated user as well as relying on database policies.
 - Real Supabase/API-key smoke remains a launch blocker.
 

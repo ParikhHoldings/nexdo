@@ -68,6 +68,12 @@ export default function MCPSettingsPage() {
   const hasApiKey = Boolean(apiKeyHint)
   const apiKeyScopes = normalizeApiKeyScopes(profile?.api_key_scopes)
   const hasApiAccess = canUseApiAccess(profile?.subscription_tier)
+  const canTestConnection = hasApiAccess && hasApiKey
+  const setupStatusMessage = !hasApiAccess
+    ? 'Upgrade to Power or Team before connecting external AI tools.'
+    : hasApiKey
+      ? 'Ready to configure. Replace placeholders with the full API key copied when it was generated.'
+      : 'Generate a scoped API key in Settings > API before connecting external AI tools.'
 
   const origin = useSyncExternalStore(
     subscribeToOrigin,
@@ -148,6 +154,12 @@ export default function MCPSettingsPage() {
   }, [hasApiKey])
 
   const handleTestConnection = async () => {
+    if (!canTestConnection) {
+      setTestStatus('error')
+      setTestMessage('API access and a generated key are required before testing a connection.')
+      return
+    }
+
     const connectionKey = testApiKey.trim()
 
     if (!connectionKey) {
@@ -215,6 +227,7 @@ export default function MCPSettingsPage() {
           <Button
             variant="secondary"
             onClick={() => handleCopy(MCP_SERVER_URL, setCopiedUrl)}
+            aria-label="Copy MCP server URL"
           >
             {copiedUrl ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
           </Button>
@@ -252,7 +265,7 @@ export default function MCPSettingsPage() {
 
         {hasApiKey && (
           <p className="mt-3 text-xs text-zinc-500">
-            Existing keys are stored as hashes and cannot be revealed. Regenerate a key in Settings &gt; API when you need a new copy.
+            Existing keys are stored as hashes and cannot be revealed. The hint above identifies the key but cannot be used as a token. Regenerate a key in Settings &gt; API when you need a new copy.
           </p>
         )}
 
@@ -278,17 +291,22 @@ export default function MCPSettingsPage() {
       {/* Test Connection */}
       <section className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 mb-6">
         <h2 className="text-lg font-semibold text-zinc-100 mb-4">Test Connection</h2>
+        <p className="mb-4 text-sm text-zinc-500">
+          Paste the full one-time API key, not the stored key hint.
+        </p>
         <div className="mb-4 flex gap-2">
           <Input
+            label="Full API key"
             type="password"
             value={testApiKey}
             onChange={(event) => setTestApiKey(event.target.value)}
             placeholder="Paste API key"
             className="font-mono"
+            disabled={!canTestConnection}
           />
         </div>
         <div className="flex items-center gap-4">
-          <Button onClick={handleTestConnection} disabled={testStatus === 'loading'}>
+          <Button onClick={handleTestConnection} disabled={!canTestConnection || testStatus === 'loading'}>
             {testStatus === 'loading' ? (
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
             ) : (
@@ -309,6 +327,11 @@ export default function MCPSettingsPage() {
             </div>
           )}
         </div>
+        {!canTestConnection && (
+          <p className="mt-3 text-sm text-amber-400">
+            API access and a generated key are required before this tester is enabled.
+          </p>
+        )}
       </section>
 
       {/* Agent Activity */}
@@ -387,6 +410,13 @@ export default function MCPSettingsPage() {
 
       {/* Setup Instructions */}
       <section className="space-y-6">
+        <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6">
+          <h2 className="text-lg font-semibold text-zinc-100 mb-2">Setup Status</h2>
+          <p className={canTestConnection ? 'text-sm text-emerald-400' : 'text-sm text-amber-400'}>
+            {setupStatusMessage}
+          </p>
+        </div>
+
         {/* Claude Desktop */}
         <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6">
           <h2 className="text-lg font-semibold text-zinc-100 mb-2">1. Claude Desktop</h2>
@@ -402,10 +432,14 @@ export default function MCPSettingsPage() {
               size="sm"
               className="absolute top-2 right-2"
               onClick={() => handleCopy(claudeConfig, setCopiedConfig)}
+              aria-label="Copy Claude Desktop MCP config"
             >
               {copiedConfig ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
             </Button>
           </div>
+          <p className="text-xs text-zinc-600 mt-3">
+            Replace <code className="text-zinc-500">YOUR_NEXDO_API_KEY</code> with the full key copied from Settings &gt; API.
+          </p>
           <p className="text-xs text-zinc-600 mt-3">
             Config file location:
             <br />
@@ -426,7 +460,7 @@ export default function MCPSettingsPage() {
             <li>2. Click <strong>Configure</strong> → <strong>Create new action</strong></li>
             <li>3. Import from URL: paste the OpenAPI spec URL below</li>
             <li>4. Under <strong>Authentication</strong>, select <strong>API Key</strong> (Bearer)</li>
-            <li>5. Paste your Nexdo API key</li>
+            <li>5. Paste the full Nexdo API key copied from Settings &gt; API</li>
           </ol>
           <div className="flex gap-2">
             <code className="flex-1 bg-zinc-800 px-4 py-2.5 rounded-lg text-sm text-zinc-300 font-mono overflow-x-auto">
@@ -435,14 +469,18 @@ export default function MCPSettingsPage() {
             <Button
               variant="secondary"
               onClick={() => handleCopy(OPENAPI_URL, setCopiedOpenApi)}
+              aria-label="Copy OpenAPI spec URL"
             >
               {copiedOpenApi ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
             </Button>
-            <a href={OPENAPI_URL} target="_blank" rel="noopener noreferrer"
+            <a href={OPENAPI_URL} target="_blank" rel="noopener noreferrer" aria-label="Open OpenAPI spec"
               className="inline-flex items-center justify-center px-3 py-2 rounded-lg border border-zinc-700 bg-transparent text-zinc-300 hover:bg-zinc-800 transition-colors">
               <ExternalLink className="h-4 w-4" />
             </a>
           </div>
+          <p className="text-xs text-zinc-600 mt-3">
+            ChatGPT Actions can only call tools allowed by the scopes on the key you paste.
+          </p>
         </div>
 
         {/* Cursor / Other */}
@@ -465,12 +503,20 @@ export default function MCPSettingsPage() {
               <code className="text-zinc-300 font-mono">Authorization: Bearer nxd_...</code>
             </div>
           </div>
+          <p className="text-xs text-zinc-600 mt-3">
+            Use the full one-time key value. The stored key hint is only for identifying which key is active.
+          </p>
         </div>
       </section>
 
       {/* Available Tools */}
       <section className="mt-8 bg-zinc-900/50 border border-zinc-800 rounded-xl p-6">
         <h2 className="text-lg font-semibold text-zinc-100 mb-4">Available Tools</h2>
+        {!canTestConnection && (
+          <p className="mb-4 text-sm text-zinc-500">
+            Tools become available to external clients after API access is active and a scoped key exists.
+          </p>
+        )}
         <div className="grid gap-3 sm:grid-cols-2">
           {MCP_TOOL_DETAILS.map((tool) => {
             const requiredScope = requiredScopeForTool(tool.name)

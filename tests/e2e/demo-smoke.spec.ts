@@ -234,6 +234,9 @@ test('connect ai page reflects the paid API access gate', async ({ page }) => {
     'href',
     '/settings?tab=billing'
   )
+  await expect(page.getByText('Upgrade to Power or Team before connecting external AI tools.')).toBeVisible()
+  await expect(page.getByLabel('Full API key')).toBeDisabled()
+  await expect(page.getByRole('button', { name: 'Test Connection' })).toBeDisabled()
 })
 
 test('demo tasks persist across reloads', async ({ page }) => {

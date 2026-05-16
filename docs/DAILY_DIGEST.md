@@ -28,6 +28,7 @@
 - Moved MCP/API keys to hashed storage with one-time reveal, display hints, legacy key migration, and fallback validation.
 - Narrowed browser-visible profile columns and direct profile self-updates so signed-in clients cannot read key hashes/Stripe IDs or self-change billing, quota, Stripe, or API-key state.
 - Made the MCP settings tool list reflect the current API key scopes.
+- Made the MCP settings setup flow prerequisite-aware, disabled free/no-key connection tests, and clarified that external clients need the full one-time key rather than the stored key hint.
 - Added a recent agent activity surface on the MCP settings page backed by `/api/mcp/events`.
 - Explicitly filtered `/api/mcp/events` by the authenticated user in addition to RLS.
 - Added idempotency handling for agent task creation using `source_agent_id` plus `external_ref`, including write-smoke replay coverage.
