@@ -170,7 +170,7 @@ interface UIState {
 
 export const useUIStore = create<UIState>((set) => ({
   theme: 'dark',
-  sidebarCollapsed: false,
+  sidebarCollapsed: true,
   commandBarOpen: false,
 
   toggleTheme: () =>

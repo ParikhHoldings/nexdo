@@ -1,5 +1,38 @@
 # Daily Digest
 
+## 2026-05-16
+### Shipped
+- Read all existing Markdown and text files in the repo, including `.github/pull_request_template.md`, `AGENTS.md`, the operating docs, and `public/robots.txt`.
+- Updated the agent operating context to reflect the real Next.js/Supabase/OpenAI/Stripe/MCP product surfaces.
+- Added `README.md` as a concise project overview for humans and LLM agents.
+- Added `docs/COMPLETION_AUDIT.md` to map the active goal to concrete evidence and remaining gaps.
+- Added `docs/DEPLOYMENT.md` and `npm run verify:env` for deploy/env preflight rails.
+- Added `npm run smoke:mcp` for authenticated MCP/API-key verification against a real deployment.
+- Updated vision, roadmap, backlog, decisions, metrics, marketing, and research docs to align with the current implementation.
+- Restored stricter build rails by adding typecheck/e2e scripts and removing build-time TypeScript/ESLint ignores.
+- Added deterministic local task intelligence for demo-mode parsing, prioritization, briefing, and bounded research/draft/prep outputs.
+- Added Playwright smoke coverage for the logged-out core product path.
+- Added Playwright smoke coverage for OpenAPI action schema, MCP/action auth failures, and action CORS headers.
+- Added GitHub Actions verification for install, lint, typecheck, build, and Playwright smoke testing.
+- Upgraded to Next.js 16, ESLint 9 flat config, and a PostCSS override; `npm audit --audit-level=moderate` now reports 0 vulnerabilities.
+- Moved the Next middleware entrypoint to the Next 16 `proxy.ts` convention.
+- Fixed mobile startup so the navigation drawer does not cover the main task screen by default.
+- Tightened launch-facing copy to avoid claims about open-ended task completion, large traction, and unverified enterprise readiness.
+- Added `docs/LAUNCH_PLAN.md` for the Monday early-access target and long-term AI-agent path.
+
+### In progress
+- Clean install/build/test rails are verified locally; the new GitHub Actions workflow still needs a real PR/branch run.
+- MVP path now centers on capture, structure, prioritize, brief, and bounded execution.
+
+### Blocked
+- Production readiness cannot be claimed until env, migrations, auth, AI, Stripe, MCP, and deployment are verified.
+
+### Approvals needed
+- Approval is still required before public launch copy, pricing changes, production deploys, or customer-facing commitments.
+
+### Recommended next focus
+- Run the new GitHub Actions workflow on a PR/branch, then smoke test Supabase, OpenAI, Stripe, and MCP flows against real environment settings.
+
 ## 2026-04-11
 ### Shipped
 - Added the repo-level autonomous operating layer directly to the live Nexdo repo.

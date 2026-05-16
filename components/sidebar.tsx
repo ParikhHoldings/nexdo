@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
@@ -41,6 +42,17 @@ export function Sidebar() {
   const todayCount = tasks.filter(
     (t) => t.status !== 'done' && t.status !== 'cancelled' && t.due_date === today
   ).length
+
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 1023px)')
+    const syncSidebarForViewport = () => {
+      setSidebarCollapsed(media.matches)
+    }
+
+    syncSidebarForViewport()
+    media.addEventListener('change', syncSidebarForViewport)
+    return () => media.removeEventListener('change', syncSidebarForViewport)
+  }, [setSidebarCollapsed])
 
   const handleLogout = async () => {
     const supabase = createClient()
@@ -227,6 +239,7 @@ export function Sidebar() {
       {/* Mobile menu button */}
       <button
         onClick={toggleSidebar}
+        aria-label="Open navigation"
         className="fixed bottom-4 left-4 z-40 p-3 bg-accent rounded-full shadow-lg lg:hidden"
       >
         <Menu className="h-6 w-6 text-white" />

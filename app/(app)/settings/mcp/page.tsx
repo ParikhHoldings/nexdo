@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState, useSyncExternalStore } from 'react'
 import Link from 'next/link'
 import {
   ArrowLeft,
@@ -27,15 +27,19 @@ function resolvePublicOrigin(): string {
   return ''
 }
 
+function subscribeToOrigin(_onStoreChange: () => void) {
+  return () => {}
+}
+
 export default function MCPSettingsPage() {
   const { profile } = useUserStore()
   const apiKey = profile?.api_key || ''
 
-  const [origin, setOrigin] = useState<string>(() => resolvePublicOrigin())
-  useEffect(() => {
-    // After hydration, make sure we use the actual window origin if no env is set.
-    setOrigin(resolvePublicOrigin())
-  }, [])
+  const origin = useSyncExternalStore(
+    subscribeToOrigin,
+    resolvePublicOrigin,
+    resolvePublicOrigin
+  )
 
   const MCP_SERVER_URL = origin ? `${origin}/api/mcp` : '/api/mcp'
   const OPENAPI_URL = origin ? `${origin}/api/mcp/openapi` : '/api/mcp/openapi'

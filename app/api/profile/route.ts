@@ -31,8 +31,6 @@ export async function PATCH(request: Request) {
     if (full_name !== undefined) updates.full_name = full_name
     if (timezone !== undefined) updates.timezone = timezone
     if (work_type !== undefined) updates.work_type = work_type
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any
     const { data: profile, error } = await db
       .from('profiles')

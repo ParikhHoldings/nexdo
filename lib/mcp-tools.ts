@@ -182,7 +182,6 @@ function formatTaskForResponse(task: Task): Record<string, unknown> {
 
 const listTasks: ToolHandler = async (args, userId) => {
   const supabaseRaw = await createServiceClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase = supabaseRaw as any
   if (!supabaseRaw) {
     return {
@@ -228,7 +227,6 @@ const listTasks: ToolHandler = async (args, userId) => {
 
 const createTask: ToolHandler = async (args, userId) => {
   const supabaseRaw = await createServiceClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase = supabaseRaw as any
   if (!supabaseRaw) {
     return {
@@ -294,7 +292,6 @@ const createTask: ToolHandler = async (args, userId) => {
 
 const completeTask: ToolHandler = async (args, userId) => {
   const supabaseRaw = await createServiceClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase = supabaseRaw as any
   if (!supabaseRaw) {
     return {
@@ -342,7 +339,6 @@ const completeTask: ToolHandler = async (args, userId) => {
 
 const updateTask: ToolHandler = async (args, userId) => {
   const supabaseRaw = await createServiceClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase = supabaseRaw as any
   if (!supabaseRaw) {
     return {
@@ -405,7 +401,6 @@ const updateTask: ToolHandler = async (args, userId) => {
 
 const getBriefing: ToolHandler = async (args, userId) => {
   const supabaseRaw = await createServiceClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase = supabaseRaw as any
   if (!supabaseRaw) {
     return {
@@ -456,7 +451,6 @@ const getBriefing: ToolHandler = async (args, userId) => {
 
 const searchTasks: ToolHandler = async (args, userId) => {
   const supabaseRaw = await createServiceClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase = supabaseRaw as any
   if (!supabaseRaw) {
     return {
@@ -500,7 +494,6 @@ const searchTasks: ToolHandler = async (args, userId) => {
 
 const getTask: ToolHandler = async (args, userId) => {
   const supabaseRaw = await createServiceClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase = supabaseRaw as any
   if (!supabaseRaw) {
     return {
@@ -597,7 +590,6 @@ export async function validateApiKey(
   apiKey: string
 ): Promise<{ userId: string } | null> {
   const supabaseRaw = await createServiceClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase = supabaseRaw as any
   if (!supabaseRaw) return null
 

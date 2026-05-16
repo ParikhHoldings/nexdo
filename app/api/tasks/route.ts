@@ -60,8 +60,6 @@ export async function GET() {
   if (authError || !user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = supabase as any
   const { data: tasks, error } = await db
     .from('tasks')
@@ -120,8 +118,6 @@ export async function POST(request: Request) {
       people,
       tags,
     } = body as Record<string, unknown>
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any
     const { data: task, error } = await db
       .from('tasks')

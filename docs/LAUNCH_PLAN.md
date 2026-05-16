@@ -1,0 +1,44 @@
+# Launch Plan
+
+## Immediate plan for Monday, 2026-05-18
+The goal is not a broad public launch. The credible Monday target is a verified early-access product demo with clear rails for humans and AI agents.
+
+### Must ship
+- A local app that passes clean install, lint, typecheck, build, and Playwright smoke tests. Verified locally on 2026-05-16.
+- A usable logged-out demo flow: load `/today`, inspect demo tasks, add a natural-language task, see prioritization, open an executable task, and generate a bounded agent output. Verified locally on 2026-05-16.
+- Public AI-agent surfaces expose a valid OpenAPI action contract and enforce bearer auth before tool execution. Smoke-tested locally on 2026-05-16.
+- Strict build rails: TypeScript and lint failures block `npm run build`. Verified locally on 2026-05-16.
+- Truthful public copy that describes bounded AI assistance instead of open-ended autonomous task completion. Draft tightened on 2026-05-16; still needs Quill/founder approval before external use.
+- Updated docs that tell future agents what exists, what is verified, and what is still blocked.
+
+### Must verify before external users
+- Supabase migrations, auth, profile creation, RLS, and task CRUD against a real project.
+- OpenAI-backed parse, prioritize, briefing, and research/draft/prep execution with a real API key.
+- Stripe checkout, portal, webhook, plan limits, and quota behavior in test mode.
+- MCP JSON-RPC, action wrappers, OpenAPI output, and API-key authentication.
+- Authenticated MCP tool execution against real task data.
+- Deployment target, env variables, domain, rollback path, and preview/production split.
+
+### Launch blockers
+- Production env is not verified in this operating pass.
+- Public-facing copy still requires Quill review and founder approval before external launch use.
+- Pricing and paid plan commitments require approval and Stripe test-mode verification.
+
+## Human-user product path
+1. Capture: make natural-language task capture reliable, fast, and explainable.
+2. Structure: preserve due date, priority, people, tags, effort, energy, and context.
+3. Prioritize: rank the day with a visible reason for each recommendation.
+4. Brief: generate a concise daily view of priorities, overdue work, quick wins, and people waiting.
+5. Execute bounded work: support useful research, draft, and prep outputs with clear review expectations.
+6. Trust: add edit history, verification notes, and better failure states before increasing autonomy.
+
+## AI-agent product path
+1. Stabilize the API-key based task layer around list, create, update, complete, search, and brief.
+2. Make agent-created tasks distinguishable with `source_agent_id`, `external_ref`, `ingestion_intent`, and `agent_metadata`.
+3. Add idempotency and safer conflict handling for agent writes.
+4. Add scoped API keys and least-privilege permissions.
+5. Add audit trails for agent actions.
+6. Expand from task access to controlled execution requests only after the bounded human flow is trusted.
+
+## Long-term direction
+Nexdo should become the coordination layer where humans define intent and AI agents can safely inspect, prioritize, and advance work. The long-term product should stay anchored in observable behavior: structured context, explainable priorities, bounded execution, reviewable outputs, and agent-safe APIs.

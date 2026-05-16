@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 import { useTaskStore } from '@/lib/store'
 import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/components/ui/toast'
+import { parseTaskHeuristic } from '@/lib/task-intelligence'
 import type { Task, ParsedTask } from '@/lib/database.types'
 
 interface TaskInputProps {
@@ -46,6 +47,7 @@ export function TaskInput({ onTaskCreated }: TaskInputProps) {
       // Check for quick mode: /quick prefix
       const isQuickMode = rawInput.startsWith('/quick ')
       const taskInput = isQuickMode ? rawInput.slice(7) : rawInput
+      const supabase = createClient()
 
       let parsedTask: ParsedTask
 
@@ -62,6 +64,8 @@ export function TaskInput({ onTaskCreated }: TaskInputProps) {
           estimated_minutes: null,
           energy_level: null,
         }
+      } else if (!supabase) {
+        parsedTask = parseTaskHeuristic(taskInput)
       } else {
         // AI parsing
         const response = await fetch('/api/tasks/parse', {
@@ -82,24 +86,13 @@ export function TaskInput({ onTaskCreated }: TaskInputProps) {
           } else if (response.status !== 401) {
             toast.info('AI parsing unavailable', payload?.message || 'Saved your task as-is.')
           }
-          parsedTask = {
-            title: taskInput.slice(0, 120),
-            due_date: null,
-            priority: 'medium',
-            context: null,
-            people: [],
-            tags: [],
-            action_type: 'manual',
-            estimated_minutes: null,
-            energy_level: null,
-          }
+          parsedTask = parseTaskHeuristic(taskInput)
         } else {
           parsedTask = await response.json()
         }
       }
 
       // Check if user is authenticated and save to Supabase
-      const supabase = createClient()
       let savedTask: Task | null = null
 
       if (supabase) {
@@ -190,24 +183,25 @@ export function TaskInput({ onTaskCreated }: TaskInputProps) {
       onTaskCreated?.(newTask)
     } catch (error) {
       console.error('Error creating task:', error)
-      // Create a basic task on error
+      // Create a locally parsed task on error so capture still works offline.
+      const parsedTask = parseTaskHeuristic(rawInput)
       const fallbackTask: Task = {
         id: crypto.randomUUID(),
         user_id: 'demo-user',
-        title: rawInput.slice(0, 80),
+        title: parsedTask.title,
         raw_input: rawInput,
         description: null,
         status: 'todo',
-        priority: 'medium',
-        due_date: null,
+        priority: parsedTask.priority,
+        due_date: parsedTask.due_date,
         due_time: null,
-        context: null,
+        context: parsedTask.context,
         source: 'manual',
-        action_type: 'manual',
-        estimated_minutes: null,
-        energy_level: null,
-        people: null,
-        tags: null,
+        action_type: parsedTask.action_type,
+        estimated_minutes: parsedTask.estimated_minutes,
+        energy_level: parsedTask.energy_level,
+        people: parsedTask.people,
+        tags: parsedTask.tags,
         parent_task_id: null,
         related_task_ids: null,
         agent_output: null,

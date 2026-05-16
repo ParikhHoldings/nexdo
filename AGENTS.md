@@ -1,83 +1,160 @@
 # AGENTS.md
 
 ## Mission
-This repository supports Nexdo.
+This repository supports Nexdo, an AI-native task manager aimed at turning captured tasks into prioritized, contextual, execution-oriented work.
 
-The mission is to turn Nexdo into a credible AI-native task manager with a clear product promise, verified build rails, and a path to autonomous product execution.
+The operating mission is to make Nexdo credible as a real product: keep the promise concrete, keep the build/deploy rails verified, and convert founder input into shipped product, roadmap updates, and bounded follow-up tasks.
 
-## Product context
-- ICP: founders, operators, and teams who want a task manager that is more execution-oriented and AI-native than traditional checklist tools
-- Core promise: Nexdo helps users move from tasks to forward motion by making planning, prioritization, and execution smarter and more proactive
-- Current priorities:
-  1. verify and standardize repo/deploy/build rails
-  2. tighten the core product promise and MVP path
-  3. create a practical path from concept to real active product execution
+## Product Truth Snapshot
+Last repo-context pass: 2026-05-16.
+Last local verification: 2026-05-16.
 
-## General operating rules
-- Operate proactively.
-- Convert founder input into roadmap updates, tasks, and execution.
-- Prefer momentum through small, bounded tasks.
-- Prefer reversible changes over broad rewrites.
-- Keep documentation aligned with reality.
-- Create follow-up tasks whenever work is deferred or partially completed.
-- Minimize unnecessary confirmations.
-- Do not let vague AI-native positioning substitute for concrete product behavior.
+Nexdo is not only a concept. The repo already contains a Next.js product shell with:
+- marketing, auth, app, settings, import, and MCP setup routes under `app/`
+- task capture, task cards, detail panel, sidebar, daily briefing, pricing, imports, and UI primitives under `components/`
+- Supabase auth/data helpers, generated DB types, task/demo data, OpenAI prompts and calls, quotas, rate limits, Stripe helpers, import normalization, and MCP tools under `lib/`
+- Supabase migrations for profiles, tasks, task notes, daily briefings, RLS, usage events, rate limits, webhook idempotency, and performance indexes under `supabase/migrations/`
+- API routes for tasks, AI parse/prioritize/briefing/agent execution, imports, profile/API keys, Stripe checkout/portal/webhook, MCP JSON-RPC, MCP actions, and OpenAPI for ChatGPT Actions under `app/api/`
+
+The product promise should be grounded in what the code actually supports:
+- natural-language task capture with AI parsing
+- priority, due date, context, people, tags, action type, estimate, and energy metadata
+- daily briefing and prioritization generated from task context
+- limited agent execution for `research`, `draft`, and `prep` task types
+- demo-mode task data when Supabase is unavailable or the visitor is logged out
+- imports from Todoist plus CSV, ICS, JSON/Trello/Things-style sources, with some UI cards for future OAuth sources
+- API key based MCP/ChatGPT Actions interop for listing, creating, completing, updating, searching, and briefing tasks
+- Stripe-backed plan surfaces, quotas, and rate-limit scaffolding
+
+Do not claim verified production readiness until build, lint, environment, database migrations, auth, Stripe, OpenAI, MCP, and deployment target have been checked in the current environment.
+
+Current local verification from 2026-05-16:
+- `npm ci` passed from the lockfile
+- `npm run lint` passed
+- `npm run typecheck` passed
+- `npm run build` passed with strict TypeScript and ESLint checks enabled
+- `npm run test:e2e` passed for the logged-out `/today` demo flow plus MCP/OpenAPI/action auth smoke tests
+- `npm audit --audit-level=moderate` passed with 0 vulnerabilities after the Next.js 16 / ESLint 9 upgrade
+
+Production environment, Supabase migrations, OpenAI provider calls, Stripe test-mode flows, MCP/API-key flows, and deployment rails remain unverified in this pass.
+
+## ICP And Positioning
+- Primary ICP: founders, operators, and AI power users with too many moving priorities and too much task context trapped in notes, chat, email, and other tools.
+- Secondary ICP: teams that need a task layer more execution-oriented than static checklists.
+- Core promise: Nexdo helps users move from task capture to forward motion by making planning, prioritization, context, and execution support more proactive.
+- Product wedge: tasks should carry enough context for AI and external agents to help decide what matters and perform bounded work, not just store a checklist item.
+
+## Current Priorities
+1. Verify and standardize repo/build/deploy rails.
+2. Turn the current implementation into a narrow, trustworthy MVP path.
+3. Audit public-facing claims against verified product behavior.
+4. Harden the task/AI/API/MCP/Stripe surfaces enough for credible early users.
+5. Maintain docs as the source of operational truth.
+
+## Architecture Notes
+- Framework: Next.js 16 app router, React 18, TypeScript, Tailwind, Framer Motion, lucide-react.
+- Data/auth: Supabase SSR/client helpers and RLS-backed tables.
+- AI: OpenAI chat completions via helpers in `lib/openai.ts`; prompts live in `lib/prompts.ts`.
+- Billing: Stripe helpers and plan limits in `lib/stripe.ts`; checkout, portal, and webhook routes under `app/api/stripe/`.
+- Agent interop: MCP definitions and handlers in `lib/mcp-tools.ts`; JSON-RPC MCP endpoint at `app/api/mcp/route.ts`; ChatGPT Actions OpenAPI at `app/api/mcp/openapi/route.ts`; action wrappers under `app/api/mcp/actions/[tool]/route.ts`.
+- Imports: source-specific and generic normalization in `lib/importers.ts`; import routes under `app/api/import/`.
+- Demo mode: `lib/tasks.ts` provides local demo tasks when Supabase is not configured or no user is authenticated.
 
 ## Commands
 - Install: `npm install`
 - Dev: `npm run dev`
 - Build: `npm run build`
 - Lint: `npm run lint`
-- Public-facing copy: route through Quill before real external use
+- Typecheck: `npm run typecheck`
+- E2E smoke: `npm run test:e2e`
+- Env preflight: `npm run verify:env`
 
-## Definition of done
-A task is done only when:
-- the implementation or artifact is complete
-- relevant checks pass
-- docs are updated if reality changed
-- PR or summary explains what changed and why
-- follow-up tasks are created for anything deferred
+Use the smallest relevant verification. For docs-only changes, a diff review is usually enough. For code changes, prefer `npm run lint`, `npm run typecheck`, and `npm run build` when dependencies and environment allow it. For launch-facing app behavior, run `npm run test:e2e` as well. If a check cannot run, record why and add a follow-up task.
 
-## Approval boundaries
+## Environment
+Use `.env.local.example` as the contract:
+- Supabase: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
+- OpenAI: `OPENAI_API_KEY`
+- Stripe: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_PRO_PRICE_ID`, `STRIPE_POWER_PRICE_ID`
+- App origin: `NEXT_PUBLIC_APP_URL`
+
+Never invent environment truth. Confirm configured values exist before treating auth, AI, billing, imports, MCP, or production URLs as working.
+
+## General Operating Rules
+- Operate proactively.
+- Convert founder input into roadmap updates, backlog items, implementation, and digest notes.
+- Prefer momentum through small, bounded, reversible tasks.
+- Keep documentation aligned with reality whenever product, build, deploy, pricing, or positioning truth changes.
+- Create follow-up tasks whenever work is deferred, partially completed, blocked, or needs verification.
+- Minimize unnecessary confirmations inside the safe boundaries below.
+- Do not let vague AI-native positioning substitute for concrete product behavior.
+- Preserve user changes. Do not revert unrelated work unless explicitly requested.
+
+## Approval Boundaries
 Require approval before:
 - public launch copy goes live
-- pricing changes
-- public posting or sending outreach
+- pricing changes or new plan commitments
+- public posting, outreach, or announcements
 - production deploys
 - customer-facing commitments beyond verified product truth
+- destructive data, auth, billing, or migration operations
 
-## Safe autonomous actions
+## Safe Autonomous Actions
 The agent may do these without asking:
 - create or update internal docs
 - create and reprioritize backlog items
 - perform research
-- draft product and marketing assets
+- draft product and marketing assets for review
 - tighten MVP framing and repo/deploy requirements
 - improve internal planning and execution scaffolding
 - fix low-risk bugs
 - add tests
 - open PRs
 
-## Review checklist
+## Public Copy Guardrails
+- Public-facing copy must be routed through Quill before real external use.
+- Before launch, audit `app/(marketing)/page.tsx` for claims that may outrun verified truth, especially claims around "actually does your tasks", "thousands of users", security, integrations, and production readiness.
+- Prefer specific behavior claims over broad productivity language.
+- Do not describe MCP, imports, agent execution, billing, or security as fully production-ready until they are verified end to end.
+
+## Definition Of Done
+A task is done only when:
+- the implementation or artifact is complete
+- relevant checks pass, or the reason they could not run is documented
+- docs are updated if reality changed
+- PR or summary explains what changed and why
+- follow-up tasks are created for anything deferred
+
+## Review Checklist
 For each meaningful change, verify:
 - usefulness to the real product path
 - clarity of product promise
 - docs updated if needed
 - overpromising risk avoided
 - roadmap remains grounded in verified reality
+- build/deploy or env assumptions are labeled as verified or unverified
 
-## Documentation rules
+## Documentation Rules
 Maintain these files as part of the operating layer:
-- docs/VISION.md
-- docs/ROADMAP.md
-- docs/BACKLOG.md
-- docs/DECISIONS.md
-- docs/METRICS.md
-- docs/MARKETING.md
-- docs/RESEARCH.md
-- docs/DAILY_DIGEST.md
+- `README.md`
+- `docs/VISION.md`
+- `docs/LAUNCH_PLAN.md`
+- `docs/COMPLETION_AUDIT.md`
+- `docs/DEPLOYMENT.md`
+- `docs/ROADMAP.md`
+- `docs/BACKLOG.md`
+- `docs/DECISIONS.md`
+- `docs/METRICS.md`
+- `docs/MARKETING.md`
+- `docs/RESEARCH.md`
+- `docs/DAILY_DIGEST.md`
 
-## Daily digest format
+Other Markdown/text files agents should remember:
+- `.github/pull_request_template.md`
+- `AGENTS.md`
+- `public/robots.txt`
+
+## Daily Digest Format
 Provide a concise digest with:
 - shipped
 - in progress
@@ -85,15 +162,16 @@ Provide a concise digest with:
 - approvals needed
 - recommended next focus
 
-## Priority order
+## Priority Order
 When choosing work, generally prioritize:
 1. repo/deploy verification and active-product rails
 2. revenue-enabling MVP clarity
-3. marketing/distribution leverage
-4. product hardening path
+3. user-facing product hardening
+4. marketing/distribution leverage
 5. documentation cleanup
 
-## Execution style
+## Execution Style
+- Read the relevant code and docs before making product assertions.
 - Do not wait passively if safe work exists.
 - Do not endlessly plan without shipping.
 - Break large goals into smaller bounded tasks.

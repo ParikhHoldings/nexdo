@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import { Inbox } from 'lucide-react'
 import { TaskInput } from '@/components/task-input'
@@ -8,27 +8,40 @@ import { TaskCard } from '@/components/task-card'
 import { DailyBriefing } from '@/components/daily-briefing'
 import { TaskListSkeleton } from '@/components/ui/skeleton'
 import { useTaskStore, useUserStore } from '@/lib/store'
+import { prioritizeTasksHeuristic } from '@/lib/task-intelligence'
 import type { PrioritizedTask } from '@/lib/database.types'
 
 export default function TodayPage() {
-  const { tasks, isLoading } = useTaskStore()
+  const { tasks, isLoading, isAuthenticated } = useTaskStore()
   const { profile } = useUserStore()
   const [prioritization, setPrioritization] = useState<PrioritizedTask[]>([])
   const [isPrioritizing, setIsPrioritizing] = useState(false)
 
   // Filter for today's tasks and incomplete tasks
   const today = new Date().toISOString().split('T')[0]
-  const todayTasks = tasks.filter(
-    (t) =>
-      t.status !== 'done' &&
-      t.status !== 'cancelled' &&
-      (t.due_date === today || !t.due_date)
+  const todayTasks = useMemo(
+    () =>
+      tasks.filter(
+        (t) =>
+          t.status !== 'done' &&
+          t.status !== 'cancelled' &&
+          (t.due_date === today || !t.due_date)
+      ),
+    [tasks, today]
   )
 
   // Fetch prioritization
   useEffect(() => {
     const fetchPrioritization = async () => {
-      if (todayTasks.length === 0) return
+      if (todayTasks.length === 0) {
+        setPrioritization([])
+        return
+      }
+
+      if (!isAuthenticated) {
+        setPrioritization(prioritizeTasksHeuristic(todayTasks))
+        return
+      }
 
       setIsPrioritizing(true)
       try {
@@ -41,16 +54,19 @@ export default function TodayPage() {
         if (response.ok) {
           const data = await response.json()
           setPrioritization(data.tasks || data)
+        } else {
+          setPrioritization(prioritizeTasksHeuristic(todayTasks))
         }
       } catch (error) {
         console.error('Failed to prioritize tasks:', error)
+        setPrioritization(prioritizeTasksHeuristic(todayTasks))
       } finally {
         setIsPrioritizing(false)
       }
     }
 
     fetchPrioritization()
-  }, [tasks.length]) // Re-prioritize when task count changes
+  }, [isAuthenticated, todayTasks])
 
   // Sort tasks by prioritization rank
   const sortedTasks = [...todayTasks].sort((a, b) => {

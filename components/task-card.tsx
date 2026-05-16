@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { forwardRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import {
   Calendar,
@@ -23,7 +23,10 @@ interface TaskCardProps {
   showReasoning?: string
 }
 
-export function TaskCard({ task, showReasoning }: TaskCardProps) {
+export const TaskCard = forwardRef<HTMLDivElement, TaskCardProps>(function TaskCard(
+  { task, showReasoning },
+  ref
+) {
   const [showMenu, setShowMenu] = useState(false)
   const { selectTask, updateTask, deleteTask } = useTaskStore()
 
@@ -47,11 +50,12 @@ export function TaskCard({ task, showReasoning }: TaskCardProps) {
     setShowMenu(false)
   }
 
-  const isExecutable = task.action_type !== 'manual'
+  const isExecutable = ['research', 'draft', 'prep'].includes(task.action_type)
   const isDone = task.status === 'done'
 
   return (
     <motion.div
+      ref={ref}
       layout
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
@@ -215,4 +219,6 @@ export function TaskCard({ task, showReasoning }: TaskCardProps) {
       </div>
     </motion.div>
   )
-}
+})
+
+TaskCard.displayName = 'TaskCard'

@@ -74,7 +74,7 @@ export default function LandingPage() {
           {/* Subhead */}
           <p className="text-xl text-zinc-400 max-w-2xl mx-auto mb-10">
             Nexdo is the AI-native task manager that understands context,
-            prioritizes intelligently, and actually does your tasks.
+            prioritizes intelligently, and helps move bounded work forward.
           </p>
 
           {/* CTAs */}
@@ -192,9 +192,9 @@ export default function LandingPage() {
               },
               {
                 step: '03',
-                title: 'Agent executes',
+                title: 'Agent assists',
                 description:
-                  'For research, drafting, and prep tasks — our agents do the work and deliver results right in the app.',
+                  'For research, drafting, and prep tasks, Nexdo can generate a useful starting point directly in the app.',
                 icon: Zap,
               },
             ].map((item) => {
@@ -261,7 +261,7 @@ export default function LandingPage() {
                 icon: Zap,
                 title: 'Agent Execution',
                 description:
-                  'Research, draft, and prep tasks completed automatically.',
+                  'Research, draft, and prep tasks get bounded AI-generated outputs.',
               },
               {
                 icon: Users,
@@ -273,8 +273,7 @@ export default function LandingPage() {
                 icon: CheckCircle2,
                 title: 'Agent Integrations',
                 description:
-                  'Connect Claude, ChatGPT, and other AI agents to your task layer.',
-                comingSoon: true,
+                  'API-key based task access for MCP-style and ChatGPT Actions workflows.',
               },
             ].map((feature) => {
               const Icon = feature.icon
@@ -288,11 +287,6 @@ export default function LandingPage() {
                   </div>
                   <h3 className="text-lg font-semibold text-zinc-100 mb-2 flex items-center gap-2">
                     {feature.title}
-                    {feature.comingSoon && (
-                      <span className="text-xs bg-zinc-700 text-zinc-400 px-2 py-0.5 rounded-full">
-                        Soon
-                      </span>
-                    )}
                   </h3>
                   <p className="text-sm text-zinc-400">{feature.description}</p>
                 </div>
@@ -321,8 +315,8 @@ export default function LandingPage() {
                 Everyday Users
               </h3>
               <p className="text-zinc-400 mb-6">
-                A beautiful app that feels like magic. Dump your thoughts, and
-                watch them transform into an organized, prioritized action plan.
+                Capture messy work in plain language and turn it into an
+                organized, prioritized action plan.
               </p>
               <ul className="space-y-3">
                 {[
@@ -348,15 +342,15 @@ export default function LandingPage() {
                 AI Power Users
               </h3>
               <p className="text-zinc-400 mb-6">
-                A unified task layer that all your AI agents can write to.
-                Claude, OpenClaw, ChatGPT — they all connect here.
+                A task layer designed for external AI tools to inspect and
+                update through a controlled API surface.
               </p>
               <ul className="space-y-3">
                 {[
                   'API access for agents',
-                  'MCP protocol support (coming)',
-                  'Agent execution pipeline',
-                  'Cross-platform sync',
+                  'MCP-style tool definitions',
+                  'ChatGPT Actions schema',
+                  'Human-readable task state',
                 ].map((item) => (
                   <li key={item} className="flex items-center gap-3 text-sm text-zinc-300">
                     <CheckCircle2 className="h-4 w-4 text-accent flex-shrink-0" />
@@ -396,19 +390,19 @@ export default function LandingPage() {
             {[
               {
                 q: 'How is Nexdo different from other to-do apps?',
-                a: 'Nexdo is AI-native from the ground up. Traditional apps just store tasks — we understand them. Our AI parses context, prioritizes intelligently, and can actually execute certain task types like research and drafting.',
+                a: 'Nexdo is built around structured task context. It parses natural-language capture, helps prioritize the day, and can generate bounded outputs for research, drafting, and prep tasks.',
               },
               {
                 q: 'What are "agent executions"?',
-                a: 'When you mark a task as research, draft, or prep, our AI agents can automatically complete the work. For example, a research task might result in a summary with key findings, sources, and recommended actions.',
+                a: 'When a task is marked as research, draft, or prep, Nexdo can generate a working output such as a summary, email draft, or meeting prep brief. Users should still review and verify important results.',
               },
               {
                 q: 'Can I connect my own AI agents?',
-                a: "We're building MCP (Model Context Protocol) support that will let you connect any compatible AI agent — Claude, ChatGPT, and others — directly to your Nexdo task layer.",
+                a: 'Nexdo includes API-key based MCP-style tools and a ChatGPT Actions OpenAPI surface for task access. These flows still need environment-specific verification before they become a front-door launch claim.',
               },
               {
                 q: 'Is my data secure?',
-                a: 'Absolutely. We use Supabase for database and auth, which provides enterprise-grade security. Your data is encrypted at rest and in transit. We never share or sell your data.',
+                a: 'Nexdo uses Supabase auth, row-level security, and server-side API checks. Security claims should be verified against the production environment before external launch use.',
               },
               {
                 q: 'Can I use Nexdo offline?',
@@ -434,11 +428,11 @@ export default function LandingPage() {
         <div className="max-w-4xl mx-auto text-center">
           <div className="bg-gradient-to-br from-accent/20 to-blue-500/10 border border-accent/20 rounded-2xl p-12">
             <h2 className="text-3xl sm:text-4xl font-bold text-zinc-100 mb-4">
-              Ready to actually get things done?
+              Ready to move tasks forward?
             </h2>
             <p className="text-lg text-zinc-400 mb-8 max-w-2xl mx-auto">
-              Join thousands of users who&apos;ve upgraded their productivity with
-              AI-native task management.
+              Try a task manager built around context, prioritization, and
+              bounded AI assistance.
             </p>
             <Link
               href="/auth/signup"

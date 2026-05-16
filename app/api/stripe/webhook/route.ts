@@ -43,7 +43,6 @@ export async function POST(request: NextRequest) {
   }
 
   const supabaseRaw = await createServiceClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase = supabaseRaw as any
   if (!supabaseRaw) {
     return NextResponse.json({ error: 'Database not configured' }, { status: 500 })

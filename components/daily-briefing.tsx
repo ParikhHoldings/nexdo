@@ -8,12 +8,12 @@ import {
   Clock,
   AlertTriangle,
   Users,
-  ChevronDown,
   ChevronUp,
 } from 'lucide-react'
 import { useBriefingStore, useTaskStore } from '@/lib/store'
 import { BriefingSkeleton } from '@/components/ui/skeleton'
 import { getGreeting } from '@/lib/utils'
+import { generateBriefingHeuristic } from '@/lib/task-intelligence'
 import type { BriefingContent } from '@/lib/database.types'
 
 interface DailyBriefingProps {
@@ -23,12 +23,17 @@ interface DailyBriefingProps {
 export function DailyBriefing({ userName = 'there' }: DailyBriefingProps) {
   const { briefing, isLoading, isDismissed, setBriefing, setLoading, dismiss } =
     useBriefingStore()
-  const { tasks, selectTask } = useTaskStore()
+  const { tasks, selectTask, isAuthenticated } = useTaskStore()
 
   useEffect(() => {
     const fetchBriefing = async () => {
       // Don't fetch if already have briefing or dismissed
       if (briefing || isDismissed) return
+
+      if (!isAuthenticated) {
+        setBriefing(generateBriefingHeuristic(tasks, userName))
+        return
+      }
 
       setLoading(true)
       try {
@@ -41,9 +46,12 @@ export function DailyBriefing({ userName = 'there' }: DailyBriefingProps) {
         if (response.ok) {
           const data = await response.json()
           setBriefing(data)
+        } else {
+          setBriefing(generateBriefingHeuristic(tasks, userName))
         }
       } catch (error) {
         console.error('Failed to fetch briefing:', error)
+        setBriefing(generateBriefingHeuristic(tasks, userName))
       } finally {
         setLoading(false)
       }
@@ -53,7 +61,7 @@ export function DailyBriefing({ userName = 'there' }: DailyBriefingProps) {
     if (tasks.length > 0) {
       fetchBriefing()
     }
-  }, [tasks.length]) // Only re-run when task count changes
+  }, [briefing, isAuthenticated, isDismissed, setBriefing, setLoading, tasks, userName])
 
   const handleTaskClick = (taskId: string) => {
     const task = tasks.find((t) => t.id === taskId)

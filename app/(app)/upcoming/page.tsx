@@ -13,15 +13,22 @@ export default function UpcomingPage() {
   const { tasks, isLoading } = useTaskStore()
 
   // Get upcoming tasks (due in the future, not done)
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
+  const today = useMemo(() => {
+    const date = new Date()
+    date.setHours(0, 0, 0, 0)
+    return date
+  }, [])
 
-  const upcomingTasks = tasks.filter((t) => {
-    if (t.status === 'done' || t.status === 'cancelled') return false
-    if (!t.due_date) return false
-    const dueDate = parseISO(t.due_date)
-    return isAfter(dueDate, today)
-  })
+  const upcomingTasks = useMemo(
+    () =>
+      tasks.filter((t) => {
+        if (t.status === 'done' || t.status === 'cancelled') return false
+        if (!t.due_date) return false
+        const dueDate = parseISO(t.due_date)
+        return isAfter(dueDate, today)
+      }),
+    [tasks, today]
+  )
 
   // Group by date
   const groupedTasks = useMemo(() => {
@@ -57,7 +64,7 @@ export default function UpcomingPage() {
     })
 
     return groups
-  }, [upcomingTasks])
+  }, [today, upcomingTasks])
 
   // Get formatted date label
   const getDateLabel = (dateStr: string): string => {

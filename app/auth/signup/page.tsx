@@ -93,8 +93,8 @@ export default function SignupPage() {
               Start getting things done
             </h2>
             <p className="mt-4 text-xl text-zinc-400">
-              The last to-do app you&apos;ll ever need — because this one actually
-              does your tasks.
+              Capture work in plain language, keep the context, and get AI help
+              on prioritization, drafting, research, and prep.
             </p>
           </div>
 

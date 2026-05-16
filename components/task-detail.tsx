@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 import { cn, formatRelativeDate, getPriorityBgColor } from '@/lib/utils'
 import { useTaskStore } from '@/lib/store'
+import { executeTaskHeuristic } from '@/lib/task-intelligence'
 import { Button } from '@/components/ui/button'
 import { Badge, TagBadge, PersonBadge } from '@/components/ui/badge'
 import type { Task, ResearchOutput, DraftOutput, PrepOutput } from '@/lib/database.types'
@@ -160,7 +161,7 @@ function AgentResult({ output, actionType }: AgentResultProps) {
 }
 
 export function TaskDetail() {
-  const { selectedTask, isDetailOpen, closeDetail, updateTask, deleteTask } =
+  const { selectedTask, isDetailOpen, closeDetail, updateTask, deleteTask, isAuthenticated } =
     useTaskStore()
   const [isExecuting, setIsExecuting] = useState(false)
   const [executionError, setExecutionError] = useState<string | null>(null)
@@ -168,12 +169,25 @@ export function TaskDetail() {
   if (!selectedTask) return null
 
   const task = selectedTask
-  const isExecutable = task.action_type !== 'manual'
+  const isExecutable = ['research', 'draft', 'prep'].includes(task.action_type)
   const hasAgentOutput = task.agent_output !== null
 
   const handleExecute = async () => {
     setIsExecuting(true)
     setExecutionError(null)
+
+    const saveAgentOutput = (output: AgentOutput) => {
+      updateTask(task.id, { agent_output: output as unknown as Task['agent_output'] })
+    }
+
+    if (!isAuthenticated) {
+      const fallback = executeTaskHeuristic(task)
+      if (fallback) {
+        saveAgentOutput(fallback)
+        setIsExecuting(false)
+        return
+      }
+    }
 
     try {
       const response = await fetch('/api/agent/execute', {
@@ -183,12 +197,26 @@ export function TaskDetail() {
       })
 
       if (!response.ok) {
+        if (response.status === 401 || response.status === 503) {
+          const fallback = executeTaskHeuristic(task)
+          if (fallback) {
+            saveAgentOutput(fallback)
+            return
+          }
+        }
         throw new Error('Execution failed')
       }
 
       const result = await response.json()
       updateTask(task.id, { agent_output: result })
     } catch {
+      if (!isAuthenticated) {
+        const fallback = executeTaskHeuristic(task)
+        if (fallback) {
+          saveAgentOutput(fallback)
+          return
+        }
+      }
       setExecutionError('Failed to execute task. Please try again.')
     } finally {
       setIsExecuting(false)

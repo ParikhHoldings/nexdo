@@ -36,8 +36,6 @@ export async function PATCH(
     } else if (updates.status && updates.status !== 'done') {
       updates.completed_at = null
     }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any
     const { data: task, error } = await db
       .from('tasks')
@@ -96,8 +94,6 @@ export async function DELETE(
 
   try {
     const { id } = await params
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any
     const { error } = await db
       .from('tasks')

@@ -171,8 +171,8 @@ function LoginForm() {
             Your to-do list just learned to think.
           </h2>
           <p className="text-xl text-zinc-400">
-            Nexdo understands context, prioritizes intelligently, and actually
-            does your tasks. Welcome to AI-native productivity.
+            Nexdo keeps task context visible, prioritizes intelligently, and
+            helps with bounded research, drafting, and prep work.
           </p>
           <div className="flex items-center gap-4 pt-4">
             <div className="flex -space-x-2">
@@ -184,7 +184,7 @@ function LoginForm() {
               ))}
             </div>
             <p className="text-sm text-zinc-400">
-              Join 2,000+ power users
+              Built for founders, operators, and AI power users
             </p>
           </div>
         </div>

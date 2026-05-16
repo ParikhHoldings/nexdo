@@ -4,14 +4,6 @@ const nextConfig = {
   // Enable strict mode for better React practices
   reactStrictMode: true,
 
-  // Allow build to succeed with TS errors (fix incrementally post-MVP)
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-
   // Image optimization domains (add Supabase storage when needed)
   images: {
     remotePatterns: [

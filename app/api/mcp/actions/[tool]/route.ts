@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { MCP_TOOLS, executeTool, validateApiKey } from '@/lib/mcp-tools'
 
+const ACTION_CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+}
+
 // Extract Bearer token from Authorization header
 function extractBearerToken(request: NextRequest): string | null {
   const auth = request.headers.get('authorization')
@@ -20,13 +26,16 @@ export async function POST(
   if (!token) {
     return NextResponse.json(
       { error: 'Authorization header with Bearer token required' },
-      { status: 401 }
+      { status: 401, headers: ACTION_CORS_HEADERS }
     )
   }
 
   const auth = await validateApiKey(token)
   if (!auth) {
-    return NextResponse.json({ error: 'Invalid API key' }, { status: 401 })
+    return NextResponse.json(
+      { error: 'Invalid API key' },
+      { status: 401, headers: ACTION_CORS_HEADERS }
+    )
   }
 
   // Validate tool exists
@@ -34,7 +43,7 @@ export async function POST(
   if (!tool) {
     return NextResponse.json(
       { error: `Unknown tool: ${toolName}` },
-      { status: 404 }
+      { status: 404, headers: ACTION_CORS_HEADERS }
     )
   }
 
@@ -46,7 +55,10 @@ export async function POST(
       args = JSON.parse(body)
     }
   } catch {
-    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+    return NextResponse.json(
+      { error: 'Invalid JSON' },
+      { status: 400, headers: ACTION_CORS_HEADERS }
+    )
   }
 
   // Execute tool
@@ -56,7 +68,7 @@ export async function POST(
     if (result.isError) {
       return NextResponse.json(
         { error: result.content[0]?.text || 'Unknown error' },
-        { status: 400 }
+        { status: 400, headers: ACTION_CORS_HEADERS }
       )
     }
 
@@ -65,19 +77,28 @@ export async function POST(
       const data = JSON.parse(result.content[0]?.text || '{}')
       // Wrap single objects in appropriate key
       if (toolName === 'list_tasks' || toolName === 'search_tasks') {
-        return NextResponse.json({ tasks: Array.isArray(data) ? data : [] })
+        return NextResponse.json(
+          { tasks: Array.isArray(data) ? data : [] },
+          { headers: ACTION_CORS_HEADERS }
+        )
       } else if (toolName === 'get_briefing') {
-        return NextResponse.json(data)
+        return NextResponse.json(data, { headers: ACTION_CORS_HEADERS })
       } else {
-        return NextResponse.json({ task: data })
+        return NextResponse.json({ task: data }, { headers: ACTION_CORS_HEADERS })
       }
     } catch {
       // Return raw text if not JSON
-      return NextResponse.json({ result: result.content[0]?.text })
+      return NextResponse.json(
+        { result: result.content[0]?.text },
+        { headers: ACTION_CORS_HEADERS }
+      )
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error'
-    return NextResponse.json({ error: message }, { status: 500 })
+    return NextResponse.json(
+      { error: message },
+      { status: 500, headers: ACTION_CORS_HEADERS }
+    )
   }
 }
 
@@ -86,9 +107,8 @@ export async function OPTIONS() {
   return new NextResponse(null, {
     status: 204,
     headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      ...ACTION_CORS_HEADERS,
+      'Access-Control-Max-Age': '86400',
     },
   })
 }

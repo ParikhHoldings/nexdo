@@ -16,6 +16,14 @@ import type {
   PrepOutput,
   Task,
 } from './database.types'
+import {
+  executeDraftHeuristic,
+  executePrepHeuristic,
+  executeResearchHeuristic,
+  generateBriefingHeuristic,
+  parseTaskHeuristic,
+  prioritizeTasksHeuristic,
+} from './task-intelligence'
 
 function getOpenAIClient(): OpenAI | null {
   const apiKey = process.env.OPENAI_API_KEY
@@ -28,18 +36,7 @@ function getOpenAIClient(): OpenAI | null {
 export async function parseTaskInput(rawInput: string): Promise<ParsedTask | null> {
   const openai = getOpenAIClient()
   if (!openai) {
-    // Return a simple parsed task when OpenAI is not configured
-    return {
-      title: rawInput.slice(0, 80),
-      due_date: null,
-      priority: 'medium',
-      context: null,
-      people: [],
-      tags: [],
-      action_type: 'manual',
-      estimated_minutes: null,
-      energy_level: null,
-    }
+    return parseTaskHeuristic(rawInput)
   }
 
   try {
@@ -66,13 +63,7 @@ export async function parseTaskInput(rawInput: string): Promise<ParsedTask | nul
 export async function prioritizeTasks(tasks: Task[]): Promise<PrioritizedTask[] | null> {
   const openai = getOpenAIClient()
   if (!openai) {
-    // Return tasks in their current order with default time blocks
-    return tasks.map((task, index) => ({
-      task_id: task.id,
-      rank: index + 1,
-      reasoning: 'AI prioritization unavailable',
-      time_block: 'morning_deep' as const,
-    }))
+    return prioritizeTasksHeuristic(tasks)
   }
 
   try {
@@ -115,38 +106,7 @@ export async function generateBriefing(
 ): Promise<BriefingContent | null> {
   const openai = getOpenAIClient()
   if (!openai) {
-    // Return a simple briefing when OpenAI is not configured
-    const today = new Date()
-    const hour = today.getHours()
-    const greeting =
-      hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
-
-    return {
-      greeting: `${greeting}, ${userName || 'there'}!`,
-      top_priorities: tasks.slice(0, 3).map((t) => ({
-        task_id: t.id,
-        title: t.title,
-        reasoning: 'Based on task order',
-      })),
-      overdue: [],
-      quick_wins: tasks
-        .filter((t) => t.estimated_minutes && t.estimated_minutes <= 15)
-        .slice(0, 3)
-        .map((t) => ({
-          task_id: t.id,
-          title: t.title,
-          estimated_minutes: t.estimated_minutes || 15,
-        })),
-      someone_waiting: tasks
-        .filter((t) => t.people && t.people.length > 0)
-        .slice(0, 3)
-        .map((t) => ({
-          task_id: t.id,
-          title: t.title,
-          person: t.people?.[0] || '',
-        })),
-      summary: `You have ${tasks.length} tasks to focus on today.`,
-    }
+    return generateBriefingHeuristic(tasks, userName)
   }
 
   try {
@@ -189,7 +149,7 @@ export async function executeResearch(
   task: Task
 ): Promise<ResearchOutput | null> {
   const openai = getOpenAIClient()
-  if (!openai) return null
+  if (!openai) return executeResearchHeuristic(task)
 
   try {
     const completion = await openai.chat.completions.create({
@@ -217,7 +177,7 @@ export async function executeResearch(
 
 export async function executeDraft(task: Task): Promise<DraftOutput | null> {
   const openai = getOpenAIClient()
-  if (!openai) return null
+  if (!openai) return executeDraftHeuristic(task)
 
   try {
     const completion = await openai.chat.completions.create({
@@ -245,7 +205,7 @@ export async function executeDraft(task: Task): Promise<DraftOutput | null> {
 
 export async function executePrep(task: Task): Promise<PrepOutput | null> {
   const openai = getOpenAIClient()
-  if (!openai) return null
+  if (!openai) return executePrepHeuristic(task)
 
   try {
     const completion = await openai.chat.completions.create({

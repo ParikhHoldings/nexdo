@@ -28,8 +28,6 @@ export async function consumeRateLimit(
   if (!supabase) {
     return { allowed: true, remaining: config.limit, resetAt: null }
   }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any).rpc('consume_rate_limit', {
     p_user_id: userId,
     p_bucket: config.bucket,

@@ -26,7 +26,6 @@ export async function getUsage(userId: string): Promise<{
 
   // Use rpc to reset-then-read atomically; increment_usage with quantity=0
   // performs the month-boundary reset without consuming budget.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any).rpc('increment_usage', {
     p_user_id: userId,
     p_event_type: 'task_create', // type is required but quantity=0 is a no-op counter-wise
@@ -35,7 +34,6 @@ export async function getUsage(userId: string): Promise<{
 
   if (error || !data || !data[0]) {
     // Fall back to a direct read if RPC isn't available (dev/migration race).
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: profile } = await (supabase as any)
       .from('profiles')
       .select('subscription_tier, task_count_this_month, agent_executions_this_month')
@@ -48,8 +46,6 @@ export async function getUsage(userId: string): Promise<{
       agent_executions_this_month: profile.agent_executions_this_month ?? 0,
     }
   }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: profile } = await (supabase as any)
     .from('profiles')
     .select('subscription_tier')
@@ -117,8 +113,6 @@ export async function consumeQuota(
   if (!supabase) {
     return { ...pre, allowed: false, reason: 'Service unavailable' }
   }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await (supabase as any).rpc('increment_usage', {
     p_user_id: userId,
     p_event_type: kind,

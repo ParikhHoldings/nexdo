@@ -23,8 +23,6 @@ export async function POST() {
   try {
     // Generate new API key with "nxd_" prefix
     const newKey = 'nxd_' + crypto.randomUUID().replace(/-/g, '')
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any
     const { error } = await db
       .from('profiles')

@@ -2,37 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Cabinet Grotesk font - loaded via local files or Fontsource */
-@font-face {
-  font-family: 'Cabinet Grotesk';
-  src: url('/fonts/CabinetGrotesk-Variable.woff2') format('woff2');
-  font-weight: 100 900;
-  font-display: swap;
-  font-style: normal;
-}
-
-/* Fallback if variable font isn't available */
-@font-face {
-  font-family: 'Cabinet Grotesk';
-  src: local('Cabinet Grotesk'), local('CabinetGrotesk-Regular');
-  font-weight: 400;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Cabinet Grotesk';
-  src: local('Cabinet Grotesk Bold'), local('CabinetGrotesk-Bold');
-  font-weight: 700;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Cabinet Grotesk';
-  src: local('Cabinet Grotesk Medium'), local('CabinetGrotesk-Medium');
-  font-weight: 500;
-  font-display: swap;
-}
-
 @layer base {
   :root {
     --background: 250 250 250;
@@ -67,7 +36,7 @@
 
   body {
     @apply bg-zinc-950 text-zinc-50 antialiased;
-    font-family: 'Cabinet Grotesk', system-ui, -apple-system, sans-serif;
+    font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     font-feature-settings: 'cv01', 'cv02', 'cv03', 'cv04', 'cv11';
   }
 

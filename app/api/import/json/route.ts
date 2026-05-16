@@ -60,7 +60,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
     const userId = user.id
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const dbClient = supabase as any
 
     // Parse JSON export
