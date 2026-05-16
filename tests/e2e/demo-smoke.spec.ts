@@ -118,6 +118,71 @@ test('demo file import adds tasks without configured auth', async ({ page }) => 
   ).toBeVisible()
 })
 
+test('demo workspace supports all, upcoming, and done lifecycle', async ({
+  page,
+}) => {
+  await page.goto('/all')
+
+  await expect(page.getByRole('heading', { name: 'All Tasks' })).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Reply to customer feedback email' })
+  ).toBeVisible()
+
+  await page.getByPlaceholder('Search tasks...').fill('customer')
+  await expect(
+    page.getByRole('heading', { name: 'Reply to customer feedback email' })
+  ).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Review Q4 marketing proposal' })
+  ).toHaveCount(0)
+  await expect(page.getByText('Showing 1 task (filtered from 5)')).toBeVisible()
+
+  await page.getByPlaceholder('Search tasks...').fill('')
+  await page.getByRole('button', { name: 'Filters' }).click()
+  await page.getByRole('button', { name: 'High' }).click()
+  await expect(page.getByText('Showing 2 tasks (filtered from 5)')).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Reply to customer feedback email' })
+  ).toBeVisible()
+
+  await page.getByRole('link', { name: 'Upcoming' }).click()
+  await expect(page.getByRole('heading', { name: 'Upcoming' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /Tomorrow/ })).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Review Q4 marketing proposal' })
+  ).toBeVisible()
+
+  await page.getByRole('link', { name: 'All Tasks' }).click()
+  await page
+    .getByRole('checkbox', {
+      name: 'Mark "Reply to customer feedback email" complete',
+    })
+    .locator('xpath=ancestor::label')
+    .click()
+  await expect(
+    page.getByRole('heading', { name: 'Reply to customer feedback email' })
+  ).toHaveCount(0)
+
+  await page.getByRole('link', { name: 'Done' }).click()
+  await expect(page.getByRole('heading', { name: 'Done' })).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Reply to customer feedback email' })
+  ).toBeVisible()
+
+  await page.reload()
+  await expect(
+    page.getByRole('heading', { name: 'Reply to customer feedback email' })
+  ).toBeVisible()
+
+  await page.getByRole('button', { name: 'Clear all' }).click()
+  await expect(page.getByRole('dialog')).toBeVisible()
+  await page.getByRole('button', { name: 'Delete all' }).click()
+  await expect(page.getByText('Nothing completed yet')).toBeVisible()
+
+  await page.reload()
+  await expect(page.getByText('Nothing completed yet')).toBeVisible()
+})
+
 test('demo settings does not allow free-plan API key generation', async ({ page }) => {
   await page.goto('/settings')
   await page.getByRole('button', { name: 'API' }).click()

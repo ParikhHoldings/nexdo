@@ -55,6 +55,7 @@
 - Removed the annual pricing toggle because checkout currently supports only configured monthly plan prices.
 - Hardened Stripe checkout and webhook entitlement handling so plan changes stay tied to server-known price IDs.
 - Added Playwright smoke coverage for the logged-out core product path.
+- Added Playwright smoke coverage for All Tasks search/filtering, Upcoming grouping, and Done clear/reload lifecycle in demo mode.
 - Added Playwright smoke coverage for OpenAPI action schema, MCP/action auth failures, and action CORS headers.
 - Made the ChatGPT Actions OpenAPI spec emit the serving request origin when `NEXT_PUBLIC_APP_URL` is not configured.
 - Added GitHub Actions verification for install, lint, typecheck, build, and Playwright smoke testing.

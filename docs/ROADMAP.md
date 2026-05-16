@@ -7,6 +7,7 @@
 - Local deterministic fallbacks now support demo-mode parsing, prioritization, briefing, and bounded agent outputs when provider env is missing.
 - Strict build rails are restored so lint and TypeScript errors block production builds.
 - A Playwright smoke test covers the core logged-out demo path.
+- Playwright now covers demo workspace navigation across All Tasks search/filtering, Upcoming grouping, and Done task lifecycle.
 - Playwright smoke tests cover OpenAPI action schema availability, MCP/action auth failures, and action CORS headers.
 - GitHub Actions verification exists for install, lint, typecheck, build, and Playwright smoke testing.
 - PR #3 Web rails passed in GitHub Actions, and the Vercel preview deployment completed.

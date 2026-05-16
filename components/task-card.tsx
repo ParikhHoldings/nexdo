@@ -73,7 +73,15 @@ export const TaskCard = forwardRef<HTMLDivElement, TaskCardProps>(function TaskC
         <div className="flex items-start gap-3">
           {/* Checkbox */}
           <div className="no-detail-trigger pt-0.5">
-            <Checkbox checked={isDone} onChange={handleComplete} />
+            <Checkbox
+              checked={isDone}
+              onChange={handleComplete}
+              aria-label={
+                isDone
+                  ? `Mark "${task.title}" active`
+                  : `Mark "${task.title}" complete`
+              }
+            />
           </div>
 
           {/* Content */}
@@ -165,6 +173,7 @@ export const TaskCard = forwardRef<HTMLDivElement, TaskCardProps>(function TaskC
               <button
                 className="p-1.5 hover:bg-zinc-700 rounded-md transition-colors"
                 title="Run agent"
+                aria-label={`Run agent for "${task.title}"`}
                 onClick={(e) => {
                   e.stopPropagation()
                   selectTask(task)
@@ -177,6 +186,7 @@ export const TaskCard = forwardRef<HTMLDivElement, TaskCardProps>(function TaskC
             <div className="relative">
               <button
                 className="p-1.5 hover:bg-zinc-700 rounded-md transition-colors"
+                aria-label={`Open task menu for "${task.title}"`}
                 onClick={(e) => {
                   e.stopPropagation()
                   setShowMenu(!showMenu)

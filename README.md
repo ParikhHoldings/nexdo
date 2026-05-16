@@ -24,7 +24,7 @@ Last checked on 2026-05-16:
 - `npm run lint` passed
 - `npm run typecheck` passed
 - `npm run build` passed
-- `npm run test:e2e` passed for the logged-out `/today` demo flow, demo task reload persistence, and MCP/OpenAPI/action auth smoke tests
+- `npm run test:e2e` passed for the logged-out `/today` demo flow, All Tasks/Upcoming/Done demo workspace lifecycle, demo task reload persistence, and MCP/OpenAPI/action auth smoke tests
 - PR #3 Web rails passed in GitHub Actions
 - PR #3 Vercel preview deployment completed
 

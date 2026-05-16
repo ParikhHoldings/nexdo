@@ -21,6 +21,7 @@ Make Nexdo a credible, launchable early-access product by Monday, 2026-05-18, wi
 | Make front-end usable for humans today | Logged-out `/today` demo flow supports task capture, structured parsing, briefing, prioritization, task detail, and bounded agent output | Locally verified |
 | Keep demo briefing aligned with task changes | Logged-out daily briefing now refreshes from local task state after demo task capture/import; Playwright verifies the active-task count updates after adding a task | Locally verified |
 | Keep demo task changes across reloads | Logged-out task add/edit/delete/complete flows now persist demo task state to localStorage; Playwright verifies a new demo task survives reload and new IDs remain unique afterward | Locally verified |
+| Verify demo workspace navigation and task lifecycle | Playwright now covers `/all` search/filtering, `/upcoming` date grouping, completing a task into `/done`, persistence after reload, and clearing completed demo tasks | Locally verified |
 | Keep demo profile settings functional | Logged-out/no-auth profile changes save to localStorage instead of failing against the authenticated profile API; Playwright verifies demo name/timezone persist across reloads | Locally verified |
 | Keep demo users out of authenticated UI state | Demo profiles no longer mark `useUserStore` authenticated, preventing signed-in-only controls such as sign-out from appearing in no-auth demo mode; Playwright covers the absence of sign-out in demo settings | Locally verified |
 | Make import front-end usable in demo mode | Logged-out file imports now parse CSV, JSON, and ICS client-side instead of hitting authenticated import APIs; Playwright verifies a CSV import appears in the task list without configured auth | Locally verified |
@@ -70,7 +71,7 @@ Make Nexdo a credible, launchable early-access product by Monday, 2026-05-18, wi
 - `npm run lint`
 - `npm run typecheck`
 - `npm run build`
-- `npm run test:e2e` including logged-out task capture/edit/reload persistence/agent output, demo briefing refresh, auth guardrails, MCP/OpenAPI/Stripe guardrails, demo CSV file import, login demo-mode entry, free-plan API-key UI gating, and settings tab deep links
+- `npm run test:e2e` including logged-out task capture/edit/reload persistence/agent output, demo briefing refresh, All Tasks search/filtering, Upcoming grouping, Done clear/reload lifecycle, auth guardrails, MCP/OpenAPI/Stripe guardrails, demo CSV file import, login demo-mode entry, free-plan API-key UI gating, and settings tab deep links
 - `npm audit --audit-level=moderate`
 - `git diff --check`
 - PR #3 GitHub Actions Web rails
