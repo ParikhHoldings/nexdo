@@ -42,7 +42,7 @@ const checks = [
     vars: [
       {
         name: 'NEXT_PUBLIC_SUPABASE_URL',
-        validate: (value) => isUrl(value) && !value.includes('your-project'),
+        validate: (value) => isUrl(value) && hasNoPlaceholderRisk(value),
       },
       {
         name: 'NEXT_PUBLIC_SUPABASE_ANON_KEY',
@@ -93,7 +93,8 @@ const checks = [
     vars: [
       {
         name: 'NEXT_PUBLIC_APP_URL',
-        validate: (value) => isUrl(value) && !value.endsWith('/'),
+        validate: (value) =>
+          isUrl(value) && hasNoPlaceholderRisk(value) && !value.endsWith('/'),
       },
     ],
   },
@@ -111,10 +112,18 @@ function isUrl(value) {
 
 function isRealSecret(value) {
   if (!value) return false
+  return value.length >= 12 && hasNoPlaceholderRisk(value)
+}
+
+function hasNoPlaceholderRisk(value) {
+  if (!value) return false
   const lower = value.toLowerCase()
   return (
-    value.length >= 12 &&
+    !lower.includes('placeholder') &&
     !lower.includes('your-') &&
+    !lower.includes('your_') &&
+    !lower.includes('changeme') &&
+    !lower.includes('todo') &&
     !lower.includes('xxx') &&
     !lower.includes('replace') &&
     !lower.includes('example')

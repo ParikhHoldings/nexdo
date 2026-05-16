@@ -100,6 +100,7 @@ Use `.env.local.example` as the contract:
 - App origin: `NEXT_PUBLIC_APP_URL`
 
 Never invent environment truth. Confirm configured values exist before treating auth, AI, billing, imports, MCP, or production URLs as working.
+`NEXDO_API_KEY` and `NEXDO_READONLY_API_KEY` are smoke-only variables for `npm run smoke:mcp`; they are not app runtime requirements.
 
 ## General Operating Rules
 - Operate proactively.

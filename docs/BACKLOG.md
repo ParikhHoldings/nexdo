@@ -5,6 +5,7 @@
 - added a project README and Monday launch plan
 - added `docs/COMPLETION_AUDIT.md` to map the active goal to evidence and remaining gaps
 - added deployment rails and an environment preflight verifier
+- aligned the env verifier with runtime placeholder-risk checks and documented smoke-only MCP API-key variables
 - made Supabase client, server, middleware, and login demo-mode checks reject placeholder anon/service keys, not only placeholder URLs
 - added a Supabase provider smoke script for schema, auth/profile trigger, RLS task CRUD, public isolation, agent audit verification, quota increments, quota no-op behavior, and rate-limit allow/block behavior
 - added an OpenAI provider smoke script for JSON-mode parse, prioritization, briefing, and prep execution checks

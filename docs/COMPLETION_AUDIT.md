@@ -40,6 +40,7 @@ Make Nexdo a credible, launchable early-access product by Monday, 2026-05-18, wi
 | Tighten public copy | `app/(marketing)/page.tsx`, auth pages, metadata, docs guardrails | Draft tightened; Quill/founder approval still required before public use |
 | Remove dependency audit blocker | Next.js 16, ESLint 9 flat config, PostCSS override; `npm audit --audit-level=moderate` reports 0 vulnerabilities | Done |
 | Verify deploy target and production env | `npm run verify:env` was run on 2026-05-16 and failed because `.env.local` is absent; no production env or deploy target credentials/config were exercised in this pass | Missing |
+| Keep env verification aligned with runtime placeholder rules | `scripts/verify-env.mjs` rejects common placeholder fragments across URL and secret values; `.env.local.example` documents smoke-only MCP API-key variables separately from deployed app env | Done |
 | Verify preview deploy rail | PR #3 Vercel preview deployment completed | Done |
 | Verify Supabase migrations/auth/RLS/task CRUD against real project | Migrations and code exist, but real project smoke test was not run | Missing |
 | Provide a repeatable Supabase smoke command | `npm run smoke:supabase` checks schema columns; `npm run smoke:supabase -- --write` creates/deletes a smoke auth user, verifies profile trigger, allowed profile reads/edits, denied sensitive profile reads/edits, task CRUD through RLS, public RLS isolation, audit-event access, quota increments, quota no-op behavior, and rate-limit allow/block behavior | Done |

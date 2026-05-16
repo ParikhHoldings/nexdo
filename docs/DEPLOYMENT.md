@@ -30,6 +30,11 @@ Required groups:
 
 The verifier only checks presence, shape, and placeholder risk. It does not prove provider connectivity.
 
+The verifier intentionally rejects common placeholder fragments such as
+`placeholder`, `your-`, `xxx`, `replace`, `example`, `todo`, and `changeme`.
+Use a copy of `.env.local.example` with real values instead of editing the
+example file directly.
+
 ## Provider smoke tests still required
 - Supabase: apply migrations to a real project, create a user, verify profile creation, RLS, task CRUD, import quota enforcement, hashed API-key storage, API key scope persistence and rotation rate limits, profile column read/update grants, `agent_action_events` audit writes, quota no-op behavior, and service-role RPCs.
 - OpenAI: verify parse, prioritization, briefing, and owned-task research/draft/prep execution with real credentials, server-side output persistence, quota use, and rate-limit behavior.
@@ -41,6 +46,10 @@ Read-only MCP smoke:
 ```bash
 NEXDO_API_KEY=nxd_... npm run smoke:mcp -- --url=https://your-deploy.example
 ```
+
+`NEXDO_API_KEY` and `NEXDO_READONLY_API_KEY` are smoke-only shell variables.
+They do not need to be configured in Vercel or in `.env.local` for the app to
+run.
 
 Optional scoped-key smoke. Provide a key with only `tasks:read` and `briefing:read`
 to verify write tools are hidden from `tools/list` and rejected with 403:
