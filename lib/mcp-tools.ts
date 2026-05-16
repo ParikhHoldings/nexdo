@@ -69,7 +69,8 @@ export const MCP_TOOLS: MCPTool[] = [
         },
         external_ref: {
           type: 'string',
-          description: 'Optional idempotency/reference id from the calling agent system',
+          description:
+            'Optional idempotency/reference id from the calling agent system. Requires source_agent_id; replays with the same source_agent_id and external_ref return the existing task.',
         },
         agent_metadata: {
           type: 'object',
@@ -216,6 +217,46 @@ function formatTaskForResponse(task: Task): Record<string, unknown> {
   }
 }
 
+async function findTaskByExternalRef(
+  supabase: any,
+  userId: string,
+  sourceAgentId: string,
+  externalRef: string
+): Promise<Task | null> {
+  const { data, error } = await supabase
+    .from('tasks')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('source_agent_id', sourceAgentId)
+    .eq('external_ref', externalRef)
+    .limit(1)
+    .maybeSingle()
+
+  if (error) return null
+  return data || null
+}
+
+function taskResponse(
+  task: Task,
+  options: { idempotentReplay?: boolean } = {}
+): ToolResult {
+  return {
+    content: [
+      {
+        type: 'text',
+        text: JSON.stringify(
+          {
+            ...formatTaskForResponse(task),
+            idempotent_replay: options.idempotentReplay || false,
+          },
+          null,
+          2
+        ),
+      },
+    ],
+  }
+}
+
 function optionalString(value: unknown): string | null {
   return typeof value === 'string' && value.trim() ? value.trim() : null
 }
@@ -328,6 +369,31 @@ const createTask: ToolHandler = async (args, userId) => {
   }
 
   const sourceAgentId = optionalString(args.source_agent_id)
+  const externalRef = optionalString(args.external_ref)
+
+  if (externalRef && !sourceAgentId) {
+    return {
+      content: [
+        {
+          type: 'text',
+          text: 'Error: source_agent_id is required when external_ref is provided',
+        },
+      ],
+      isError: true,
+    }
+  }
+
+  if (externalRef && sourceAgentId) {
+    const existingTask = await findTaskByExternalRef(
+      supabase,
+      userId,
+      sourceAgentId,
+      externalRef
+    )
+    if (existingTask) {
+      return taskResponse(existingTask, { idempotentReplay: true })
+    }
+  }
 
   // Parse the natural language input
   const parsed = await parseTaskInput(input)
@@ -356,7 +422,7 @@ const createTask: ToolHandler = async (args, userId) => {
       status: 'todo',
       source: sourceAgentId ? 'agent' : 'api',
       source_agent_id: sourceAgentId,
-      external_ref: optionalString(args.external_ref),
+      external_ref: externalRef,
       ingestion_intent: 'create',
       agent_metadata: optionalMetadata(args.agent_metadata),
     })
@@ -364,20 +430,25 @@ const createTask: ToolHandler = async (args, userId) => {
     .single()
 
   if (error) {
+    if (externalRef && sourceAgentId && error.code === '23505') {
+      const existingTask = await findTaskByExternalRef(
+        supabase,
+        userId,
+        sourceAgentId,
+        externalRef
+      )
+      if (existingTask) {
+        return taskResponse(existingTask, { idempotentReplay: true })
+      }
+    }
+
     return {
       content: [{ type: 'text', text: `Error: ${error.message}` }],
       isError: true,
     }
   }
 
-  return {
-    content: [
-      {
-        type: 'text',
-        text: JSON.stringify(formatTaskForResponse(task), null, 2),
-      },
-    ],
-  }
+  return taskResponse(task)
 }
 
 const completeTask: ToolHandler = async (args, userId) => {

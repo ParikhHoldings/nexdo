@@ -99,13 +99,33 @@ async function main() {
 
   if (allowWrite) {
     const title = `MCP smoke test ${new Date().toISOString()}`
+    const sourceAgentId = 'nexdo-smoke'
+    const externalRef = `mcp-smoke-${Date.now()}`
     const createdResult = await rpc('tools/call', {
       name: 'create_task',
-      arguments: { input: `${title} today high priority` },
+      arguments: {
+        input: `${title} today high priority`,
+        source_agent_id: sourceAgentId,
+        external_ref: externalRef,
+      },
     })
     const created = parseToolContent(createdResult)
     if (!created?.id) throw new Error('create_task did not return a task id.')
     console.log('ok create_task')
+
+    const replayResult = await rpc('tools/call', {
+      name: 'create_task',
+      arguments: {
+        input: `${title} today high priority`,
+        source_agent_id: sourceAgentId,
+        external_ref: externalRef,
+      },
+    })
+    const replayed = parseToolContent(replayResult)
+    if (replayed?.id !== created.id || replayed?.idempotent_replay !== true) {
+      throw new Error('create_task idempotency replay did not return the original task.')
+    }
+    console.log('ok create_task idempotency')
 
     const completedResult = await rpc('tools/call', {
       name: 'complete_task',

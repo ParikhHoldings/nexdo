@@ -99,7 +99,8 @@ const openApiSpec = {
                   },
                   external_ref: {
                     type: 'string',
-                    description: 'Optional idempotency/reference id from the calling agent system',
+                    description:
+                      'Optional idempotency/reference id from the calling agent system. Requires source_agent_id; replays with the same source_agent_id and external_ref return the existing task.',
                   },
                   agent_metadata: {
                     type: 'object',
@@ -433,6 +434,7 @@ const openApiSpec = {
           estimated_minutes: { type: 'integer', nullable: true },
           source_agent_id: { type: 'string', nullable: true },
           external_ref: { type: 'string', nullable: true },
+          idempotent_replay: { type: 'boolean' },
           ingestion_intent: {
             type: 'string',
             enum: ['create', 'update', 'complete', 'auto'],

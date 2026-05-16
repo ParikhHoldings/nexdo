@@ -44,6 +44,12 @@ create index if not exists agent_action_events_user_created_idx
 create index if not exists agent_action_events_user_tool_idx
   on agent_action_events(user_id, tool_name, created_at desc);
 
+drop index if exists tasks_user_agent_external_ref_unique_idx;
+create unique index tasks_user_agent_external_ref_unique_idx
+  on tasks(user_id, source_agent_id, external_ref)
+  where source_agent_id is not null
+    and external_ref is not null;
+
 alter table agent_action_events enable row level security;
 do $$
 begin

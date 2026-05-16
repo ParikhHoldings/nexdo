@@ -25,6 +25,7 @@ The product promise should be grounded in what the code actually supports:
 - imports from Todoist plus CSV, ICS, JSON/Trello/Things-style sources, with some UI cards for future OAuth sources
 - API key based MCP/ChatGPT Actions interop for listing, creating, completing, updating, searching, and briefing tasks
 - scoped API-key permissions and an agent action audit table/migration for MCP/API-key calls
+- idempotent agent task creation when callers provide `source_agent_id` plus `external_ref`
 - Stripe-backed plan surfaces, quotas, and rate-limit scaffolding
 
 Do not claim verified production readiness until build, lint, environment, database migrations, auth, Stripe, OpenAI, MCP, and deployment target have been checked in the current environment.
@@ -41,7 +42,7 @@ Current PR verification from 2026-05-16:
 - PR #3 Web rails passed in GitHub Actions
 - PR #3 Vercel preview deployment completed
 
-Production environment, Supabase migrations, OpenAI provider calls, Stripe test-mode flows, scoped MCP/API-key execution, agent audit writes, and deployment rails remain unverified in this pass.
+Production environment, Supabase migrations, OpenAI provider calls, Stripe test-mode flows, scoped MCP/API-key execution, idempotency replay against real task data, agent audit writes, and deployment rails remain unverified in this pass.
 
 ## ICP And Positioning
 - Primary ICP: founders, operators, and AI power users with too many moving priorities and too much task context trapped in notes, chat, email, and other tools.

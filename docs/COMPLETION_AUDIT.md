@@ -34,6 +34,7 @@ Make Nexdo a credible, launchable early-access product by Monday, 2026-05-18, wi
 | Verify authenticated MCP/API-key flow against real task data | OpenAPI/auth/scope guardrails pass; real API-key tool execution not exercised | Missing |
 | Provide a repeatable MCP/API-key smoke command | `npm run smoke:mcp` supports read-only and explicit `--write` authenticated checks | Done |
 | Make agent-created tasks distinguishable | MCP create/update schemas and handlers expose `source_agent_id`, `external_ref`, `ingestion_intent`, and `agent_metadata` | Done |
+| Add idempotency and safer conflict handling for agent writes | `create_task` replays by `source_agent_id` + `external_ref`, migration adds `tasks_user_agent_external_ref_unique_idx`, and `npm run smoke:mcp -- --write` checks replay behavior | Implemented locally; provider verification missing |
 | Add scoped API keys and agent audit trails | `supabase/migrations/003_agent_governance.sql`, settings key-scope UI, MCP scope filtering/enforcement, and `agent_action_events` logging exist; real Supabase migration/audit-write smoke still required | Implemented locally; provider verification missing |
 
 ## Commands verified locally
@@ -54,5 +55,5 @@ The Monday early-access demo and local build/test rails are in materially better
 1. Configure a real Supabase project and verify migrations, auth, profile creation, RLS, and task CRUD.
 2. Exercise OpenAI-backed parse, prioritization, briefing, and bounded agent execution with real credentials.
 3. Exercise Stripe checkout, portal, webhook, plan updates, quota enforcement, and idempotency in test mode.
-4. Generate scoped API keys and run authenticated MCP/ChatGPT Actions tool execution plus audit-write checks against real task data with `npm run smoke:mcp`.
+4. Generate scoped API keys and run authenticated MCP/ChatGPT Actions tool execution, idempotency replay, and audit-write checks against real task data with `npm run smoke:mcp -- --write`.
 5. Route public copy through Quill/founder approval before external launch use.

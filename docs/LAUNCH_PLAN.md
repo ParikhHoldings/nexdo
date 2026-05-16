@@ -8,6 +8,7 @@ The goal is not a broad public launch. The credible Monday target is a verified 
 - A usable logged-out demo flow: load `/today`, inspect demo tasks, add a natural-language task, see prioritization, open an executable task, and generate a bounded agent output. Verified locally on 2026-05-16.
 - Public AI-agent surfaces expose a valid OpenAPI action contract and enforce bearer auth before tool execution. Smoke-tested locally on 2026-05-16.
 - MCP/API keys now have local scope modeling, scope-filtered tool listings, scope enforcement, and an agent action audit table. Real Supabase/API-key verification is still required before treating this as production-ready.
+- Agent task creation now has local idempotency handling through `source_agent_id` plus `external_ref`; real Supabase/API-key replay verification is still required.
 - PR #3 Web rails passed in GitHub Actions and the Vercel preview deployment completed on 2026-05-16.
 - Strict build rails: TypeScript and lint failures block `npm run build`. Verified locally on 2026-05-16.
 - Truthful public copy that describes bounded AI assistance instead of open-ended autonomous task completion. Draft tightened on 2026-05-16; still needs Quill/founder approval before external use.
@@ -37,7 +38,7 @@ The goal is not a broad public launch. The credible Monday target is a verified 
 ## AI-agent product path
 1. Stabilize the API-key based task layer around list, create, update, complete, search, and brief.
 2. Make agent-created tasks distinguishable with `source_agent_id`, `external_ref`, `ingestion_intent`, and `agent_metadata`.
-3. Add idempotency and safer conflict handling for agent writes.
+3. Verify idempotency and safer conflict handling for agent writes against a real Supabase project.
 4. Verify scoped API keys and least-privilege permissions against a real Supabase project.
 5. Verify audit trails for agent actions with real MCP/API-key execution.
 6. Expand from task access to controlled execution requests only after the bounded human flow is trusted.
