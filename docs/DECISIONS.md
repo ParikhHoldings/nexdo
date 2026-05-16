@@ -1,5 +1,15 @@
 # Decisions
 
+## 2026-05-16 - Validate AI request bodies before consuming rate limits
+### Decision
+Task parse, prioritization, and briefing routes parse and validate request bodies before calling the shared rate-limit RPC.
+
+### Why
+Malformed requests should receive fast 400 responses without consuming a user's AI request window or touching provider-adjacent rails.
+
+### Impact
+Future AI routes should follow the same order: auth, body validation, rate-limit check, provider work.
+
 ## 2026-05-16 - Keep OpenAI model selection consistent
 ### Decision
 App OpenAI helpers use `OPENAI_MODEL` when provided and default to `gpt-4o`, matching the OpenAI smoke script.

@@ -20,6 +20,7 @@
 - opened PR #3 and verified GitHub Actions Web rails plus Vercel preview deployment
 - enabled strict lint/typecheck behavior in production builds
 - added deterministic local task intelligence fallbacks for demo/provider-missing flows
+- moved AI route body validation before rate-limit consumption for parse, prioritize, and briefing requests
 - hardened task mutation routes with allowlisted PATCH fields and owned-delete 404 handling
 - hardened authenticated agent execution so the server runs only owned executable task records and persists output
 - fixed optimistic task updates so agent-output edits do not accidentally clear `completed_at`

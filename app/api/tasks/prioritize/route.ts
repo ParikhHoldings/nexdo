@@ -8,6 +8,27 @@ export async function POST(request: NextRequest) {
   const auth = await requireUser()
   if (!auth.ok) return auth.response
 
+  let body: { tasks?: unknown }
+  try {
+    body = await request.json()
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+  }
+
+  const { tasks } = body
+
+  if (!tasks || !Array.isArray(tasks)) {
+    return NextResponse.json({ error: 'Invalid tasks array' }, { status: 400 })
+  }
+
+  // Upper bound on batch size to protect the OpenAI budget.
+  if (tasks.length > 100) {
+    return NextResponse.json(
+      { error: 'Too many tasks (max 100 per request)' },
+      { status: 400 }
+    )
+  }
+
   const gate = await consumeRateLimit(auth.userId, RATE_LIMITS.aiPrioritize)
   if (!gate.allowed) {
     return NextResponse.json(
@@ -21,20 +42,6 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { tasks } = await request.json()
-
-    if (!tasks || !Array.isArray(tasks)) {
-      return NextResponse.json({ error: 'Invalid tasks array' }, { status: 400 })
-    }
-
-    // Upper bound on batch size to protect the OpenAI budget.
-    if (tasks.length > 100) {
-      return NextResponse.json(
-        { error: 'Too many tasks (max 100 per request)' },
-        { status: 400 }
-      )
-    }
-
     const prioritized = await prioritizeTasks(tasks as Task[])
 
     if (!prioritized) {
