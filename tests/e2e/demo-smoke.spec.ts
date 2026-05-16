@@ -32,6 +32,14 @@ test('demo task capture, briefing, prioritization, and agent output work', async
   await page.getByRole('heading', { name: 'Send weekly update to team' }).click()
   await expect(page.getByRole('heading', { name: 'AI Agent' })).toBeVisible()
 
+  await page.getByRole('button', { name: 'Edit task' }).click()
+  await page.getByLabel('Task title').fill('Send weekly update to product team')
+  await page.getByLabel('Task estimate').fill('20')
+  await page.getByRole('button', { name: /Save/ }).click()
+  await expect(
+    page.locator('h2', { hasText: 'Send weekly update to product team' })
+  ).toBeVisible()
+
   await page.getByRole('button', { name: /Run draft/i }).click()
   await expect(page.getByText('Completed')).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Draft' })).toBeVisible()

@@ -34,6 +34,7 @@
 - sanitized prioritization and briefing task arrays before rate-limit consumption and AI provider/fallback execution
 - validated and bounded OpenAI JSON responses before parsed tasks, prioritization, briefings, or agent outputs are returned or saved
 - hardened task mutation routes with allowlisted PATCH fields and owned-delete 404 handling
+- made task detail editing functional for title, context, due date, priority, action type, estimate, people, and tags
 - hardened authenticated agent execution so the server runs only owned executable task records and persists output
 - hardened agent execution quota ordering so output is not saved or returned if usage recording fails
 - fixed optimistic task updates so agent-output edits do not accidentally clear `completed_at`

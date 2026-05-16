@@ -36,6 +36,7 @@
 - Sanitized prioritization and briefing task arrays before rate-limit consumption and AI provider/fallback execution.
 - Added bounded validation for OpenAI JSON responses before parsed tasks, prioritization, briefings, or research/draft/prep agent outputs are returned or saved.
 - Hardened task mutation routes so PATCH only accepts user-editable fields and DELETE reports missing owned tasks.
+- Made the task detail panel's edit action functional for the MVP task fields.
 - Hardened authenticated agent execution so it runs only owned task records and saves output server-side.
 - Hardened agent execution quota ordering so output is not saved or returned when usage recording fails.
 - Fixed optimistic task updates so non-status changes no longer clear completed timestamps.

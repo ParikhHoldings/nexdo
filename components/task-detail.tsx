@@ -15,13 +15,23 @@ import {
   AlertCircle,
   FileText,
   Trash2,
+  Edit3,
+  Save,
 } from 'lucide-react'
-import { cn, formatRelativeDate, getPriorityBgColor } from '@/lib/utils'
+import { cn, formatRelativeDate } from '@/lib/utils'
 import { useTaskStore } from '@/lib/store'
 import { executeTaskHeuristic } from '@/lib/task-intelligence'
 import { Button } from '@/components/ui/button'
 import { Badge, TagBadge, PersonBadge } from '@/components/ui/badge'
-import type { Task, ResearchOutput, DraftOutput, PrepOutput } from '@/lib/database.types'
+import type {
+  ActionType,
+  DraftOutput,
+  PrepOutput,
+  ResearchOutput,
+  Task,
+  TaskPriority,
+  TaskUpdate,
+} from '@/lib/database.types'
 
 type AgentOutput = ResearchOutput | DraftOutput | PrepOutput
 
@@ -160,17 +170,107 @@ function AgentResult({ output, actionType }: AgentResultProps) {
   return null
 }
 
+const PRIORITIES: TaskPriority[] = ['urgent', 'high', 'medium', 'low']
+const ACTION_TYPES: ActionType[] = ['manual', 'research', 'draft', 'prep', 'remind']
+
+function listToText(value: string[] | null): string {
+  return value?.join(', ') ?? ''
+}
+
+function textToList(value: string): string[] | null {
+  const items = value
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean)
+
+  return items.length > 0 ? Array.from(new Set(items)) : null
+}
+
 export function TaskDetail() {
   const { selectedTask, isDetailOpen, closeDetail, updateTask, deleteTask, isAuthenticated } =
     useTaskStore()
   const [isExecuting, setIsExecuting] = useState(false)
   const [executionError, setExecutionError] = useState<string | null>(null)
+  const [isEditing, setIsEditing] = useState(false)
+  const [editError, setEditError] = useState<string | null>(null)
+  const [editTitle, setEditTitle] = useState('')
+  const [editContext, setEditContext] = useState('')
+  const [editDueDate, setEditDueDate] = useState('')
+  const [editPriority, setEditPriority] = useState<TaskPriority>('medium')
+  const [editActionType, setEditActionType] = useState<ActionType>('manual')
+  const [editEstimate, setEditEstimate] = useState('')
+  const [editPeople, setEditPeople] = useState('')
+  const [editTags, setEditTags] = useState('')
 
   if (!selectedTask) return null
 
   const task = selectedTask
   const isExecutable = ['research', 'draft', 'prep'].includes(task.action_type)
   const hasAgentOutput = task.agent_output !== null
+
+  const resetEditForm = () => {
+    setEditError(null)
+    setEditTitle(task.title)
+    setEditContext(task.context ?? '')
+    setEditDueDate(task.due_date ?? '')
+    setEditPriority(task.priority)
+    setEditActionType(task.action_type)
+    setEditEstimate(task.estimated_minutes !== null ? String(task.estimated_minutes) : '')
+    setEditPeople(listToText(task.people))
+    setEditTags(listToText(task.tags))
+  }
+
+  const handleStartEdit = () => {
+    resetEditForm()
+    setIsEditing(true)
+  }
+
+  const handleCancelEdit = () => {
+    resetEditForm()
+    setIsEditing(false)
+  }
+
+  const handleClose = () => {
+    setIsEditing(false)
+    setEditError(null)
+    closeDetail()
+  }
+
+  const handleSaveEdit = () => {
+    const title = editTitle.trim()
+    if (!title) {
+      setEditError('Title is required.')
+      return
+    }
+
+    const estimatedMinutes =
+      editEstimate.trim() === '' ? null : Number(editEstimate.trim())
+    if (
+      estimatedMinutes !== null &&
+      (!Number.isFinite(estimatedMinutes) ||
+        estimatedMinutes < 0 ||
+        estimatedMinutes > 60 * 24 * 7)
+    ) {
+      setEditError('Estimate must be between 0 and 10080 minutes.')
+      return
+    }
+
+    const updates: TaskUpdate = {
+      title,
+      context: editContext.trim() || null,
+      due_date: editDueDate || null,
+      priority: editPriority,
+      action_type: editActionType,
+      estimated_minutes:
+        estimatedMinutes === null ? null : Math.round(estimatedMinutes),
+      people: textToList(editPeople),
+      tags: textToList(editTags),
+    }
+
+    updateTask(task.id, updates)
+    setEditError(null)
+    setIsEditing(false)
+  }
 
   const handleExecute = async () => {
     setIsExecuting(true)
@@ -229,7 +329,7 @@ export function TaskDetail() {
 
   const handleDelete = () => {
     deleteTask(task.id)
-    closeDetail()
+    handleClose()
   }
 
   const handleStatusChange = (status: Task['status']) => {
@@ -246,7 +346,7 @@ export function TaskDetail() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-            onClick={closeDetail}
+            onClick={handleClose}
           />
 
           {/* Panel */}
@@ -270,25 +370,177 @@ export function TaskDetail() {
                   </Badge>
                 )}
               </div>
-              <button
-                onClick={closeDetail}
-                className="p-2 hover:bg-zinc-800 rounded-lg transition-colors"
-              >
-                <X className="h-5 w-5 text-zinc-400" />
-              </button>
+              <div className="flex items-center gap-1">
+                {!isEditing && (
+                  <button
+                    onClick={handleStartEdit}
+                    className="p-2 hover:bg-zinc-800 rounded-lg transition-colors"
+                    aria-label="Edit task"
+                    title="Edit task"
+                  >
+                    <Edit3 className="h-5 w-5 text-zinc-400" />
+                  </button>
+                )}
+                <button
+                  onClick={handleClose}
+                  className="p-2 hover:bg-zinc-800 rounded-lg transition-colors"
+                  aria-label="Close task detail"
+                >
+                  <X className="h-5 w-5 text-zinc-400" />
+                </button>
+              </div>
             </div>
 
             {/* Content */}
             <div className="flex-1 overflow-y-auto p-4 space-y-6">
-              {/* Title */}
-              <div>
-                <h2 className="text-xl font-semibold text-zinc-100">
-                  {task.title}
-                </h2>
-                {task.context && (
-                  <p className="mt-2 text-sm text-zinc-400">{task.context}</p>
-                )}
-              </div>
+              {isEditing ? (
+                <div className="space-y-4 rounded-xl border border-zinc-800 bg-zinc-950/40 p-4">
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-300 mb-1.5">
+                      Title
+                    </label>
+                    <input
+                      aria-label="Task title"
+                      value={editTitle}
+                      onChange={(event) => setEditTitle(event.target.value)}
+                      className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/50"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-300 mb-1.5">
+                      Context
+                    </label>
+                    <textarea
+                      aria-label="Task context"
+                      value={editContext}
+                      onChange={(event) => setEditContext(event.target.value)}
+                      rows={4}
+                      className="w-full resize-none rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/50"
+                    />
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div>
+                      <label className="block text-sm font-medium text-zinc-300 mb-1.5">
+                        Due date
+                      </label>
+                      <input
+                        aria-label="Task due date"
+                        type="date"
+                        value={editDueDate}
+                        onChange={(event) => setEditDueDate(event.target.value)}
+                        className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/50"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-zinc-300 mb-1.5">
+                        Estimate
+                      </label>
+                      <input
+                        aria-label="Task estimate"
+                        type="number"
+                        min={0}
+                        max={10080}
+                        value={editEstimate}
+                        onChange={(event) => setEditEstimate(event.target.value)}
+                        placeholder="Minutes"
+                        className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-500 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/50"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div>
+                      <label className="block text-sm font-medium text-zinc-300 mb-1.5">
+                        Priority
+                      </label>
+                      <select
+                        aria-label="Task priority"
+                        value={editPriority}
+                        onChange={(event) =>
+                          setEditPriority(event.target.value as TaskPriority)
+                        }
+                        className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/50"
+                      >
+                        {PRIORITIES.map((priority) => (
+                          <option key={priority} value={priority}>
+                            {priority}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-zinc-300 mb-1.5">
+                        Action type
+                      </label>
+                      <select
+                        aria-label="Task action type"
+                        value={editActionType}
+                        onChange={(event) =>
+                          setEditActionType(event.target.value as ActionType)
+                        }
+                        className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/50"
+                      >
+                        {ACTION_TYPES.map((actionType) => (
+                          <option key={actionType} value={actionType}>
+                            {actionType}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-300 mb-1.5">
+                      People
+                    </label>
+                    <input
+                      aria-label="Task people"
+                      value={editPeople}
+                      onChange={(event) => setEditPeople(event.target.value)}
+                      placeholder="Sarah, Alex"
+                      className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-500 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/50"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-300 mb-1.5">
+                      Tags
+                    </label>
+                    <input
+                      aria-label="Task tags"
+                      value={editTags}
+                      onChange={(event) => setEditTags(event.target.value)}
+                      placeholder="customer, launch"
+                      className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-500 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/50"
+                    />
+                  </div>
+
+                  {editError && (
+                    <p className="text-sm text-red-400">{editError}</p>
+                  )}
+
+                  <div className="flex justify-end gap-2">
+                    <Button variant="ghost" size="sm" onClick={handleCancelEdit}>
+                      Cancel
+                    </Button>
+                    <Button size="sm" onClick={handleSaveEdit}>
+                      <Save className="h-4 w-4 mr-2" />
+                      Save
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <h2 className="text-xl font-semibold text-zinc-100">
+                    {task.title}
+                  </h2>
+                  {task.context && (
+                    <p className="mt-2 text-sm text-zinc-400">{task.context}</p>
+                  )}
+                </div>
+              )}
 
               {/* Meta grid */}
               <div className="grid grid-cols-2 gap-4">
