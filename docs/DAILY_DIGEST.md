@@ -43,6 +43,7 @@
 - Made the task detail panel's edit action functional for the MVP task fields.
 - Removed nonfunctional theme and notification controls from the app shell/settings for launch truthfulness.
 - Aligned the Connect AI setup page with the Power-plan API access gate.
+- Surfaced settings profile/API-key failures in the UI and refreshed local profile state after authenticated saves.
 - Hardened authenticated agent execution so it runs only owned task records and saves output server-side.
 - Hardened agent execution quota ordering so output is not saved or returned when usage recording fails.
 - Fixed optimistic task updates so non-status changes no longer clear completed timestamps.

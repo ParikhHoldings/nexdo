@@ -67,6 +67,7 @@ function SettingsContent() {
   const [saveSuccess, setSaveSuccess] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [apiKeySuccess, setApiKeySuccess] = useState(false)
+  const [apiKeyError, setApiKeyError] = useState<string | null>(null)
   const [billingError, setBillingError] = useState<string | null>(null)
   const [isManagingBilling, setIsManagingBilling] = useState(false)
 
@@ -82,6 +83,7 @@ function SettingsContent() {
     if (!hasApiAccess) return
 
     setApiKeySuccess(false)
+    setApiKeyError(null)
     try {
       const response = await fetch('/api/profile/api-key', {
         method: 'POST',
@@ -113,10 +115,16 @@ function SettingsContent() {
         setApiKeySuccess(true)
         setTimeout(() => setApiKeySuccess(false), 3000)
       } else {
-        console.error('Failed to generate API key')
+        const payload = await response.json().catch(() => ({}))
+        setApiKeyError(
+          payload?.message ||
+            payload?.error ||
+            'Unable to generate an API key right now.'
+        )
       }
     } catch (error) {
       console.error('Error generating API key:', error)
+      setApiKeyError('Unable to generate an API key right now.')
     }
   }
 
@@ -165,10 +173,20 @@ function SettingsContent() {
       })
 
       if (response.ok) {
+        const nextProfile = await response.json()
+        setProfile(nextProfile)
+        setFullName(nextProfile.full_name || '')
+        setTimezone(nextProfile.timezone || timezone)
         setSaveSuccess(true)
         setTimeout(() => setSaveSuccess(false), 3000)
       } else {
-        setSaveError('Failed to save profile')
+        const payload = await response.json().catch(() => ({}))
+        const validationMessage = payload?.errors?.[0]?.message
+        setSaveError(
+          validationMessage ||
+            payload?.error ||
+            'Failed to save profile'
+        )
       }
     } catch (error) {
       console.error('Error saving profile:', error)
@@ -407,6 +425,12 @@ function SettingsContent() {
               {apiKeySuccess && (
                 <p className="text-sm text-emerald-400">
                   New key generated. Copy it now; it will not be shown again.
+                </p>
+              )}
+
+              {apiKeyError && (
+                <p className="text-sm text-red-400">
+                  {apiKeyError}
                 </p>
               )}
 

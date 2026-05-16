@@ -41,6 +41,7 @@
 - made task detail editing functional for title, context, due date, priority, action type, estimate, people, and tags
 - removed nonfunctional theme and notification controls from the launch app shell/settings until real behavior exists
 - aligned the Connect AI setup page with the Power-plan API access gate
+- surfaced settings profile/API-key failures in the UI and refreshed local profile state after authenticated saves
 - hardened authenticated agent execution so the server runs only owned executable task records and persists output
 - hardened agent execution quota ordering so output is not saved or returned if usage recording fails
 - fixed optimistic task updates so agent-output edits do not accidentally clear `completed_at`
