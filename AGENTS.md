@@ -13,7 +13,7 @@ Nexdo is not only a concept. The repo already contains a Next.js product shell w
 - marketing, auth, app, settings, import, and MCP setup routes under `app/`
 - task capture, task cards, detail panel, sidebar, daily briefing, pricing, imports, and UI primitives under `components/`
 - Supabase auth/data helpers, generated DB types, task/demo data, OpenAI prompts and calls, quotas, rate limits, Stripe helpers, import normalization, and MCP tools under `lib/`
-- Supabase migrations for profiles, tasks, task notes, daily briefings, RLS, usage events, rate limits, webhook idempotency, and performance indexes under `supabase/migrations/`
+- Supabase migrations for profiles, tasks, task notes, daily briefings, RLS, usage events, quota cleanup, rate limits, webhook idempotency, and performance indexes under `supabase/migrations/`
 - API routes for tasks, AI parse/prioritize/briefing/agent execution, imports, profile/API keys, Stripe checkout/portal/webhook, MCP JSON-RPC, MCP actions, and OpenAPI for ChatGPT Actions under `app/api/`
 
 The product promise should be grounded in what the code actually supports:

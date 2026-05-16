@@ -21,6 +21,7 @@ The goal is not a broad public launch. The credible Monday target is a verified 
 - Stripe checkout now accepts only server-known `pro` and `power` plans, derives price IDs from env, and skips unknown webhook price IDs instead of granting paid access.
 - Pricing UI now shows only monthly prices because annual Stripe prices are not configured.
 - Supabase provider verification now has a repeatable smoke script, `npm run smoke:supabase`; it still needs to be run with real credentials after migrations are applied.
+- Supabase migrations now include quota cleanup so usage read probes reset monthly counters without writing zero-quantity audit events.
 - Truthful public copy that describes bounded AI assistance instead of open-ended autonomous task completion. Draft tightened on 2026-05-16; still needs Quill/founder approval before external use.
 - Updated docs that tell future agents what exists, what is verified, and what is still blocked.
 

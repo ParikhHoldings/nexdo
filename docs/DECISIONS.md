@@ -1,5 +1,15 @@
 # Decisions
 
+## 2026-05-16 - Quota read probes must not write audit noise
+### Decision
+`increment_usage` keeps its quantity-0 reset/read behavior, but skips counter increments and `usage_events` writes when quantity is zero.
+
+### Why
+The API uses quantity 0 to lazily reset/read usage counters. Those probes should not pollute the usage audit log or confuse later quota investigation.
+
+### Impact
+Supabase write smoke now verifies no-op quota behavior plus task/agent quota increments and rate-limit allow/block behavior.
+
 ## 2026-05-16 - Do not show unconfigured annual billing
 ### Decision
 The pricing table shows only monthly prices until annual Stripe price IDs and checkout handling exist.

@@ -5,7 +5,7 @@
 - added a project README and Monday launch plan
 - added `docs/COMPLETION_AUDIT.md` to map the active goal to evidence and remaining gaps
 - added deployment rails and an environment preflight verifier
-- added a Supabase provider smoke script for schema, auth/profile trigger, RLS task CRUD, public isolation, and agent audit verification
+- added a Supabase provider smoke script for schema, auth/profile trigger, RLS task CRUD, public isolation, agent audit verification, quota increments, quota no-op behavior, and rate-limit allow/block behavior
 - added an OpenAI provider smoke script for JSON-mode parse, prioritization, briefing, and prep execution checks
 - added a Stripe provider smoke script for account, price, Checkout, and Customer Portal configuration checks
 - added an authenticated MCP smoke script for real API-key verification
@@ -22,6 +22,7 @@
 - hardened authenticated agent execution so the server runs only owned executable task records and persists output
 - fixed optimistic task updates so agent-output edits do not accidentally clear `completed_at`
 - enforced monthly task quotas across CSV, JSON, ICS, Todoist, Google Tasks, and Microsoft To Do imports
+- added a quota cleanup migration so usage read probes do not write zero-quantity audit events
 - removed the unbacked annual pricing toggle until annual Stripe prices exist
 - hardened Stripe checkout so clients can only request server-known `pro` or `power` plans and cannot override price IDs
 - hardened Stripe webhooks so unknown price IDs do not grant paid-tier access by default

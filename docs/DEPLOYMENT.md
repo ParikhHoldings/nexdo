@@ -31,7 +31,7 @@ Required groups:
 The verifier only checks presence, shape, and placeholder risk. It does not prove provider connectivity.
 
 ## Provider smoke tests still required
-- Supabase: apply migrations to a real project, create a user, verify profile creation, RLS, task CRUD, import quota enforcement, API key scope persistence and rotation rate limits, `agent_action_events` audit writes, and service-role RPCs.
+- Supabase: apply migrations to a real project, create a user, verify profile creation, RLS, task CRUD, import quota enforcement, API key scope persistence and rotation rate limits, `agent_action_events` audit writes, quota no-op behavior, and service-role RPCs.
 - OpenAI: verify parse, prioritization, briefing, and owned-task research/draft/prep execution with real credentials, server-side output persistence, quota use, and rate-limit behavior.
 - Stripe: verify checkout, portal, webhook signature handling, idempotency, subscription tier updates, quota enforcement, and unknown-price behavior in test mode.
 - MCP/ChatGPT Actions: generate real scoped API keys and run authenticated list/create/update/complete/search/briefing/get-task calls against real task data, including `create_task` replay with a repeated `source_agent_id` plus `external_ref`.

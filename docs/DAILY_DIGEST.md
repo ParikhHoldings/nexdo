@@ -9,7 +9,7 @@
 - Added `docs/DEPLOYMENT.md` and `npm run verify:env` for deploy/env preflight rails.
 - Added `npm run smoke:openai` for real OpenAI JSON-mode provider verification.
 - Added `npm run smoke:stripe` for Stripe account, price, Checkout, and Customer Portal verification.
-- Added `npm run smoke:supabase` for real Supabase schema/auth/RLS/task/audit verification.
+- Added `npm run smoke:supabase` for real Supabase schema/auth/RLS/task/audit/quota/rate-limit verification.
 - Added `npm run smoke:mcp` for authenticated MCP/API-key verification against a real deployment.
 - Exposed agent metadata fields in MCP create/update tools so agent-created tasks can carry source identifiers and external references.
 - Added scoped API key permissions, scope-filtered MCP tool listings, REST/JSON-RPC scope enforcement, and an agent action audit table/migration.
@@ -25,6 +25,7 @@
 - Hardened authenticated agent execution so it runs only owned task records and saves output server-side.
 - Fixed optimistic task updates so non-status changes no longer clear completed timestamps.
 - Added batch task-quota enforcement to CSV, JSON, ICS, Todoist, Google Tasks, and Microsoft To Do imports.
+- Added a quota cleanup migration so usage read probes do not create zero-quantity audit events.
 - Removed the annual pricing toggle because checkout currently supports only configured monthly plan prices.
 - Hardened Stripe checkout and webhook entitlement handling so plan changes stay tied to server-known price IDs.
 - Added Playwright smoke coverage for the logged-out core product path.

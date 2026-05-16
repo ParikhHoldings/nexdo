@@ -98,6 +98,79 @@ async function waitForProfile(userId) {
   fail('profile trigger did not create a profile for the smoke user')
 }
 
+async function verifyUsageAndRateLimits(userId) {
+  const { count: beforeNoopCount, error: beforeNoopError } = await service
+    .from('usage_events')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', userId)
+  if (beforeNoopError) fail('usage event count before no-op failed', beforeNoopError)
+
+  const { error: noopUsageError } = await service.rpc('increment_usage', {
+    p_user_id: userId,
+    p_event_type: 'task_create',
+    p_quantity: 0,
+  })
+  if (noopUsageError) fail('increment_usage no-op failed', noopUsageError)
+
+  const { count: afterNoopCount, error: afterNoopError } = await service
+    .from('usage_events')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', userId)
+  if (afterNoopError) fail('usage event count after no-op failed', afterNoopError)
+  if (afterNoopCount !== beforeNoopCount) {
+    fail('increment_usage quantity 0 wrote a usage event')
+  }
+  console.log('ok quota no-op reset without audit event')
+
+  const { data: taskUsage, error: taskUsageError } = await service.rpc('increment_usage', {
+    p_user_id: userId,
+    p_event_type: 'task_create',
+    p_quantity: 2,
+  })
+  if (taskUsageError || !taskUsage?.[0]) {
+    fail('increment_usage task_create quantity failed', taskUsageError)
+  }
+  if (taskUsage[0].task_count_this_month < 2) {
+    fail('increment_usage did not increment task counter by quantity')
+  }
+  console.log('ok task quota increment quantity')
+
+  const { data: agentUsage, error: agentUsageError } = await service.rpc('increment_usage', {
+    p_user_id: userId,
+    p_event_type: 'agent_execute',
+    p_quantity: 1,
+  })
+  if (agentUsageError || !agentUsage?.[0]) {
+    fail('increment_usage agent_execute failed', agentUsageError)
+  }
+  if (agentUsage[0].agent_executions_this_month < 1) {
+    fail('increment_usage did not increment agent execution counter')
+  }
+  console.log('ok agent quota increment')
+
+  const bucket = `smoke_api_key_rotate_${Date.now()}`
+  const { data: firstGate, error: firstGateError } = await service.rpc('consume_rate_limit', {
+    p_user_id: userId,
+    p_bucket: bucket,
+    p_limit: 1,
+    p_window_seconds: 60,
+  })
+  if (firstGateError || firstGate?.[0]?.allowed !== true) {
+    fail('consume_rate_limit first request failed', firstGateError)
+  }
+
+  const { data: secondGate, error: secondGateError } = await service.rpc('consume_rate_limit', {
+    p_user_id: userId,
+    p_bucket: bucket,
+    p_limit: 1,
+    p_window_seconds: 60,
+  })
+  if (secondGateError || secondGate?.[0]?.allowed !== false) {
+    fail('consume_rate_limit did not block over-limit request', secondGateError)
+  }
+  console.log('ok rate-limit allow and block')
+}
+
 async function writeSmoke() {
   const email = `nexdo-smoke-${Date.now()}@example.com`
   const password = `Nexdo-smoke-${crypto.randomUUID()}!`
@@ -192,6 +265,8 @@ async function writeSmoke() {
       fail('agent audit RLS read failed', auditReadError)
     }
     console.log('ok agent audit RLS read')
+
+    await verifyUsageAndRateLimits(userId)
   } finally {
     if (userId) {
       const { error } = await service.auth.admin.deleteUser(userId)

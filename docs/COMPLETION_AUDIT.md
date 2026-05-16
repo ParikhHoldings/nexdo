@@ -22,7 +22,7 @@ Make Nexdo a credible, launchable early-access product by Monday, 2026-05-18, wi
 | Keep demo useful without provider secrets | `lib/task-intelligence.ts`, `lib/openai.ts`, `components/task-input.tsx`, `components/daily-briefing.tsx`, `components/task-detail.tsx`, `app/(app)/today/page.tsx` | Done |
 | Harden core task mutation routes | `PATCH /api/tasks/[id]` now allowlists and validates user-editable fields; `DELETE /api/tasks/[id]` returns 404 when no owned task is deleted; e2e covers unauthenticated/config guardrails | Done |
 | Harden authenticated agent execution | `/api/agent/execute` now requires a `taskId`, loads the owned task from Supabase, rejects non-executable task types, saves `agent_output` server-side, and checks quota-consumption failures | Done |
-| Enforce task quotas on imports | CSV, JSON, ICS, Todoist, Google Tasks, and Microsoft To Do imports now consume task-create quota in batch before saving imported tasks | Done |
+| Enforce task quotas on imports | CSV, JSON, ICS, Todoist, Google Tasks, and Microsoft To Do imports now consume task-create quota in batch before saving imported tasks; migration `004_quota_noop_audit_cleanup.sql` prevents quota read probes from writing zero-quantity audit noise | Done |
 | Restore strict build rails | `next.config.mjs` no longer ignores TypeScript/ESLint; scripts include `typecheck`; `npm run build` passes | Done |
 | Add browser smoke coverage | `playwright.config.ts`, `tests/e2e/demo-smoke.spec.ts` | Done |
 | Add AI-agent and billing guard smoke coverage | `tests/e2e/agent-surfaces.spec.ts` covers OpenAPI schema, auth failures, action CORS headers, and unsupported Stripe checkout plan rejection | Done |
@@ -32,7 +32,7 @@ Make Nexdo a credible, launchable early-access product by Monday, 2026-05-18, wi
 | Verify deploy target and production env | No production env or deploy target credentials/config were exercised in this pass | Missing |
 | Verify preview deploy rail | PR #3 Vercel preview deployment completed | Done |
 | Verify Supabase migrations/auth/RLS/task CRUD against real project | Migrations and code exist, but real project smoke test was not run | Missing |
-| Provide a repeatable Supabase smoke command | `npm run smoke:supabase` checks schema columns; `npm run smoke:supabase -- --write` creates/deletes a smoke auth user, verifies profile trigger, task CRUD through RLS, public RLS isolation, and audit-event access | Done |
+| Provide a repeatable Supabase smoke command | `npm run smoke:supabase` checks schema columns; `npm run smoke:supabase -- --write` creates/deletes a smoke auth user, verifies profile trigger, task CRUD through RLS, public RLS isolation, audit-event access, quota increments, quota no-op behavior, and rate-limit allow/block behavior | Done |
 | Verify OpenAI provider-backed parse/prioritize/briefing/execution | Fallbacks and UI path work; real provider calls not exercised | Missing |
 | Provide a repeatable OpenAI smoke command | `npm run smoke:openai` verifies OpenAI JSON-mode calls for parse, prioritization, briefing, and prep-style execution shapes | Done |
 | Verify Stripe checkout/portal/webhook/quota updates | Code exists; Stripe test-mode flow not exercised | Missing |
