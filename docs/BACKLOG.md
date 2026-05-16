@@ -43,6 +43,7 @@
 - persisted logged-out demo profile changes to localStorage so no-auth settings saves do not hit authenticated profile APIs
 - kept demo profiles out of authenticated UI state so no-auth demo mode does not expose sign-out or authenticated profile-save behavior
 - added client-side demo file import parsing for CSV, JSON, and ICS so logged-out visitors can exercise imports without weakening authenticated API import guards
+- added representative import parser coverage for Todoist, CSV, ICS, Trello JSON, Things-style JSON, and invalid JSON exports
 - prevented authenticated task-capture save failures from creating local-only demo tasks; failed saves now restore the input and surface an error
 - prevented stale authenticated sessions from falling through to local demo task creation when Supabase returns no active user during capture
 - moved AI route body validation before rate-limit consumption for parse, prioritize, and briefing requests
@@ -100,7 +101,6 @@
 - tighten landing/waitlist language around the clearest user promise
 - clarify whether Nexdo should lead with founder/operator use case or broader team use case
 - add focused tests for task validation, import normalization, quota/rate-limit helpers, and MCP tool handlers
-- verify import routes with representative Todoist, CSV, ICS, Trello, and Things-style files
 - verify import quota behavior against a real Supabase profile near the monthly task limit
 - document known local-development and production-environment setup steps
 

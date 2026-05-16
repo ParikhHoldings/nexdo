@@ -198,7 +198,7 @@ Monday is not credible if:
 - Approval for any production deploy or public launch commitment.
 
 ## Next product hardening after MVP
-- Add focused route/helper tests for task validation, import normalization, quota/rate-limit helpers, and MCP handlers.
+- Add focused route/helper tests for task validation, quota/rate-limit helpers, and MCP handlers.
 - Add import previews and remaining-quota warnings before authenticated imports.
 - Add execution history and verification notes for agent outputs.
 - Add notification delivery only after real notification behavior exists.
