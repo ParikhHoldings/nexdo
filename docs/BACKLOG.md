@@ -17,6 +17,7 @@
 - expanded MCP smoke coverage to verify read-only scoped API keys hide and deny write tools when `NEXDO_READONLY_API_KEY` is provided
 - exposed MCP create/update metadata for agent-created task traceability
 - added bounded MCP tool input validation and made MCP `create_task` consume task-create quota
+- aligned MCP `search_tasks` with its advertised contract by searching title, context, and tags
 - added scoped API key permissions, MCP scope filtering/enforcement, and an `agent_action_events` audit trail migration
 - gated API-key generation and MCP API-key validation to Power/team profiles so API access matches pricing truth
 - wired settings tab query parameters so upgrade links such as `/settings?tab=billing` open the intended billing tab

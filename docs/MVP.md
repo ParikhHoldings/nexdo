@@ -127,10 +127,12 @@ Acceptance gate:
 - Bearer auth is required before action execution.
 - Scope-limited keys hide and deny unauthorized tools.
 - Write tools validate bounded inputs and consume quotas where appropriate.
+- Search behavior matches the advertised task contract, including title, context, and tags.
 
 Current evidence:
 - `/api/mcp/openapi` exposes the ChatGPT Actions schema.
 - `/api/mcp/actions/[tool]` enforces bearer auth and scopes.
+- `search_tasks` filters title, context, and tags in the MCP handler.
 - `npm run test:e2e` covers OpenAPI, action auth, CORS, and unsupported billing guardrails.
 - `npm run smoke:mcp` exists for real API-key read/write/idempotency checks once a real environment is configured.
 

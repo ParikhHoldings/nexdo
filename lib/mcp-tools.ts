@@ -336,6 +336,15 @@ function numberLimit(value: unknown, fallback: number, max: number) {
   return Math.min(Math.max(1, Math.floor(n)), max)
 }
 
+function taskMatchesSearch(task: Task, query: string): boolean {
+  const needle = query.toLowerCase()
+  return (
+    task.title.toLowerCase().includes(needle) ||
+    Boolean(task.context?.toLowerCase().includes(needle)) ||
+    Boolean(task.tags?.some((tag) => tag.toLowerCase().includes(needle)))
+  )
+}
+
 function metadataArg(value: unknown) {
   if (value === undefined) return { value: null }
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
@@ -779,16 +788,15 @@ const searchTasks: ToolHandler = async (args, userId) => {
   }
 
   const limit = numberLimit(args.limit, 10, 50)
-  const searchPattern = `%${query}%`
 
-  // Search in title, context, and use textSearch for tags
+  // Fetch a bounded recent window and filter locally so the advertised tag
+  // search works without relying on fragile PostgREST array-query syntax.
   const { data: tasks, error } = await supabase
     .from('tasks')
     .select('*')
     .eq('user_id', userId)
-    .or(`title.ilike.${searchPattern},context.ilike.${searchPattern}`)
     .order('updated_at', { ascending: false })
-    .limit(limit)
+    .limit(250)
 
   if (error) {
     return {
@@ -797,7 +805,10 @@ const searchTasks: ToolHandler = async (args, userId) => {
     }
   }
 
-  const formatted = (tasks || []).map(formatTaskForResponse)
+  const formatted = (tasks || [])
+    .filter((task: Task) => taskMatchesSearch(task, query))
+    .slice(0, limit)
+    .map(formatTaskForResponse)
   return {
     content: [{ type: 'text', text: JSON.stringify(formatted, null, 2) }],
   }
