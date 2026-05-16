@@ -33,6 +33,7 @@
 - added deterministic local task intelligence fallbacks for demo/provider-missing flows
 - refreshed logged-out daily briefings from local demo task state after task capture/import
 - persisted logged-out demo task changes to localStorage so added/imported/edited/completed/deleted demo tasks survive reloads
+- aligned the exported demo task updater with the main store so non-status edits do not clear completion timestamps
 - persisted logged-out demo profile changes to localStorage so no-auth settings saves do not hit authenticated profile APIs
 - kept demo profiles out of authenticated UI state so no-auth demo mode does not expose sign-out or authenticated profile-save behavior
 - added client-side demo file import parsing for CSV, JSON, and ICS so logged-out visitors can exercise imports without weakening authenticated API import guards

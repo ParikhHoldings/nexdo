@@ -250,17 +250,21 @@ export function addDemoTask(task: Omit<TaskInsert, 'id' | 'user_id'>): Task {
 export function updateDemoTask(id: string, updates: TaskUpdate): Task | undefined {
   const index = demoTasks.findIndex((t) => t.id === id)
   if (index === -1) return undefined
+  const task = demoTasks[index]
+  const updatedAt = new Date().toISOString()
 
   const updatedTask: Task = {
-    ...demoTasks[index],
+    ...task,
     ...updates,
-    updated_at: new Date().toISOString(),
+    updated_at: updatedAt,
     completed_at:
-      updates.status === 'done' && !demoTasks[index].completed_at
-        ? new Date().toISOString()
-        : updates.status !== 'done'
+      updates.completed_at !== undefined
+        ? updates.completed_at
+        : updates.status === 'done' && !task.completed_at
+          ? updatedAt
+          : updates.status !== undefined && updates.status !== 'done'
           ? null
-          : demoTasks[index].completed_at,
+          : task.completed_at,
   }
 
   persistDemoTasks([

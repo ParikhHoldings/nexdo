@@ -35,6 +35,7 @@
 - Added deterministic local task intelligence for demo-mode parsing, prioritization, briefing, and bounded research/draft/prep outputs.
 - Refreshed logged-out daily briefings from local demo task state after task capture/import.
 - Persisted logged-out demo task changes to localStorage so added, imported, edited, completed, and deleted demo tasks survive reloads.
+- Aligned the exported demo task updater with the main store so non-status edits preserve completion timestamps.
 - Persisted logged-out demo profile changes to localStorage so no-auth settings saves stay functional.
 - Kept demo profiles out of authenticated UI state so no-auth demo mode does not expose sign-out or authenticated profile-save behavior.
 - Added client-side demo file import parsing for CSV, JSON, and ICS, with browser smoke coverage that verifies a logged-out CSV import appears in the task list.
