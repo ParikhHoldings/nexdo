@@ -72,6 +72,7 @@
 - added Playwright smoke coverage for OpenAPI action schema, MCP/action auth failures, and action CORS headers
 - made the ChatGPT Actions OpenAPI spec emit the serving request origin when `NEXT_PUBLIC_APP_URL` is not configured
 - added GitHub Actions verification for install, lint, typecheck, build, and Playwright smoke testing
+- documented local development and production setup sequences in `docs/DEPLOYMENT.md`
 - hardened authenticated task creation with explicit validation/normalization before quota consumption
 - upgraded to Next.js 16 and ESLint 9 flat config
 - remediated the dependency audit to 0 vulnerabilities with a PostCSS override
@@ -103,7 +104,6 @@
 - clarify whether Nexdo should lead with founder/operator use case or broader team use case
 - add focused tests for DB-backed MCP tool handlers
 - verify import quota behavior against a real Supabase profile near the monthly task limit
-- document known local-development and production-environment setup steps
 
 ## Low priority
 - explore broader feature sets before MVP truth is nailed down

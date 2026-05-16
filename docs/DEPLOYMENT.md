@@ -9,6 +9,19 @@ PR #3 passed the GitHub Actions Web rails workflow and completed a Vercel previe
 - Required checks before deploy: `npm ci`, `npm run lint`, `npm run typecheck`, `npm run build`, `npm run test:e2e`, and `npm audit --audit-level=moderate`.
 - Production deploys require approval.
 
+## Local development setup
+1. Install dependencies with `npm install` or `npm ci`.
+2. Copy `.env.local.example` to `.env.local` only when you have real provider values.
+3. For no-provider local work, leave `.env.local` absent and use the logged-out demo path. The app is expected to keep auth-dependent routes guarded and demo flows functional without Supabase/OpenAI/Stripe secrets.
+4. Start the app with `npm run dev`.
+5. Before pushing changes, run `npm run lint`, `npm run typecheck`, `npm run test:e2e`, `npm run build`, `npm audit --audit-level=moderate`, and `git diff --check`.
+
+Known local behavior:
+- Missing Supabase env should expose demo mode rather than a broken auth screen.
+- Missing OpenAI env should use deterministic local task intelligence.
+- Missing Stripe env should fail billing actions closed instead of creating checkout sessions.
+- Missing MCP API keys should not block the app; MCP smoke keys are shell-only verification inputs.
+
 ## Environment preflight
 Use `.env.local.example` as the contract and run:
 
@@ -34,6 +47,17 @@ The verifier intentionally rejects common placeholder fragments such as
 `placeholder`, `your-`, `xxx`, `replace`, `example`, `todo`, and `changeme`.
 Use a copy of `.env.local.example` with real values instead of editing the
 example file directly.
+
+## Production setup sequence
+1. Create or select the production Supabase project.
+2. Apply every migration in `supabase/migrations/` to that project.
+3. Configure production environment variables in the deploy platform from `.env.local.example`; do not configure smoke-only `NEXDO_API_KEY` values as app runtime env.
+4. Configure Stripe test-mode first, including `STRIPE_PRO_PRICE_ID`, `STRIPE_POWER_PRICE_ID`, and `STRIPE_WEBHOOK_SECRET`.
+5. Configure OpenAI with `OPENAI_API_KEY` and optional `OPENAI_MODEL`.
+6. Set `NEXT_PUBLIC_APP_URL` to the public production origin with no trailing slash.
+7. Run `npm run verify:env -- <env-file>` locally against an exported production env file, or verify the same variable set in the deploy platform before treating the environment as launch-ready.
+8. Deploy to preview, then run the provider smoke tests below against the preview URL.
+9. Only after the provider smokes and approvals pass, promote to production.
 
 ## Provider smoke tests still required
 - Supabase: apply migrations to a real project, create a user, verify profile creation, RLS, task CRUD, import quota enforcement, hashed API-key storage, API key scope persistence and rotation rate limits, profile column read/update grants, `agent_action_events` audit writes, quota no-op behavior, and service-role RPCs.

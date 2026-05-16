@@ -73,6 +73,7 @@
 - Added Playwright smoke coverage for OpenAPI action schema, MCP/action auth failures, and action CORS headers.
 - Made the ChatGPT Actions OpenAPI spec emit the serving request origin when `NEXT_PUBLIC_APP_URL` is not configured.
 - Added GitHub Actions verification for install, lint, typecheck, build, and Playwright smoke testing.
+- Documented local development and production setup sequences in `docs/DEPLOYMENT.md`.
 - Hardened authenticated task creation with explicit validation/normalization before task quota is consumed.
 - Upgraded to Next.js 16, ESLint 9 flat config, and a PostCSS override; `npm audit --audit-level=moderate` now reports 0 vulnerabilities.
 - Moved the Next middleware entrypoint to the Next 16 `proxy.ts` convention.
