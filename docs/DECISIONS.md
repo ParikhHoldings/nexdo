@@ -1,5 +1,15 @@
 # Decisions
 
+## 2026-05-16 - Agent output is server-managed
+### Decision
+Generic task PATCH requests cannot write `agent_output`. Agent output must be produced and persisted through `/api/agent/execute`, which loads an owned task, checks action type, gates rate/quota, and records output server-side.
+
+### Why
+Agent output is evidence that a bounded agent action ran. Allowing clients to mutate it through the generic task route would weaken trust in task history and agent-readiness surfaces.
+
+### Impact
+Client UI can still update local state with returned output for responsiveness, but persisted agent output must come from the dedicated execution route.
+
 ## 2026-05-16 - Store external API keys as hashes
 ### Decision
 New Nexdo MCP/API keys are stored as SHA-256 hashes with a short display hint. The raw key is returned only at generation time, and migration `005_hashed_api_keys.sql` hashes existing raw keys before clearing them.

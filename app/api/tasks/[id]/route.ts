@@ -137,14 +137,10 @@ function validatePatch(body: Record<string, unknown>): PatchValidation {
   }
 
   if (body.agent_output !== undefined) {
-    if (
-      body.agent_output !== null &&
-      (typeof body.agent_output !== 'object' || Array.isArray(body.agent_output))
-    ) {
-      errors.push({ field: 'agent_output', message: 'Must be an object or null.' })
-    } else {
-      updates.agent_output = body.agent_output
-    }
+    errors.push({
+      field: 'agent_output',
+      message: 'Agent output is server-managed. Use /api/agent/execute.',
+    })
   }
 
   return { updates, errors }

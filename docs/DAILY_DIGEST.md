@@ -32,6 +32,7 @@
 - Fixed optimistic task updates so non-status changes no longer clear completed timestamps.
 - Added batch task-quota enforcement to CSV, JSON, ICS, Todoist, Google Tasks, and Microsoft To Do imports.
 - Moved CSV, JSON, and ICS imports to authenticate before reading uploaded content or request bodies.
+- Made persisted `agent_output` server-managed through `/api/agent/execute` instead of generic task PATCH requests.
 - Added a quota cleanup migration so usage read probes do not create zero-quantity audit events.
 - Removed the annual pricing toggle because checkout currently supports only configured monthly plan prices.
 - Hardened Stripe checkout and webhook entitlement handling so plan changes stay tied to server-known price IDs.
