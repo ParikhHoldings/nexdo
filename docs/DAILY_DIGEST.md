@@ -40,6 +40,7 @@
 - Added Playwright smoke coverage for the logged-out core product path.
 - Added Playwright smoke coverage for OpenAPI action schema, MCP/action auth failures, and action CORS headers.
 - Added GitHub Actions verification for install, lint, typecheck, build, and Playwright smoke testing.
+- Hardened authenticated task creation with explicit validation/normalization before task quota is consumed.
 - Upgraded to Next.js 16, ESLint 9 flat config, and a PostCSS override; `npm audit --audit-level=moderate` now reports 0 vulnerabilities.
 - Moved the Next middleware entrypoint to the Next 16 `proxy.ts` convention.
 - Hardened profile updates with allowlisted timezone/work-type values and name length normalization.

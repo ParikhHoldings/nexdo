@@ -3,19 +3,85 @@ import { createClient } from '@/lib/supabase/server'
 import { consumeQuota, quotaExceededResponse } from '@/lib/quota'
 
 const PRIORITIES = ['urgent', 'high', 'medium', 'low'] as const
-const SOURCES = ['manual', 'email', 'voice', 'api', 'agent'] as const
+const SOURCES = ['manual', 'email', 'voice', 'api'] as const
 const ACTION_TYPES = ['manual', 'research', 'draft', 'prep', 'remind'] as const
 const ENERGY = ['deep', 'light', 'quick'] as const
 
 const MAX_TITLE = 500
 const MAX_CONTEXT = 4000
+const MAX_DUE_TIME = 8
+const MAX_ARRAY_ITEMS = 50
+const MAX_ARRAY_ITEM = 120
 
 interface ValidationError {
   field: string
   message: string
 }
 
-function validateTaskInput(body: Record<string, unknown>): ValidationError[] {
+type NormalizedTaskInput = {
+  title: string
+  raw_input: string | null
+  description: string | null
+  priority: string
+  due_date: string | null
+  due_time: string | null
+  context: string | null
+  source: string
+  action_type: string
+  estimated_minutes: number | null
+  energy_level: string | null
+  people: string[] | null
+  tags: string[] | null
+}
+
+function normalizeNullableText(value: unknown): string | null {
+  if (typeof value !== 'string') return null
+  return value.trim() || null
+}
+
+function normalizeStringArray(value: unknown): string[] | null {
+  if (!Array.isArray(value)) return null
+
+  const normalized = value
+    .map((item) => (typeof item === 'string' ? item.trim() : ''))
+    .filter(Boolean)
+
+  return normalized.length > 0 ? normalized : null
+}
+
+function validateStringArray(
+  field: string,
+  value: unknown,
+  errors: ValidationError[]
+) {
+  if (value === undefined || value === null) return
+
+  if (!Array.isArray(value)) {
+    errors.push({ field, message: 'Must be an array of strings or null.' })
+    return
+  }
+
+  if (value.length > MAX_ARRAY_ITEMS) {
+    errors.push({ field, message: `Must include ${MAX_ARRAY_ITEMS} items or fewer.` })
+    return
+  }
+
+  for (const item of value) {
+    if (typeof item !== 'string') {
+      errors.push({ field, message: 'Must be an array of strings or null.' })
+      return
+    }
+    if (item.length > MAX_ARRAY_ITEM) {
+      errors.push({ field, message: `Items must be ${MAX_ARRAY_ITEM} characters or fewer.` })
+      return
+    }
+  }
+}
+
+function validateTaskInput(body: Record<string, unknown>): {
+  errors: ValidationError[]
+  task: NormalizedTaskInput | null
+} {
   const errs: ValidationError[] = []
   if (typeof body.title !== 'string' || body.title.trim().length === 0) {
     errs.push({ field: 'title', message: 'Title is required.' })
@@ -39,16 +105,61 @@ function validateTaskInput(body: Record<string, unknown>): ValidationError[] {
       errs.push({ field: 'due_date', message: 'Must be YYYY-MM-DD.' })
     }
   }
-  if (typeof body.context === 'string' && body.context.length > MAX_CONTEXT) {
-    errs.push({ field: 'context', message: `Context must be ${MAX_CONTEXT} chars or fewer.` })
+
+  if (body.due_time !== undefined && body.due_time !== null) {
+    if (
+      typeof body.due_time !== 'string' ||
+      body.due_time.length > MAX_DUE_TIME ||
+      !/^\d{2}:\d{2}(:\d{2})?$/.test(body.due_time)
+    ) {
+      errs.push({ field: 'due_time', message: 'Must be HH:MM or HH:MM:SS.' })
+    }
   }
+
+  for (const field of ['raw_input', 'description', 'context'] as const) {
+    const value = body[field]
+    if (value !== undefined && value !== null && typeof value !== 'string') {
+      errs.push({ field, message: 'Must be a string or null.' })
+    } else if (typeof value === 'string' && value.length > MAX_CONTEXT) {
+      errs.push({ field, message: `Must be ${MAX_CONTEXT} chars or fewer.` })
+    }
+  }
+
   if (body.estimated_minutes !== undefined && body.estimated_minutes !== null) {
     const n = Number(body.estimated_minutes)
     if (!Number.isFinite(n) || n < 0 || n > 60 * 24 * 7) {
       errs.push({ field: 'estimated_minutes', message: 'Must be between 0 and 10080.' })
     }
   }
-  return errs
+
+  validateStringArray('people', body.people, errs)
+  validateStringArray('tags', body.tags, errs)
+
+  if (errs.length > 0) {
+    return { errors: errs, task: null }
+  }
+
+  return {
+    errors: [],
+    task: {
+      title: (body.title as string).trim(),
+      raw_input: normalizeNullableText(body.raw_input),
+      description: normalizeNullableText(body.description),
+      priority: (body.priority as string | undefined) ?? 'medium',
+      due_date: (body.due_date as string | null | undefined) ?? null,
+      due_time: (body.due_time as string | null | undefined) ?? null,
+      context: normalizeNullableText(body.context),
+      source: (body.source as string | undefined) ?? 'manual',
+      action_type: (body.action_type as string | undefined) ?? 'manual',
+      estimated_minutes:
+        body.estimated_minutes === undefined || body.estimated_minutes === null
+          ? null
+          : Math.round(Number(body.estimated_minutes)),
+      energy_level: (body.energy_level as string | null | undefined) ?? null,
+      people: normalizeStringArray(body.people),
+      tags: normalizeStringArray(body.tags),
+    },
+  }
 }
 
 export async function GET() {
@@ -93,7 +204,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
   }
 
-  const errors = validateTaskInput(body)
+  const { errors, task: validatedTask } = validateTaskInput(body)
   if (errors.length > 0) {
     return NextResponse.json({ error: 'Validation failed', errors }, { status: 400 })
   }
@@ -105,35 +216,28 @@ export async function POST(request: Request) {
   }
 
   try {
-    const {
-      title,
-      raw_input,
-      priority = 'medium',
-      due_date,
-      context,
-      source = 'manual',
-      action_type = 'manual',
-      estimated_minutes,
-      energy_level,
-      people,
-      tags,
-    } = body as Record<string, unknown>
+    if (!validatedTask) {
+      return NextResponse.json({ error: 'Validation failed' }, { status: 400 })
+    }
+
     const db = supabase as any
     const { data: task, error } = await db
       .from('tasks')
       .insert({
         user_id: user.id,
-        title: (title as string).trim(),
-        raw_input: raw_input ?? null,
-        priority: priority ?? 'medium',
-        due_date: due_date ?? null,
-        context: context ?? null,
-        source: source ?? 'manual',
-        action_type: action_type ?? 'manual',
-        estimated_minutes: estimated_minutes ?? null,
-        energy_level: energy_level ?? null,
-        people: people ?? null,
-        tags: tags ?? null,
+        title: validatedTask.title,
+        raw_input: validatedTask.raw_input,
+        description: validatedTask.description,
+        priority: validatedTask.priority,
+        due_date: validatedTask.due_date,
+        due_time: validatedTask.due_time,
+        context: validatedTask.context,
+        source: validatedTask.source,
+        action_type: validatedTask.action_type,
+        estimated_minutes: validatedTask.estimated_minutes,
+        energy_level: validatedTask.energy_level,
+        people: validatedTask.people,
+        tags: validatedTask.tags,
         status: 'todo',
       })
       .select()

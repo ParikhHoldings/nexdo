@@ -39,6 +39,7 @@
 - added Playwright smoke coverage for the logged-out core product path
 - added Playwright smoke coverage for OpenAPI action schema, MCP/action auth failures, and action CORS headers
 - added GitHub Actions verification for install, lint, typecheck, build, and Playwright smoke testing
+- hardened authenticated task creation with explicit validation/normalization before quota consumption
 - upgraded to Next.js 16 and ESLint 9 flat config
 - remediated the dependency audit to 0 vulnerabilities with a PostCSS override
 - moved the framework request hook from `middleware.ts` to the Next 16 `proxy.ts` convention

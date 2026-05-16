@@ -1,5 +1,15 @@
 # Decisions
 
+## 2026-05-16 - Task creation payloads are normalized before quota
+### Decision
+Authenticated `POST /api/tasks` validates and normalizes title, raw input, description, due date/time, context, source, action type, estimates, energy, people, and tags before consuming task quota or inserting a task.
+
+### Why
+Task data powers briefing, prioritization, imports, and agent execution. Malformed arrays or oversized text should fail with clear 400s before quota is consumed or database errors leak through.
+
+### Impact
+Future task fields should be added to the explicit validation/normalization path before becoming client-writable.
+
 ## 2026-05-16 - MCP task creation respects task quota
 ### Decision
 The `create_task` MCP/ChatGPT Actions tool validates bounded string/metadata inputs and consumes `task_create` quota before inserting a new task. Idempotency replays by `source_agent_id` plus `external_ref` return the existing task before consuming quota.
