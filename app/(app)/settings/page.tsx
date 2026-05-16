@@ -10,11 +10,14 @@ import {
   Check,
   ExternalLink,
   RefreshCw,
+  Palette,
+  Moon,
+  Sun,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { PricingTable } from '@/components/pricing-table'
-import { useUserStore } from '@/lib/store'
+import { useUIStore, useUserStore, type Theme } from '@/lib/store'
 import { persistDemoProfile } from '@/lib/demo-profile'
 import { cn } from '@/lib/utils'
 import {
@@ -26,7 +29,7 @@ import {
   type ApiKeyScope,
 } from '@/lib/agent-scopes'
 
-const SETTINGS_TABS = ['profile', 'billing', 'api'] as const
+const SETTINGS_TABS = ['profile', 'appearance', 'billing', 'api'] as const
 type Tab = (typeof SETTINGS_TABS)[number]
 
 function isSettingsTab(value: string | null): value is Tab {
@@ -43,6 +46,7 @@ function SettingsContent() {
   const requestedTab = searchParams.get('tab')
 
   const { profile, isAuthenticated, setProfile } = useUserStore()
+  const { theme, setTheme } = useUIStore()
 
   const [activeTab, setActiveTab] = useState<Tab>(
     isSettingsTab(requestedTab) ? requestedTab : 'profile'
@@ -254,8 +258,17 @@ function SettingsContent() {
 
   const tabs = [
     { key: 'profile' as Tab, label: 'Profile', icon: User },
+    { key: 'appearance' as Tab, label: 'Appearance', icon: Palette },
     { key: 'billing' as Tab, label: 'Billing', icon: CreditCard },
     { key: 'api' as Tab, label: 'API', icon: Key },
+  ]
+  const themeOptions: Array<{
+    value: Theme
+    label: string
+    icon: typeof Moon
+  }> = [
+    { value: 'dark', label: 'Dark', icon: Moon },
+    { value: 'light', label: 'Light', icon: Sun },
   ]
 
   return (
@@ -352,6 +365,70 @@ function SettingsContent() {
                 {saveError && (
                   <span className="text-sm text-red-400">{saveError}</span>
                 )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Appearance Tab */}
+        {activeTab === 'appearance' && (
+          <div className="space-y-6">
+            <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 space-y-5">
+              <div>
+                <h2 className="text-lg font-semibold text-zinc-100">
+                  Appearance
+                </h2>
+                <p className="mt-1 text-sm text-zinc-500">
+                  Choose how Nexdo looks on this device.
+                </p>
+              </div>
+
+              <div
+                role="radiogroup"
+                aria-label="Theme"
+                className="grid gap-3 sm:grid-cols-2"
+              >
+                {themeOptions.map((option) => {
+                  const Icon = option.icon
+                  const isSelected = theme === option.value
+
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      role="radio"
+                      aria-checked={isSelected}
+                      onClick={() => setTheme(option.value)}
+                      className={cn(
+                        'flex items-center gap-3 rounded-lg border p-4 text-left transition-colors',
+                        isSelected
+                          ? 'border-accent/60 bg-accent/10 text-zinc-100'
+                          : 'border-zinc-800 bg-zinc-900 text-zinc-400 hover:border-zinc-700 hover:text-zinc-100'
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          'flex h-10 w-10 items-center justify-center rounded-lg border',
+                          isSelected
+                            ? 'border-accent bg-accent/15 text-accent'
+                            : 'border-zinc-800 bg-zinc-800/50 text-zinc-400'
+                        )}
+                      >
+                        <Icon className="h-5 w-5" />
+                      </span>
+                      <span>
+                        <span className="block font-medium">
+                          {option.label}
+                        </span>
+                        <span className="text-sm text-zinc-500">
+                          {option.value === 'dark'
+                            ? 'Low-glare workspace'
+                            : 'Bright workspace'}
+                        </span>
+                      </span>
+                    </button>
+                  )
+                })}
               </div>
             </div>
           </div>

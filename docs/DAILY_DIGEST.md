@@ -80,6 +80,7 @@
 - Moved the Next middleware entrypoint to the Next 16 `proxy.ts` convention.
 - Hardened profile updates with allowlisted timezone/work-type values and name length normalization.
 - Fixed mobile startup so the navigation drawer does not cover the main task screen by default.
+- Added real persisted dark/light appearance support before reintroducing theme controls.
 - Tightened launch-facing copy to avoid claims about open-ended task completion, large traction, and unverified enterprise readiness.
 - Added `docs/LAUNCH_PLAN.md` for the Monday early-access target and long-term AI-agent path.
 

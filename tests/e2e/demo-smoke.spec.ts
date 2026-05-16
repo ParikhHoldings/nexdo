@@ -199,8 +199,39 @@ test('settings tab query opens billing tab', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Current Plan' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Billing' })).toHaveClass(/bg-accent/)
   await expect(page.getByRole('button', { name: 'Notifications' })).toHaveCount(0)
-  await expect(page.getByRole('button', { name: /Light mode|Dark mode/ })).toHaveCount(0)
   await expect(page.getByRole('button', { name: 'Sign out' })).toHaveCount(0)
+})
+
+test('appearance settings apply and persist theme locally', async ({ page }) => {
+  await page.goto('/settings?tab=appearance')
+
+  await expect(page.getByRole('heading', { name: 'Appearance' })).toBeVisible()
+  await expect(page.getByRole('radio', { name: /Dark/ })).toHaveAttribute(
+    'aria-checked',
+    'true'
+  )
+
+  await page.getByRole('radio', { name: /Light/ }).click()
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light')
+  await expect(page.locator('body')).toHaveClass(/light/)
+  await expect(page.getByRole('radio', { name: /Light/ })).toHaveAttribute(
+    'aria-checked',
+    'true'
+  )
+  await expect.poll(
+    async () => page.evaluate(() => window.localStorage.getItem('nexdo_theme'))
+  ).toBe('light')
+
+  await page.reload()
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light')
+  await expect(page.getByRole('radio', { name: /Light/ })).toHaveAttribute(
+    'aria-checked',
+    'true'
+  )
+
+  await page.getByRole('radio', { name: /Dark/ }).click()
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
+  await expect(page.locator('body')).toHaveClass(/dark/)
 })
 
 test('demo profile settings save locally across reloads', async ({ page }) => {

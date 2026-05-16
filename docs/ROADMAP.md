@@ -5,6 +5,7 @@
 - Supabase schema/migrations and auth/data helpers exist.
 - AI parsing, prioritization, briefings, and bounded agent execution code exists.
 - Local deterministic fallbacks now support demo-mode parsing, prioritization, briefing, and bounded agent outputs when provider env is missing.
+- The app workspace now has a real persisted dark/light appearance preference.
 - Strict build rails are restored so lint and TypeScript errors block production builds.
 - A Playwright smoke test covers the core logged-out demo path.
 - Playwright now covers demo workspace navigation across All Tasks search/filtering, Upcoming grouping, and Done task lifecycle.

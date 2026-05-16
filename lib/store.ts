@@ -4,6 +4,20 @@ import { create } from 'zustand'
 import type { Task, Profile, BriefingContent, TaskUpdate } from './database.types'
 import { persistDemoTasks } from './tasks'
 
+export type Theme = 'dark' | 'light'
+const THEME_STORAGE_KEY = 'nexdo_theme'
+
+function getInitialTheme(): Theme {
+  if (typeof window === 'undefined') return 'dark'
+  const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY)
+  return storedTheme === 'light' || storedTheme === 'dark' ? storedTheme : 'dark'
+}
+
+function persistTheme(theme: Theme) {
+  if (typeof window === 'undefined') return
+  window.localStorage.setItem(THEME_STORAGE_KEY, theme)
+}
+
 interface TaskState {
   tasks: Task[]
   selectedTask: Task | null
@@ -234,13 +248,13 @@ export const useBriefingStore = create<BriefingState>((set) => ({
 }))
 
 interface UIState {
-  theme: 'dark' | 'light'
+  theme: Theme
   sidebarCollapsed: boolean
   commandBarOpen: boolean
 
   // Actions
   toggleTheme: () => void
-  setTheme: (theme: 'dark' | 'light') => void
+  setTheme: (theme: Theme) => void
   toggleSidebar: () => void
   setSidebarCollapsed: (collapsed: boolean) => void
   openCommandBar: () => void
@@ -248,16 +262,21 @@ interface UIState {
 }
 
 export const useUIStore = create<UIState>((set) => ({
-  theme: 'dark',
+  theme: getInitialTheme(),
   sidebarCollapsed: true,
   commandBarOpen: false,
 
   toggleTheme: () =>
-    set((state) => ({
-      theme: state.theme === 'dark' ? 'light' : 'dark',
-    })),
+    set((state) => {
+      const theme = state.theme === 'dark' ? 'light' : 'dark'
+      persistTheme(theme)
+      return { theme }
+    }),
 
-  setTheme: (theme) => set({ theme }),
+  setTheme: (theme) => {
+    persistTheme(theme)
+    set({ theme })
+  },
 
   toggleSidebar: () =>
     set((state) => ({

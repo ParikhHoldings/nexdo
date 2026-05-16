@@ -6,6 +6,7 @@ import { TaskDetail } from '@/components/task-detail'
 import { ToastProvider } from '@/components/ui'
 import { useToast } from '@/components/ui/toast'
 import { SidebarSkeleton, TaskListSkeleton } from '@/components/ui/skeleton'
+import { ThemeController } from '@/components/theme-controller'
 import { useTaskStore, useUserStore } from '@/lib/store'
 import { getDemoTasks } from '@/lib/tasks'
 import { getDemoProfile } from '@/lib/demo-profile'
@@ -102,6 +103,7 @@ export default function AppLayout({
 
   return (
     <ToastProvider>
+      <ThemeController />
       <TaskStoreErrorToast />
       <div className="flex h-screen bg-zinc-950">
         {isLoading ? <SidebarSkeleton /> : <Sidebar />}
