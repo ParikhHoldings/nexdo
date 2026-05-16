@@ -7,6 +7,7 @@ import {
   normalizeTask,
   saveImportedTasks,
 } from '@/lib/importers'
+import { enforceImportQuota } from '@/lib/import-quota'
 import type { TaskInsert } from '@/lib/database.types'
 
 export async function POST(request: Request) {
@@ -103,6 +104,9 @@ export async function POST(request: Request) {
         { status: 400 }
       )
     }
+
+    const quotaResponse = await enforceImportQuota(userId, tasks.length)
+    if (quotaResponse) return quotaResponse
 
     // Save tasks
     const result = await saveImportedTasks(tasks, dbClient)

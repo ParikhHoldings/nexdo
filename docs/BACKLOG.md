@@ -20,6 +20,7 @@
 - hardened task mutation routes with allowlisted PATCH fields and owned-delete 404 handling
 - hardened authenticated agent execution so the server runs only owned executable task records and persists output
 - fixed optimistic task updates so agent-output edits do not accidentally clear `completed_at`
+- enforced monthly task quotas across CSV, JSON, ICS, Todoist, Google Tasks, and Microsoft To Do imports
 - hardened Stripe checkout so clients can only request server-known `pro` or `power` plans and cannot override price IDs
 - hardened Stripe webhooks so unknown price IDs do not grant paid-tier access by default
 - added Playwright smoke coverage for the logged-out core product path
@@ -56,6 +57,7 @@
 - add focused tests for task validation, import normalization, quota/rate-limit helpers, and MCP tool handlers
 - add unit tests for deterministic task intelligence fallbacks
 - verify import routes with representative Todoist, CSV, ICS, Trello, and Things-style files
+- verify import quota behavior against a real Supabase profile near the monthly task limit
 - improve OpenAPI/action response consistency where wrappers differ from MCP tool payloads
 - document known local-development and production-environment setup steps
 

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { parseTodoistTask, saveImportedTasks } from '@/lib/importers'
+import { enforceImportQuota } from '@/lib/import-quota'
 import type { TaskInsert } from '@/lib/database.types'
 
 export async function POST(request: Request) {
@@ -56,6 +57,9 @@ export async function POST(request: Request) {
     const tasks: TaskInsert[] = todoistTasks.map((task: Record<string, unknown>) =>
       parseTodoistTask(task, userId)
     )
+
+    const quotaResponse = await enforceImportQuota(userId, tasks.length)
+    if (quotaResponse) return quotaResponse
 
     // Save tasks
     const result = await saveImportedTasks(tasks, dbClient)

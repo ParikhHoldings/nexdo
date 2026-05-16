@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { parseMicrosoftTask, saveImportedTasks } from '@/lib/importers'
+import { enforceImportQuota } from '@/lib/import-quota'
 import type { TaskInsert } from '@/lib/database.types'
 
 export async function POST(request: Request) {
@@ -67,6 +68,9 @@ export async function POST(request: Request) {
         }
       }
     }
+
+    const quotaResponse = await enforceImportQuota(userId, allTasks.length)
+    if (quotaResponse) return quotaResponse
 
     // Save tasks
     const result = await saveImportedTasks(allTasks, dbClient)

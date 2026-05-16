@@ -63,4 +63,9 @@ test('task mutation endpoints require configured auth', async ({ request }) => {
     data: { taskId: 'not-a-real-task' },
   })
   expect([401, 503]).toContain(execute.status())
+
+  const csvImport = await request.post('/api/import/csv', {
+    data: { content: 'title\nImported smoke task' },
+  })
+  expect([401, 503]).toContain(csvImport.status())
 })

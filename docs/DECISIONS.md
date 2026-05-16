@@ -1,5 +1,15 @@
 # Decisions
 
+## 2026-05-16 - Imports must respect task quotas
+### Decision
+Authenticated imports consume task-create quota for the number of tasks being imported before saving them.
+
+### Why
+Imports are task creation. Free-tier limits and future plan limits should not be bypassable through CSV, calendar, JSON, or external task imports.
+
+### Impact
+Future import UX should show remaining task capacity before upload and real Supabase smoke tests should verify behavior near monthly limits.
+
 ## 2026-05-16 - Agent execution must operate on owned task records
 ### Decision
 Authenticated `/api/agent/execute` requests must provide a task ID. The server loads the task for the current user, verifies it is executable, runs the bounded agent action, saves the result to `agent_output`, and then records quota usage.

@@ -8,6 +8,7 @@ The goal is not a broad public launch. The credible Monday target is a verified 
 - A usable logged-out demo flow: load `/today`, inspect demo tasks, add a natural-language task, see prioritization, open an executable task, and generate a bounded agent output. Verified locally on 2026-05-16.
 - Core task mutation routes now validate allowlisted fields and protect owned-task updates/deletes.
 - Authenticated agent execution now loads owned task records by `taskId`, rejects unsupported action types, saves output server-side, and checks quota-consumption failures.
+- Authenticated task imports now consume monthly task quota in batch before saving imported tasks.
 - Public AI-agent surfaces expose a valid OpenAPI action contract and enforce bearer auth before tool execution. Smoke-tested locally on 2026-05-16.
 - MCP/API keys now have local scope modeling, scope-aware setup UI, scope-filtered tool listings, scope enforcement, and an agent action audit table. Real Supabase/API-key verification is still required before treating this as production-ready.
 - The MCP settings page now exposes recent agent activity from the audit table when a user is authenticated.
