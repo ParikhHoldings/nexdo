@@ -80,6 +80,7 @@
 - moved the framework request hook from `middleware.ts` to the Next 16 `proxy.ts` convention
 - fixed mobile app startup so the navigation drawer no longer covers the main task screen by default
 - added real persisted dark/light appearance support before reintroducing theme controls
+- added real local browser due-task reminders before reintroducing notification controls
 - tightened launch-facing copy away from open-ended autonomy, unverified traction, and unverified enterprise-security claims
 - verified `npm ci`, `npm run lint`, `npm run typecheck`, `npm run build`, and `npm run test:e2e` locally
 
@@ -99,7 +100,6 @@
 - complete Quill/founder review of `app/(marketing)/page.tsx` before public launch
 
 ## Medium priority
-- add real notification delivery before reintroducing notification preference controls
 - identify the fastest revenue angle for an AI-native task manager in this portfolio context
 - tighten landing/waitlist language around the clearest user promise
 - clarify whether Nexdo should lead with founder/operator use case or broader team use case

@@ -3,6 +3,7 @@
 import { Suspense, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import {
+  Bell,
   User,
   CreditCard,
   Key,
@@ -15,6 +16,7 @@ import {
   Sun,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { PricingTable } from '@/components/pricing-table'
 import { useUIStore, useUserStore, type Theme } from '@/lib/store'
@@ -29,7 +31,7 @@ import {
   type ApiKeyScope,
 } from '@/lib/agent-scopes'
 
-const SETTINGS_TABS = ['profile', 'appearance', 'billing', 'api'] as const
+const SETTINGS_TABS = ['profile', 'appearance', 'notifications', 'billing', 'api'] as const
 type Tab = (typeof SETTINGS_TABS)[number]
 
 function isSettingsTab(value: string | null): value is Tab {
@@ -46,7 +48,14 @@ function SettingsContent() {
   const requestedTab = searchParams.get('tab')
 
   const { profile, isAuthenticated, setProfile } = useUserStore()
-  const { theme, setTheme } = useUIStore()
+  const {
+    theme,
+    setTheme,
+    browserNotificationsEnabled,
+    notificationPermission,
+    setBrowserNotificationsEnabled,
+    setNotificationPermission,
+  } = useUIStore()
 
   const [activeTab, setActiveTab] = useState<Tab>(
     isSettingsTab(requestedTab) ? requestedTab : 'profile'
@@ -74,6 +83,8 @@ function SettingsContent() {
   const [apiKeyError, setApiKeyError] = useState<string | null>(null)
   const [billingError, setBillingError] = useState<string | null>(null)
   const [isManagingBilling, setIsManagingBilling] = useState(false)
+  const [notificationMessage, setNotificationMessage] = useState<string | null>(null)
+  const [notificationError, setNotificationError] = useState<string | null>(null)
 
   const handleCopyApiKey = () => {
     if (copyableApiKey) {
@@ -256,9 +267,42 @@ function SettingsContent() {
     }
   }
 
+  const handleBrowserNotificationsChange = async (enabled: boolean) => {
+    setNotificationMessage(null)
+    setNotificationError(null)
+
+    if (!enabled) {
+      setBrowserNotificationsEnabled(false)
+      setNotificationMessage('Browser reminders disabled.')
+      return
+    }
+
+    if (typeof window === 'undefined' || !('Notification' in window)) {
+      setNotificationPermission('unsupported')
+      setBrowserNotificationsEnabled(false)
+      setNotificationError('This browser does not support notifications.')
+      return
+    }
+
+    let permission = window.Notification.permission
+    if (permission === 'default') {
+      permission = await window.Notification.requestPermission()
+    }
+
+    setNotificationPermission(permission)
+    if (permission === 'granted') {
+      setBrowserNotificationsEnabled(true)
+      setNotificationMessage('Browser reminders enabled. Nexdo will notify once per due task each day.')
+    } else {
+      setBrowserNotificationsEnabled(false)
+      setNotificationError('Notification permission was not granted.')
+    }
+  }
+
   const tabs = [
     { key: 'profile' as Tab, label: 'Profile', icon: User },
     { key: 'appearance' as Tab, label: 'Appearance', icon: Palette },
+    { key: 'notifications' as Tab, label: 'Notifications', icon: Bell },
     { key: 'billing' as Tab, label: 'Billing', icon: CreditCard },
     { key: 'api' as Tab, label: 'API', icon: Key },
   ]
@@ -429,6 +473,53 @@ function SettingsContent() {
                     </button>
                   )
                 })}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Notifications Tab */}
+        {activeTab === 'notifications' && (
+          <div className="space-y-6">
+            <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 space-y-5">
+              <div>
+                <h2 className="text-lg font-semibold text-zinc-100">
+                  Notifications
+                </h2>
+                <p className="mt-1 text-sm text-zinc-500">
+                  Get browser reminders for active tasks due today or overdue.
+                </p>
+              </div>
+
+              <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-4 space-y-3">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="space-y-1">
+                    <h3 className="text-sm font-medium text-zinc-100">
+                      Browser due-task reminders
+                    </h3>
+                    <p className="text-sm text-zinc-500">
+                      Nexdo sends one local browser notification per due task each day while the app is open.
+                    </p>
+                    <p className="text-xs text-zinc-500">
+                      Permission: {notificationPermission}
+                    </p>
+                  </div>
+                  <Checkbox
+                    aria-label="Browser due-task reminders"
+                    checked={browserNotificationsEnabled}
+                    disabled={notificationPermission === 'unsupported'}
+                    onChange={(event) =>
+                      handleBrowserNotificationsChange(event.currentTarget.checked)
+                    }
+                  />
+                </div>
+
+                {notificationMessage && (
+                  <p className="text-sm text-emerald-400">{notificationMessage}</p>
+                )}
+                {notificationError && (
+                  <p className="text-sm text-red-400">{notificationError}</p>
+                )}
               </div>
             </div>
           </div>

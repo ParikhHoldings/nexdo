@@ -6,6 +6,7 @@
 - AI parsing, prioritization, briefings, and bounded agent execution code exists.
 - Local deterministic fallbacks now support demo-mode parsing, prioritization, briefing, and bounded agent outputs when provider env is missing.
 - The app workspace now has a real persisted dark/light appearance preference.
+- The app workspace now has permission-gated local browser reminders for active tasks due today or overdue.
 - Strict build rails are restored so lint and TypeScript errors block production builds.
 - A Playwright smoke test covers the core logged-out demo path.
 - Playwright now covers demo workspace navigation across All Tasks search/filtering, Upcoming grouping, and Done task lifecycle.

@@ -26,6 +26,7 @@ Make Nexdo a credible, launchable early-access product by Monday, 2026-05-18, wi
 | Verify demo workspace navigation and task lifecycle | Playwright now covers `/all` search/filtering, `/upcoming` date grouping, completing a task into `/done`, persistence after reload, and clearing completed demo tasks | Locally verified |
 | Keep demo profile settings functional | Logged-out/no-auth profile changes save to localStorage instead of failing against the authenticated profile API; Playwright verifies demo name/timezone persist across reloads | Locally verified |
 | Make appearance settings functional | Settings now includes a real Appearance tab backed by the UI store, `localStorage`, a theme controller, and light-mode CSS mappings; Playwright verifies light/dark selection applies to the document and survives reload | Locally verified |
+| Make notification settings functional | Settings now includes a real Notifications tab backed by local browser notification permission, `localStorage`, and a due-task notification controller; Playwright stubs the browser Notification API and verifies permission request, reminder delivery, persistence, and once-per-task-per-day replay prevention | Locally verified |
 | Keep demo users out of authenticated UI state | Demo profiles no longer mark `useUserStore` authenticated, preventing signed-in-only controls such as sign-out from appearing in no-auth demo mode; Playwright covers the absence of sign-out in demo settings | Locally verified |
 | Make import front-end usable in demo mode | Logged-out file imports now parse CSV, JSON, and ICS client-side instead of hitting authenticated import APIs; Playwright verifies a CSV import appears in the task list without configured auth | Locally verified |
 | Cover representative import parsing | `tests/e2e/importers.spec.ts` verifies Todoist, CSV with auto mapping, ICS VTODO metadata, Trello JSON, Things-style JSON, and invalid JSON parser behavior | Done |
@@ -81,7 +82,7 @@ Make Nexdo a credible, launchable early-access product by Monday, 2026-05-18, wi
 - `npm run lint`
 - `npm run typecheck`
 - `npm run build`
-- `npm run test:e2e` including logged-out task capture/edit/reload persistence/agent output, demo briefing refresh, All Tasks search/filtering, Upcoming grouping, Done clear/reload lifecycle, persistent appearance settings, auth guardrails, MCP/OpenAPI/Stripe guardrails, DB-backed MCP handler and API-key validation coverage, demo CSV file import, login demo-mode entry, free-plan API-key UI gating, and settings tab deep links
+- `npm run test:e2e` including logged-out task capture/edit/reload persistence/agent output, demo briefing refresh, All Tasks search/filtering, Upcoming grouping, Done clear/reload lifecycle, persistent appearance and browser reminder settings, auth guardrails, MCP/OpenAPI/Stripe guardrails, DB-backed MCP handler and API-key validation coverage, demo CSV file import, login demo-mode entry, free-plan API-key UI gating, and settings tab deep links
 - `npm audit --audit-level=moderate`
 - `git diff --check`
 - PR #3 GitHub Actions Web rails
@@ -91,7 +92,7 @@ Make Nexdo a credible, launchable early-access product by Monday, 2026-05-18, wi
 - `npm run verify:env` failed because `.env.local` is not present in this workspace. `.env.local.example` is present, but it is only the contract and cannot support provider smoke checks.
 
 ## Current completion judgment
-The Monday early-access demo, local build/test rails, demo task persistence, persistent appearance settings, task mutation guards, AI input/output guards, authenticated agent execution guards, DB-backed MCP handler and API-key validation behavior, import quota guards, and billing route guards are in materially better shape and are locally verified. The broader objective is not complete as a production launch because provider-backed flows, real database/auth, Stripe billing, authenticated MCP tool execution, deployment rails, and approvals remain unverified.
+The Monday early-access demo, local build/test rails, demo task persistence, persistent appearance and browser reminder settings, task mutation guards, AI input/output guards, authenticated agent execution guards, DB-backed MCP handler and API-key validation behavior, import quota guards, and billing route guards are in materially better shape and are locally verified. The broader objective is not complete as a production launch because provider-backed flows, real database/auth, Stripe billing, authenticated MCP tool execution, deployment rails, and approvals remain unverified.
 
 ## Next required work
 1. Configure a real Supabase project and run `npm run smoke:supabase -- --write` to verify migrations, auth, profile creation, RLS, task CRUD, and audit events.

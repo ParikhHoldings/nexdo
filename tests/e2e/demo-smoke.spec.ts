@@ -198,7 +198,7 @@ test('settings tab query opens billing tab', async ({ page }) => {
 
   await expect(page.getByRole('heading', { name: 'Current Plan' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Billing' })).toHaveClass(/bg-accent/)
-  await expect(page.getByRole('button', { name: 'Notifications' })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Notifications' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Sign out' })).toHaveCount(0)
 })
 
@@ -232,6 +232,96 @@ test('appearance settings apply and persist theme locally', async ({ page }) => 
   await page.getByRole('radio', { name: /Dark/ }).click()
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
   await expect(page.locator('body')).toHaveClass(/dark/)
+})
+
+test('notification settings request permission and deliver due-task reminders', async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const deliveredNotifications: Array<{
+      title: string
+      options?: NotificationOptions
+    }> = []
+
+    class MockNotification {
+      static permission: NotificationPermission =
+        (window.localStorage.getItem('__mock_notification_permission') as NotificationPermission | null) ||
+        'default'
+
+      onclick: (() => void) | null = null
+
+      constructor(title: string, options?: NotificationOptions) {
+        deliveredNotifications.push({ title, options })
+      }
+
+      static async requestPermission() {
+        MockNotification.permission = 'granted'
+        window.localStorage.setItem('__mock_notification_permission', 'granted')
+        return MockNotification.permission
+      }
+    }
+
+    Object.defineProperty(window, 'Notification', {
+      value: MockNotification,
+      configurable: true,
+    })
+    ;(window as typeof window & {
+      __nexdoNotifications: typeof deliveredNotifications
+    }).__nexdoNotifications = deliveredNotifications
+  })
+
+  await page.goto('/settings?tab=notifications')
+
+  await expect(page.getByRole('heading', { name: 'Notifications' })).toBeVisible()
+  await expect(page.getByText('Permission: default')).toBeVisible()
+
+  await page
+    .getByRole('checkbox', { name: 'Browser due-task reminders' })
+    .check({ force: true })
+
+  await expect(page.getByText('Browser reminders enabled.')).toBeVisible()
+  await expect(page.getByText('Permission: granted')).toBeVisible()
+  await expect.poll(
+    async () =>
+      page.evaluate(() =>
+        window.localStorage.getItem('nexdo_browser_notifications_enabled')
+      )
+  ).toBe('true')
+
+  await expect.poll(
+    async () =>
+      page.evaluate(
+        () =>
+          (window as typeof window & {
+            __nexdoNotifications: Array<{ title: string }>
+          }).__nexdoNotifications.length
+      )
+  ).toBeGreaterThan(0)
+
+  const delivered = await page.evaluate(
+    () =>
+      (window as typeof window & {
+        __nexdoNotifications: Array<{
+          title: string
+          options?: NotificationOptions
+        }>
+      }).__nexdoNotifications
+  )
+  expect(delivered[0].title).toContain('Nexdo:')
+  expect(delivered[0].options?.body).toContain('Due today')
+
+  await page.reload()
+  await expect(page.getByText('Permission: granted')).toBeVisible()
+  await expect(page.getByRole('checkbox', { name: 'Browser due-task reminders' })).toBeChecked()
+  await expect.poll(
+    async () =>
+      page.evaluate(
+        () =>
+          (window as typeof window & {
+            __nexdoNotifications: Array<{ title: string }>
+          }).__nexdoNotifications.length
+      )
+  ).toBe(0)
 })
 
 test('demo profile settings save locally across reloads', async ({ page }) => {

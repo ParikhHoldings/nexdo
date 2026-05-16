@@ -10,6 +10,7 @@ This repo currently contains a Next.js app with:
 - bounded validation for OpenAI JSON output before parsed tasks, briefings, prioritization, or agent results are returned or saved
 - localStorage-backed demo-mode task and profile data when Supabase is unavailable or the visitor is logged out
 - persistent dark/light appearance preferences for the app workspace
+- local browser due-task reminders for active tasks due today or overdue
 - imports from Todoist and file-based task exports such as CSV, ICS, JSON/Trello/Things-style sources, including client-side demo file imports for logged-out visitors
 - Stripe plan, checkout, portal, webhook, quota, and rate-limit scaffolding
 - MCP and ChatGPT Actions surfaces for external agents to list, create, complete, update, search, and brief tasks
@@ -25,7 +26,7 @@ Last checked on 2026-05-16:
 - `npm run lint` passed
 - `npm run typecheck` passed
 - `npm run build` passed
-- `npm run test:e2e` passed for logged-out demo workflows, task workspace lifecycle, persistent appearance settings, MCP/OpenAPI/action auth smoke tests, DB-backed MCP handler and API-key validation coverage, billing guardrails, deterministic task-intelligence coverage, import parser coverage, Stripe entitlement mapping, and local validation helper contracts
+- `npm run test:e2e` passed for logged-out demo workflows, task workspace lifecycle, persistent appearance and browser reminder settings, MCP/OpenAPI/action auth smoke tests, DB-backed MCP handler and API-key validation coverage, billing guardrails, deterministic task-intelligence coverage, import parser coverage, Stripe entitlement mapping, and local validation helper contracts
 - PR #3 Web rails passed in GitHub Actions
 - PR #3 Vercel preview deployment completed
 

@@ -2,6 +2,12 @@
 
 import { create } from 'zustand'
 import type { Task, Profile, BriefingContent, TaskUpdate } from './database.types'
+import {
+  getBrowserNotificationPermission,
+  getStoredBrowserNotificationsEnabled,
+  persistBrowserNotificationsEnabled,
+  type BrowserNotificationPermission,
+} from './browser-notifications'
 import { persistDemoTasks } from './tasks'
 
 export type Theme = 'dark' | 'light'
@@ -249,12 +255,16 @@ export const useBriefingStore = create<BriefingState>((set) => ({
 
 interface UIState {
   theme: Theme
+  browserNotificationsEnabled: boolean
+  notificationPermission: BrowserNotificationPermission
   sidebarCollapsed: boolean
   commandBarOpen: boolean
 
   // Actions
   toggleTheme: () => void
   setTheme: (theme: Theme) => void
+  setBrowserNotificationsEnabled: (enabled: boolean) => void
+  setNotificationPermission: (permission: BrowserNotificationPermission) => void
   toggleSidebar: () => void
   setSidebarCollapsed: (collapsed: boolean) => void
   openCommandBar: () => void
@@ -263,6 +273,8 @@ interface UIState {
 
 export const useUIStore = create<UIState>((set) => ({
   theme: getInitialTheme(),
+  browserNotificationsEnabled: getStoredBrowserNotificationsEnabled(),
+  notificationPermission: getBrowserNotificationPermission(),
   sidebarCollapsed: true,
   commandBarOpen: false,
 
@@ -277,6 +289,13 @@ export const useUIStore = create<UIState>((set) => ({
     persistTheme(theme)
     set({ theme })
   },
+
+  setBrowserNotificationsEnabled: (enabled) => {
+    persistBrowserNotificationsEnabled(enabled)
+    set({ browserNotificationsEnabled: enabled })
+  },
+
+  setNotificationPermission: (permission) => set({ notificationPermission: permission }),
 
   toggleSidebar: () =>
     set((state) => ({
