@@ -1,5 +1,15 @@
 # Decisions
 
+## 2026-05-16 - Profile updates must be allowlisted
+### Decision
+`PATCH /api/profile` validates mutable profile fields before updating: bounded name length, known timezone values, and known work types.
+
+### Why
+Settings data flows into personalization and product surfaces. Invalid profile data should fail with clear 400s instead of relying on database errors or accepting arbitrary strings.
+
+### Impact
+Future profile fields should add explicit API validation before being written.
+
 ## 2026-05-16 - Validate AI request bodies before consuming rate limits
 ### Decision
 Task parse, prioritization, and briefing routes parse and validate request bodies before calling the shared rate-limit RPC.

@@ -37,6 +37,7 @@
 - Added GitHub Actions verification for install, lint, typecheck, build, and Playwright smoke testing.
 - Upgraded to Next.js 16, ESLint 9 flat config, and a PostCSS override; `npm audit --audit-level=moderate` now reports 0 vulnerabilities.
 - Moved the Next middleware entrypoint to the Next 16 `proxy.ts` convention.
+- Hardened profile updates with allowlisted timezone/work-type values and name length normalization.
 - Fixed mobile startup so the navigation drawer does not cover the main task screen by default.
 - Tightened launch-facing copy to avoid claims about open-ended task completion, large traction, and unverified enterprise readiness.
 - Added `docs/LAUNCH_PLAN.md` for the Monday early-access target and long-term AI-agent path.

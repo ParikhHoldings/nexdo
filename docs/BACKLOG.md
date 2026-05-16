@@ -19,6 +19,7 @@
 - added agent write idempotency for `create_task` through `source_agent_id` plus `external_ref`
 - opened PR #3 and verified GitHub Actions Web rails plus Vercel preview deployment
 - enabled strict lint/typecheck behavior in production builds
+- hardened profile updates with allowlisted timezone/work-type values and name length normalization
 - added deterministic local task intelligence fallbacks for demo/provider-missing flows
 - moved AI route body validation before rate-limit consumption for parse, prioritize, and briefing requests
 - hardened task mutation routes with allowlisted PATCH fields and owned-delete 404 handling

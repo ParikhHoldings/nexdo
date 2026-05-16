@@ -73,4 +73,9 @@ test('task mutation endpoints require configured auth', async ({ request }) => {
     data: { scopes: ['tasks:read'] },
   })
   expect([401, 503]).toContain(apiKey.status())
+
+  const profile = await request.patch('/api/profile', {
+    data: { full_name: 'Smoke User', timezone: 'Not/AZone', work_type: 'owner' },
+  })
+  expect([401, 503]).toContain(profile.status())
 })
