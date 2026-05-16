@@ -55,6 +55,7 @@
 - hardened Stripe webhooks so unknown price IDs do not grant paid-tier access by default
 - added Playwright smoke coverage for the logged-out core product path
 - added Playwright smoke coverage for OpenAPI action schema, MCP/action auth failures, and action CORS headers
+- made the ChatGPT Actions OpenAPI spec emit the serving request origin when `NEXT_PUBLIC_APP_URL` is not configured
 - added GitHub Actions verification for install, lint, typecheck, build, and Playwright smoke testing
 - hardened authenticated task creation with explicit validation/normalization before quota consumption
 - upgraded to Next.js 16 and ESLint 9 flat config

@@ -15,8 +15,12 @@ test('OpenAPI exposes the agent action contract', async ({ request }) => {
   expect(response.ok()).toBeTruthy()
 
   const spec = await response.json()
+  const advertisedServerUrl = new URL(spec.servers[0].url)
   expect(spec.openapi).toBe('3.0.0')
   expect(spec.info.title).toBe('Nexdo API')
+  expect(advertisedServerUrl.protocol).toBe('http:')
+  expect(['127.0.0.1', 'localhost']).toContain(advertisedServerUrl.hostname)
+  expect(advertisedServerUrl.port).toBe('3001')
   expect(spec.components.securitySchemes.BearerAuth).toMatchObject({
     type: 'http',
     scheme: 'bearer',
