@@ -12,6 +12,7 @@
 - added an authenticated MCP smoke script for real API-key verification
 - expanded MCP smoke coverage to verify read-only scoped API keys hide and deny write tools when `NEXDO_READONLY_API_KEY` is provided
 - exposed MCP create/update metadata for agent-created task traceability
+- added bounded MCP tool input validation and made MCP `create_task` consume task-create quota
 - added scoped API key permissions, MCP scope filtering/enforcement, and an `agent_action_events` audit trail migration
 - rate-limited API key rotation for scoped MCP/API keys
 - moved generated MCP/API keys to hashed storage with one-time reveal, key hints, and legacy raw-key migration fallback

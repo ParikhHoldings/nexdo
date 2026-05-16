@@ -91,14 +91,17 @@ const openApiSpec = {
                 properties: {
                   input: {
                     type: 'string',
+                    maxLength: 2000,
                     description: 'Natural language task description (e.g., "Call John about the project tomorrow at 2pm - high priority")',
                   },
                   source_agent_id: {
                     type: 'string',
+                    maxLength: 160,
                     description: 'Optional stable identifier for the agent creating the task',
                   },
                   external_ref: {
                     type: 'string',
+                    maxLength: 160,
                     description:
                       'Optional idempotency/reference id from the calling agent system. Requires source_agent_id; replays with the same source_agent_id and external_ref return the existing task.',
                   },
@@ -195,6 +198,7 @@ const openApiSpec = {
                   },
                   title: {
                     type: 'string',
+                    maxLength: 500,
                     description: 'New title for the task',
                   },
                   priority: {
@@ -214,14 +218,17 @@ const openApiSpec = {
                   },
                   context: {
                     type: 'string',
+                    maxLength: 4000,
                     description: 'Additional context or notes about the task',
                   },
                   source_agent_id: {
                     type: 'string',
+                    maxLength: 160,
                     description: 'Optional stable identifier for the agent updating the task',
                   },
                   external_ref: {
                     type: 'string',
+                    maxLength: 160,
                     description: 'Optional idempotency/reference id from the calling agent system',
                   },
                   ingestion_intent: {
@@ -307,6 +314,7 @@ const openApiSpec = {
                 properties: {
                   query: {
                     type: 'string',
+                    maxLength: 200,
                     description: 'Search query',
                   },
                   limit: {

@@ -2,6 +2,7 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { parseTaskInput, generateBriefing } from '@/lib/openai'
 import { hasRequiredScope, requiredScopeForTool } from '@/lib/agent-scopes'
 import { apiKeyHint, hashApiKey } from '@/lib/api-keys'
+import { consumeQuota } from '@/lib/quota'
 import type {
   Task,
   TaskStatus,
@@ -9,6 +10,17 @@ import type {
   BriefingContent,
   IngestionIntent,
 } from '@/lib/database.types'
+
+const TASK_STATUSES = ['todo', 'in_progress', 'waiting', 'done', 'cancelled'] as const
+const TASK_PRIORITIES = ['urgent', 'high', 'medium', 'low'] as const
+const INGESTION_INTENTS = ['create', 'update', 'complete', 'auto'] as const
+
+const MAX_AGENT_INPUT = 2000
+const MAX_AGENT_REF = 160
+const MAX_AGENT_METADATA_BYTES = 4000
+const MAX_TITLE = 500
+const MAX_CONTEXT = 4000
+const MAX_SEARCH_QUERY = 200
 
 // Tool definition type
 export interface MCPTool {
@@ -61,15 +73,18 @@ export const MCP_TOOLS: MCPTool[] = [
       properties: {
         input: {
           type: 'string',
+          maxLength: MAX_AGENT_INPUT,
           description:
             'Natural language task description (e.g., "Call John about the project tomorrow at 2pm - high priority")',
         },
         source_agent_id: {
           type: 'string',
+          maxLength: MAX_AGENT_REF,
           description: 'Optional stable identifier for the agent creating the task',
         },
         external_ref: {
           type: 'string',
+          maxLength: MAX_AGENT_REF,
           description:
             'Optional idempotency/reference id from the calling agent system. Requires source_agent_id; replays with the same source_agent_id and external_ref return the existing task.',
         },
@@ -107,6 +122,7 @@ export const MCP_TOOLS: MCPTool[] = [
         },
         title: {
           type: 'string',
+          maxLength: MAX_TITLE,
           description: 'New title for the task',
         },
         priority: {
@@ -125,14 +141,17 @@ export const MCP_TOOLS: MCPTool[] = [
         },
         context: {
           type: 'string',
+          maxLength: MAX_CONTEXT,
           description: 'Additional context or notes about the task',
         },
         source_agent_id: {
           type: 'string',
+          maxLength: MAX_AGENT_REF,
           description: 'Optional stable identifier for the agent updating the task',
         },
         external_ref: {
           type: 'string',
+          maxLength: MAX_AGENT_REF,
           description: 'Optional idempotency/reference id from the calling agent system',
         },
         ingestion_intent: {
@@ -166,6 +185,7 @@ export const MCP_TOOLS: MCPTool[] = [
       properties: {
         query: {
           type: 'string',
+          maxLength: MAX_SEARCH_QUERY,
           description: 'Search query',
         },
         limit: {
@@ -258,20 +278,75 @@ function taskResponse(
   }
 }
 
-function optionalString(value: unknown): string | null {
-  return typeof value === 'string' && value.trim() ? value.trim() : null
+function optionalString(
+  value: unknown,
+  options: { maxLength?: number } = {}
+): string | null {
+  if (typeof value !== 'string') return null
+  const trimmed = value.trim()
+  if (!trimmed) return null
+  return options.maxLength ? trimmed.slice(0, options.maxLength) : trimmed
 }
 
 function optionalMetadata(value: unknown): Record<string, unknown> | null {
-  return value && typeof value === 'object' && !Array.isArray(value)
-    ? (value as Record<string, unknown>)
-    : null
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null
+  const metadata = value as Record<string, unknown>
+  const byteLength = new TextEncoder().encode(JSON.stringify(metadata)).length
+  return byteLength <= MAX_AGENT_METADATA_BYTES ? metadata : null
 }
 
 function optionalIngestionIntent(value: unknown): IngestionIntent | null {
-  return value === 'create' || value === 'update' || value === 'complete' || value === 'auto'
-    ? value
+  return INGESTION_INTENTS.includes(value as IngestionIntent)
+    ? (value as IngestionIntent)
     : null
+}
+
+function toolError(text: string): ToolResult {
+  return {
+    content: [{ type: 'text', text }],
+    isError: true,
+  }
+}
+
+function stringArg(
+  args: Record<string, unknown>,
+  field: string,
+  options: { required?: boolean; maxLength?: number } = {}
+) {
+  const value = args[field]
+  if (value === undefined || value === null || value === '') {
+    return options.required ? { error: `Error: ${field} is required` } : { value: null }
+  }
+  if (typeof value !== 'string') {
+    return { error: `Error: ${field} must be a string` }
+  }
+  const trimmed = value.trim()
+  if (!trimmed) {
+    return options.required ? { error: `Error: ${field} is required` } : { value: null }
+  }
+  if (options.maxLength && trimmed.length > options.maxLength) {
+    return { error: `Error: ${field} must be ${options.maxLength} characters or fewer` }
+  }
+  return { value: trimmed }
+}
+
+function numberLimit(value: unknown, fallback: number, max: number) {
+  const n = typeof value === 'number' ? value : Number(value)
+  if (!Number.isFinite(n)) return fallback
+  return Math.min(Math.max(1, Math.floor(n)), max)
+}
+
+function metadataArg(value: unknown) {
+  if (value === undefined) return { value: null }
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return { error: 'Error: agent_metadata must be an object' }
+  }
+  const metadata = value as Record<string, unknown>
+  const byteLength = new TextEncoder().encode(JSON.stringify(metadata)).length
+  if (byteLength > MAX_AGENT_METADATA_BYTES) {
+    return { error: `Error: agent_metadata must be ${MAX_AGENT_METADATA_BYTES} bytes or fewer` }
+  }
+  return { value: metadata }
 }
 
 function auditMetadata(args: Record<string, unknown>): Record<string, unknown> {
@@ -317,8 +392,16 @@ const listTasks: ToolHandler = async (args, userId) => {
   }
 
   const status = args.status as TaskStatus | undefined
+  if (status !== undefined && !TASK_STATUSES.includes(status)) {
+    return toolError(`Error: status must be one of ${TASK_STATUSES.join(', ')}`)
+  }
+
+  if (args.due_today !== undefined && typeof args.due_today !== 'boolean') {
+    return toolError('Error: due_today must be a boolean')
+  }
+
   const dueToday = args.due_today as boolean | undefined
-  const limit = Math.min(Math.max(1, (args.limit as number) || 20), 50)
+  const limit = numberLimit(args.limit, 20, 50)
 
   let query = supabase
     .from('tasks')
@@ -361,27 +444,29 @@ const createTask: ToolHandler = async (args, userId) => {
     }
   }
 
-  const input = args.input as string
-  if (!input) {
-    return {
-      content: [{ type: 'text', text: 'Error: input is required' }],
-      isError: true,
-    }
-  }
+  const inputResult = stringArg(args, 'input', {
+    required: true,
+    maxLength: MAX_AGENT_INPUT,
+  })
+  if (inputResult.error) return toolError(inputResult.error)
+  const input = inputResult.value as string
 
-  const sourceAgentId = optionalString(args.source_agent_id)
-  const externalRef = optionalString(args.external_ref)
+  const sourceAgentResult = stringArg(args, 'source_agent_id', {
+    maxLength: MAX_AGENT_REF,
+  })
+  if (sourceAgentResult.error) return toolError(sourceAgentResult.error)
+  const externalRefResult = stringArg(args, 'external_ref', {
+    maxLength: MAX_AGENT_REF,
+  })
+  if (externalRefResult.error) return toolError(externalRefResult.error)
+  const metadataResult = metadataArg(args.agent_metadata)
+  if (metadataResult.error) return toolError(metadataResult.error)
+
+  const sourceAgentId = sourceAgentResult.value
+  const externalRef = externalRefResult.value
 
   if (externalRef && !sourceAgentId) {
-    return {
-      content: [
-        {
-          type: 'text',
-          text: 'Error: source_agent_id is required when external_ref is provided',
-        },
-      ],
-      isError: true,
-    }
+    return toolError('Error: source_agent_id is required when external_ref is provided')
   }
 
   if (externalRef && sourceAgentId) {
@@ -399,10 +484,14 @@ const createTask: ToolHandler = async (args, userId) => {
   // Parse the natural language input
   const parsed = await parseTaskInput(input)
   if (!parsed) {
-    return {
-      content: [{ type: 'text', text: 'Error: Failed to parse task input' }],
-      isError: true,
-    }
+    return toolError('Error: Failed to parse task input')
+  }
+
+  const quota = await consumeQuota(userId, 'task_create')
+  if (!quota.allowed) {
+    return toolError(
+      `Error: ${quota.reason || 'Task quota exceeded for this account'}`
+    )
   }
 
   // Insert the task
@@ -425,7 +514,7 @@ const createTask: ToolHandler = async (args, userId) => {
       source_agent_id: sourceAgentId,
       external_ref: externalRef,
       ingestion_intent: 'create',
-      agent_metadata: optionalMetadata(args.agent_metadata),
+      agent_metadata: metadataResult.value,
     })
     .select()
     .single()
@@ -462,13 +551,9 @@ const completeTask: ToolHandler = async (args, userId) => {
     }
   }
 
-  const taskId = args.task_id as string
-  if (!taskId) {
-    return {
-      content: [{ type: 'text', text: 'Error: task_id is required' }],
-      isError: true,
-    }
-  }
+  const taskIdResult = stringArg(args, 'task_id', { required: true })
+  if (taskIdResult.error) return toolError(taskIdResult.error)
+  const taskId = taskIdResult.value as string
 
   const { data: task, error } = await supabase
     .from('tasks')
@@ -509,23 +594,42 @@ const updateTask: ToolHandler = async (args, userId) => {
     }
   }
 
-  const taskId = args.task_id as string
-  if (!taskId) {
-    return {
-      content: [{ type: 'text', text: 'Error: task_id is required' }],
-      isError: true,
-    }
-  }
+  const taskIdResult = stringArg(args, 'task_id', { required: true })
+  if (taskIdResult.error) return toolError(taskIdResult.error)
+  const taskId = taskIdResult.value as string
 
   // Build update object with only provided fields
   const updates: Record<string, unknown> = {
     updated_at: new Date().toISOString(),
   }
 
-  if (args.title !== undefined) updates.title = args.title
-  if (args.priority !== undefined) updates.priority = args.priority as TaskPriority
-  if (args.due_date !== undefined) updates.due_date = args.due_date
+  if (args.title !== undefined) {
+    const titleResult = stringArg(args, 'title', { required: true, maxLength: MAX_TITLE })
+    if (titleResult.error) return toolError(titleResult.error)
+    updates.title = titleResult.value
+  }
+
+  if (args.priority !== undefined) {
+    if (!TASK_PRIORITIES.includes(args.priority as TaskPriority)) {
+      return toolError(`Error: priority must be one of ${TASK_PRIORITIES.join(', ')}`)
+    }
+    updates.priority = args.priority as TaskPriority
+  }
+
+  if (args.due_date !== undefined) {
+    if (
+      args.due_date !== null &&
+      (typeof args.due_date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(args.due_date))
+    ) {
+      return toolError('Error: due_date must be YYYY-MM-DD or null')
+    }
+    updates.due_date = args.due_date
+  }
+
   if (args.status !== undefined) {
+    if (!TASK_STATUSES.includes(args.status as TaskStatus)) {
+      return toolError(`Error: status must be one of ${TASK_STATUSES.join(', ')}`)
+    }
     updates.status = args.status as TaskStatus
     // Set completed_at when marking done
     if (args.status === 'done') {
@@ -534,16 +638,47 @@ const updateTask: ToolHandler = async (args, userId) => {
       updates.completed_at = null
     }
   }
-  if (args.context !== undefined) updates.context = args.context
+  if (args.context !== undefined) {
+    if (args.context !== null && typeof args.context !== 'string') {
+      return toolError('Error: context must be a string or null')
+    }
+    if (typeof args.context === 'string' && args.context.length > MAX_CONTEXT) {
+      return toolError(`Error: context must be ${MAX_CONTEXT} characters or fewer`)
+    }
+    updates.context = typeof args.context === 'string' ? args.context.trim() || null : null
+  }
+
   if (args.source_agent_id !== undefined) {
-    updates.source_agent_id = optionalString(args.source_agent_id)
+    const sourceAgentResult = stringArg(args, 'source_agent_id', {
+      maxLength: MAX_AGENT_REF,
+    })
+    if (sourceAgentResult.error) return toolError(sourceAgentResult.error)
+    updates.source_agent_id = sourceAgentResult.value
     if (updates.source_agent_id) updates.source = 'agent'
   }
-  if (args.external_ref !== undefined) updates.external_ref = optionalString(args.external_ref)
-  if (args.ingestion_intent !== undefined) {
-    updates.ingestion_intent = optionalIngestionIntent(args.ingestion_intent)
+  if (args.external_ref !== undefined) {
+    const externalRefResult = stringArg(args, 'external_ref', {
+      maxLength: MAX_AGENT_REF,
+    })
+    if (externalRefResult.error) return toolError(externalRefResult.error)
+    updates.external_ref = externalRefResult.value
   }
-  if (args.agent_metadata !== undefined) updates.agent_metadata = optionalMetadata(args.agent_metadata)
+  if (args.ingestion_intent !== undefined) {
+    const intent = optionalIngestionIntent(args.ingestion_intent)
+    if (!intent) {
+      return toolError(`Error: ingestion_intent must be one of ${INGESTION_INTENTS.join(', ')}`)
+    }
+    updates.ingestion_intent = intent
+  }
+  if (args.agent_metadata !== undefined) {
+    const metadataResult = metadataArg(args.agent_metadata)
+    if (metadataResult.error) return toolError(metadataResult.error)
+    updates.agent_metadata = metadataResult.value
+  }
+
+  if (Object.keys(updates).length === 1) {
+    return toolError('Error: no valid updates provided')
+  }
 
   const { data: task, error } = await supabase
     .from('tasks')
@@ -630,15 +765,20 @@ const searchTasks: ToolHandler = async (args, userId) => {
     }
   }
 
-  const query = args.query as string
+  const queryResult = stringArg(args, 'query', {
+    required: true,
+    maxLength: MAX_SEARCH_QUERY,
+  })
+  if (queryResult.error) return toolError(queryResult.error)
+  const query = (queryResult.value as string)
+    .replace(/[,%()]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
   if (!query) {
-    return {
-      content: [{ type: 'text', text: 'Error: query is required' }],
-      isError: true,
-    }
+    return toolError('Error: query must include searchable text')
   }
 
-  const limit = Math.min(Math.max(1, (args.limit as number) || 10), 50)
+  const limit = numberLimit(args.limit, 10, 50)
   const searchPattern = `%${query}%`
 
   // Search in title, context, and use textSearch for tags
@@ -673,13 +813,9 @@ const getTask: ToolHandler = async (args, userId) => {
     }
   }
 
-  const taskId = args.task_id as string
-  if (!taskId) {
-    return {
-      content: [{ type: 'text', text: 'Error: task_id is required' }],
-      isError: true,
-    }
-  }
+  const taskIdResult = stringArg(args, 'task_id', { required: true })
+  if (taskIdResult.error) return toolError(taskIdResult.error)
+  const taskId = taskIdResult.value as string
 
   const { data: task, error } = await supabase
     .from('tasks')

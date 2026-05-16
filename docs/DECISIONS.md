@@ -1,5 +1,15 @@
 # Decisions
 
+## 2026-05-16 - MCP task creation respects task quota
+### Decision
+The `create_task` MCP/ChatGPT Actions tool validates bounded string/metadata inputs and consumes `task_create` quota before inserting a new task. Idempotency replays by `source_agent_id` plus `external_ref` return the existing task before consuming quota.
+
+### Why
+External agents should use the same task-creation budget and validation rails as human-created tasks and imports. Agent interop cannot be a quota bypass.
+
+### Impact
+Real MCP write smoke should be run against a profile with available task quota. Future agent write tools should keep validation, ownership, scope, audit, idempotency, and quota behavior aligned.
+
 ## 2026-05-16 - Agent output is server-managed
 ### Decision
 Generic task PATCH requests cannot write `agent_output`. Agent output must be produced and persisted through `/api/agent/execute`, which loads an owned task, checks action type, gates rate/quota, and records output server-side.

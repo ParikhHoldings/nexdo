@@ -39,10 +39,24 @@ test('OpenAPI exposes the agent action contract', async ({ request }) => {
       'application/json'
     ].schema
   expect(createTaskSchema.properties.source_agent_id).toBeTruthy()
+  expect(createTaskSchema.properties.input.maxLength).toBe(2000)
+  expect(createTaskSchema.properties.source_agent_id.maxLength).toBe(160)
   expect(createTaskSchema.properties.external_ref.description).toContain(
     'source_agent_id'
   )
+  expect(createTaskSchema.properties.external_ref.maxLength).toBe(160)
   expect(createTaskSchema.properties.agent_metadata).toBeTruthy()
+  const updateTaskSchema =
+    spec.paths['/api/mcp/actions/update_task'].post.requestBody.content[
+      'application/json'
+    ].schema
+  expect(updateTaskSchema.properties.title.maxLength).toBe(500)
+  expect(updateTaskSchema.properties.context.maxLength).toBe(4000)
+  const searchTaskSchema =
+    spec.paths['/api/mcp/actions/search_tasks'].post.requestBody.content[
+      'application/json'
+    ].schema
+  expect(searchTaskSchema.properties.query.maxLength).toBe(200)
   expect(spec.components.schemas.Task.properties.source_agent_id).toBeTruthy()
   expect(spec.components.schemas.Task.properties.idempotent_replay).toBeTruthy()
   expect(spec.components.schemas.Task.properties.ingestion_intent).toBeTruthy()

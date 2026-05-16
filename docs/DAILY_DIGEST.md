@@ -14,6 +14,7 @@
 - Added `npm run smoke:mcp` for authenticated MCP/API-key verification against a real deployment.
 - Expanded MCP smoke coverage so an optional read-only scoped key can verify write tools are hidden and denied.
 - Exposed agent metadata fields in MCP create/update tools so agent-created tasks can carry source identifiers and external references.
+- Added bounded MCP tool input validation and made MCP `create_task` consume task-create quota.
 - Added scoped API key permissions, scope-filtered MCP tool listings, REST/JSON-RPC scope enforcement, and an agent action audit table/migration.
 - Added rate limiting to API key rotation for scoped MCP/API keys.
 - Moved MCP/API keys to hashed storage with one-time reveal, display hints, legacy key migration, and fallback validation.
