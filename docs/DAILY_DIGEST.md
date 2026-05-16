@@ -66,6 +66,7 @@
 - Added a quota cleanup migration so usage read probes do not create zero-quantity audit events.
 - Removed the annual pricing toggle because checkout currently supports only configured monthly plan prices.
 - Hardened Stripe checkout and webhook entitlement handling so plan changes stay tied to server-known price IDs.
+- Added Stripe price-entitlement regression coverage so missing, placeholder, or unknown price IDs cannot map to paid tiers.
 - Added Playwright smoke coverage for the logged-out core product path.
 - Added Playwright smoke coverage for All Tasks search/filtering, Upcoming grouping, and Done clear/reload lifecycle in demo mode.
 - Added Playwright smoke coverage for OpenAPI action schema, MCP/action auth failures, and action CORS headers.

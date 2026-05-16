@@ -65,6 +65,7 @@
 - removed the unbacked annual pricing toggle until annual Stripe prices exist
 - hardened Stripe checkout so clients can only request server-known `pro` or `power` plans and cannot override price IDs
 - hardened Stripe webhooks so unknown price IDs do not grant paid-tier access by default
+- added Stripe price-entitlement regression coverage so missing, placeholder, or unknown price IDs cannot map to paid tiers
 - added Playwright smoke coverage for the logged-out core product path
 - added Playwright smoke coverage for All Tasks search/filtering, Upcoming grouping, and Done clear/reload lifecycle in demo mode
 - added Playwright smoke coverage for OpenAPI action schema, MCP/action auth failures, and action CORS headers
@@ -87,7 +88,6 @@
 - smoke test OpenAI task parse, prioritization, daily briefing, and agent execution with real env
 - smoke test authenticated agent execution against an owned Supabase task after provider env is configured
 - smoke test Stripe checkout, portal, webhook idempotency, and plan/quota updates in test mode
-- add webhook-level regression coverage for unknown Stripe price IDs once route-handler tests are in place
 - smoke test MCP JSON-RPC and ChatGPT Actions OpenAPI/API-key flow
 - smoke test authenticated MCP tool execution against real task data
 - smoke test MCP `create_task` idempotency replay against real task data

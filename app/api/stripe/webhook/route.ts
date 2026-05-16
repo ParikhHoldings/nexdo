@@ -2,17 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { stripe } from '@/lib/stripe'
 import { createServiceClient } from '@/lib/supabase/server'
-
-/**
- * Map a Stripe price id to the Nexdo subscription tier. Unknown prices must not
- * grant paid access; this keeps entitlement changes tied to explicit env config.
- */
-function tierForPriceId(priceId: string | undefined): 'pro' | 'power' | null {
-  if (priceId === process.env.STRIPE_POWER_PRICE_ID) return 'power'
-  if (priceId === process.env.STRIPE_PRO_PRICE_ID) return 'pro'
-  console.warn('Stripe webhook: unrecognized priceId, skipping tier update:', priceId)
-  return null
-}
+import { tierForStripePriceId } from '@/lib/stripe-entitlements'
 
 export async function POST(request: NextRequest) {
   if (!stripe) {
@@ -78,8 +68,11 @@ export async function POST(request: NextRequest) {
         }
 
         const priceId = subscription.items.data[0]?.price.id
-        const tier = tierForPriceId(priceId)
-        if (!tier) break
+        const tier = tierForStripePriceId(priceId)
+        if (!tier) {
+          console.warn('Stripe webhook: unrecognized priceId, skipping tier update:', priceId)
+          break
+        }
 
         await supabase
           .from('profiles')
@@ -105,8 +98,11 @@ export async function POST(request: NextRequest) {
           break
         }
 
-        const tier = tierForPriceId(priceId)
-        if (!tier) break
+        const tier = tierForStripePriceId(priceId)
+        if (!tier) {
+          console.warn('Stripe webhook: unrecognized priceId, skipping tier update:', priceId)
+          break
+        }
 
         await supabase
           .from('profiles')
