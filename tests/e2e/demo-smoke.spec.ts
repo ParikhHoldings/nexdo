@@ -49,3 +49,13 @@ test('demo task capture, briefing, prioritization, and agent output work', async
   )
   expect(unexpectedMessages).toEqual([])
 })
+
+test('task mutation endpoints require configured auth', async ({ request }) => {
+  const patch = await request.patch('/api/tasks/not-a-real-task', {
+    data: { title: 'Should not update', user_id: 'someone-else' },
+  })
+  expect([401, 503]).toContain(patch.status())
+
+  const del = await request.delete('/api/tasks/not-a-real-task')
+  expect([401, 503]).toContain(del.status())
+})

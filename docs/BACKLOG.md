@@ -17,6 +17,7 @@
 - opened PR #3 and verified GitHub Actions Web rails plus Vercel preview deployment
 - enabled strict lint/typecheck behavior in production builds
 - added deterministic local task intelligence fallbacks for demo/provider-missing flows
+- hardened task mutation routes with allowlisted PATCH fields and owned-delete 404 handling
 - added Playwright smoke coverage for the logged-out core product path
 - added Playwright smoke coverage for OpenAPI action schema, MCP/action auth failures, and action CORS headers
 - added GitHub Actions verification for install, lint, typecheck, build, and Playwright smoke testing

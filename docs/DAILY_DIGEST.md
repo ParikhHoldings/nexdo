@@ -20,6 +20,7 @@
 - Updated vision, roadmap, backlog, decisions, metrics, marketing, and research docs to align with the current implementation.
 - Restored stricter build rails by adding typecheck/e2e scripts and removing build-time TypeScript/ESLint ignores.
 - Added deterministic local task intelligence for demo-mode parsing, prioritization, briefing, and bounded research/draft/prep outputs.
+- Hardened task mutation routes so PATCH only accepts user-editable fields and DELETE reports missing owned tasks.
 - Added Playwright smoke coverage for the logged-out core product path.
 - Added Playwright smoke coverage for OpenAPI action schema, MCP/action auth failures, and action CORS headers.
 - Added GitHub Actions verification for install, lint, typecheck, build, and Playwright smoke testing.
