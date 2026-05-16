@@ -149,6 +149,10 @@ export function TaskInput({ onTaskCreated }: TaskInputProps) {
               toast.error('Could not save task', 'Your task was not saved. Please try again.')
               return
             }
+          } else if (isAuthenticated) {
+            setInput(rawInput)
+            toast.error('Session expired', 'Please sign in again before creating tasks.')
+            return
           }
         } catch (error) {
           console.error('Error saving to Supabase:', error)

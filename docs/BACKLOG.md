@@ -39,6 +39,7 @@
 - kept demo profiles out of authenticated UI state so no-auth demo mode does not expose sign-out or authenticated profile-save behavior
 - added client-side demo file import parsing for CSV, JSON, and ICS so logged-out visitors can exercise imports without weakening authenticated API import guards
 - prevented authenticated task-capture save failures from creating local-only demo tasks; failed saves now restore the input and surface an error
+- prevented stale authenticated sessions from falling through to local demo task creation when Supabase returns no active user during capture
 - moved AI route body validation before rate-limit consumption for parse, prioritize, and briefing requests
 - sanitized prioritization and briefing task arrays before rate-limit consumption and AI provider/fallback execution
 - validated and bounded OpenAI JSON responses before parsed tasks, prioritization, briefings, or agent outputs are returned or saved
