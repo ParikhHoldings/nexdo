@@ -69,6 +69,7 @@ Acceptance gate:
 
 Current evidence:
 - `/today` uses AI/provider prioritization for authenticated users and deterministic fallback for demo users.
+- Deterministic fallback behavior has focused regression coverage for parsing, prioritization, briefing, and bounded execution output shapes.
 - Playwright verifies visible "Why now" reasoning.
 - `lib/ai-task-input.ts` sanitizes task arrays before provider calls.
 

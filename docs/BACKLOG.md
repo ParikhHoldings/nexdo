@@ -35,6 +35,7 @@
 - enabled strict lint/typecheck behavior in production builds
 - hardened profile updates with allowlisted timezone/work-type values and name length normalization
 - added deterministic local task intelligence fallbacks for demo/provider-missing flows
+- added focused regression coverage for deterministic local task parsing, prioritization, briefing, and bounded execution fallbacks
 - refreshed logged-out daily briefings from local demo task state after task capture/import
 - refreshed authenticated daily briefings when task state or user name changes instead of keeping the first briefing stale
 - persisted logged-out demo task changes to localStorage so added/imported/edited/completed/deleted demo tasks survive reloads
@@ -99,7 +100,6 @@
 - tighten landing/waitlist language around the clearest user promise
 - clarify whether Nexdo should lead with founder/operator use case or broader team use case
 - add focused tests for task validation, import normalization, quota/rate-limit helpers, and MCP tool handlers
-- add unit tests for deterministic task intelligence fallbacks
 - verify import routes with representative Todoist, CSV, ICS, Trello, and Things-style files
 - verify import quota behavior against a real Supabase profile near the monthly task limit
 - document known local-development and production-environment setup steps

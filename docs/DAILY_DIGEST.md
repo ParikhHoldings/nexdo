@@ -37,6 +37,7 @@
 - Updated vision, roadmap, backlog, decisions, metrics, marketing, and research docs to align with the current implementation.
 - Restored stricter build rails by adding typecheck/e2e scripts and removing build-time TypeScript/ESLint ignores.
 - Added deterministic local task intelligence for demo-mode parsing, prioritization, briefing, and bounded research/draft/prep outputs.
+- Added focused regression coverage for deterministic local task parsing, prioritization, briefing, and bounded execution fallbacks.
 - Refreshed logged-out daily briefings from local demo task state after task capture/import.
 - Refreshed authenticated daily briefings when task state or user name changes instead of keeping the first briefing stale.
 - Persisted logged-out demo task changes to localStorage so added, imported, edited, completed, and deleted demo tasks survive reloads.

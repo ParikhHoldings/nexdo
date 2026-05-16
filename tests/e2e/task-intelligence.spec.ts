@@ -1,0 +1,175 @@
+import { expect, test } from '@playwright/test'
+import type { Task } from '../../lib/database.types'
+import {
+  executeDraftHeuristic,
+  executePrepHeuristic,
+  executeResearchHeuristic,
+  executeTaskHeuristic,
+  generateBriefingHeuristic,
+  parseTaskHeuristic,
+  prioritizeTasksHeuristic,
+} from '../../lib/task-intelligence'
+
+function isoDate(offsetDays = 0): string {
+  const date = new Date()
+  date.setHours(0, 0, 0, 0)
+  date.setDate(date.getDate() + offsetDays)
+  return date.toISOString().split('T')[0]
+}
+
+function task(overrides: Partial<Task>): Task {
+  const now = new Date().toISOString()
+
+  return {
+    id: overrides.id || crypto.randomUUID(),
+    user_id: 'test-user',
+    title: overrides.title || 'Untitled task',
+    raw_input: overrides.raw_input ?? null,
+    description: overrides.description ?? null,
+    status: overrides.status || 'todo',
+    priority: overrides.priority || 'medium',
+    due_date: overrides.due_date ?? null,
+    due_time: overrides.due_time ?? null,
+    context: overrides.context ?? null,
+    source: overrides.source || 'manual',
+    action_type: overrides.action_type || 'manual',
+    estimated_minutes: overrides.estimated_minutes ?? null,
+    energy_level: overrides.energy_level ?? null,
+    people: overrides.people ?? null,
+    tags: overrides.tags ?? null,
+    parent_task_id: overrides.parent_task_id ?? null,
+    related_task_ids: overrides.related_task_ids ?? null,
+    agent_output: overrides.agent_output ?? null,
+    completed_at: overrides.completed_at ?? null,
+    created_at: overrides.created_at || now,
+    updated_at: overrides.updated_at || now,
+    source_agent_id: overrides.source_agent_id ?? null,
+    external_ref: overrides.external_ref ?? null,
+    ingestion_intent: overrides.ingestion_intent ?? null,
+    agent_metadata: overrides.agent_metadata ?? null,
+  }
+}
+
+test('task parsing heuristic extracts launch-relevant metadata', () => {
+  const parsed = parseTaskHeuristic(
+    'Draft launch email to Sarah tomorrow 25 min high priority for customer rollout',
+    new Date('2026-05-16T12:00:00')
+  )
+
+  expect(parsed).toMatchObject({
+    due_date: '2026-05-17',
+    priority: 'high',
+    action_type: 'draft',
+    estimated_minutes: 25,
+    energy_level: 'light',
+  })
+  expect(parsed.people).toContain('Sarah')
+  expect(parsed.tags).toEqual(expect.arrayContaining(['email', 'customer']))
+})
+
+test('prioritization heuristic ranks urgent and dated tasks first', () => {
+  const ranked = prioritizeTasksHeuristic([
+    task({
+      id: 'low-quick',
+      title: 'Quick cleanup',
+      priority: 'low',
+      estimated_minutes: 10,
+      energy_level: 'quick',
+    }),
+    task({
+      id: 'urgent-today',
+      title: 'Fix launch blocker',
+      priority: 'urgent',
+      due_date: isoDate(0),
+      estimated_minutes: 60,
+      energy_level: 'deep',
+    }),
+    task({
+      id: 'medium-later',
+      title: 'Later follow-up',
+      priority: 'medium',
+      due_date: isoDate(3),
+      estimated_minutes: 30,
+      energy_level: 'light',
+    }),
+  ])
+
+  expect(ranked[0]).toMatchObject({
+    task_id: 'urgent-today',
+    rank: 1,
+    time_block: 'morning_deep',
+  })
+  expect(ranked.find((item) => item.task_id === 'low-quick')).toMatchObject({
+    time_block: 'quick_win',
+  })
+})
+
+test('briefing heuristic summarizes active tasks without completed work', () => {
+  const briefing = generateBriefingHeuristic(
+    [
+      task({
+        id: 'overdue',
+        title: 'Reply to blocked customer',
+        priority: 'urgent',
+        due_date: isoDate(-2),
+        people: ['Jordan'],
+      }),
+      task({
+        id: 'quick',
+        title: 'Send status note',
+        priority: 'medium',
+        estimated_minutes: 10,
+      }),
+      task({
+        id: 'done',
+        title: 'Already shipped',
+        status: 'done',
+        priority: 'urgent',
+        due_date: isoDate(-5),
+      }),
+    ],
+    'Casey'
+  )
+
+  expect(briefing.greeting).toContain('Casey')
+  expect(briefing.top_priorities.map((item) => item.task_id)).toContain('overdue')
+  expect(briefing.overdue).toEqual([
+    expect.objectContaining({
+      task_id: 'overdue',
+      days_overdue: 2,
+    }),
+  ])
+  expect(briefing.quick_wins).toEqual([
+    expect.objectContaining({ task_id: 'quick', estimated_minutes: 10 }),
+  ])
+  expect(briefing.someone_waiting).toEqual([
+    expect.objectContaining({ task_id: 'overdue', person: 'Jordan' }),
+  ])
+  expect(briefing.summary).toContain('2 active tasks')
+})
+
+test('execution heuristics return bounded outputs by action type', () => {
+  const researchTask = task({
+    title: 'Research pricing options',
+    action_type: 'research',
+    context: 'Compare entry-level launch plans.',
+  })
+  const draftTask = task({
+    title: 'Draft customer update',
+    action_type: 'draft',
+    people: ['Mira'],
+  })
+  const prepTask = task({
+    title: 'Prepare launch standup',
+    action_type: 'prep',
+    estimated_minutes: 45,
+  })
+
+  expect(executeResearchHeuristic(researchTask).key_findings.length).toBeGreaterThanOrEqual(3)
+  expect(executeDraftHeuristic(draftTask).draft).toContain('Mira')
+  expect(executePrepHeuristic(prepTask).questions_to_ask.length).toBeGreaterThanOrEqual(3)
+  expect(executeTaskHeuristic(researchTask)).toHaveProperty('recommended_action')
+  expect(executeTaskHeuristic(draftTask)).toHaveProperty('suggested_subject')
+  expect(executeTaskHeuristic(prepTask)).toHaveProperty('materials_needed')
+  expect(executeTaskHeuristic(task({ title: 'Manual task' }))).toBeNull()
+})
