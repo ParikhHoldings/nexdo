@@ -24,6 +24,15 @@ import {
   parseTaskHeuristic,
   prioritizeTasksHeuristic,
 } from './task-intelligence'
+import {
+  parseJsonResponse,
+  validateBriefingContent,
+  validateDraftOutput,
+  validateParsedTask,
+  validatePrepOutput,
+  validatePrioritizedTasks,
+  validateResearchOutput,
+} from './ai-response-validation'
 
 function getOpenAIClient(): OpenAI | null {
   const apiKey = process.env.OPENAI_API_KEY
@@ -60,12 +69,13 @@ export async function parseTaskInput(rawInput: string): Promise<ParsedTask | nul
     })
 
     const content = completion.choices[0]?.message?.content
-    if (!content) return null
+    if (!content) return parseTaskHeuristic(rawInput)
 
-    return JSON.parse(content) as ParsedTask
+    const parsed = validateParsedTask(parseJsonResponse(content))
+    return parsed ?? parseTaskHeuristic(rawInput)
   } catch (error) {
     console.error('Error parsing task:', error)
-    return null
+    return parseTaskHeuristic(rawInput)
   }
 }
 
@@ -98,14 +108,13 @@ export async function prioritizeTasks(tasks: Task[]): Promise<PrioritizedTask[] 
     })
 
     const content = completion.choices[0]?.message?.content
-    if (!content) return null
+    if (!content) return prioritizeTasksHeuristic(tasks)
 
-    const result = JSON.parse(content)
-    // Handle both array and object with tasks array
-    return Array.isArray(result) ? result : result.tasks || []
+    return validatePrioritizedTasks(parseJsonResponse(content), tasks) ??
+      prioritizeTasksHeuristic(tasks)
   } catch (error) {
     console.error('Error prioritizing tasks:', error)
-    return null
+    return prioritizeTasksHeuristic(tasks)
   }
 }
 
@@ -145,12 +154,13 @@ export async function generateBriefing(
     })
 
     const content = completion.choices[0]?.message?.content
-    if (!content) return null
+    if (!content) return generateBriefingHeuristic(tasks, userName)
 
-    return JSON.parse(content) as BriefingContent
+    return validateBriefingContent(parseJsonResponse(content), tasks) ??
+      generateBriefingHeuristic(tasks, userName)
   } catch (error) {
     console.error('Error generating briefing:', error)
-    return null
+    return generateBriefingHeuristic(tasks, userName)
   }
 }
 
@@ -175,12 +185,12 @@ export async function executeResearch(
     })
 
     const content = completion.choices[0]?.message?.content
-    if (!content) return null
+    if (!content) return executeResearchHeuristic(task)
 
-    return JSON.parse(content) as ResearchOutput
+    return validateResearchOutput(parseJsonResponse(content)) ?? executeResearchHeuristic(task)
   } catch (error) {
     console.error('Error executing research:', error)
-    return null
+    return executeResearchHeuristic(task)
   }
 }
 
@@ -203,12 +213,12 @@ export async function executeDraft(task: Task): Promise<DraftOutput | null> {
     })
 
     const content = completion.choices[0]?.message?.content
-    if (!content) return null
+    if (!content) return executeDraftHeuristic(task)
 
-    return JSON.parse(content) as DraftOutput
+    return validateDraftOutput(parseJsonResponse(content)) ?? executeDraftHeuristic(task)
   } catch (error) {
     console.error('Error executing draft:', error)
-    return null
+    return executeDraftHeuristic(task)
   }
 }
 
@@ -231,11 +241,11 @@ export async function executePrep(task: Task): Promise<PrepOutput | null> {
     })
 
     const content = completion.choices[0]?.message?.content
-    if (!content) return null
+    if (!content) return executePrepHeuristic(task)
 
-    return JSON.parse(content) as PrepOutput
+    return validatePrepOutput(parseJsonResponse(content)) ?? executePrepHeuristic(task)
   } catch (error) {
     console.error('Error executing prep:', error)
-    return null
+    return executePrepHeuristic(task)
   }
 }

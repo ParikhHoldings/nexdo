@@ -7,6 +7,7 @@ This repo currently contains a Next.js app with:
 - marketing, auth, task workspace, settings, import, and MCP setup routes
 - Supabase-backed profiles, tasks, notes, daily briefings, usage events, and rate-limit tables
 - natural-language task parsing, daily briefing, prioritization, and limited agent execution through OpenAI
+- bounded validation for OpenAI JSON output before parsed tasks, briefings, prioritization, or agent results are returned or saved
 - demo-mode task data when Supabase is unavailable or the visitor is logged out
 - imports from Todoist and file-based task exports such as CSV, ICS, JSON/Trello/Things-style sources
 - Stripe plan, checkout, portal, webhook, quota, and rate-limit scaffolding

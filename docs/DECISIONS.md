@@ -1,5 +1,15 @@
 # Decisions
 
+## 2026-05-16 - OpenAI responses must be validated before use
+### Decision
+Runtime OpenAI helpers validate and bound JSON output before returning parsed tasks, prioritization, briefings, or research/draft/prep agent results. Malformed, missing, or incomplete provider output falls back to deterministic local task intelligence.
+
+### Why
+Provider JSON mode does not make the response a trusted application object. Nexdo should not return oversized strings, unknown enum values, task IDs that do not belong to the current request, or malformed agent output to users or persisted task records.
+
+### Impact
+Future AI helpers should add explicit response validators before model output crosses a route, UI, database, or agent boundary. Provider smoke still needs real OpenAI credentials because local fallbacks only prove graceful degradation.
+
 ## 2026-05-16 - AI task arrays are sanitized before provider calls
 ### Decision
 Authenticated prioritization and briefing routes sanitize client-supplied task arrays into bounded task summaries before rate-limit consumption and OpenAI/fallback execution.

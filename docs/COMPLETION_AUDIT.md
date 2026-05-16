@@ -21,6 +21,7 @@ Make Nexdo a credible, launchable early-access product by Monday, 2026-05-18, wi
 | Make front-end usable for humans today | Logged-out `/today` demo flow supports task capture, structured parsing, briefing, prioritization, task detail, and bounded agent output | Locally verified |
 | Keep demo useful without provider secrets | `lib/task-intelligence.ts`, `lib/openai.ts`, `components/task-input.tsx`, `components/daily-briefing.tsx`, `components/task-detail.tsx`, `app/(app)/today/page.tsx` | Done |
 | Harden AI briefing/prioritization inputs | `lib/ai-task-input.ts` sanitizes task arrays and user names before `/api/tasks/prioritize` and `/api/briefing` consume rate limits or call OpenAI/fallback execution | Done |
+| Harden AI provider output shapes | `lib/ai-response-validation.ts` validates and bounds OpenAI JSON responses for parsing, prioritization, briefing, and research/draft/prep output before runtime helpers return or persist provider content; malformed provider output falls back to local heuristics | Done |
 | Harden core task mutation routes | `POST /api/tasks` validates and normalizes task payloads before quota/insert; `PATCH /api/tasks/[id]` now allowlists and validates user-editable fields; `DELETE /api/tasks/[id]` returns 404 when no owned task is deleted; e2e covers unauthenticated/config guardrails | Done |
 | Harden profile mutation route | `PATCH /api/profile` now validates name length, allowlisted timezone values, and allowlisted work types before updating profiles | Done |
 | Harden profile/database access boundary | `supabase/migrations/005_hashed_api_keys.sql` hashes stored API keys; `supabase/migrations/006_profile_column_grants.sql` limits direct authenticated profile reads/updates to app-needed fields; sensitive billing, Stripe, raw/hash API-key, quota mutation, and entitlement state must use server/service-role paths | Implemented locally; real Supabase verification missing |
@@ -65,7 +66,7 @@ Make Nexdo a credible, launchable early-access product by Monday, 2026-05-18, wi
 - `npm run verify:env` failed because `.env.local` is not present in this workspace. `.env.local.example` is present, but it is only the contract and cannot support provider smoke checks.
 
 ## Current completion judgment
-The Monday early-access demo, local build/test rails, task mutation guards, authenticated agent execution guards, import quota guards, and billing route guards are in materially better shape and are locally verified. The broader objective is not complete as a production launch because provider-backed flows, real database/auth, Stripe billing, authenticated MCP tool execution, deployment rails, and approvals remain unverified.
+The Monday early-access demo, local build/test rails, task mutation guards, AI input/output guards, authenticated agent execution guards, import quota guards, and billing route guards are in materially better shape and are locally verified. The broader objective is not complete as a production launch because provider-backed flows, real database/auth, Stripe billing, authenticated MCP tool execution, deployment rails, and approvals remain unverified.
 
 ## Next required work
 1. Configure a real Supabase project and run `npm run smoke:supabase -- --write` to verify migrations, auth, profile creation, RLS, task CRUD, and audit events.

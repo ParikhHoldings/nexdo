@@ -26,6 +26,7 @@
 - added deterministic local task intelligence fallbacks for demo/provider-missing flows
 - moved AI route body validation before rate-limit consumption for parse, prioritize, and briefing requests
 - sanitized prioritization and briefing task arrays before rate-limit consumption and AI provider/fallback execution
+- validated and bounded OpenAI JSON responses before parsed tasks, prioritization, briefings, or agent outputs are returned or saved
 - hardened task mutation routes with allowlisted PATCH fields and owned-delete 404 handling
 - hardened authenticated agent execution so the server runs only owned executable task records and persists output
 - hardened agent execution quota ordering so output is not saved or returned if usage recording fails
