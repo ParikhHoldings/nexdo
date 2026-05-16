@@ -97,6 +97,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to execute task' }, { status: 500 })
     }
 
+    // Only consume quota after a successful run, but before returning or
+    // persisting output. If quota recording fails closed, the result is not
+    // exposed or saved without accounting.
+    const consumed = await consumeQuota(auth.userId, 'agent_execute')
+    if (!consumed.allowed) {
+      const status =
+        consumed.reason === 'Failed to record usage' ||
+        consumed.reason === 'Service unavailable' ||
+        consumed.reason === 'No profile'
+          ? 500
+          : 402
+      return NextResponse.json(
+        quotaExceededResponse(consumed),
+        { status }
+      )
+    }
+
     const { data: updatedTask, error: updateError } = await (supabase as any)
       .from('tasks')
       .update({
@@ -118,21 +135,6 @@ export async function POST(request: NextRequest) {
 
     if (!updatedTask) {
       return NextResponse.json({ error: 'Task not found' }, { status: 404 })
-    }
-
-    // Only consume quota after a successful run so users aren't charged for failures.
-    const consumed = await consumeQuota(auth.userId, 'agent_execute')
-    if (!consumed.allowed) {
-      const status =
-        consumed.reason === 'Failed to record usage' ||
-        consumed.reason === 'Service unavailable' ||
-        consumed.reason === 'No profile'
-          ? 500
-          : 402
-      return NextResponse.json(
-        quotaExceededResponse(consumed),
-        { status }
-      )
     }
 
     return NextResponse.json(result, {

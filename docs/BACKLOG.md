@@ -23,6 +23,7 @@
 - moved AI route body validation before rate-limit consumption for parse, prioritize, and briefing requests
 - hardened task mutation routes with allowlisted PATCH fields and owned-delete 404 handling
 - hardened authenticated agent execution so the server runs only owned executable task records and persists output
+- hardened agent execution quota ordering so output is not saved or returned if usage recording fails
 - fixed optimistic task updates so agent-output edits do not accidentally clear `completed_at`
 - enforced monthly task quotas across CSV, JSON, ICS, Todoist, Google Tasks, and Microsoft To Do imports
 - added a quota cleanup migration so usage read probes do not write zero-quantity audit events

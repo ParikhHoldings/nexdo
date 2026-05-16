@@ -72,10 +72,10 @@ Future import UX should show remaining task capacity before upload and real Supa
 
 ## 2026-05-16 - Agent execution must operate on owned task records
 ### Decision
-Authenticated `/api/agent/execute` requests must provide a task ID. The server loads the task for the current user, verifies it is executable, runs the bounded agent action, saves the result to `agent_output`, and then records quota usage.
+Authenticated `/api/agent/execute` requests must provide a task ID. The server loads the task for the current user, verifies it is executable, runs the bounded agent action, records quota usage, then saves the result to `agent_output`.
 
 ### Why
-Agent execution is a core trust boundary. It should not execute arbitrary client-supplied task objects or silently ignore quota recording failures.
+Agent execution is a core trust boundary. It should not execute arbitrary client-supplied task objects, silently ignore quota recording failures, or expose saved output without usage accounting.
 
 ### Impact
 Future agent execution features should keep the owned-record boundary and add real Supabase/OpenAI smoke coverage before production use.
