@@ -126,3 +126,9 @@ test('settings tab query opens billing tab', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Current Plan' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Billing' })).toHaveClass(/bg-accent/)
 })
+
+test('login exposes demo mode when auth env is not configured', async ({ page }) => {
+  await page.goto('/auth/login')
+
+  await expect(page.getByRole('button', { name: /Try demo mode/ })).toBeVisible()
+})

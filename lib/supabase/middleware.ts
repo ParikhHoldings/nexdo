@@ -1,6 +1,14 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+function isUsableEnv(value: string | undefined): value is string {
+  return Boolean(
+    value &&
+      !value.toLowerCase().includes('placeholder') &&
+      !value.toLowerCase().includes('your-')
+  )
+}
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
@@ -10,7 +18,7 @@ export async function updateSession(request: NextRequest) {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   // Skip Supabase middleware if not configured
-  if (!supabaseUrl || !supabaseAnonKey || supabaseUrl.includes('placeholder')) {
+  if (!isUsableEnv(supabaseUrl) || !isUsableEnv(supabaseAnonKey)) {
     return supabaseResponse
   }
 

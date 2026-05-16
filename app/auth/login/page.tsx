@@ -9,11 +9,21 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { createClient } from '@/lib/supabase/client'
 
+function isUsableEnv(value: string | undefined): value is string {
+  return Boolean(
+    value &&
+      !value.toLowerCase().includes('placeholder') &&
+      !value.toLowerCase().includes('your-')
+  )
+}
+
 function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const redirect = searchParams.get('redirect') || '/today'
-  const isDemoModeAvailable = !process.env.NEXT_PUBLIC_SUPABASE_URL
+  const isDemoModeAvailable =
+    !isUsableEnv(process.env.NEXT_PUBLIC_SUPABASE_URL) ||
+    !isUsableEnv(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
