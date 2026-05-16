@@ -38,6 +38,8 @@
 - Added bounded validation for OpenAI JSON responses before parsed tasks, prioritization, briefings, or research/draft/prep agent outputs are returned or saved.
 - Hardened task mutation routes so PATCH only accepts user-editable fields and DELETE reports missing owned tasks.
 - Made the task detail panel's edit action functional for the MVP task fields.
+- Removed nonfunctional theme and notification controls from the app shell/settings for launch truthfulness.
+- Aligned the Connect AI setup page with the Power-plan API access gate.
 - Hardened authenticated agent execution so it runs only owned task records and saves output server-side.
 - Hardened agent execution quota ordering so output is not saved or returned when usage recording fails.
 - Fixed optimistic task updates so non-status changes no longer clear completed timestamps.

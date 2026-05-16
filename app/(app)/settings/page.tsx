@@ -6,9 +6,6 @@ import {
   User,
   CreditCard,
   Key,
-  Bell,
-  Moon,
-  Globe,
   Copy,
   Check,
   ExternalLink,
@@ -17,7 +14,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { PricingTable } from '@/components/pricing-table'
-import { useUserStore, useUIStore } from '@/lib/store'
+import { useUserStore } from '@/lib/store'
 import { cn } from '@/lib/utils'
 import {
   API_KEY_SCOPE_LABELS,
@@ -28,7 +25,7 @@ import {
   type ApiKeyScope,
 } from '@/lib/agent-scopes'
 
-const SETTINGS_TABS = ['profile', 'billing', 'api', 'notifications'] as const
+const SETTINGS_TABS = ['profile', 'billing', 'api'] as const
 type Tab = (typeof SETTINGS_TABS)[number]
 
 function isSettingsTab(value: string | null): value is Tab {
@@ -45,7 +42,6 @@ function SettingsContent() {
   const requestedTab = searchParams.get('tab')
 
   const { profile, setProfile } = useUserStore()
-  const { theme, toggleTheme } = useUIStore()
 
   const [activeTab, setActiveTab] = useState<Tab>(
     isSettingsTab(requestedTab) ? requestedTab : 'profile'
@@ -62,32 +58,6 @@ function SettingsContent() {
   const hasApiKey = Boolean(copyableApiKey || apiKeyHint)
   const apiKeyScopes = apiKeyScopesDraft ?? normalizeApiKeyScopes(profile?.api_key_scopes)
   const hasApiAccess = canUseApiAccess(profile?.subscription_tier)
-
-  // Notification preferences state
-  const defaultNotifications = [
-    { id: 'daily_briefing', title: 'Daily Briefing', description: 'Receive your morning briefing via email', enabled: true },
-    { id: 'task_reminders', title: 'Task Reminders', description: 'Get notified about upcoming due dates', enabled: true },
-    { id: 'agent_completions', title: 'Agent Completions', description: 'Notification when an agent finishes a task', enabled: false },
-    { id: 'weekly_summary', title: 'Weekly Summary', description: 'Weekly productivity report', enabled: true },
-  ]
-
-  const [notifications, setNotifications] = useState(() => {
-    if (typeof window === 'undefined') return defaultNotifications
-    try {
-      const saved = localStorage.getItem('nexdo_notifications')
-      return saved ? JSON.parse(saved) : defaultNotifications
-    } catch {
-      return defaultNotifications
-    }
-  })
-
-  const toggleNotification = (id: string) => {
-    const updated = notifications.map((n: typeof defaultNotifications[0]) =>
-      n.id === id ? { ...n, enabled: !n.enabled } : n
-    )
-    setNotifications(updated)
-    localStorage.setItem('nexdo_notifications', JSON.stringify(updated))
-  }
 
   // Profile form state
   const [fullName, setFullName] = useState(profile?.full_name || '')
@@ -250,7 +220,6 @@ function SettingsContent() {
     { key: 'profile' as Tab, label: 'Profile', icon: User },
     { key: 'billing' as Tab, label: 'Billing', icon: CreditCard },
     { key: 'api' as Tab, label: 'API', icon: Key },
-    { key: 'notifications' as Tab, label: 'Notifications', icon: Bell },
   ]
 
   return (
@@ -346,40 +315,6 @@ function SettingsContent() {
                 {saveError && (
                   <span className="text-sm text-red-400">{saveError}</span>
                 )}
-              </div>
-            </div>
-
-            <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 space-y-4">
-              <h2 className="text-lg font-semibold text-zinc-100">
-                Appearance
-              </h2>
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Moon className="h-5 w-5 text-zinc-400" />
-                  <div>
-                    <p className="text-sm font-medium text-zinc-200">
-                      Dark Mode
-                    </p>
-                    <p className="text-xs text-zinc-500">
-                      Use dark theme for the interface
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={toggleTheme}
-                  className={cn(
-                    'relative w-12 h-6 rounded-full transition-colors',
-                    theme === 'dark' ? 'bg-accent' : 'bg-zinc-700'
-                  )}
-                >
-                  <span
-                    className={cn(
-                      'absolute top-1 w-4 h-4 bg-white rounded-full transition-transform',
-                      theme === 'dark' ? 'left-7' : 'left-1'
-                    )}
-                  />
-                </button>
               </div>
             </div>
           </div>
@@ -568,47 +503,6 @@ function SettingsContent() {
                   <p className="text-sm text-zinc-500 mt-1">Agent Executions</p>
                 </div>
               </div>
-            </div>
-          </div>
-        )}
-
-        {/* Notifications Tab */}
-        {activeTab === 'notifications' && (
-          <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 space-y-6">
-            <h2 className="text-lg font-semibold text-zinc-100">
-              Notification Preferences
-            </h2>
-
-            <div className="space-y-4">
-              {notifications.map((notification: typeof defaultNotifications[0]) => (
-                <div
-                  key={notification.id}
-                  className="flex items-center justify-between py-3 border-b border-zinc-800 last:border-0"
-                >
-                  <div>
-                    <p className="text-sm font-medium text-zinc-200">
-                      {notification.title}
-                    </p>
-                    <p className="text-xs text-zinc-500">
-                      {notification.description}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => toggleNotification(notification.id)}
-                    className={cn(
-                      'relative w-10 h-5 rounded-full transition-colors',
-                      notification.enabled ? 'bg-accent' : 'bg-zinc-700'
-                    )}
-                  >
-                    <span
-                      className={cn(
-                        'absolute top-0.5 w-4 h-4 bg-white rounded-full transition-transform',
-                        notification.enabled ? 'left-5' : 'left-0.5'
-                      )}
-                    />
-                  </button>
-                </div>
-              ))}
             </div>
           </div>
         )}

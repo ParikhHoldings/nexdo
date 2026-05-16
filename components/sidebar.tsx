@@ -10,7 +10,6 @@ import {
   CheckCircle2,
   Settings,
   LogOut,
-  Moon,
   Menu,
   X,
   Sparkles,
@@ -33,7 +32,7 @@ const navigation = [
 export function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
-  const { theme, toggleTheme, sidebarCollapsed, toggleSidebar, setSidebarCollapsed } = useUIStore()
+  const { sidebarCollapsed, toggleSidebar, setSidebarCollapsed } = useUIStore()
   const { profile, isAuthenticated } = useUserStore()
   const { tasks } = useTaskStore()
 
@@ -172,21 +171,6 @@ export function Sidebar() {
             {!sidebarCollapsed && <span className="font-medium">Settings</span>}
           </Link>
 
-          <button
-            onClick={toggleTheme}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg w-full text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
-          >
-            {theme === 'dark' ? (
-              <Sun className="h-5 w-5" />
-            ) : (
-              <Moon className="h-5 w-5" />
-            )}
-            {!sidebarCollapsed && (
-              <span className="font-medium">
-                {theme === 'dark' ? 'Light mode' : 'Dark mode'}
-              </span>
-            )}
-          </button>
         </div>
 
         {/* User */}

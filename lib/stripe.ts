@@ -46,7 +46,7 @@ export const PLAN_LIMITS = {
       'Everything in Pro',
       'Unlimited agent executions',
       'API access',
-      'Agent integrations (coming soon)',
+      'MCP and ChatGPT Actions setup',
       'Priority support',
     ],
   },

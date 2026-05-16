@@ -18,6 +18,8 @@ import { Input } from '@/components/ui/input'
 import { useUserStore } from '@/lib/store'
 import {
   API_KEY_SCOPE_LABELS,
+  API_ACCESS_REQUIRED_MESSAGE,
+  canUseApiAccess,
   normalizeApiKeyScopes,
   requiredScopeForTool,
 } from '@/lib/agent-scopes'
@@ -65,6 +67,7 @@ export default function MCPSettingsPage() {
   const apiKeyHint = profile?.api_key_hint || ''
   const hasApiKey = Boolean(apiKeyHint)
   const apiKeyScopes = normalizeApiKeyScopes(profile?.api_key_scopes)
+  const hasApiAccess = canUseApiAccess(profile?.subscription_tier)
 
   const origin = useSyncExternalStore(
     subscribeToOrigin,
@@ -226,6 +229,15 @@ export default function MCPSettingsPage() {
             <code className="flex-1 bg-zinc-800 px-4 py-2.5 rounded-lg text-sm text-zinc-300 font-mono">
               {apiKeyHint}
             </code>
+          </div>
+        ) : !hasApiAccess ? (
+          <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+            <p className="text-sm text-amber-400">
+              {API_ACCESS_REQUIRED_MESSAGE}{' '}
+              <Link href="/settings?tab=billing" className="underline">
+                Open billing
+              </Link>
+            </p>
           </div>
         ) : (
           <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg">

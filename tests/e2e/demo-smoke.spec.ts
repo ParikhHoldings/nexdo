@@ -133,12 +133,27 @@ test('settings tab query opens billing tab', async ({ page }) => {
 
   await expect(page.getByRole('heading', { name: 'Current Plan' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Billing' })).toHaveClass(/bg-accent/)
+  await expect(page.getByRole('button', { name: 'Notifications' })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: /Light mode|Dark mode/ })).toHaveCount(0)
 })
 
 test('login exposes demo mode when auth env is not configured', async ({ page }) => {
   await page.goto('/auth/login')
 
   await expect(page.getByRole('button', { name: /Try demo mode/ })).toBeVisible()
+})
+
+test('connect ai page reflects the paid API access gate', async ({ page }) => {
+  await page.goto('/settings/mcp')
+
+  await expect(page.getByRole('heading', { name: 'Connect AI Tools' })).toBeVisible()
+  await expect(
+    page.getByText('API access requires a Power plan or higher.')
+  ).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Open billing' })).toHaveAttribute(
+    'href',
+    '/settings?tab=billing'
+  )
 })
 
 test('demo tasks persist across reloads', async ({ page }) => {

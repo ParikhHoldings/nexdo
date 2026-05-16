@@ -36,6 +36,8 @@
 - validated and bounded OpenAI JSON responses before parsed tasks, prioritization, briefings, or agent outputs are returned or saved
 - hardened task mutation routes with allowlisted PATCH fields and owned-delete 404 handling
 - made task detail editing functional for title, context, due date, priority, action type, estimate, people, and tags
+- removed nonfunctional theme and notification controls from the launch app shell/settings until real behavior exists
+- aligned the Connect AI setup page with the Power-plan API access gate
 - hardened authenticated agent execution so the server runs only owned executable task records and persists output
 - hardened agent execution quota ordering so output is not saved or returned if usage recording fails
 - fixed optimistic task updates so agent-output edits do not accidentally clear `completed_at`
@@ -75,6 +77,8 @@
 - document the minimum real MVP path around capture, structure, prioritize, brief, and bounded execution
 
 ## Medium priority
+- add real theme support before reintroducing theme controls
+- add real notification delivery before reintroducing notification preference controls
 - identify the fastest revenue angle for an AI-native task manager in this portfolio context
 - tighten landing/waitlist language around the clearest user promise
 - clarify whether Nexdo should lead with founder/operator use case or broader team use case
