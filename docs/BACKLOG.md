@@ -15,6 +15,7 @@
 - added bounded MCP tool input validation and made MCP `create_task` consume task-create quota
 - added scoped API key permissions, MCP scope filtering/enforcement, and an `agent_action_events` audit trail migration
 - gated API-key generation and MCP API-key validation to Power/team profiles so API access matches pricing truth
+- wired settings tab query parameters so upgrade links such as `/settings?tab=billing` open the intended billing tab
 - rate-limited API key rotation for scoped MCP/API keys
 - moved generated MCP/API keys to hashed storage with one-time reveal, key hints, and legacy raw-key migration fallback
 - narrowed browser-visible profile columns and direct profile self-updates so authenticated clients cannot read key hashes/Stripe IDs or self-change billing, quota, Stripe, or API-key state

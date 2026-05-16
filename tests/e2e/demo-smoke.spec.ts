@@ -118,3 +118,10 @@ test('demo settings does not allow free-plan API key generation', async ({ page 
   ).toBeVisible()
   await expect(page.getByRole('button', { name: /Regenerate/ })).toBeDisabled()
 })
+
+test('settings tab query opens billing tab', async ({ page }) => {
+  await page.goto('/settings?tab=billing')
+
+  await expect(page.getByRole('heading', { name: 'Current Plan' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Billing' })).toHaveClass(/bg-accent/)
+})

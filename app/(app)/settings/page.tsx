@@ -28,7 +28,12 @@ import {
   type ApiKeyScope,
 } from '@/lib/agent-scopes'
 
-type Tab = 'profile' | 'billing' | 'api' | 'notifications'
+const SETTINGS_TABS = ['profile', 'billing', 'api', 'notifications'] as const
+type Tab = (typeof SETTINGS_TABS)[number]
+
+function isSettingsTab(value: string | null): value is Tab {
+  return SETTINGS_TABS.includes(value as Tab)
+}
 
 function formatApiKeyHint(apiKey: string) {
   return `${apiKey.slice(0, 8)}...${apiKey.slice(-4)}`
@@ -37,11 +42,14 @@ function formatApiKeyHint(apiKey: string) {
 function SettingsContent() {
   const searchParams = useSearchParams()
   const checkoutStatus = searchParams.get('checkout')
+  const requestedTab = searchParams.get('tab')
 
   const { profile, setProfile } = useUserStore()
   const { theme, toggleTheme } = useUIStore()
 
-  const [activeTab, setActiveTab] = useState<Tab>('profile')
+  const [activeTab, setActiveTab] = useState<Tab>(
+    isSettingsTab(requestedTab) ? requestedTab : 'profile'
+  )
   const [copied, setCopied] = useState(false)
   const [generatedApiKey, setGeneratedApiKey] = useState('')
   const [generatedApiKeyHint, setGeneratedApiKeyHint] = useState('')
