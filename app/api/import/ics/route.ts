@@ -5,6 +5,17 @@ import { enforceImportQuota } from '@/lib/import-quota'
 
 export async function POST(request: Request) {
   try {
+    const supabase = await createClient()
+    if (!supabase) {
+      return NextResponse.json({ error: 'Supabase not configured' }, { status: 503 })
+    }
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    const userId = user.id
+    const dbClient = supabase as any
+
     const contentType = request.headers.get('content-type') || ''
     let content: string
 
@@ -41,17 +52,6 @@ export async function POST(request: Request) {
         { status: 400 }
       )
     }
-
-    const supabase = await createClient()
-    if (!supabase) {
-      return NextResponse.json({ error: 'Supabase not configured' }, { status: 503 })
-    }
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-    const userId = user.id
-    const dbClient = supabase as any
 
     // Parse ICS content
     const tasks = parseICSContent(content, userId)

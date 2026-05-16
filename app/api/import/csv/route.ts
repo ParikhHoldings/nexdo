@@ -12,6 +12,18 @@ import type { TaskInsert } from '@/lib/database.types'
 
 export async function POST(request: Request) {
   try {
+    // Get authenticated user before reading uploaded content.
+    const supabase = await createClient()
+    if (!supabase) {
+      return NextResponse.json({ error: 'Supabase not configured' }, { status: 503 })
+    }
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    const userId = user.id
+    const dbClient = supabase as any
+
     const contentType = request.headers.get('content-type') || ''
     let content: string
     let providedMapping: Record<string, string> | undefined
@@ -42,18 +54,6 @@ export async function POST(request: Request) {
         )
       }
     }
-
-    // Get authenticated user (required for imports so data can't leak across accounts).
-    const supabase = await createClient()
-    if (!supabase) {
-      return NextResponse.json({ error: 'Supabase not configured' }, { status: 503 })
-    }
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-    const userId = user.id
-    const dbClient = supabase as any
 
     // Parse CSV headers
     const lines = content.split(/\r?\n/).filter(line => line.trim())

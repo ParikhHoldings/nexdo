@@ -69,6 +69,16 @@ test('task mutation endpoints require configured auth', async ({ request }) => {
   })
   expect([401, 503]).toContain(csvImport.status())
 
+  const jsonImport = await request.post('/api/import/json', {
+    data: { content: '[{"title":"Imported smoke task"}]' },
+  })
+  expect([401, 503]).toContain(jsonImport.status())
+
+  const icsImport = await request.post('/api/import/ics', {
+    data: { content: 'BEGIN:VCALENDAR\nEND:VCALENDAR' },
+  })
+  expect([401, 503]).toContain(icsImport.status())
+
   const apiKey = await request.post('/api/profile/api-key', {
     data: { scopes: ['tasks:read'] },
   })

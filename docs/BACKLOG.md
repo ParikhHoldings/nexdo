@@ -29,6 +29,7 @@
 - hardened agent execution quota ordering so output is not saved or returned if usage recording fails
 - fixed optimistic task updates so agent-output edits do not accidentally clear `completed_at`
 - enforced monthly task quotas across CSV, JSON, ICS, Todoist, Google Tasks, and Microsoft To Do imports
+- moved CSV, JSON, and ICS import auth/config checks before file or body parsing
 - added a quota cleanup migration so usage read probes do not write zero-quantity audit events
 - removed the unbacked annual pricing toggle until annual Stripe prices exist
 - hardened Stripe checkout so clients can only request server-known `pro` or `power` plans and cannot override price IDs
