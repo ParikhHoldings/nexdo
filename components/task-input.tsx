@@ -128,7 +128,7 @@ export function TaskInput({ onTaskCreated }: TaskInputProps) {
                 kind: 'error',
                 title: 'Monthly limit reached',
                 message: payload?.message || 'Upgrade to create more tasks.',
-                action: { label: 'Upgrade plan', href: '/settings' },
+                action: { label: 'Upgrade plan', href: '/settings?tab=billing' },
               })
               return
             } else if (saveResponse.status === 400) {

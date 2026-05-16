@@ -26,14 +26,19 @@ export function DailyBriefing({ userName = 'there' }: DailyBriefingProps) {
   const { tasks, selectTask, isAuthenticated } = useTaskStore()
 
   useEffect(() => {
+    if (isDismissed || isAuthenticated) return
+
+    setBriefing(
+      tasks.length > 0 ? generateBriefingHeuristic(tasks, userName) : null
+    )
+  }, [isAuthenticated, isDismissed, setBriefing, tasks, userName])
+
+  useEffect(() => {
+    if (!isAuthenticated) return
+
     const fetchBriefing = async () => {
       // Don't fetch if already have briefing or dismissed
       if (briefing || isDismissed) return
-
-      if (!isAuthenticated) {
-        setBriefing(generateBriefingHeuristic(tasks, userName))
-        return
-      }
 
       setLoading(true)
       try {

@@ -24,8 +24,9 @@ test('demo task capture, briefing, prioritization, and agent output work', async
   await page.keyboard.press('Enter')
 
   await expect(
-    page.getByText('Research competitor pricing with Sarah today high priority 45 minutes')
+    page.getByRole('heading', { name: /Research competitor pricing/ }).first()
   ).toBeVisible()
+  await expect(page.getByText(/6 active tasks/)).toBeVisible()
   await expect(page.getByText('Why now:').first()).toBeVisible()
 
   await page.getByRole('heading', { name: 'Send weekly update to team' }).click()

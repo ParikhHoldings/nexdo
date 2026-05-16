@@ -26,6 +26,7 @@
 - enabled strict lint/typecheck behavior in production builds
 - hardened profile updates with allowlisted timezone/work-type values and name length normalization
 - added deterministic local task intelligence fallbacks for demo/provider-missing flows
+- refreshed logged-out daily briefings from local demo task state after task capture/import
 - added client-side demo file import parsing for CSV, JSON, and ICS so logged-out visitors can exercise imports without weakening authenticated API import guards
 - moved AI route body validation before rate-limit consumption for parse, prioritize, and briefing requests
 - sanitized prioritization and briefing task arrays before rate-limit consumption and AI provider/fallback execution

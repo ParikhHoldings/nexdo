@@ -19,6 +19,7 @@ Make Nexdo a credible, launchable early-access product by Monday, 2026-05-18, wi
 | Provide immediate plan | `docs/LAUNCH_PLAN.md` Monday 2026-05-18 section | Done |
 | Provide long-term plan | `docs/LAUNCH_PLAN.md` human-user, AI-agent, and long-term direction sections | Done |
 | Make front-end usable for humans today | Logged-out `/today` demo flow supports task capture, structured parsing, briefing, prioritization, task detail, and bounded agent output | Locally verified |
+| Keep demo briefing aligned with task changes | Logged-out daily briefing now refreshes from local task state after demo task capture/import; Playwright verifies the active-task count updates after adding a task | Locally verified |
 | Make import front-end usable in demo mode | Logged-out file imports now parse CSV, JSON, and ICS client-side instead of hitting authenticated import APIs; Playwright verifies a CSV import appears in the task list without configured auth | Locally verified |
 | Keep demo useful without provider secrets | `lib/task-intelligence.ts`, `lib/openai.ts`, `components/task-input.tsx`, `components/daily-briefing.tsx`, `components/task-detail.tsx`, `app/(app)/today/page.tsx` | Done |
 | Harden AI briefing/prioritization inputs | `lib/ai-task-input.ts` sanitizes task arrays and user names before `/api/tasks/prioritize` and `/api/briefing` consume rate limits or call OpenAI/fallback execution | Done |
@@ -59,7 +60,7 @@ Make Nexdo a credible, launchable early-access product by Monday, 2026-05-18, wi
 - `npm run lint`
 - `npm run typecheck`
 - `npm run build`
-- `npm run test:e2e` including logged-out task capture/agent output, auth guardrails, MCP/OpenAPI/Stripe guardrails, demo CSV file import, free-plan API-key UI gating, and settings tab deep links
+- `npm run test:e2e` including logged-out task capture/agent output, demo briefing refresh, auth guardrails, MCP/OpenAPI/Stripe guardrails, demo CSV file import, free-plan API-key UI gating, and settings tab deep links
 - `npm audit --audit-level=moderate`
 - `git diff --check`
 - PR #3 GitHub Actions Web rails
