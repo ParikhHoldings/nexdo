@@ -2,6 +2,7 @@
 
 import { create } from 'zustand'
 import type { Task, Profile, BriefingContent, TaskUpdate } from './database.types'
+import { persistDemoTasks } from './tasks'
 
 interface TaskState {
   tasks: Task[]
@@ -34,10 +35,12 @@ export const useTaskStore = create<TaskState>((set, get) => ({
 
   setTasks: (tasks) => set({ tasks }),
 
-  addTask: (task) =>
-    set((state) => ({
-      tasks: [task, ...state.tasks],
-    })),
+  addTask: (task) => {
+    const { tasks, isAuthenticated } = get()
+    const nextTasks = [task, ...tasks]
+    set({ tasks: nextTasks })
+    if (!isAuthenticated) persistDemoTasks(nextTasks)
+  },
 
   updateTask: (id, updates, options) => {
     const updatedAt = new Date().toISOString()
@@ -55,18 +58,24 @@ export const useTaskStore = create<TaskState>((set, get) => ({
               : task.completed_at,
     })
 
+    const state = get()
+    const nextTasks = state.tasks.map((t) => (t.id === id ? applyUpdates(t) : t))
+    const nextSelectedTask =
+      state.selectedTask?.id === id
+        ? applyUpdates(state.selectedTask)
+        : state.selectedTask
+
     // Optimistic update
-    set((state) => ({
-      tasks: state.tasks.map((t) => (t.id === id ? applyUpdates(t) : t)),
-      selectedTask:
-        state.selectedTask?.id === id
-          ? applyUpdates(state.selectedTask)
-          : state.selectedTask,
-    }))
+    set({
+      tasks: nextTasks,
+      selectedTask: nextSelectedTask,
+    })
 
     // Persist to Supabase if authenticated
-    const { isAuthenticated } = get()
-    if (isAuthenticated && options?.persist !== false) {
+    const { isAuthenticated } = state
+    if (!isAuthenticated) {
+      persistDemoTasks(nextTasks)
+    } else if (options?.persist !== false) {
       fetch(`/api/tasks/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -76,16 +85,21 @@ export const useTaskStore = create<TaskState>((set, get) => ({
   },
 
   deleteTask: (id) => {
+    const state = get()
+    const nextTasks = state.tasks.filter((t) => t.id !== id)
+
     // Optimistic update
-    set((state) => ({
-      tasks: state.tasks.filter((t) => t.id !== id),
+    set({
+      tasks: nextTasks,
       selectedTask: state.selectedTask?.id === id ? null : state.selectedTask,
       isDetailOpen: state.selectedTask?.id === id ? false : state.isDetailOpen,
-    }))
+    })
 
     // Persist to Supabase if authenticated
-    const { isAuthenticated } = get()
-    if (isAuthenticated) {
+    const { isAuthenticated } = state
+    if (!isAuthenticated) {
+      persistDemoTasks(nextTasks)
+    } else {
       fetch(`/api/tasks/${id}`, { method: 'DELETE' }).catch(console.error)
     }
   },

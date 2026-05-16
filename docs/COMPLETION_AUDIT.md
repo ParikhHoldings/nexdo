@@ -20,6 +20,7 @@ Make Nexdo a credible, launchable early-access product by Monday, 2026-05-18, wi
 | Provide long-term plan | `docs/LAUNCH_PLAN.md` human-user, AI-agent, and long-term direction sections | Done |
 | Make front-end usable for humans today | Logged-out `/today` demo flow supports task capture, structured parsing, briefing, prioritization, task detail, and bounded agent output | Locally verified |
 | Keep demo briefing aligned with task changes | Logged-out daily briefing now refreshes from local task state after demo task capture/import; Playwright verifies the active-task count updates after adding a task | Locally verified |
+| Keep demo task changes across reloads | Logged-out task add/edit/delete/complete flows now persist demo task state to localStorage; Playwright verifies a new demo task survives reload and new IDs remain unique afterward | Locally verified |
 | Make import front-end usable in demo mode | Logged-out file imports now parse CSV, JSON, and ICS client-side instead of hitting authenticated import APIs; Playwright verifies a CSV import appears in the task list without configured auth | Locally verified |
 | Keep demo entry reachable when env is placeholder/missing | Supabase client/server/middleware/login checks now reject placeholder anon/service keys as unconfigured; Playwright verifies the login page exposes demo mode without auth env | Locally verified |
 | Keep demo useful without provider secrets | `lib/task-intelligence.ts`, `lib/openai.ts`, `components/task-input.tsx`, `components/daily-briefing.tsx`, `components/task-detail.tsx`, `app/(app)/today/page.tsx` | Done |
@@ -62,7 +63,7 @@ Make Nexdo a credible, launchable early-access product by Monday, 2026-05-18, wi
 - `npm run lint`
 - `npm run typecheck`
 - `npm run build`
-- `npm run test:e2e` including logged-out task capture/edit/agent output, demo briefing refresh, auth guardrails, MCP/OpenAPI/Stripe guardrails, demo CSV file import, login demo-mode entry, free-plan API-key UI gating, and settings tab deep links
+- `npm run test:e2e` including logged-out task capture/edit/reload persistence/agent output, demo briefing refresh, auth guardrails, MCP/OpenAPI/Stripe guardrails, demo CSV file import, login demo-mode entry, free-plan API-key UI gating, and settings tab deep links
 - `npm audit --audit-level=moderate`
 - `git diff --check`
 - PR #3 GitHub Actions Web rails
@@ -72,7 +73,7 @@ Make Nexdo a credible, launchable early-access product by Monday, 2026-05-18, wi
 - `npm run verify:env` failed because `.env.local` is not present in this workspace. `.env.local.example` is present, but it is only the contract and cannot support provider smoke checks.
 
 ## Current completion judgment
-The Monday early-access demo, local build/test rails, task mutation guards, AI input/output guards, authenticated agent execution guards, import quota guards, and billing route guards are in materially better shape and are locally verified. The broader objective is not complete as a production launch because provider-backed flows, real database/auth, Stripe billing, authenticated MCP tool execution, deployment rails, and approvals remain unverified.
+The Monday early-access demo, local build/test rails, demo task persistence, task mutation guards, AI input/output guards, authenticated agent execution guards, import quota guards, and billing route guards are in materially better shape and are locally verified. The broader objective is not complete as a production launch because provider-backed flows, real database/auth, Stripe billing, authenticated MCP tool execution, deployment rails, and approvals remain unverified.
 
 ## Next required work
 1. Configure a real Supabase project and run `npm run smoke:supabase -- --write` to verify migrations, auth, profile creation, RLS, task CRUD, and audit events.

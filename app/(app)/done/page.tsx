@@ -8,6 +8,7 @@ import { TaskListSkeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/components/ui/toast'
 import { useTaskStore } from '@/lib/store'
+import { persistDemoTasks } from '@/lib/tasks'
 import { format, parseISO, isToday, isYesterday, isThisWeek } from 'date-fns'
 
 export default function DonePage() {
@@ -82,6 +83,7 @@ export default function DonePage() {
         toast.success(`Cleared ${toDelete.length} completed task${toDelete.length === 1 ? '' : 's'}`)
       }
     } else {
+      persistDemoTasks(activeTasks)
       toast.success('Cleared completed tasks')
     }
 

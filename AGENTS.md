@@ -21,7 +21,7 @@ The product promise should be grounded in what the code actually supports:
 - priority, due date, context, people, tags, action type, estimate, and energy metadata
 - daily briefing and prioritization generated from task context
 - limited agent execution for owned `research`, `draft`, and `prep` task records, with server-side output persistence
-- demo-mode task data when Supabase is unavailable or the visitor is logged out
+- localStorage-backed demo-mode task data when Supabase is unavailable or the visitor is logged out, so logged-out task changes survive reloads
 - imports from Todoist plus CSV, ICS, JSON/Trello/Things-style sources, with client-side demo file imports for logged-out visitors and task quota enforcement for authenticated imports
 - API key based MCP/ChatGPT Actions interop for listing, creating, completing, updating, searching, and briefing tasks
 - Power/team-gated API-key access, scoped API-key permissions, rotation rate limits, scope-aware MCP setup UI, and an agent action audit table/migration for MCP/API-key calls
@@ -39,7 +39,7 @@ Current local verification from 2026-05-16:
 - `npm run lint` passed
 - `npm run typecheck` passed
 - `npm run build` passed with strict TypeScript and ESLint checks enabled
-- `npm run test:e2e` passed for the logged-out `/today` demo flow plus task/agent auth guards, MCP/OpenAPI/action auth smoke tests, and a Stripe checkout plan guard
+- `npm run test:e2e` passed for the logged-out `/today` demo flow, demo task reload persistence, task/agent auth guards, MCP/OpenAPI/action auth smoke tests, and a Stripe checkout plan guard
 - `npm audit --audit-level=moderate` passed with 0 vulnerabilities after the Next.js 16 / ESLint 9 upgrade
 - `npm run verify:env` failed because `.env.local` is absent; only `.env.local.example` exists in this workspace
 
@@ -70,7 +70,7 @@ Production environment, Supabase migrations, OpenAI provider calls, Stripe test-
 - Agent interop: MCP definitions and handlers in `lib/mcp-tools.ts`; JSON-RPC MCP endpoint at `app/api/mcp/route.ts`; ChatGPT Actions OpenAPI at `app/api/mcp/openapi/route.ts`; action wrappers under `app/api/mcp/actions/[tool]/route.ts`.
 - Agent governance: API key scopes are modeled in `lib/agent-scopes.ts`; key generation/hashing helpers live in `lib/api-keys.ts`; hashed keys and key hints are persisted on profiles; agent calls are intended to log to `agent_action_events`.
 - Imports: source-specific and generic normalization in `lib/importers.ts`; import routes under `app/api/import/`.
-- Demo mode: `lib/tasks.ts` provides local demo tasks when Supabase is not configured or no user is authenticated.
+- Demo mode: `lib/tasks.ts` provides local demo tasks when Supabase is not configured or no user is authenticated; browser demo changes persist to localStorage and must never be treated as authenticated product data.
 
 ## Commands
 - Install: `npm install`

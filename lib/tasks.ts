@@ -1,5 +1,7 @@
 import type { Task, TaskInsert, TaskUpdate, TaskStatus } from './database.types'
 
+const DEMO_TASKS_STORAGE_KEY = 'nexdo_demo_tasks'
+
 // Mock tasks for development when Supabase is not connected
 const mockTasks: Task[] = [
   {
@@ -148,8 +150,64 @@ const mockTasks: Task[] = [
 let demoTasks = [...mockTasks]
 let taskIdCounter = 6
 
+function canUseLocalStorage(): boolean {
+  if (typeof window === 'undefined') return false
+
+  try {
+    return Boolean(window.localStorage)
+  } catch {
+    return false
+  }
+}
+
+function isTask(value: unknown): value is Task {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false
+  const task = value as Partial<Task>
+  return typeof task.id === 'string' && typeof task.title === 'string'
+}
+
+function getStoredDemoTasks(): Task[] | null {
+  if (!canUseLocalStorage()) return null
+
+  try {
+    const raw = window.localStorage.getItem(DEMO_TASKS_STORAGE_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    if (!Array.isArray(parsed)) return null
+    const tasks = parsed.filter(isTask)
+    return tasks
+  } catch {
+    return null
+  }
+}
+
+export function persistDemoTasks(tasks: Task[]): void {
+  demoTasks = tasks
+  taskIdCounter = getNextDemoTaskId(tasks)
+  if (!canUseLocalStorage()) return
+
+  try {
+    window.localStorage.setItem(DEMO_TASKS_STORAGE_KEY, JSON.stringify(tasks))
+  } catch {
+    // Demo persistence is best-effort; local task state still works in memory.
+  }
+}
+
 export function getDemoTasks(): Task[] {
+  const storedTasks = getStoredDemoTasks()
+  if (storedTasks) {
+    persistDemoTasks(storedTasks)
+  }
   return demoTasks
+}
+
+function getNextDemoTaskId(tasks: Task[]): number {
+  const maxNumericId = tasks.reduce((max, task) => {
+    const numericId = Number(task.id)
+    return Number.isFinite(numericId) ? Math.max(max, numericId) : max
+  }, 0)
+
+  return Math.max(maxNumericId + 1, mockTasks.length + 1)
 }
 
 export function getDemoTask(id: string): Task | undefined {
@@ -185,7 +243,7 @@ export function addDemoTask(task: Omit<TaskInsert, 'id' | 'user_id'>): Task {
     ingestion_intent: task.ingestion_intent || null,
     agent_metadata: task.agent_metadata || null,
   }
-  demoTasks = [newTask, ...demoTasks]
+  persistDemoTasks([newTask, ...demoTasks])
   return newTask
 }
 
@@ -205,11 +263,11 @@ export function updateDemoTask(id: string, updates: TaskUpdate): Task | undefine
           : demoTasks[index].completed_at,
   }
 
-  demoTasks = [
+  persistDemoTasks([
     ...demoTasks.slice(0, index),
     updatedTask,
     ...demoTasks.slice(index + 1),
-  ]
+  ])
 
   return updatedTask
 }
@@ -217,7 +275,7 @@ export function updateDemoTask(id: string, updates: TaskUpdate): Task | undefine
 export function deleteDemoTask(id: string): boolean {
   const index = demoTasks.findIndex((t) => t.id === id)
   if (index === -1) return false
-  demoTasks = [...demoTasks.slice(0, index), ...demoTasks.slice(index + 1)]
+  persistDemoTasks([...demoTasks.slice(0, index), ...demoTasks.slice(index + 1)])
   return true
 }
 
@@ -252,6 +310,6 @@ export function filterDemoTasks(filter: {
 }
 
 export function resetDemoTasks(): void {
-  demoTasks = [...mockTasks]
+  persistDemoTasks([...mockTasks])
   taskIdCounter = 6
 }

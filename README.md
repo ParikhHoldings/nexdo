@@ -8,7 +8,7 @@ This repo currently contains a Next.js app with:
 - Supabase-backed profiles, tasks, notes, daily briefings, usage events, and rate-limit tables
 - natural-language task parsing, daily briefing, prioritization, and limited agent execution through OpenAI
 - bounded validation for OpenAI JSON output before parsed tasks, briefings, prioritization, or agent results are returned or saved
-- demo-mode task data when Supabase is unavailable or the visitor is logged out
+- localStorage-backed demo-mode task data when Supabase is unavailable or the visitor is logged out
 - imports from Todoist and file-based task exports such as CSV, ICS, JSON/Trello/Things-style sources, including client-side demo file imports for logged-out visitors
 - Stripe plan, checkout, portal, webhook, quota, and rate-limit scaffolding
 - MCP and ChatGPT Actions surfaces for external agents to list, create, complete, update, search, and brief tasks
@@ -24,7 +24,7 @@ Last checked on 2026-05-16:
 - `npm run lint` passed
 - `npm run typecheck` passed
 - `npm run build` passed
-- `npm run test:e2e` passed for the logged-out `/today` demo flow plus MCP/OpenAPI/action auth smoke tests
+- `npm run test:e2e` passed for the logged-out `/today` demo flow, demo task reload persistence, and MCP/OpenAPI/action auth smoke tests
 - PR #3 Web rails passed in GitHub Actions
 - PR #3 Vercel preview deployment completed
 

@@ -15,7 +15,7 @@ test('demo task capture, briefing, prioritization, and agent output work', async
 
   await page.goto('/today')
 
-  await expect(page.getByRole('heading', { name: 'Today' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Today', exact: true })).toBeVisible()
   await expect(page.getByText('Top Priorities')).toBeVisible()
 
   await page
@@ -47,7 +47,7 @@ test('demo task capture, briefing, prioritization, and agent output work', async
 
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/today')
-  await expect(page.getByRole('heading', { name: 'Today' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Today', exact: true })).toBeVisible()
   await expect(page.getByPlaceholder('What needs to get done? Be specific...')).toBeVisible()
   await expect(page.getByRole('button', { name: 'Open navigation' })).toBeVisible()
   await page.screenshot({ path: '/tmp/nexdo-smoke-mobile.png', fullPage: false })
@@ -139,4 +139,33 @@ test('login exposes demo mode when auth env is not configured', async ({ page })
   await page.goto('/auth/login')
 
   await expect(page.getByRole('button', { name: /Try demo mode/ })).toBeVisible()
+})
+
+test('demo tasks persist across reloads', async ({ page }) => {
+  await page.goto('/today')
+  await page
+    .getByPlaceholder('What needs to get done? Be specific...')
+    .fill('Draft demo persistence note today')
+  await page.keyboard.press('Enter')
+
+  await expect(page.getByRole('heading', { name: /Draft demo persistence note/ })).toBeVisible()
+
+  await page.reload()
+  await expect(page.getByRole('heading', { name: /Draft demo persistence note/ })).toBeVisible()
+
+  await page
+    .getByPlaceholder('What needs to get done? Be specific...')
+    .fill('Create second persisted demo task')
+  await page.keyboard.press('Enter')
+
+  await expect(
+    page.getByRole('heading', { name: /Create second persisted demo task/ })
+  ).toBeVisible()
+
+  const persistedIds = await page.evaluate(() => {
+    const raw = window.localStorage.getItem('nexdo_demo_tasks')
+    const tasks = raw ? JSON.parse(raw) : []
+    return tasks.map((task: { id: string }) => task.id)
+  })
+  expect(new Set(persistedIds).size).toBe(persistedIds.length)
 })
