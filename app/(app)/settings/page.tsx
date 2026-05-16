@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { PricingTable } from '@/components/pricing-table'
 import { useUserStore } from '@/lib/store'
+import { persistDemoProfile } from '@/lib/demo-profile'
 import { cn } from '@/lib/utils'
 import {
   API_KEY_SCOPE_LABELS,
@@ -41,7 +42,7 @@ function SettingsContent() {
   const checkoutStatus = searchParams.get('checkout')
   const requestedTab = searchParams.get('tab')
 
-  const { profile, setProfile } = useUserStore()
+  const { profile, isAuthenticated, setProfile } = useUserStore()
 
   const [activeTab, setActiveTab] = useState<Tab>(
     isSettingsTab(requestedTab) ? requestedTab : 'profile'
@@ -134,6 +135,23 @@ function SettingsContent() {
     setIsSaving(true)
     setSaveSuccess(false)
     setSaveError(null)
+
+    if (!isAuthenticated && profile) {
+      const nextProfile = {
+        ...profile,
+        full_name: fullName.trim() || null,
+        timezone,
+        work_type: 'other' as const,
+        updated_at: new Date().toISOString(),
+      }
+
+      setProfile(nextProfile)
+      persistDemoProfile(nextProfile)
+      setSaveSuccess(true)
+      setTimeout(() => setSaveSuccess(false), 3000)
+      setIsSaving(false)
+      return
+    }
 
     try {
       const response = await fetch('/api/profile', {
@@ -292,6 +310,7 @@ function SettingsContent() {
                     Timezone
                   </label>
                   <select
+                    aria-label="Timezone"
                     value={timezone}
                     onChange={(e) => setTimezone(e.target.value)}
                     className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2.5 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent"

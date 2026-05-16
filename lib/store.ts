@@ -134,7 +134,8 @@ export const useUserStore = create<UserState>((set) => ({
   isAuthenticated: false,
   isLoading: true,
 
-  setProfile: (profile) => set({ profile, isAuthenticated: !!profile }),
+  setProfile: (profile) =>
+    set({ profile, isAuthenticated: !!profile && profile.id !== 'demo-user' }),
 
   setAuthenticated: (auth) => set({ isAuthenticated: auth }),
 

@@ -7,6 +7,7 @@ import { ToastProvider } from '@/components/ui'
 import { SidebarSkeleton, TaskListSkeleton } from '@/components/ui/skeleton'
 import { useTaskStore, useUserStore } from '@/lib/store'
 import { getDemoTasks } from '@/lib/tasks'
+import { getDemoProfile } from '@/lib/demo-profile'
 import { createClient } from '@/lib/supabase/client'
 import { CLIENT_PROFILE_SELECT, toClientProfile } from '@/lib/profile'
 
@@ -65,49 +66,18 @@ export default function AppLayout({
             // Logged-out visitors see demo data so they can explore the app.
             setAuthenticated(false)
             setTasks(getDemoTasks())
-            setProfile({
-              id: 'demo-user',
-              full_name: 'Demo User',
-              timezone,
-              work_type: null,
-              subscription_tier: 'free',
-              stripe_customer_id: null,
-              api_key: null,
-              api_key_hash: null,
-              api_key_hint: null,
-              api_key_scopes: ['tasks:read', 'tasks:write', 'briefing:read'],
-              api_key_last_used_at: null,
-              task_count_this_month: 0,
-              agent_executions_this_month: 0,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-            })
+            setProfile(getDemoProfile(timezone))
           }
         } catch (error) {
           console.error('Error loading data:', error)
           setAuthenticated(false)
           setTasks(getDemoTasks())
+          setProfile(getDemoProfile(timezone))
         }
       } else {
         setAuthenticated(false)
         setTasks(getDemoTasks())
-        setProfile({
-          id: 'demo-user',
-          full_name: 'Demo User',
-          timezone,
-          work_type: null,
-          subscription_tier: 'free',
-          stripe_customer_id: null,
-          api_key: null,
-          api_key_hash: null,
-          api_key_hint: null,
-          api_key_scopes: ['tasks:read', 'tasks:write', 'briefing:read'],
-          api_key_last_used_at: null,
-          task_count_this_month: 0,
-          agent_executions_this_month: 0,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        })
+        setProfile(getDemoProfile(timezone))
       }
 
       setLoading(false)

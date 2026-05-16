@@ -135,6 +135,21 @@ test('settings tab query opens billing tab', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Billing' })).toHaveClass(/bg-accent/)
   await expect(page.getByRole('button', { name: 'Notifications' })).toHaveCount(0)
   await expect(page.getByRole('button', { name: /Light mode|Dark mode/ })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Sign out' })).toHaveCount(0)
+})
+
+test('demo profile settings save locally across reloads', async ({ page }) => {
+  await page.goto('/settings')
+
+  await page.getByLabel('Full Name').fill('Casey Demo')
+  await page.getByLabel('Timezone').selectOption('America/Los_Angeles')
+  await page.getByRole('button', { name: 'Save Changes' }).click()
+
+  await expect(page.getByText('Saved!')).toBeVisible()
+
+  await page.reload()
+  await expect(page.getByLabel('Full Name')).toHaveValue('Casey Demo')
+  await expect(page.getByLabel('Timezone')).toHaveValue('America/Los_Angeles')
 })
 
 test('login exposes demo mode when auth env is not configured', async ({ page }) => {

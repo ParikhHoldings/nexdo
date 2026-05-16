@@ -33,6 +33,8 @@
 - Added deterministic local task intelligence for demo-mode parsing, prioritization, briefing, and bounded research/draft/prep outputs.
 - Refreshed logged-out daily briefings from local demo task state after task capture/import.
 - Persisted logged-out demo task changes to localStorage so added, imported, edited, completed, and deleted demo tasks survive reloads.
+- Persisted logged-out demo profile changes to localStorage so no-auth settings saves stay functional.
+- Kept demo profiles out of authenticated UI state so no-auth demo mode does not expose sign-out or authenticated profile-save behavior.
 - Added client-side demo file import parsing for CSV, JSON, and ICS, with browser smoke coverage that verifies a logged-out CSV import appears in the task list.
 - Moved AI route body validation before rate-limit consumption for parse, prioritize, and briefing requests.
 - Sanitized prioritization and briefing task arrays before rate-limit consumption and AI provider/fallback execution.
