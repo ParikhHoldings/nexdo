@@ -24,7 +24,7 @@ The product promise should be grounded in what the code actually supports:
 - demo-mode task data when Supabase is unavailable or the visitor is logged out
 - imports from Todoist plus CSV, ICS, JSON/Trello/Things-style sources, with task quota enforcement for authenticated imports
 - API key based MCP/ChatGPT Actions interop for listing, creating, completing, updating, searching, and briefing tasks
-- scoped API-key permissions, scope-aware MCP setup UI, and an agent action audit table/migration for MCP/API-key calls
+- scoped API-key permissions, rotation rate limits, scope-aware MCP setup UI, and an agent action audit table/migration for MCP/API-key calls
 - a recent agent activity surface under `/settings/mcp`
 - idempotent agent task creation when callers provide `source_agent_id` plus `external_ref`
 - Stripe-backed plan surfaces, quotas, and rate-limit scaffolding, with checkout price IDs derived from server configuration and unknown webhook prices skipped instead of granting paid access

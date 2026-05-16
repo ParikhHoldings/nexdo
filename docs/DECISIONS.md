@@ -1,5 +1,15 @@
 # Decisions
 
+## 2026-05-16 - API key rotation uses rate limits
+### Decision
+Scoped API-key rotation goes through the shared user rate-limit rail before a new key is issued.
+
+### Why
+API keys are the trust boundary for MCP and ChatGPT Actions. Rotation should remain easy for users but bounded enough to reduce accidental or automated abuse.
+
+### Impact
+Real Supabase smoke verification should include `consume_rate_limit` behavior for API-key rotation.
+
 ## 2026-05-16 - Imports must respect task quotas
 ### Decision
 Authenticated imports consume task-create quota for the number of tasks being imported before saving them.

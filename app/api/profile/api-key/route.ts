@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { normalizeApiKeyScopes } from '@/lib/agent-scopes'
+import { consumeRateLimit, RATE_LIMITS, rateLimitResponseHeaders } from '@/lib/rate-limit'
 
 export async function POST(request: Request) {
   const supabase = await createClient()
@@ -18,6 +19,21 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { error: 'Unauthorized' },
       { status: 401 }
+    )
+  }
+
+  const gate = await consumeRateLimit(user.id, RATE_LIMITS.apiKeyRotate)
+  if (!gate.allowed) {
+    return NextResponse.json(
+      {
+        error: 'Rate limit exceeded',
+        message: 'Too many API key rotations. Please try again later.',
+        reset_at: gate.resetAt?.toISOString() ?? null,
+      },
+      {
+        status: 429,
+        headers: rateLimitResponseHeaders(gate, RATE_LIMITS.apiKeyRotate.limit),
+      }
     )
   }
 
@@ -45,7 +61,10 @@ export async function POST(request: Request) {
       )
     }
 
-    return NextResponse.json({ api_key: newKey, api_key_scopes: scopes })
+    return NextResponse.json(
+      { api_key: newKey, api_key_scopes: scopes },
+      { headers: rateLimitResponseHeaders(gate, RATE_LIMITS.apiKeyRotate.limit) }
+    )
   } catch (error) {
     console.error('Error generating API key:', error)
     return NextResponse.json(

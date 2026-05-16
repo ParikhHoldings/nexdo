@@ -68,4 +68,9 @@ test('task mutation endpoints require configured auth', async ({ request }) => {
     data: { content: 'title\nImported smoke task' },
   })
   expect([401, 503]).toContain(csvImport.status())
+
+  const apiKey = await request.post('/api/profile/api-key', {
+    data: { scopes: ['tasks:read'] },
+  })
+  expect([401, 503]).toContain(apiKey.status())
 })
