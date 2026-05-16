@@ -1,5 +1,15 @@
 # Decisions
 
+## 2026-05-16 - Define the MVP as capture to bounded execution
+### Decision
+Nexdo's first launchable MVP is the concrete path documented in `docs/MVP.md`: capture plain-language tasks, structure them into useful metadata, prioritize the day, brief the user, execute bounded research/draft/prep work, and expose scoped task-layer access for external agents.
+
+### Why
+The product needs a launch contract that is narrower than broad "AI-native task manager" positioning and stricter than a demo-only checklist app. This path can be built, tested, sold honestly, and expanded without promising unbounded autonomy.
+
+### Impact
+Future product work should strengthen this path before broadening scope. New claims, controls, or integrations should map to the MVP acceptance gates or be marked post-MVP until verified.
+
 ## 2026-05-16 - API-key access is paid-plan gated
 ### Decision
 API-key generation requires a Power or Team profile before rate-limit consumption, and MCP/API-key validation rejects keys for profiles outside the API-access tiers. The settings UI disables key generation when the current profile cannot use API access.

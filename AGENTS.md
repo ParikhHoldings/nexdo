@@ -40,7 +40,7 @@ Current local verification from 2026-05-16:
 - `npm run lint` passed
 - `npm run typecheck` passed
 - `npm run build` passed with strict TypeScript and ESLint checks enabled
-- `npm run test:e2e` passed for the logged-out `/today` demo flow, demo task reload persistence, task/agent auth guards, MCP/OpenAPI/action auth smoke tests, and a Stripe checkout plan guard
+- `npm run test:e2e` passed for the logged-out `/today` demo flow, All Tasks/Upcoming/Done demo workspace lifecycle, demo task reload persistence, task/agent auth guards, MCP/OpenAPI/action auth smoke tests, and a Stripe checkout plan guard
 - `npm audit --audit-level=moderate` passed with 0 vulnerabilities after the Next.js 16 / ESLint 9 upgrade
 - `npm run verify:env` failed because `.env.local` is absent; only `.env.local.example` exists in this workspace
 
@@ -161,6 +161,7 @@ For each meaningful change, verify:
 Maintain these files as part of the operating layer:
 - `README.md`
 - `docs/VISION.md`
+- `docs/MVP.md`
 - `docs/LAUNCH_PLAN.md`
 - `docs/COMPLETION_AUDIT.md`
 - `docs/DEPLOYMENT.md`

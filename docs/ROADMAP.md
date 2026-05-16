@@ -13,6 +13,7 @@
 - PR #3 Web rails passed in GitHub Actions, and the Vercel preview deployment completed.
 - Dependency audit is clean after the Next.js 16, ESLint 9, and PostCSS remediation.
 - `npm ci`, `npm run lint`, `npm run typecheck`, `npm run build`, and `npm run test:e2e` passed locally on 2026-05-16.
+- `docs/MVP.md` now defines the smallest trustworthy MVP path around capture, structure, prioritize, brief, bounded execution, and scoped agent task-layer access.
 - Import, billing/quota, MCP, and ChatGPT Actions surfaces exist.
 - Production deploy state, environment completeness, and end-to-end flow status are still unverified in the operating layer.
 
@@ -30,7 +31,7 @@
 - verify Stripe checkout/portal/webhook behavior in test mode before any pricing commitment
 - verify MCP and ChatGPT Actions against the real API key flow
 - audit marketing page claims and route public copy through Quill before external use
-- document the smallest trustworthy MVP path and active-product requirements
+- keep `docs/MVP.md` aligned with verified product truth as core behavior changes
 
 ## Next major milestones
 - repo state verified against portfolio standard

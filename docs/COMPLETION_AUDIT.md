@@ -18,6 +18,7 @@ Make Nexdo a credible, launchable early-access product by Monday, 2026-05-18, wi
 | Update `AGENTS.md` for Codex/LLM project understanding | `AGENTS.md` now includes product truth, architecture, commands, env contract, verification state, and doc rules | Done |
 | Provide immediate plan | `docs/LAUNCH_PLAN.md` Monday 2026-05-18 section | Done |
 | Provide long-term plan | `docs/LAUNCH_PLAN.md` human-user, AI-agent, and long-term direction sections | Done |
+| Document minimum human-user and AI-agent MVP path | `docs/MVP.md` defines the capture -> structure -> prioritize -> brief -> bounded execution path, AI-agent task-layer requirements, acceptance gates, blockers, and post-MVP hardening queue | Done |
 | Make front-end usable for humans today | Logged-out `/today` demo flow supports task capture, structured parsing, briefing, prioritization, task detail, and bounded agent output | Locally verified |
 | Keep demo briefing aligned with task changes | Logged-out daily briefing now refreshes from local task state after demo task capture/import; Playwright verifies the active-task count updates after adding a task | Locally verified |
 | Keep demo task changes across reloads | Logged-out task add/edit/delete/complete flows now persist demo task state to localStorage; Playwright verifies a new demo task survives reload and new IDs remain unique afterward | Locally verified |

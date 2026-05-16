@@ -3,6 +3,8 @@
 ## Immediate plan for Monday, 2026-05-18
 The goal is not a broad public launch. The credible Monday target is a verified early-access product demo with clear rails for humans and AI agents.
 
+`docs/MVP.md` is the working product contract for this target: capture -> structure -> prioritize -> brief -> bounded execution, plus scoped task-layer access for AI agents.
+
 ### Must ship
 - A local app that passes clean install, lint, typecheck, build, and Playwright smoke tests. Verified locally on 2026-05-16.
 - A usable logged-out demo flow: load `/today`, inspect demo tasks, add a natural-language task, see prioritization, open an executable task, and generate a bounded agent output. Verified locally on 2026-05-16.

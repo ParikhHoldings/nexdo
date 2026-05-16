@@ -65,6 +65,7 @@ Do not treat auth, AI, billing, MCP, imports, or deployment as verified until th
 ## Operating Docs
 - `AGENTS.md` is the repo-level operating contract for Codex and other LLM agents.
 - `docs/VISION.md` captures the product promise and non-goals.
+- `docs/MVP.md` defines the minimum human-user and AI-agent product path, acceptance gates, launch blockers, and post-MVP hardening queue.
 - `docs/LAUNCH_PLAN.md` captures the immediate Monday launch-readiness plan and long-term agent roadmap.
 - `docs/COMPLETION_AUDIT.md` maps the active goal to real evidence and remaining gaps.
 - `docs/DEPLOYMENT.md` captures deploy, env, provider-smoke, and rollback rails.

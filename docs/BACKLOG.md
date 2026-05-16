@@ -3,6 +3,7 @@
 ## Completed 2026-05-16
 - read and updated the repo-level agent context and all existing Markdown/text operating files
 - added a project README and Monday launch plan
+- documented the minimum MVP path for human users and AI-agent users in `docs/MVP.md`
 - added `docs/COMPLETION_AUDIT.md` to map the active goal to evidence and remaining gaps
 - added deployment rails and an environment preflight verifier
 - aligned the env verifier with runtime placeholder-risk checks and documented smoke-only MCP API-key variables
@@ -81,7 +82,6 @@
 - smoke test MCP `create_task` idempotency replay against real task data
 - smoke test scoped MCP key behavior and `agent_action_events` writes against a real Supabase project
 - complete Quill/founder review of `app/(marketing)/page.tsx` before public launch
-- document the minimum real MVP path around capture, structure, prioritize, brief, and bounded execution
 
 ## Medium priority
 - add real theme support before reintroducing theme controls

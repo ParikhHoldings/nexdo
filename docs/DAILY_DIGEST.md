@@ -5,6 +5,7 @@
 - Read all existing Markdown and text files in the repo, including `.github/pull_request_template.md`, `AGENTS.md`, the operating docs, and `public/robots.txt`.
 - Updated the agent operating context to reflect the real Next.js/Supabase/OpenAI/Stripe/MCP product surfaces.
 - Added `README.md` as a concise project overview for humans and LLM agents.
+- Added `docs/MVP.md` to define the minimum human-user and AI-agent product path, acceptance gates, blockers, and post-MVP hardening queue.
 - Added `docs/COMPLETION_AUDIT.md` to map the active goal to concrete evidence and remaining gaps.
 - Added `docs/DEPLOYMENT.md` and `npm run verify:env` for deploy/env preflight rails.
 - Aligned the env verifier with runtime placeholder-risk checks and documented smoke-only MCP API-key variables.
