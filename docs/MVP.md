@@ -47,11 +47,13 @@ Required fields:
 
 Acceptance gate:
 - Users can inspect and edit core task fields.
+- Failed authenticated edits/deletes do not leave stale optimistic UI without warning.
 - AI/provider output is validated before becoming task data.
 - Generic user edits cannot spoof server-managed agent output.
 
 Current evidence:
 - `TaskDetail` edit mode supports the MVP task fields.
+- The task store rolls back failed authenticated edit/delete mutations and surfaces visible app notifications.
 - `lib/ai-response-validation.ts` bounds OpenAI output.
 - `PATCH /api/tasks/[id]` allowlists user-editable fields and rejects `agent_output`.
 

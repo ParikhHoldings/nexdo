@@ -42,6 +42,7 @@
 - validated and bounded OpenAI JSON responses before parsed tasks, prioritization, briefings, or agent outputs are returned or saved
 - hardened task mutation routes with allowlisted PATCH fields and owned-delete 404 handling
 - made task detail editing functional for title, context, due date, priority, action type, estimate, people, and tags
+- rolled back failed authenticated task edits/deletes and surfaced visible task-store error notifications instead of console-only failures
 - removed nonfunctional theme and notification controls from the launch app shell/settings until real behavior exists
 - aligned the Connect AI setup page with the Power-plan API access gate
 - surfaced settings profile/API-key failures in the UI and refreshed local profile state after authenticated saves

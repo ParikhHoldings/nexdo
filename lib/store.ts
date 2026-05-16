@@ -43,6 +43,13 @@ export const useTaskStore = create<TaskState>((set, get) => ({
   },
 
   updateTask: (id, updates, options) => {
+    const state = get()
+    const originalTask = state.tasks.find((task) => task.id === id)
+    if (!originalTask) {
+      set({ error: 'Task not found.' })
+      return
+    }
+
     const updatedAt = new Date().toISOString()
     const applyUpdates = (task: Task): Task => ({
       ...task,
@@ -58,7 +65,6 @@ export const useTaskStore = create<TaskState>((set, get) => ({
               : task.completed_at,
     })
 
-    const state = get()
     const nextTasks = state.tasks.map((t) => (t.id === id ? applyUpdates(t) : t))
     const nextSelectedTask =
       state.selectedTask?.id === id
@@ -80,12 +86,46 @@ export const useTaskStore = create<TaskState>((set, get) => ({
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates),
-      }).catch(console.error)
+      })
+        .then(async (response) => {
+          if (!response.ok) {
+            throw new Error('Task update failed')
+          }
+
+          const savedTask = (await response.json()) as Task
+          set((current) => ({
+            tasks: current.tasks.map((task) =>
+              task.id === id ? savedTask : task
+            ),
+            selectedTask:
+              current.selectedTask?.id === id ? savedTask : current.selectedTask,
+          }))
+        })
+        .catch((error) => {
+          console.error('Error updating task:', error)
+          set((current) => ({
+            tasks: current.tasks.map((task) =>
+              task.id === id ? originalTask : task
+            ),
+            selectedTask:
+              current.selectedTask?.id === id
+                ? originalTask
+                : current.selectedTask,
+            error: 'Could not save task changes. The previous task state was restored.',
+          }))
+        })
     }
   },
 
   deleteTask: (id) => {
     const state = get()
+    const originalIndex = state.tasks.findIndex((t) => t.id === id)
+    const originalTask = state.tasks[originalIndex]
+    if (!originalTask) {
+      set({ error: 'Task not found.' })
+      return
+    }
+
     const nextTasks = state.tasks.filter((t) => t.id !== id)
 
     // Optimistic update
@@ -100,7 +140,30 @@ export const useTaskStore = create<TaskState>((set, get) => ({
     if (!isAuthenticated) {
       persistDemoTasks(nextTasks)
     } else {
-      fetch(`/api/tasks/${id}`, { method: 'DELETE' }).catch(console.error)
+      fetch(`/api/tasks/${id}`, { method: 'DELETE' })
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error('Task delete failed')
+          }
+        })
+        .catch((error) => {
+          console.error('Error deleting task:', error)
+          set((current) => {
+            const taskExists = current.tasks.some((task) => task.id === id)
+            const restoredTasks = taskExists
+              ? current.tasks
+              : [
+                  ...current.tasks.slice(0, originalIndex),
+                  originalTask,
+                  ...current.tasks.slice(originalIndex),
+                ]
+
+            return {
+              tasks: restoredTasks,
+              error: 'Could not delete task. The task was restored.',
+            }
+          })
+        })
     }
   },
 

@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import { Sidebar } from '@/components/sidebar'
 import { TaskDetail } from '@/components/task-detail'
 import { ToastProvider } from '@/components/ui'
+import { useToast } from '@/components/ui/toast'
 import { SidebarSkeleton, TaskListSkeleton } from '@/components/ui/skeleton'
 import { useTaskStore, useUserStore } from '@/lib/store'
 import { getDemoTasks } from '@/lib/tasks'
@@ -21,6 +22,19 @@ function detectTimezone(): string {
   } catch {
     return 'UTC'
   }
+}
+
+function TaskStoreErrorToast() {
+  const { error, setError } = useTaskStore()
+  const toast = useToast()
+
+  useEffect(() => {
+    if (!error) return
+    toast.error(error)
+    setError(null)
+  }, [error, setError, toast])
+
+  return null
 }
 
 export default function AppLayout({
@@ -88,6 +102,7 @@ export default function AppLayout({
 
   return (
     <ToastProvider>
+      <TaskStoreErrorToast />
       <div className="flex h-screen bg-zinc-950">
         {isLoading ? <SidebarSkeleton /> : <Sidebar />}
         <main className="flex-1 overflow-hidden">

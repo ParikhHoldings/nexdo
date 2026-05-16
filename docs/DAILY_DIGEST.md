@@ -43,6 +43,7 @@
 - Sanitized prioritization and briefing task arrays before rate-limit consumption and AI provider/fallback execution.
 - Added bounded validation for OpenAI JSON responses before parsed tasks, prioritization, briefings, or research/draft/prep agent outputs are returned or saved.
 - Hardened task mutation routes so PATCH only accepts user-editable fields and DELETE reports missing owned tasks.
+- Rolled back failed authenticated task edits/deletes and surfaced task-store errors through visible notifications.
 - Made the task detail panel's edit action functional for the MVP task fields.
 - Removed nonfunctional theme and notification controls from the app shell/settings for launch truthfulness.
 - Aligned the Connect AI setup page with the Power-plan API access gate.
