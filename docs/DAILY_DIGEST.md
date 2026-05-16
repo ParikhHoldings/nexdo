@@ -71,7 +71,7 @@
 - Added Playwright smoke coverage for the logged-out core product path.
 - Added Playwright smoke coverage for All Tasks search/filtering, Upcoming grouping, and Done clear/reload lifecycle in demo mode.
 - Added Playwright smoke coverage for OpenAPI action schema, MCP/action auth failures, and action CORS headers.
-- Added DB-backed MCP tool handler coverage for owned reads, search, briefing, create idempotency, quota ordering, mutations, and audit logging.
+- Added DB-backed MCP tool handler and API-key validation coverage for owned reads, search, briefing, create idempotency, quota ordering, mutations, audit logging, hashed-key lookup, legacy-key migration, and paid-plan gating.
 - Made the ChatGPT Actions OpenAPI spec emit the serving request origin when `NEXT_PUBLIC_APP_URL` is not configured.
 - Added GitHub Actions verification for install, lint, typecheck, build, and Playwright smoke testing.
 - Documented local development and production setup sequences in `docs/DEPLOYMENT.md`.

@@ -3,7 +3,9 @@ import {
   executeToolWithDependencies,
   type MCPToolDependencies,
   type ToolResult,
+  validateApiKeyWithDependencies,
 } from '../../lib/mcp-tools'
+import { apiKeyHint, hashApiKey } from '../../lib/api-keys'
 import type {
   BriefingContent,
   ParsedTask,
@@ -591,4 +593,80 @@ test('DB-backed MCP mutation handlers update owned tasks and log failures', asyn
     true,
     false,
   ])
+})
+
+test('MCP API-key validation accepts hashed paid keys and records last use', async () => {
+  const apiKey = 'nxd_power_key_123'
+  const db = new FakeSupabase({
+    profiles: [
+      {
+        id: 'power-user',
+        api_key_hash: hashApiKey(apiKey),
+        api_key_scopes: ['tasks:read'],
+        subscription_tier: 'power',
+        api_key_last_used_at: null,
+      },
+    ],
+  })
+
+  const result = await validateApiKeyWithDependencies(apiKey, dependenciesFor(db))
+
+  expect(result).toEqual({
+    userId: 'power-user',
+    scopes: ['tasks:read'],
+  })
+  expect(db.profiles[0]).toMatchObject({
+    api_key_hash: hashApiKey(apiKey),
+    api_key_last_used_at: expect.any(String),
+  })
+})
+
+test('MCP API-key validation migrates paid legacy keys to hashed storage', async () => {
+  const apiKey = 'nxd_legacy_key_123'
+  const db = new FakeSupabase({
+    profiles: [
+      {
+        id: 'team-user',
+        api_key: apiKey,
+        api_key_hash: null,
+        api_key_hint: null,
+        api_key_scopes: ['tasks:read', 'briefing:read'],
+        subscription_tier: 'team',
+        api_key_last_used_at: null,
+      },
+    ],
+  })
+
+  const result = await validateApiKeyWithDependencies(apiKey, dependenciesFor(db))
+
+  expect(result).toEqual({
+    userId: 'team-user',
+    scopes: ['tasks:read', 'briefing:read'],
+  })
+  expect(db.profiles[0]).toMatchObject({
+    api_key: null,
+    api_key_hash: hashApiKey(apiKey),
+    api_key_hint: apiKeyHint(apiKey),
+    api_key_last_used_at: expect.any(String),
+  })
+})
+
+test('MCP API-key validation denies invalid prefixes and non-API tiers', async () => {
+  const apiKey = 'nxd_free_key_123'
+  const db = new FakeSupabase({
+    profiles: [
+      {
+        id: 'free-user',
+        api_key_hash: hashApiKey(apiKey),
+        api_key_scopes: ['tasks:read'],
+        subscription_tier: 'free',
+        api_key_last_used_at: null,
+      },
+    ],
+  })
+  const deps = dependenciesFor(db)
+
+  await expect(validateApiKeyWithDependencies('not-a-nexdo-key', deps)).resolves.toBeNull()
+  await expect(validateApiKeyWithDependencies(apiKey, deps)).resolves.toBeNull()
+  expect(db.profiles[0].api_key_last_used_at).toBeNull()
 })

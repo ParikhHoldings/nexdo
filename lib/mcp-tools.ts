@@ -964,7 +964,14 @@ function isMissingApiKeyHashColumn(error: unknown) {
 export async function validateApiKey(
   apiKey: string
 ): Promise<{ userId: string; scopes: string[] } | null> {
-  const supabaseRaw = await createServiceClient()
+  return validateApiKeyWithDependencies(apiKey, DEFAULT_MCP_TOOL_DEPENDENCIES)
+}
+
+export async function validateApiKeyWithDependencies(
+  apiKey: string,
+  deps: Pick<MCPToolDependencies, 'createServiceClient'>
+): Promise<{ userId: string; scopes: string[] } | null> {
+  const supabaseRaw = await deps.createServiceClient()
   const supabase = supabaseRaw as any
   if (!supabaseRaw) return null
 
