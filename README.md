@@ -46,6 +46,7 @@ npm run build
 npm run test:e2e
 npm run verify:env
 npm run smoke:openai
+npm run smoke:stripe
 npm run smoke:supabase
 npm run smoke:mcp
 ```

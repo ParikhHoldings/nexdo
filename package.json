@@ -12,6 +12,7 @@
     "verify:env": "node scripts/verify-env.mjs",
     "smoke:openai": "node scripts/smoke-openai.mjs",
     "smoke:mcp": "node scripts/smoke-mcp.mjs",
+    "smoke:stripe": "node scripts/smoke-stripe.mjs",
     "smoke:supabase": "node scripts/smoke-supabase.mjs"
   },
   "dependencies": {

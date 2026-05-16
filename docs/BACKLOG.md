@@ -7,6 +7,7 @@
 - added deployment rails and an environment preflight verifier
 - added a Supabase provider smoke script for schema, auth/profile trigger, RLS task CRUD, public isolation, and agent audit verification
 - added an OpenAI provider smoke script for JSON-mode parse, prioritization, briefing, and prep execution checks
+- added a Stripe provider smoke script for account, price, Checkout, and Customer Portal configuration checks
 - added an authenticated MCP smoke script for real API-key verification
 - exposed MCP create/update metadata for agent-created task traceability
 - added scoped API key permissions, MCP scope filtering/enforcement, and an `agent_action_events` audit trail migration
@@ -28,6 +29,7 @@
 - configure and verify the real production deploy target
 - run `npm run smoke:supabase -- --write` against a real Supabase project after applying migrations
 - run `npm run smoke:openai` with a real OpenAI key, then verify the authenticated in-app AI routes
+- run `npm run smoke:stripe -- --write` with Stripe test-mode keys, then verify webhook events and quota updates
 - smoke test auth, profile creation, task CRUD, demo-mode fallback, and app navigation
 - smoke test OpenAI task parse, prioritization, daily briefing, and agent execution with real env
 - smoke test Stripe checkout, portal, webhook idempotency, and plan/quota updates in test mode

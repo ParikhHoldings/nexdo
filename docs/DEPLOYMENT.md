@@ -66,6 +66,18 @@ OpenAI provider smoke:
 npm run smoke:openai
 ```
 
+Read-only Stripe billing smoke:
+
+```bash
+npm run smoke:stripe
+```
+
+Stripe write smoke that creates and deletes disposable test-mode billing objects:
+
+```bash
+npm run smoke:stripe -- --write
+```
+
 ## Rollback notes
 - Keep the last known-good deploy available in the deploy platform.
 - If a release breaks auth, billing, or task writes, roll back before attempting live data fixes.
