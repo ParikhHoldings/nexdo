@@ -1,7 +1,6 @@
 'use client'
 
-import { Suspense } from 'react'
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import {
   User,
@@ -19,7 +18,13 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { PricingTable } from '@/components/pricing-table'
 import { useUserStore, useUIStore } from '@/lib/store'
-import { cn, generateApiKey } from '@/lib/utils'
+import { cn } from '@/lib/utils'
+import {
+  API_KEY_SCOPE_LABELS,
+  API_KEY_SCOPES,
+  normalizeApiKeyScopes,
+  type ApiKeyScope,
+} from '@/lib/agent-scopes'
 
 type Tab = 'profile' | 'billing' | 'api' | 'notifications'
 
@@ -32,7 +37,10 @@ function SettingsContent() {
 
   const [activeTab, setActiveTab] = useState<Tab>('profile')
   const [copied, setCopied] = useState(false)
-  const [apiKey, setApiKey] = useState(profile?.api_key || '')
+  const [generatedApiKey, setGeneratedApiKey] = useState('')
+  const [apiKeyScopesDraft, setApiKeyScopesDraft] = useState<ApiKeyScope[] | null>(null)
+  const apiKey = generatedApiKey || profile?.api_key || ''
+  const apiKeyScopes = apiKeyScopesDraft ?? normalizeApiKeyScopes(profile?.api_key_scopes)
 
   // Notification preferences state
   const defaultNotifications = [
@@ -83,11 +91,16 @@ function SettingsContent() {
     try {
       const response = await fetch('/api/profile/api-key', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ scopes: apiKeyScopes }),
       })
 
       if (response.ok) {
         const result = await response.json()
-        setApiKey(result.api_key)
+        setGeneratedApiKey(result.api_key)
+        if (result.api_key_scopes) {
+          setApiKeyScopesDraft(result.api_key_scopes)
+        }
         setApiKeySuccess(true)
         setTimeout(() => setApiKeySuccess(false), 3000)
       } else {
@@ -96,6 +109,17 @@ function SettingsContent() {
     } catch (error) {
       console.error('Error generating API key:', error)
     }
+  }
+
+  const toggleApiKeyScope = (scope: ApiKeyScope) => {
+    setApiKeyScopesDraft((currentDraft) => {
+      const current = currentDraft ?? apiKeyScopes
+      if (current.includes(scope)) {
+        const next = current.filter((item) => item !== scope)
+        return next.length > 0 ? next : current
+      }
+      return [...current, scope]
+    })
   }
 
   const handleSaveProfile = async () => {
@@ -380,7 +404,7 @@ function SettingsContent() {
               </div>
 
               <p className="text-sm text-zinc-500">
-                Use this key to authenticate API requests. Keep it secret!
+                Use this key to authenticate AI tools and API requests. Keep it secret.
               </p>
 
               {apiKeySuccess && (
@@ -405,6 +429,53 @@ function SettingsContent() {
                     <Copy className="h-4 w-4" />
                   )}
                 </Button>
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <h3 className="text-sm font-medium text-zinc-300">
+                    Key scopes
+                  </h3>
+                  <p className="text-xs text-zinc-500 mt-1">
+                    Choose the permissions included next time you generate this key.
+                  </p>
+                </div>
+                <div className="grid gap-2 sm:grid-cols-3">
+                  {API_KEY_SCOPES.map((scope) => (
+                    <button
+                      key={scope}
+                      type="button"
+                      onClick={() => toggleApiKeyScope(scope)}
+                      className={cn(
+                        'flex items-start gap-2 rounded-lg border p-3 text-left transition-colors',
+                        apiKeyScopes.includes(scope)
+                          ? 'border-accent/50 bg-accent/10 text-zinc-100'
+                          : 'border-zinc-800 bg-zinc-900 text-zinc-400 hover:border-zinc-700'
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          'mt-0.5 flex h-4 w-4 items-center justify-center rounded border',
+                          apiKeyScopes.includes(scope)
+                            ? 'border-accent bg-accent'
+                            : 'border-zinc-600'
+                        )}
+                      >
+                        {apiKeyScopes.includes(scope) && (
+                          <Check className="h-3 w-3 text-white" />
+                        )}
+                      </span>
+                      <span>
+                        <span className="block text-sm font-medium">
+                          {API_KEY_SCOPE_LABELS[scope]}
+                        </span>
+                        <code className="mt-1 block text-xs text-zinc-500">
+                          {scope}
+                        </code>
+                      </span>
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {profile?.subscription_tier === 'free' && (

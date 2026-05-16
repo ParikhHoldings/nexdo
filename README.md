@@ -11,6 +11,7 @@ This repo currently contains a Next.js app with:
 - imports from Todoist and file-based task exports such as CSV, ICS, JSON/Trello/Things-style sources
 - Stripe plan, checkout, portal, webhook, quota, and rate-limit scaffolding
 - MCP and ChatGPT Actions surfaces for external agents to list, create, complete, update, search, and brief tasks
+- scoped API-key permissions and an agent action audit table for MCP/API-key calls
 
 The current strategic priority is not more broad positioning. It is verifying build/deploy truth, tightening the MVP path, and making every public claim match what the product can actually do.
 
@@ -24,7 +25,7 @@ Last checked on 2026-05-16:
 - PR #3 Web rails passed in GitHub Actions
 - PR #3 Vercel preview deployment completed
 
-Still unverified: production env, Supabase migrations/auth against a real project, OpenAI provider calls, Stripe test-mode flows, MCP/API-key flows, and deployment rails. `npm audit --audit-level=moderate` passes with 0 vulnerabilities after the Next.js 16 / ESLint 9 upgrade.
+Still unverified: production env, Supabase migrations/auth against a real project, OpenAI provider calls, Stripe test-mode flows, scoped MCP/API-key execution, agent audit writes, and deployment rails. `npm audit --audit-level=moderate` passes with 0 vulnerabilities after the Next.js 16 / ESLint 9 upgrade.
 
 ## Stack
 - Next.js 16 app router
@@ -43,6 +44,7 @@ npm run typecheck
 npm run build
 npm run test:e2e
 npm run verify:env
+npm run smoke:mcp
 ```
 
 ## Environment

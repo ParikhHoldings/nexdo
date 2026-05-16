@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { MCP_TOOLS, executeTool, validateApiKey } from '@/lib/mcp-tools'
+import {
+  MCP_TOOLS,
+  canUseTool,
+  executeTool,
+  missingScopeMessage,
+  validateApiKey,
+} from '@/lib/mcp-tools'
 
 const ACTION_CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -44,6 +50,13 @@ export async function POST(
     return NextResponse.json(
       { error: `Unknown tool: ${toolName}` },
       { status: 404, headers: ACTION_CORS_HEADERS }
+    )
+  }
+
+  if (!canUseTool(auth.scopes, toolName)) {
+    return NextResponse.json(
+      { error: missingScopeMessage(toolName) },
+      { status: 403, headers: ACTION_CORS_HEADERS }
     )
   }
 

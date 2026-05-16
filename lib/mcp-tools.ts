@@ -1,10 +1,12 @@
 import { createServiceClient } from '@/lib/supabase/server'
 import { parseTaskInput, generateBriefing } from '@/lib/openai'
+import { hasRequiredScope, requiredScopeForTool } from '@/lib/agent-scopes'
 import type {
   Task,
   TaskStatus,
   TaskPriority,
   BriefingContent,
+  IngestionIntent,
 } from '@/lib/database.types'
 
 // Tool definition type
@@ -224,6 +226,44 @@ function optionalMetadata(value: unknown): Record<string, unknown> | null {
     : null
 }
 
+function optionalIngestionIntent(value: unknown): IngestionIntent | null {
+  return value === 'create' || value === 'update' || value === 'complete' || value === 'auto'
+    ? value
+    : null
+}
+
+function auditMetadata(args: Record<string, unknown>): Record<string, unknown> {
+  return {
+    argument_keys: Object.keys(args).sort(),
+    has_agent_metadata: Boolean(optionalMetadata(args.agent_metadata)),
+  }
+}
+
+async function logAgentAction(input: {
+  userId: string
+  toolName: string
+  args: Record<string, unknown>
+  success: boolean
+  error?: string | null
+  durationMs: number
+}) {
+  const supabaseRaw = await createServiceClient()
+  if (!supabaseRaw) return
+
+  const supabase = supabaseRaw as any
+  await supabase.from('agent_action_events').insert({
+    user_id: input.userId,
+    tool_name: input.toolName,
+    source_agent_id: optionalString(input.args.source_agent_id),
+    external_ref: optionalString(input.args.external_ref),
+    ingestion_intent: optionalIngestionIntent(input.args.ingestion_intent),
+    metadata: auditMetadata(input.args),
+    success: input.success,
+    error: input.error || null,
+    duration_ms: input.durationMs,
+  })
+}
+
 const listTasks: ToolHandler = async (args, userId) => {
   const supabaseRaw = await createServiceClient()
   const supabase = supabaseRaw as any
@@ -428,7 +468,9 @@ const updateTask: ToolHandler = async (args, userId) => {
     if (updates.source_agent_id) updates.source = 'agent'
   }
   if (args.external_ref !== undefined) updates.external_ref = optionalString(args.external_ref)
-  if (args.ingestion_intent !== undefined) updates.ingestion_intent = args.ingestion_intent
+  if (args.ingestion_intent !== undefined) {
+    updates.ingestion_intent = optionalIngestionIntent(args.ingestion_intent)
+  }
   if (args.agent_metadata !== undefined) updates.agent_metadata = optionalMetadata(args.agent_metadata)
 
   const { data: task, error } = await supabase
@@ -631,21 +673,34 @@ export async function executeTool(
     }
   }
 
+  const startedAt = Date.now()
+  let result: ToolResult
   try {
-    return await handler(args, userId)
+    result = await handler(args, userId)
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error'
-    return {
+    result = {
       content: [{ type: 'text', text: `Error executing ${name}: ${message}` }],
       isError: true,
     }
   }
+
+  await logAgentAction({
+    userId,
+    toolName: name,
+    args,
+    success: !result.isError,
+    error: result.isError ? result.content[0]?.text : null,
+    durationMs: Date.now() - startedAt,
+  }).catch(console.error)
+
+  return result
 }
 
 // Auth helper: validate API key and return user ID
 export async function validateApiKey(
   apiKey: string
-): Promise<{ userId: string } | null> {
+): Promise<{ userId: string; scopes: string[] } | null> {
   const supabaseRaw = await createServiceClient()
   const supabase = supabaseRaw as any
   if (!supabaseRaw) return null
@@ -655,11 +710,24 @@ export async function validateApiKey(
 
   const { data: profile, error } = await supabase
     .from('profiles')
-    .select('id')
+    .select('id, api_key_scopes')
     .eq('api_key', apiKey)
     .single()
 
   if (error || !profile) return null
 
-  return { userId: profile.id }
+  await supabase
+    .from('profiles')
+    .update({ api_key_last_used_at: new Date().toISOString() })
+    .eq('id', profile.id)
+
+  return { userId: profile.id, scopes: profile.api_key_scopes || [] }
+}
+
+export function canUseTool(scopes: string[], toolName: string): boolean {
+  return hasRequiredScope(scopes, toolName)
+}
+
+export function missingScopeMessage(toolName: string): string {
+  return `API key missing required scope: ${requiredScopeForTool(toolName)}`
 }

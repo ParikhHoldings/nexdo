@@ -28,6 +28,7 @@ test('OpenAPI exposes the agent action contract', async ({ request }) => {
     expect(path, `${tool} path should exist`).toBeTruthy()
     expect(path.post.security).toEqual([{ BearerAuth: [] }])
     expect(path.post.responses['401']).toBeTruthy()
+    expect(path.post.responses['403'].description).toContain('scope')
     expect(path.post.operationId).toBeTruthy()
     operationIds.add(path.post.operationId)
   }

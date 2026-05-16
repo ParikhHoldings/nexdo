@@ -24,6 +24,7 @@ The product promise should be grounded in what the code actually supports:
 - demo-mode task data when Supabase is unavailable or the visitor is logged out
 - imports from Todoist plus CSV, ICS, JSON/Trello/Things-style sources, with some UI cards for future OAuth sources
 - API key based MCP/ChatGPT Actions interop for listing, creating, completing, updating, searching, and briefing tasks
+- scoped API-key permissions and an agent action audit table/migration for MCP/API-key calls
 - Stripe-backed plan surfaces, quotas, and rate-limit scaffolding
 
 Do not claim verified production readiness until build, lint, environment, database migrations, auth, Stripe, OpenAI, MCP, and deployment target have been checked in the current environment.
@@ -40,7 +41,7 @@ Current PR verification from 2026-05-16:
 - PR #3 Web rails passed in GitHub Actions
 - PR #3 Vercel preview deployment completed
 
-Production environment, Supabase migrations, OpenAI provider calls, Stripe test-mode flows, MCP/API-key flows, and deployment rails remain unverified in this pass.
+Production environment, Supabase migrations, OpenAI provider calls, Stripe test-mode flows, scoped MCP/API-key execution, agent audit writes, and deployment rails remain unverified in this pass.
 
 ## ICP And Positioning
 - Primary ICP: founders, operators, and AI power users with too many moving priorities and too much task context trapped in notes, chat, email, and other tools.
@@ -61,6 +62,7 @@ Production environment, Supabase migrations, OpenAI provider calls, Stripe test-
 - AI: OpenAI chat completions via helpers in `lib/openai.ts`; prompts live in `lib/prompts.ts`.
 - Billing: Stripe helpers and plan limits in `lib/stripe.ts`; checkout, portal, and webhook routes under `app/api/stripe/`.
 - Agent interop: MCP definitions and handlers in `lib/mcp-tools.ts`; JSON-RPC MCP endpoint at `app/api/mcp/route.ts`; ChatGPT Actions OpenAPI at `app/api/mcp/openapi/route.ts`; action wrappers under `app/api/mcp/actions/[tool]/route.ts`.
+- Agent governance: API key scopes are modeled in `lib/agent-scopes.ts` and persisted on profiles; agent calls are intended to log to `agent_action_events`.
 - Imports: source-specific and generic normalization in `lib/importers.ts`; import routes under `app/api/import/`.
 - Demo mode: `lib/tasks.ts` provides local demo tasks when Supabase is not configured or no user is authenticated.
 

@@ -7,6 +7,7 @@
 - added deployment rails and an environment preflight verifier
 - added an authenticated MCP smoke script for real API-key verification
 - exposed MCP create/update metadata for agent-created task traceability
+- added scoped API key permissions, MCP scope filtering/enforcement, and an `agent_action_events` audit trail migration
 - opened PR #3 and verified GitHub Actions Web rails plus Vercel preview deployment
 - enabled strict lint/typecheck behavior in production builds
 - added deterministic local task intelligence fallbacks for demo/provider-missing flows
@@ -28,6 +29,7 @@
 - smoke test Stripe checkout, portal, webhook idempotency, and plan/quota updates in test mode
 - smoke test MCP JSON-RPC and ChatGPT Actions OpenAPI/API-key flow
 - smoke test authenticated MCP tool execution against real task data
+- smoke test scoped MCP key behavior and `agent_action_events` writes against a real Supabase project
 - complete Quill/founder review of `app/(marketing)/page.tsx` before public launch
 - document the minimum real MVP path around capture, structure, prioritize, brief, and bounded execution
 

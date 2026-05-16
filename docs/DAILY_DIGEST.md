@@ -9,6 +9,7 @@
 - Added `docs/DEPLOYMENT.md` and `npm run verify:env` for deploy/env preflight rails.
 - Added `npm run smoke:mcp` for authenticated MCP/API-key verification against a real deployment.
 - Exposed agent metadata fields in MCP create/update tools so agent-created tasks can carry source identifiers and external references.
+- Added scoped API key permissions, scope-filtered MCP tool listings, REST/JSON-RPC scope enforcement, and an agent action audit table/migration.
 - Opened PR #3 and verified GitHub Actions Web rails plus Vercel preview deployment.
 - Updated vision, roadmap, backlog, decisions, metrics, marketing, and research docs to align with the current implementation.
 - Restored stricter build rails by adding typecheck/e2e scripts and removing build-time TypeScript/ESLint ignores.
@@ -23,8 +24,8 @@
 - Added `docs/LAUNCH_PLAN.md` for the Monday early-access target and long-term AI-agent path.
 
 ### In progress
-- Clean install/build/test rails are verified locally; the new GitHub Actions workflow still needs a real PR/branch run.
 - MVP path now centers on capture, structure, prioritize, brief, and bounded execution.
+- Agent-governance code exists locally; scoped key behavior and audit writes still need a real Supabase/API-key smoke.
 
 ### Blocked
 - Production readiness cannot be claimed until env, migrations, auth, AI, Stripe, MCP, and deployment are verified.

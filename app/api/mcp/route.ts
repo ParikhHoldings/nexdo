@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { MCP_TOOLS, executeTool, validateApiKey } from '@/lib/mcp-tools'
+import {
+  MCP_TOOLS,
+  canUseTool,
+  executeTool,
+  missingScopeMessage,
+  validateApiKey,
+} from '@/lib/mcp-tools'
 
 // MCP Protocol version
 const PROTOCOL_VERSION = '2024-11-05'
@@ -171,7 +177,7 @@ export async function POST(request: NextRequest) {
       case 'tools/list':
         return NextResponse.json(
           jsonRpcSuccess(id, {
-            tools: MCP_TOOLS,
+            tools: MCP_TOOLS.filter((tool) => canUseTool(auth.scopes, tool.name)),
           })
         )
 
@@ -189,6 +195,13 @@ export async function POST(request: NextRequest) {
         if (!tool) {
           return NextResponse.json(
             jsonRpcError(id, METHOD_NOT_FOUND, `Unknown tool: ${toolName}`)
+          )
+        }
+
+        if (!canUseTool(auth.scopes, toolName)) {
+          return NextResponse.json(
+            jsonRpcError(id, INVALID_REQUEST, missingScopeMessage(toolName)),
+            { status: 403 }
           )
         }
 

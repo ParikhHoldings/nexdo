@@ -10,15 +10,12 @@ const baseUrl = (
 const apiKey = process.env.NEXDO_API_KEY || process.env.NEXDO_MCP_API_KEY
 const allowWrite = args.has('--write')
 
-const expectedTools = [
+const requiredReadTools = [
   'list_tasks',
-  'create_task',
-  'complete_task',
-  'update_task',
-  'get_briefing',
   'search_tasks',
   'get_task',
 ]
+const requiredWriteTools = ['create_task', 'complete_task', 'update_task']
 
 if (!apiKey) {
   console.error('Missing NEXDO_API_KEY or NEXDO_MCP_API_KEY.')
@@ -82,8 +79,13 @@ async function main() {
 
   const toolList = await rpc('tools/list')
   const toolNames = new Set((toolList.tools || []).map((tool) => tool.name))
-  for (const tool of expectedTools) {
+  for (const tool of requiredReadTools) {
     if (!toolNames.has(tool)) throw new Error(`Missing MCP tool: ${tool}`)
+  }
+  if (allowWrite) {
+    for (const tool of requiredWriteTools) {
+      if (!toolNames.has(tool)) throw new Error(`Missing MCP write tool: ${tool}`)
+    }
   }
   console.log('ok tools/list')
 
