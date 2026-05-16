@@ -1,5 +1,15 @@
 # Decisions
 
+## 2026-05-16 - Do not show unconfigured annual billing
+### Decision
+The pricing table shows only monthly prices until annual Stripe price IDs and checkout handling exist.
+
+### Why
+The UI previously displayed an annual toggle and 20% savings, but checkout only selected a single server price for each paid plan.
+
+### Impact
+Annual pricing can be added later with explicit annual price IDs, checkout plan interval handling, and Stripe test-mode verification.
+
 ## 2026-05-16 - API key rotation uses rate limits
 ### Decision
 Scoped API-key rotation goes through the shared user rate-limit rail before a new key is issued.

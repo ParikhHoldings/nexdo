@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import { Check, Sparkles, Zap, Building2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -58,8 +57,6 @@ export function PricingTable({
   onSelectPlan,
   showCurrentPlan = true,
 }: PricingTableProps) {
-  const [isAnnual, setIsAnnual] = useState(false)
-
   const handleSelect = (planKey: string) => {
     if (onSelectPlan) {
       onSelectPlan(planKey)
@@ -68,52 +65,12 @@ export function PricingTable({
 
   return (
     <div className="w-full max-w-6xl mx-auto">
-      {/* Billing toggle */}
-      <div className="flex items-center justify-center gap-4 mb-8">
-        <span
-          className={cn(
-            'text-sm font-medium transition-colors',
-            !isAnnual ? 'text-zinc-100' : 'text-zinc-500'
-          )}
-        >
-          Monthly
-        </span>
-        <button
-          onClick={() => setIsAnnual(!isAnnual)}
-          className={cn(
-            'relative w-12 h-6 rounded-full transition-colors',
-            isAnnual ? 'bg-accent' : 'bg-zinc-700'
-          )}
-        >
-          <span
-            className={cn(
-              'absolute top-1 w-4 h-4 bg-white rounded-full transition-transform',
-              isAnnual ? 'left-7' : 'left-1'
-            )}
-          />
-        </button>
-        <span
-          className={cn(
-            'text-sm font-medium transition-colors',
-            isAnnual ? 'text-zinc-100' : 'text-zinc-500'
-          )}
-        >
-          Annual
-          <span className="ml-1.5 text-xs text-emerald-400">Save 20%</span>
-        </span>
-      </div>
-
       {/* Plans grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {plans.map((plan) => {
           const Icon = plan.icon
           const isCurrentPlan = showCurrentPlan && currentPlan === plan.key
-          const displayPrice =
-            typeof plan.price === 'number'
-              ? isAnnual && plan.price > 0
-                ? Math.round(plan.price * 0.8)
-                : plan.price
-              : null
+          const displayPrice = typeof plan.price === 'number' ? plan.price : null
 
           return (
             <div

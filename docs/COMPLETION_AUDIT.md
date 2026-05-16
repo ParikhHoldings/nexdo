@@ -38,6 +38,7 @@ Make Nexdo a credible, launchable early-access product by Monday, 2026-05-18, wi
 | Verify Stripe checkout/portal/webhook/quota updates | Code exists; Stripe test-mode flow not exercised | Missing |
 | Provide a repeatable Stripe smoke command | `npm run smoke:stripe` verifies account and recurring price configuration; `npm run smoke:stripe -- --write` creates disposable test-mode customer, checkout session, and billing portal session | Done |
 | Harden Stripe plan selection and entitlement mapping | `/api/stripe/checkout` now accepts only `pro` or `power` plan keys and derives price IDs from server env; webhooks skip unknown Stripe prices instead of defaulting to paid access; e2e covers unsupported checkout plans | Done |
+| Keep pricing UI aligned with billing reality | `components/pricing-table.tsx` now shows monthly pricing only because annual Stripe prices are not configured | Done |
 | Verify authenticated MCP/API-key flow against real task data | OpenAPI/auth/scope guardrails pass; real API-key tool execution not exercised | Missing |
 | Provide a repeatable MCP/API-key smoke command | `npm run smoke:mcp` supports read-only and explicit `--write` authenticated checks | Done |
 | Make agent-created tasks distinguishable | MCP create/update schemas and handlers expose `source_agent_id`, `external_ref`, `ingestion_intent`, and `agent_metadata` | Done |

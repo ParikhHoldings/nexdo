@@ -22,6 +22,7 @@
 - hardened authenticated agent execution so the server runs only owned executable task records and persists output
 - fixed optimistic task updates so agent-output edits do not accidentally clear `completed_at`
 - enforced monthly task quotas across CSV, JSON, ICS, Todoist, Google Tasks, and Microsoft To Do imports
+- removed the unbacked annual pricing toggle until annual Stripe prices exist
 - hardened Stripe checkout so clients can only request server-known `pro` or `power` plans and cannot override price IDs
 - hardened Stripe webhooks so unknown price IDs do not grant paid-tier access by default
 - added Playwright smoke coverage for the logged-out core product path

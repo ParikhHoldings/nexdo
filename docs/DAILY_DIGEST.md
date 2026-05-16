@@ -25,6 +25,7 @@
 - Hardened authenticated agent execution so it runs only owned task records and saves output server-side.
 - Fixed optimistic task updates so non-status changes no longer clear completed timestamps.
 - Added batch task-quota enforcement to CSV, JSON, ICS, Todoist, Google Tasks, and Microsoft To Do imports.
+- Removed the annual pricing toggle because checkout currently supports only configured monthly plan prices.
 - Hardened Stripe checkout and webhook entitlement handling so plan changes stay tied to server-known price IDs.
 - Added Playwright smoke coverage for the logged-out core product path.
 - Added Playwright smoke coverage for OpenAPI action schema, MCP/action auth failures, and action CORS headers.
