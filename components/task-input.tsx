@@ -19,7 +19,7 @@ export function TaskInput({ onTaskCreated }: TaskInputProps) {
   const [isProcessing, setIsProcessing] = useState(false)
   const [isFocused, setIsFocused] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
-  const { addTask } = useTaskStore()
+  const { addTask, isAuthenticated } = useTaskStore()
   const toast = useToast()
 
   // Global keyboard shortcut: Cmd+K to focus
@@ -124,6 +124,7 @@ export function TaskInput({ onTaskCreated }: TaskInputProps) {
             } else if (saveResponse.status === 402) {
               // Quota exhausted — surface an actionable upgrade prompt.
               const payload = await saveResponse.json().catch(() => ({}))
+              setInput(rawInput)
               toast.push({
                 kind: 'error',
                 title: 'Monthly limit reached',
@@ -133,17 +134,29 @@ export function TaskInput({ onTaskCreated }: TaskInputProps) {
               return
             } else if (saveResponse.status === 400) {
               const payload = await saveResponse.json().catch(() => ({}))
+              setInput(rawInput)
               toast.error(
                 'Could not save task',
                 payload?.errors?.[0]?.message || payload?.error || 'Validation failed.'
               )
               return
-            } else if (saveResponse.status !== 401) {
-              toast.error('Could not save task', 'Please try again.')
+            } else if (saveResponse.status === 401) {
+              setInput(rawInput)
+              toast.error('Session expired', 'Please sign in again before creating tasks.')
+              return
+            } else {
+              setInput(rawInput)
+              toast.error('Could not save task', 'Your task was not saved. Please try again.')
+              return
             }
           }
         } catch (error) {
           console.error('Error saving to Supabase:', error)
+          if (isAuthenticated) {
+            setInput(rawInput)
+            toast.error('Could not save task', 'Your task was not saved. Please try again.')
+            return
+          }
           toast.error('Could not save task', 'Check your connection and try again.')
           // Fall through to local creation for demo users.
         }
@@ -183,6 +196,11 @@ export function TaskInput({ onTaskCreated }: TaskInputProps) {
       onTaskCreated?.(newTask)
     } catch (error) {
       console.error('Error creating task:', error)
+      if (isAuthenticated) {
+        setInput(rawInput)
+        toast.error('Could not create task', 'Your task was not saved. Please try again.')
+        return
+      }
       // Create a locally parsed task on error so capture still works offline.
       const parsedTask = parseTaskHeuristic(rawInput)
       const fallbackTask: Task = {

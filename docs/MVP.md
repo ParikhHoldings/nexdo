@@ -23,11 +23,13 @@ Acceptance gate:
 - Captured tasks appear immediately in the workspace.
 - Logged-out demo captures persist across reloads.
 - Authenticated captures must save through `POST /api/tasks` with validation and task quota checks.
+- Failed authenticated captures must not create local-only tasks that disappear on reload.
 
 Current evidence:
 - `TaskInput` supports capture.
 - `npm run test:e2e` covers logged-out task creation and reload persistence.
 - `POST /api/tasks` validates normalized task input before quota and insert.
+- Authenticated task-capture save failures restore the input and show an error instead of adding a local demo task.
 
 ### 2. Structure
 Tasks should carry enough context to support prioritization, briefing, execution, and agent interop.
