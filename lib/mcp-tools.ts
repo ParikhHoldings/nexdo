@@ -1,6 +1,7 @@
 import { createServiceClient } from '@/lib/supabase/server'
 import { parseTaskInput, generateBriefing } from '@/lib/openai'
 import { hasRequiredScope, requiredScopeForTool } from '@/lib/agent-scopes'
+import { apiKeyHint, hashApiKey } from '@/lib/api-keys'
 import type {
   Task,
   TaskStatus,
@@ -768,6 +769,21 @@ export async function executeTool(
   return result
 }
 
+function isMissingApiKeyHashColumn(error: unknown) {
+  const message =
+    typeof error === 'object' &&
+    error !== null &&
+    'message' in error &&
+    typeof error.message === 'string'
+      ? error.message
+      : ''
+
+  return (
+    message.includes('api_key_hash') &&
+    (message.includes('does not exist') || message.includes('schema cache'))
+  )
+}
+
 // Auth helper: validate API key and return user ID
 export async function validateApiKey(
   apiKey: string
@@ -779,18 +795,49 @@ export async function validateApiKey(
   // API keys start with 'nxd_'
   if (!apiKey.startsWith('nxd_')) return null
 
-  const { data: profile, error } = await supabase
+  const apiKeyHash = hashApiKey(apiKey)
+  let matchedLegacyKey = false
+  let { data: profile, error } = await supabase
     .from('profiles')
     .select('id, api_key_scopes')
-    .eq('api_key', apiKey)
-    .single()
+    .eq('api_key_hash', apiKeyHash)
+    .maybeSingle()
+
+  if ((error && isMissingApiKeyHashColumn(error)) || !profile) {
+    const legacyResult = await supabase
+      .from('profiles')
+      .select('id, api_key_scopes')
+      .eq('api_key', apiKey)
+      .maybeSingle()
+
+    profile = legacyResult.data
+    error = legacyResult.error
+    matchedLegacyKey = !!profile
+  }
 
   if (error || !profile) return null
 
-  await supabase
+  const usedAt = new Date().toISOString()
+  const update = matchedLegacyKey
+    ? {
+        api_key: null,
+        api_key_hash: apiKeyHash,
+        api_key_hint: apiKeyHint(apiKey),
+        api_key_last_used_at: usedAt,
+      }
+    : { api_key_last_used_at: usedAt }
+
+  const { error: updateError } = await supabase
     .from('profiles')
-    .update({ api_key_last_used_at: new Date().toISOString() })
+    .update(update)
     .eq('id', profile.id)
+
+  if (updateError && matchedLegacyKey && isMissingApiKeyHashColumn(updateError)) {
+    await supabase
+      .from('profiles')
+      .update({ api_key_last_used_at: usedAt })
+      .eq('id', profile.id)
+  }
 
   return { userId: profile.id, scopes: profile.api_key_scopes || [] }
 }

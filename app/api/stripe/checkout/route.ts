@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createCheckoutSession, createCustomer, PRICE_IDS } from '@/lib/stripe'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 
 const BILLABLE_PLANS = ['pro', 'power'] as const
 type BillablePlan = (typeof BILLABLE_PLANS)[number]
@@ -50,6 +50,14 @@ export async function POST(request: NextRequest) {
 
     // Create a Stripe customer if one doesn't exist
     if (!customerId) {
+      const service = await createServiceClient()
+      if (!service) {
+        return NextResponse.json(
+          { error: 'Billing persistence is not configured yet.' },
+          { status: 503 }
+        )
+      }
+
       const customer = await createCustomer(user.email || '', user.user_metadata?.full_name)
       if (!customer) {
         return NextResponse.json(
@@ -61,7 +69,7 @@ export async function POST(request: NextRequest) {
       customerId = customer.id
 
       // Save the customer ID to the profile
-      await (supabase as any)
+      await (service as any)
         .from('profiles')
         .update({ stripe_customer_id: customerId })
         .eq('id', user.id)

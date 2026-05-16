@@ -16,6 +16,8 @@
 - Exposed agent metadata fields in MCP create/update tools so agent-created tasks can carry source identifiers and external references.
 - Added scoped API key permissions, scope-filtered MCP tool listings, REST/JSON-RPC scope enforcement, and an agent action audit table/migration.
 - Added rate limiting to API key rotation for scoped MCP/API keys.
+- Moved MCP/API keys to hashed storage with one-time reveal, display hints, legacy key migration, and fallback validation.
+- Narrowed direct profile self-updates so signed-in browser clients cannot self-change billing, quota, Stripe, or API-key state.
 - Made the MCP settings tool list reflect the current API key scopes.
 - Added a recent agent activity surface on the MCP settings page backed by `/api/mcp/events`.
 - Added idempotency handling for agent task creation using `source_agent_id` plus `external_ref`, including write-smoke replay coverage.
@@ -47,6 +49,7 @@
 - Authenticated agent execution is structurally safer, but still needs real Supabase/OpenAI smoke verification.
 - Import quota enforcement is in code, but still needs real Supabase smoke near plan limits.
 - Agent-governance code exists locally; scoped key behavior, idempotency replay, and audit writes still need a real Supabase/API-key smoke.
+- Hashed API-key storage and profile column grants exist locally, but still need real Supabase migration/write-smoke verification.
 - Stripe route hardening exists locally; real test-mode checkout, portal, webhook, and quota verification still needs provider credentials.
 
 ### Blocked

@@ -11,7 +11,7 @@ This repo currently contains a Next.js app with:
 - imports from Todoist and file-based task exports such as CSV, ICS, JSON/Trello/Things-style sources
 - Stripe plan, checkout, portal, webhook, quota, and rate-limit scaffolding
 - MCP and ChatGPT Actions surfaces for external agents to list, create, complete, update, search, and brief tasks
-- scoped API-key permissions, API-key rotation rate limits, scope-aware MCP setup UI, and an agent action audit table for MCP/API-key calls
+- scoped API-key permissions, hashed one-time-reveal API keys, API-key rotation rate limits, scope-aware MCP setup UI, and an agent action audit table for MCP/API-key calls
 - a recent agent activity surface on the MCP settings page
 - idempotent agent task creation when callers provide `source_agent_id` plus `external_ref`
 
@@ -27,7 +27,7 @@ Last checked on 2026-05-16:
 - PR #3 Web rails passed in GitHub Actions
 - PR #3 Vercel preview deployment completed
 
-Still unverified: production env, Supabase migrations/auth against a real project, OpenAI provider calls, Stripe test-mode flows, scoped MCP/API-key execution, idempotency replay against real task data, agent audit writes, and deployment rails. `npm audit --audit-level=moderate` passes with 0 vulnerabilities after the Next.js 16 / ESLint 9 upgrade.
+Still unverified: production env, Supabase migrations/auth/profile column grants against a real project, OpenAI provider calls, Stripe test-mode flows, scoped MCP/API-key execution, idempotency replay against real task data, agent audit writes, and deployment rails. `npm audit --audit-level=moderate` passes with 0 vulnerabilities after the Next.js 16 / ESLint 9 upgrade.
 
 ## Stack
 - Next.js 16 app router

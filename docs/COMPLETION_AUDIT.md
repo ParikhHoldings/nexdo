@@ -22,6 +22,7 @@ Make Nexdo a credible, launchable early-access product by Monday, 2026-05-18, wi
 | Keep demo useful without provider secrets | `lib/task-intelligence.ts`, `lib/openai.ts`, `components/task-input.tsx`, `components/daily-briefing.tsx`, `components/task-detail.tsx`, `app/(app)/today/page.tsx` | Done |
 | Harden core task mutation routes | `PATCH /api/tasks/[id]` now allowlists and validates user-editable fields; `DELETE /api/tasks/[id]` returns 404 when no owned task is deleted; e2e covers unauthenticated/config guardrails | Done |
 | Harden profile mutation route | `PATCH /api/profile` now validates name length, allowlisted timezone values, and allowlisted work types before updating profiles | Done |
+| Harden profile/database self-update boundary | `supabase/migrations/005_hashed_api_keys.sql` limits direct authenticated profile updates to preference fields; sensitive billing, quota, Stripe, and API-key state must use server/service-role paths | Implemented locally; real Supabase verification missing |
 | Harden authenticated agent execution | `/api/agent/execute` now requires a `taskId`, loads the owned task from Supabase, rejects non-executable task types, records quota usage after a successful run, and only then saves `agent_output` server-side | Done |
 | Enforce task quotas on imports | CSV, JSON, ICS, Todoist, Google Tasks, and Microsoft To Do imports now consume task-create quota in batch before saving imported tasks; migration `004_quota_noop_audit_cleanup.sql` prevents quota read probes from writing zero-quantity audit noise | Done |
 | Restore strict build rails | `next.config.mjs` no longer ignores TypeScript/ESLint; scripts include `typecheck`; `npm run build` passes | Done |
@@ -33,7 +34,7 @@ Make Nexdo a credible, launchable early-access product by Monday, 2026-05-18, wi
 | Verify deploy target and production env | No production env or deploy target credentials/config were exercised in this pass | Missing |
 | Verify preview deploy rail | PR #3 Vercel preview deployment completed | Done |
 | Verify Supabase migrations/auth/RLS/task CRUD against real project | Migrations and code exist, but real project smoke test was not run | Missing |
-| Provide a repeatable Supabase smoke command | `npm run smoke:supabase` checks schema columns; `npm run smoke:supabase -- --write` creates/deletes a smoke auth user, verifies profile trigger, task CRUD through RLS, public RLS isolation, audit-event access, quota increments, quota no-op behavior, and rate-limit allow/block behavior | Done |
+| Provide a repeatable Supabase smoke command | `npm run smoke:supabase` checks schema columns; `npm run smoke:supabase -- --write` creates/deletes a smoke auth user, verifies profile trigger, allowed profile preference edits, denied sensitive profile edits, task CRUD through RLS, public RLS isolation, audit-event access, quota increments, quota no-op behavior, and rate-limit allow/block behavior | Done |
 | Verify OpenAI provider-backed parse/prioritize/briefing/execution | Fallbacks and UI path work; real provider calls not exercised | Missing |
 | Provide a repeatable OpenAI smoke command | `npm run smoke:openai` verifies OpenAI JSON-mode calls for parse, prioritization, briefing, and prep-style execution shapes; app helpers use the same optional `OPENAI_MODEL` default | Done |
 | Verify Stripe checkout/portal/webhook/quota updates | Code exists; Stripe test-mode flow not exercised | Missing |
@@ -44,7 +45,7 @@ Make Nexdo a credible, launchable early-access product by Monday, 2026-05-18, wi
 | Provide a repeatable MCP/API-key smoke command | `npm run smoke:mcp` supports authenticated read checks, optional `NEXDO_READONLY_API_KEY` scope-denial checks, and explicit `--write` task/idempotency checks | Done |
 | Make agent-created tasks distinguishable | MCP create/update schemas and handlers expose `source_agent_id`, `external_ref`, `ingestion_intent`, and `agent_metadata` | Done |
 | Add idempotency and safer conflict handling for agent writes | `create_task` replays by `source_agent_id` + `external_ref`, migration adds `tasks_user_agent_external_ref_unique_idx`, and `npm run smoke:mcp -- --write` checks replay behavior | Implemented locally; provider verification missing |
-| Add scoped API keys and agent audit trails | `supabase/migrations/003_agent_governance.sql`, settings key-scope UI, API-key rotation rate limiting, scope-aware MCP setup UI, MCP scope filtering/enforcement, `agent_action_events` logging, `/api/mcp/events`, and the MCP settings activity list exist; real Supabase migration/audit-write smoke still required | Implemented locally; provider verification missing |
+| Add scoped API keys and agent audit trails | `supabase/migrations/003_agent_governance.sql`, settings key-scope UI, API-key rotation rate limiting, hashed key storage in `supabase/migrations/005_hashed_api_keys.sql`, scope-aware MCP setup UI, MCP scope filtering/enforcement, `agent_action_events` logging, `/api/mcp/events`, and the MCP settings activity list exist; real Supabase migration/audit-write smoke still required | Implemented locally; provider verification missing |
 
 ## Commands verified locally
 - `npm ci`

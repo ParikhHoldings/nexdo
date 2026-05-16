@@ -14,6 +14,7 @@ import {
   Loader2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { useUserStore } from '@/lib/store'
 import {
   API_KEY_SCOPE_LABELS,
@@ -59,9 +60,17 @@ function subscribeToOrigin(_onStoreChange: () => void) {
   return () => {}
 }
 
+function formatApiKeyHint(apiKey: string) {
+  return `${apiKey.slice(0, 8)}...${apiKey.slice(-4)}`
+}
+
 export default function MCPSettingsPage() {
   const { profile } = useUserStore()
-  const apiKey = profile?.api_key || ''
+  const legacyApiKey = profile?.api_key || ''
+  const apiKeyHint =
+    profile?.api_key_hint ||
+    (profile?.api_key ? formatApiKeyHint(profile.api_key) : '')
+  const hasApiKey = Boolean(legacyApiKey || apiKeyHint)
   const apiKeyScopes = normalizeApiKeyScopes(profile?.api_key_scopes)
 
   const origin = useSyncExternalStore(
@@ -77,6 +86,7 @@ export default function MCPSettingsPage() {
   const [copiedKey, setCopiedKey] = useState(false)
   const [copiedConfig, setCopiedConfig] = useState(false)
   const [copiedOpenApi, setCopiedOpenApi] = useState(false)
+  const [testApiKey, setTestApiKey] = useState('')
   const [testStatus, setTestStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [testMessage, setTestMessage] = useState('')
   const [events, setEvents] = useState<AgentEvent[]>([])
@@ -89,7 +99,7 @@ export default function MCPSettingsPage() {
         nexdo: {
           url: MCP_SERVER_URL,
           headers: {
-            Authorization: `Bearer ${apiKey || 'YOUR_NEXDO_API_KEY'}`,
+            Authorization: `Bearer ${legacyApiKey || 'YOUR_NEXDO_API_KEY'}`,
           },
         },
       },
@@ -105,7 +115,7 @@ export default function MCPSettingsPage() {
   }
 
   useEffect(() => {
-    if (!apiKey) return
+    if (!hasApiKey) return
 
     let cancelled = false
 
@@ -140,12 +150,14 @@ export default function MCPSettingsPage() {
     return () => {
       cancelled = true
     }
-  }, [apiKey])
+  }, [hasApiKey])
 
   const handleTestConnection = async () => {
-    if (!apiKey) {
+    const connectionKey = testApiKey.trim() || legacyApiKey
+
+    if (!connectionKey) {
       setTestStatus('error')
-      setTestMessage('No API key found. Generate one in Settings > API.')
+      setTestMessage('Paste an API key to test the connection.')
       return
     }
 
@@ -157,7 +169,7 @@ export default function MCPSettingsPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${apiKey}`,
+          Authorization: `Bearer ${connectionKey}`,
         },
         body: JSON.stringify({
           jsonrpc: '2.0',
@@ -217,17 +229,19 @@ export default function MCPSettingsPage() {
       {/* API Key */}
       <section className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 mb-6">
         <h2 className="text-lg font-semibold text-zinc-100 mb-4">Your API Key</h2>
-        {apiKey ? (
+        {hasApiKey ? (
           <div className="flex gap-2">
             <code className="flex-1 bg-zinc-800 px-4 py-2.5 rounded-lg text-sm text-zinc-300 font-mono">
-              {apiKey.slice(0, 8)}{'•'.repeat(24)}{apiKey.slice(-4)}
+              {apiKeyHint || `${legacyApiKey.slice(0, 8)}...${legacyApiKey.slice(-4)}`}
             </code>
-            <Button
-              variant="secondary"
-              onClick={() => handleCopy(apiKey, setCopiedKey)}
-            >
-              {copiedKey ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-            </Button>
+            {legacyApiKey && (
+              <Button
+                variant="secondary"
+                onClick={() => handleCopy(legacyApiKey, setCopiedKey)}
+              >
+                {copiedKey ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+              </Button>
+            )}
           </div>
         ) : (
           <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg">
@@ -240,7 +254,13 @@ export default function MCPSettingsPage() {
           </div>
         )}
 
-        {apiKey && (
+        {hasApiKey && !legacyApiKey && (
+          <p className="mt-3 text-xs text-zinc-500">
+            Existing keys are stored as hashes and cannot be revealed. Regenerate a key in Settings &gt; API when you need a new copy.
+          </p>
+        )}
+
+        {hasApiKey && (
           <div className="mt-4 border-t border-zinc-800 pt-4">
             <p className="text-xs uppercase tracking-wide text-zinc-600">
               Current key scopes
@@ -262,6 +282,15 @@ export default function MCPSettingsPage() {
       {/* Test Connection */}
       <section className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 mb-6">
         <h2 className="text-lg font-semibold text-zinc-100 mb-4">Test Connection</h2>
+        <div className="mb-4 flex gap-2">
+          <Input
+            type="password"
+            value={testApiKey}
+            onChange={(event) => setTestApiKey(event.target.value)}
+            placeholder={legacyApiKey ? 'Using stored legacy key' : 'Paste API key'}
+            className="font-mono"
+          />
+        </div>
         <div className="flex items-center gap-4">
           <Button onClick={handleTestConnection} disabled={testStatus === 'loading'}>
             {testStatus === 'loading' ? (
@@ -300,7 +329,7 @@ export default function MCPSettingsPage() {
           <Activity className="h-5 w-5 text-zinc-500" />
         </div>
 
-        {!apiKey ? (
+        {!hasApiKey ? (
           <p className="text-sm text-zinc-500">
             Generate an API key before agent activity can appear here.
           </p>
@@ -449,7 +478,7 @@ export default function MCPSettingsPage() {
         <div className="grid gap-3 sm:grid-cols-2">
           {MCP_TOOL_DETAILS.map((tool) => {
             const requiredScope = requiredScopeForTool(tool.name)
-            const isEnabled = Boolean(apiKey) && apiKeyScopes.includes(requiredScope)
+            const isEnabled = hasApiKey && apiKeyScopes.includes(requiredScope)
 
             return (
               <div

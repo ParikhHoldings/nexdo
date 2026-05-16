@@ -28,18 +28,28 @@ import {
 
 type Tab = 'profile' | 'billing' | 'api' | 'notifications'
 
+function formatApiKeyHint(apiKey: string) {
+  return `${apiKey.slice(0, 8)}...${apiKey.slice(-4)}`
+}
+
 function SettingsContent() {
   const searchParams = useSearchParams()
   const checkoutStatus = searchParams.get('checkout')
 
-  const { profile } = useUserStore()
+  const { profile, setProfile } = useUserStore()
   const { theme, toggleTheme } = useUIStore()
 
   const [activeTab, setActiveTab] = useState<Tab>('profile')
   const [copied, setCopied] = useState(false)
   const [generatedApiKey, setGeneratedApiKey] = useState('')
+  const [generatedApiKeyHint, setGeneratedApiKeyHint] = useState('')
   const [apiKeyScopesDraft, setApiKeyScopesDraft] = useState<ApiKeyScope[] | null>(null)
-  const apiKey = generatedApiKey || profile?.api_key || ''
+  const copyableApiKey = generatedApiKey || profile?.api_key || ''
+  const apiKeyHint =
+    generatedApiKeyHint ||
+    profile?.api_key_hint ||
+    (profile?.api_key ? formatApiKeyHint(profile.api_key) : '')
+  const hasApiKey = Boolean(copyableApiKey || apiKeyHint)
   const apiKeyScopes = apiKeyScopesDraft ?? normalizeApiKeyScopes(profile?.api_key_scopes)
 
   // Notification preferences state
@@ -79,8 +89,8 @@ function SettingsContent() {
   const [isManagingBilling, setIsManagingBilling] = useState(false)
 
   const handleCopyApiKey = () => {
-    if (apiKey) {
-      navigator.clipboard.writeText(apiKey)
+    if (copyableApiKey) {
+      navigator.clipboard.writeText(copyableApiKey)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     }
@@ -97,9 +107,24 @@ function SettingsContent() {
 
       if (response.ok) {
         const result = await response.json()
+        const nextScopes = normalizeApiKeyScopes(result.api_key_scopes)
+        const nextHint = result.api_key_hint || formatApiKeyHint(result.api_key)
+
         setGeneratedApiKey(result.api_key)
+        setGeneratedApiKeyHint(nextHint)
         if (result.api_key_scopes) {
-          setApiKeyScopesDraft(result.api_key_scopes)
+          setApiKeyScopesDraft(nextScopes)
+        }
+        if (profile) {
+          setProfile({
+            ...profile,
+            api_key: null,
+            api_key_hash: null,
+            api_key_hint: nextHint,
+            api_key_scopes: nextScopes,
+            api_key_last_used_at: null,
+            updated_at: new Date().toISOString(),
+          })
         }
         setApiKeySuccess(true)
         setTimeout(() => setApiKeySuccess(false), 3000)
@@ -404,24 +429,29 @@ function SettingsContent() {
               </div>
 
               <p className="text-sm text-zinc-500">
-                Use this key to authenticate AI tools and API requests. Keep it secret.
+                Use this key to authenticate AI tools and API requests. New keys are shown once.
               </p>
 
               {apiKeySuccess && (
-                <p className="text-sm text-emerald-400">New key generated</p>
+                <p className="text-sm text-emerald-400">
+                  New key generated. Copy it now; it will not be shown again.
+                </p>
               )}
 
               <div className="flex gap-2">
                 <Input
-                  type="password"
-                  value={apiKey || 'No API key generated'}
+                  type={copyableApiKey ? 'password' : 'text'}
+                  value={
+                    copyableApiKey ||
+                    (apiKeyHint ? `Stored key ${apiKeyHint}` : 'No API key generated')
+                  }
                   readOnly
                   className="font-mono"
                 />
                 <Button
                   variant="secondary"
                   onClick={handleCopyApiKey}
-                  disabled={!apiKey}
+                  disabled={!copyableApiKey}
                 >
                   {copied ? (
                     <Check className="h-4 w-4" />
@@ -430,6 +460,12 @@ function SettingsContent() {
                   )}
                 </Button>
               </div>
+
+              {hasApiKey && !copyableApiKey && (
+                <p className="text-xs text-zinc-500">
+                  Existing keys cannot be revealed. Regenerate to copy a new key.
+                </p>
+              )}
 
               <div className="space-y-3">
                 <div>

@@ -14,6 +14,8 @@
 - exposed MCP create/update metadata for agent-created task traceability
 - added scoped API key permissions, MCP scope filtering/enforcement, and an `agent_action_events` audit trail migration
 - rate-limited API key rotation for scoped MCP/API keys
+- moved generated MCP/API keys to hashed storage with one-time reveal, key hints, and legacy raw-key migration fallback
+- narrowed direct profile self-updates so authenticated browser clients cannot self-change billing, quota, Stripe, or API-key state
 - made the MCP settings tool list reflect the current API key scopes
 - added an MCP settings activity list backed by `/api/mcp/events`
 - added agent write idempotency for `create_task` through `source_agent_id` plus `external_ref`
@@ -43,7 +45,7 @@
 
 ## High priority
 - configure and verify the real production deploy target
-- run `npm run smoke:supabase -- --write` against a real Supabase project after applying migrations
+- run `npm run smoke:supabase -- --write` against a real Supabase project after applying migrations, including hashed API-key columns and profile column-update grants
 - run `npm run smoke:openai` with a real OpenAI key, then verify the authenticated in-app AI routes
 - run `npm run smoke:stripe -- --write` with Stripe test-mode keys, then verify webhook events and quota updates
 - smoke test auth, profile creation, task CRUD, demo-mode fallback, and app navigation

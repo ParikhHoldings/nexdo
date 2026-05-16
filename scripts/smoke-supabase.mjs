@@ -47,7 +47,7 @@ async function readSmoke() {
     'profiles schema',
     service
       .from('profiles')
-      .select('id, api_key, api_key_scopes, api_key_last_used_at')
+      .select('id, api_key, api_key_hash, api_key_hint, api_key_scopes, api_key_last_used_at')
       .limit(1)
   )
 
@@ -206,6 +206,27 @@ async function writeSmoke() {
     console.log('ok auth sign-in')
 
     const userClient = authedClient(signedIn.session.access_token)
+    const { error: profileUpdateError } = await userClient
+      .from('profiles')
+      .update({ full_name: 'Nexdo Smoke Test Updated' })
+      .eq('id', userId)
+    if (profileUpdateError) fail('allowed profile update failed', profileUpdateError)
+    console.log('ok profile self-update allowed fields')
+
+    const { error: tierUpdateError } = await userClient
+      .from('profiles')
+      .update({ subscription_tier: 'power' })
+      .eq('id', userId)
+    if (!tierUpdateError) fail('direct subscription_tier update was unexpectedly allowed')
+    console.log('ok sensitive profile fields cannot be self-updated')
+
+    const { error: apiScopeUpdateError } = await userClient
+      .from('profiles')
+      .update({ api_key_scopes: ['tasks:read', 'tasks:write', 'briefing:read'] })
+      .eq('id', userId)
+    if (!apiScopeUpdateError) fail('direct api_key_scopes update was unexpectedly allowed')
+    console.log('ok API key scopes require server route')
+
     const { data: insertedTask, error: insertError } = await userClient
       .from('tasks')
       .insert({

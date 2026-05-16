@@ -18,9 +18,7 @@ type ValidationError = {
 }
 
 function validateProfilePatch(body: Record<string, unknown>) {
-  const updates: Record<string, unknown> = {
-    updated_at: new Date().toISOString(),
-  }
+  const updates: Record<string, unknown> = {}
   const errors: ValidationError[] = []
 
   if (body.full_name !== undefined) {
@@ -84,7 +82,7 @@ export async function PATCH(request: Request) {
       )
     }
 
-    if (Object.keys(updates).length === 1) {
+    if (Object.keys(updates).length === 0) {
       return NextResponse.json(
         { error: 'No valid updates provided' },
         { status: 400 }

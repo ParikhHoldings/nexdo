@@ -28,6 +28,8 @@ export interface Database {
           subscription_tier: SubscriptionTier
           stripe_customer_id: string | null
           api_key: string | null
+          api_key_hash: string | null
+          api_key_hint: string | null
           api_key_scopes: string[]
           api_key_last_used_at: string | null
           task_count_this_month: number
@@ -43,6 +45,8 @@ export interface Database {
           subscription_tier?: SubscriptionTier
           stripe_customer_id?: string | null
           api_key?: string | null
+          api_key_hash?: string | null
+          api_key_hint?: string | null
           api_key_scopes?: string[]
           api_key_last_used_at?: string | null
           task_count_this_month?: number
@@ -58,6 +62,8 @@ export interface Database {
           subscription_tier?: SubscriptionTier
           stripe_customer_id?: string | null
           api_key?: string | null
+          api_key_hash?: string | null
+          api_key_hint?: string | null
           api_key_scopes?: string[]
           api_key_last_used_at?: string | null
           task_count_this_month?: number
