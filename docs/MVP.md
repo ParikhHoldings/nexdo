@@ -163,12 +163,14 @@ Acceptance gate:
 - API access is gated to Power/team profiles.
 - API keys are scoped and hashed.
 - The settings UI shows key scopes and recent agent activity.
+- Agent activity reads are scoped to the authenticated user.
 - Real provider smoke verifies scope denial and audit writes.
 
 Current evidence:
 - API-key generation and validation are Power/team gated.
 - Hashed key storage and key hints exist.
 - `/settings/mcp` includes scope-aware setup and activity surfaces.
+- `/api/mcp/events` filters activity by the authenticated user as well as relying on database policies.
 - Real Supabase/API-key smoke remains a launch blocker.
 
 ## Monday early-access success criteria

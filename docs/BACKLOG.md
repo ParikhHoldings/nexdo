@@ -27,6 +27,7 @@
 - narrowed browser-visible profile columns and direct profile self-updates so authenticated clients cannot read key hashes/Stripe IDs or self-change billing, quota, Stripe, or API-key state
 - made the MCP settings tool list reflect the current API key scopes
 - added an MCP settings activity list backed by `/api/mcp/events`
+- explicitly filtered `/api/mcp/events` by the authenticated user in addition to RLS
 - added agent write idempotency for `create_task` through `source_agent_id` plus `external_ref`
 - opened PR #3 and verified GitHub Actions Web rails plus Vercel preview deployment
 - enabled strict lint/typecheck behavior in production builds
