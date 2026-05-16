@@ -2,16 +2,31 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createCheckoutSession, createCustomer, PRICE_IDS } from '@/lib/stripe'
 import { createClient } from '@/lib/supabase/server'
 
+const BILLABLE_PLANS = ['pro', 'power'] as const
+type BillablePlan = (typeof BILLABLE_PLANS)[number]
+
+function isBillablePlan(plan: unknown): plan is BillablePlan {
+  return typeof plan === 'string' && BILLABLE_PLANS.includes(plan as BillablePlan)
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const { priceId, plan } = await request.json()
+    const body = (await request.json().catch(() => ({}))) as { plan?: unknown }
+    const plan = body.plan
+
+    if (!isBillablePlan(plan)) {
+      return NextResponse.json(
+        { error: 'Invalid plan. Choose pro or power.' },
+        { status: 400 }
+      )
+    }
 
     // Get the authenticated user
     const supabase = await createClient()
     if (!supabase) {
       return NextResponse.json(
         { error: 'Database not configured' },
-        { status: 500 }
+        { status: 503 }
       )
     }
 
@@ -52,8 +67,9 @@ export async function POST(request: NextRequest) {
         .eq('id', user.id)
     }
 
-    // Get the correct price ID
-    const actualPriceId = priceId || (plan === 'pro' ? PRICE_IDS.pro : PRICE_IDS.power)
+    // Derive the Stripe price from server configuration only. Clients choose
+    // a product plan; they never get to supply the chargeable price id.
+    const actualPriceId = PRICE_IDS[plan]
 
     // Guard against running with placeholder env. Failing fast here is far
     // better than sending the user to Stripe with an invalid price id.

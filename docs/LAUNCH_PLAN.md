@@ -15,6 +15,7 @@ The goal is not a broad public launch. The credible Monday target is a verified 
 - Strict build rails: TypeScript and lint failures block `npm run build`. Verified locally on 2026-05-16.
 - OpenAI provider verification now has a repeatable smoke script, `npm run smoke:openai`; it still needs to be run with a real key and followed by authenticated app-route verification.
 - Stripe provider verification now has a repeatable smoke script, `npm run smoke:stripe`; it still needs to be run with test-mode keys and followed by webhook/quota verification.
+- Stripe checkout now accepts only server-known `pro` and `power` plans, derives price IDs from env, and skips unknown webhook price IDs instead of granting paid access.
 - Supabase provider verification now has a repeatable smoke script, `npm run smoke:supabase`; it still needs to be run with real credentials after migrations are applied.
 - Truthful public copy that describes bounded AI assistance instead of open-ended autonomous task completion. Draft tightened on 2026-05-16; still needs Quill/founder approval before external use.
 - Updated docs that tell future agents what exists, what is verified, and what is still blocked.

@@ -85,3 +85,15 @@ test('agent endpoints enforce auth and advertise CORS for action clients', async
   const eventsBody = await events.json()
   expect(eventsBody.error).toBeTruthy()
 })
+
+test('billing checkout rejects unsupported client-selected plans', async ({
+  request,
+}) => {
+  const response = await request.post('/api/stripe/checkout', {
+    data: { plan: 'team', priceId: 'price_client_supplied' },
+  })
+
+  expect(response.status()).toBe(400)
+  const body = await response.json()
+  expect(body.error).toContain('Invalid plan')
+})

@@ -1,5 +1,15 @@
 # Decisions
 
+## 2026-05-16 - Keep billing entitlements tied to server-known prices
+### Decision
+Checkout requests may choose only the `pro` or `power` plan key, and the server derives the Stripe price ID from environment configuration. Stripe webhooks must ignore unknown price IDs instead of defaulting to a paid Nexdo tier.
+
+### Why
+Paid access should not depend on client-supplied price IDs or implicit fallback mappings. Launch billing needs predictable, auditable plan selection before pricing is externally committed.
+
+### Impact
+Future billing changes must update the server-side price mapping and rerun Stripe test-mode checkout, portal, webhook, and quota smoke checks before public use.
+
 ## 2026-05-16 - Treat Monday as verified early access, not broad launch
 ### Decision
 Aim for a verified early-access/demo-ready product by Monday, 2026-05-18, with truthful copy, passing rails, and a clear launch-blocker list.

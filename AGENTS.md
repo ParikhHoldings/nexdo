@@ -27,7 +27,7 @@ The product promise should be grounded in what the code actually supports:
 - scoped API-key permissions, scope-aware MCP setup UI, and an agent action audit table/migration for MCP/API-key calls
 - a recent agent activity surface under `/settings/mcp`
 - idempotent agent task creation when callers provide `source_agent_id` plus `external_ref`
-- Stripe-backed plan surfaces, quotas, and rate-limit scaffolding
+- Stripe-backed plan surfaces, quotas, and rate-limit scaffolding, with checkout price IDs derived from server configuration and unknown webhook prices skipped instead of granting paid access
 
 Do not claim verified production readiness until build, lint, environment, database migrations, auth, Stripe, OpenAI, MCP, and deployment target have been checked in the current environment.
 
@@ -36,7 +36,7 @@ Current local verification from 2026-05-16:
 - `npm run lint` passed
 - `npm run typecheck` passed
 - `npm run build` passed with strict TypeScript and ESLint checks enabled
-- `npm run test:e2e` passed for the logged-out `/today` demo flow plus MCP/OpenAPI/action auth smoke tests
+- `npm run test:e2e` passed for the logged-out `/today` demo flow plus MCP/OpenAPI/action auth smoke tests and a Stripe checkout plan guard
 - `npm audit --audit-level=moderate` passed with 0 vulnerabilities after the Next.js 16 / ESLint 9 upgrade
 
 Current PR verification from 2026-05-16:
@@ -62,7 +62,7 @@ Production environment, Supabase migrations, OpenAI provider calls, Stripe test-
 - Framework: Next.js 16 app router, React 18, TypeScript, Tailwind, Framer Motion, lucide-react.
 - Data/auth: Supabase SSR/client helpers and RLS-backed tables.
 - AI: OpenAI chat completions via helpers in `lib/openai.ts`; prompts live in `lib/prompts.ts`.
-- Billing: Stripe helpers and plan limits in `lib/stripe.ts`; checkout, portal, and webhook routes under `app/api/stripe/`.
+- Billing: Stripe helpers and plan limits in `lib/stripe.ts`; checkout, portal, and webhook routes under `app/api/stripe/`. Checkout accepts only server-known `pro`/`power` plan keys, and webhook tier updates require explicit Stripe price ID mappings.
 - Agent interop: MCP definitions and handlers in `lib/mcp-tools.ts`; JSON-RPC MCP endpoint at `app/api/mcp/route.ts`; ChatGPT Actions OpenAPI at `app/api/mcp/openapi/route.ts`; action wrappers under `app/api/mcp/actions/[tool]/route.ts`.
 - Agent governance: API key scopes are modeled in `lib/agent-scopes.ts` and persisted on profiles; agent calls are intended to log to `agent_action_events`.
 - Imports: source-specific and generic normalization in `lib/importers.ts`; import routes under `app/api/import/`.

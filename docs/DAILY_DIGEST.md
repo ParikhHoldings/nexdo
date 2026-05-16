@@ -21,6 +21,7 @@
 - Restored stricter build rails by adding typecheck/e2e scripts and removing build-time TypeScript/ESLint ignores.
 - Added deterministic local task intelligence for demo-mode parsing, prioritization, briefing, and bounded research/draft/prep outputs.
 - Hardened task mutation routes so PATCH only accepts user-editable fields and DELETE reports missing owned tasks.
+- Hardened Stripe checkout and webhook entitlement handling so plan changes stay tied to server-known price IDs.
 - Added Playwright smoke coverage for the logged-out core product path.
 - Added Playwright smoke coverage for OpenAPI action schema, MCP/action auth failures, and action CORS headers.
 - Added GitHub Actions verification for install, lint, typecheck, build, and Playwright smoke testing.
@@ -33,6 +34,7 @@
 ### In progress
 - MVP path now centers on capture, structure, prioritize, brief, and bounded execution.
 - Agent-governance code exists locally; scoped key behavior, idempotency replay, and audit writes still need a real Supabase/API-key smoke.
+- Stripe route hardening exists locally; real test-mode checkout, portal, webhook, and quota verification still needs provider credentials.
 
 ### Blocked
 - Production readiness cannot be claimed until env, migrations, auth, AI, Stripe, MCP, and deployment are verified.
