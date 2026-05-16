@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createBillingPortalSession } from '@/lib/stripe'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 
 export async function POST() {
   try {
@@ -17,7 +17,13 @@ export async function POST() {
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-    const { data: profile } = await (supabase as any)
+
+    const service = await createServiceClient()
+    if (!service) {
+      return NextResponse.json({ error: 'Billing is not configured yet' }, { status: 503 })
+    }
+
+    const { data: profile } = await (service as any)
       .from('profiles')
       .select('stripe_customer_id')
       .eq('id', user.id)

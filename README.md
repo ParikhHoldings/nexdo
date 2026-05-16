@@ -11,7 +11,7 @@ This repo currently contains a Next.js app with:
 - imports from Todoist and file-based task exports such as CSV, ICS, JSON/Trello/Things-style sources
 - Stripe plan, checkout, portal, webhook, quota, and rate-limit scaffolding
 - MCP and ChatGPT Actions surfaces for external agents to list, create, complete, update, search, and brief tasks
-- scoped API-key permissions, hashed one-time-reveal API keys, API-key rotation rate limits, scope-aware MCP setup UI, and an agent action audit table for MCP/API-key calls
+- scoped API-key permissions, hashed one-time-reveal API keys, restricted browser-visible profile columns, API-key rotation rate limits, scope-aware MCP setup UI, and an agent action audit table for MCP/API-key calls
 - a recent agent activity surface on the MCP settings page
 - idempotent agent task creation when callers provide `source_agent_id` plus `external_ref`
 

@@ -8,6 +8,7 @@ import { SidebarSkeleton, TaskListSkeleton } from '@/components/ui/skeleton'
 import { useTaskStore, useUserStore } from '@/lib/store'
 import { getDemoTasks } from '@/lib/tasks'
 import { createClient } from '@/lib/supabase/client'
+import { CLIENT_PROFILE_SELECT, toClientProfile } from '@/lib/profile'
 
 /**
  * Detects the user's local IANA timezone so demo tasks and briefings
@@ -43,12 +44,12 @@ export default function AppLayout({
 
             const { data: profile } = await supabase
               .from('profiles')
-              .select('*')
+              .select(CLIENT_PROFILE_SELECT)
               .eq('id', user.id)
               .single()
 
             if (profile) {
-              setProfile(profile)
+              setProfile(toClientProfile(profile))
             }
 
             const { data: tasks } = await supabase

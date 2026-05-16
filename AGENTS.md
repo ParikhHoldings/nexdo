@@ -26,7 +26,7 @@ The product promise should be grounded in what the code actually supports:
 - API key based MCP/ChatGPT Actions interop for listing, creating, completing, updating, searching, and briefing tasks
 - scoped API-key permissions, rotation rate limits, scope-aware MCP setup UI, and an agent action audit table/migration for MCP/API-key calls
 - hashed API-key storage with one-time key reveal, short key hints in settings, and legacy raw-key migration/fallback
-- narrowed direct profile self-updates so browser clients can edit profile preferences but cannot self-grant billing, quota, Stripe, or API-key state
+- narrowed browser-visible profile columns and direct profile self-updates so clients can read/edit needed preferences without direct access to Stripe IDs, raw/hash API-key material, quota internals, or billing mutation fields
 - a recent agent activity surface under `/settings/mcp`
 - idempotent agent task creation when callers provide `source_agent_id` plus `external_ref`
 - Stripe-backed plan surfaces, quotas, and rate-limit scaffolding, with checkout price IDs derived from server configuration and unknown webhook prices skipped instead of granting paid access

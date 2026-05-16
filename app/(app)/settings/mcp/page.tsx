@@ -60,17 +60,10 @@ function subscribeToOrigin(_onStoreChange: () => void) {
   return () => {}
 }
 
-function formatApiKeyHint(apiKey: string) {
-  return `${apiKey.slice(0, 8)}...${apiKey.slice(-4)}`
-}
-
 export default function MCPSettingsPage() {
   const { profile } = useUserStore()
-  const legacyApiKey = profile?.api_key || ''
-  const apiKeyHint =
-    profile?.api_key_hint ||
-    (profile?.api_key ? formatApiKeyHint(profile.api_key) : '')
-  const hasApiKey = Boolean(legacyApiKey || apiKeyHint)
+  const apiKeyHint = profile?.api_key_hint || ''
+  const hasApiKey = Boolean(apiKeyHint)
   const apiKeyScopes = normalizeApiKeyScopes(profile?.api_key_scopes)
 
   const origin = useSyncExternalStore(
@@ -83,7 +76,6 @@ export default function MCPSettingsPage() {
   const OPENAPI_URL = origin ? `${origin}/api/mcp/openapi` : '/api/mcp/openapi'
 
   const [copiedUrl, setCopiedUrl] = useState(false)
-  const [copiedKey, setCopiedKey] = useState(false)
   const [copiedConfig, setCopiedConfig] = useState(false)
   const [copiedOpenApi, setCopiedOpenApi] = useState(false)
   const [testApiKey, setTestApiKey] = useState('')
@@ -99,7 +91,7 @@ export default function MCPSettingsPage() {
         nexdo: {
           url: MCP_SERVER_URL,
           headers: {
-            Authorization: `Bearer ${legacyApiKey || 'YOUR_NEXDO_API_KEY'}`,
+            Authorization: 'Bearer YOUR_NEXDO_API_KEY',
           },
         },
       },
@@ -153,7 +145,7 @@ export default function MCPSettingsPage() {
   }, [hasApiKey])
 
   const handleTestConnection = async () => {
-    const connectionKey = testApiKey.trim() || legacyApiKey
+    const connectionKey = testApiKey.trim()
 
     if (!connectionKey) {
       setTestStatus('error')
@@ -232,16 +224,8 @@ export default function MCPSettingsPage() {
         {hasApiKey ? (
           <div className="flex gap-2">
             <code className="flex-1 bg-zinc-800 px-4 py-2.5 rounded-lg text-sm text-zinc-300 font-mono">
-              {apiKeyHint || `${legacyApiKey.slice(0, 8)}...${legacyApiKey.slice(-4)}`}
+              {apiKeyHint}
             </code>
-            {legacyApiKey && (
-              <Button
-                variant="secondary"
-                onClick={() => handleCopy(legacyApiKey, setCopiedKey)}
-              >
-                {copiedKey ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-              </Button>
-            )}
           </div>
         ) : (
           <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg">
@@ -254,7 +238,7 @@ export default function MCPSettingsPage() {
           </div>
         )}
 
-        {hasApiKey && !legacyApiKey && (
+        {hasApiKey && (
           <p className="mt-3 text-xs text-zinc-500">
             Existing keys are stored as hashes and cannot be revealed. Regenerate a key in Settings &gt; API when you need a new copy.
           </p>
@@ -287,7 +271,7 @@ export default function MCPSettingsPage() {
             type="password"
             value={testApiKey}
             onChange={(event) => setTestApiKey(event.target.value)}
-            placeholder={legacyApiKey ? 'Using stored legacy key' : 'Paste API key'}
+            placeholder="Paste API key"
             className="font-mono"
           />
         </div>

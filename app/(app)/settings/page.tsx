@@ -44,11 +44,11 @@ function SettingsContent() {
   const [generatedApiKey, setGeneratedApiKey] = useState('')
   const [generatedApiKeyHint, setGeneratedApiKeyHint] = useState('')
   const [apiKeyScopesDraft, setApiKeyScopesDraft] = useState<ApiKeyScope[] | null>(null)
-  const copyableApiKey = generatedApiKey || profile?.api_key || ''
+  const copyableApiKey = generatedApiKey
   const apiKeyHint =
     generatedApiKeyHint ||
     profile?.api_key_hint ||
-    (profile?.api_key ? formatApiKeyHint(profile.api_key) : '')
+    ''
   const hasApiKey = Boolean(copyableApiKey || apiKeyHint)
   const apiKeyScopes = apiKeyScopesDraft ?? normalizeApiKeyScopes(profile?.api_key_scopes)
 

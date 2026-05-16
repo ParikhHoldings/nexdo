@@ -206,6 +206,25 @@ async function writeSmoke() {
     console.log('ok auth sign-in')
 
     const userClient = authedClient(signedIn.session.access_token)
+    const { data: allowedProfile, error: profileReadError } = await userClient
+      .from('profiles')
+      .select('id, full_name, api_key_hint, api_key_scopes')
+      .eq('id', userId)
+      .single()
+    if (profileReadError || allowedProfile.id !== userId) {
+      fail('allowed profile column read failed', profileReadError)
+    }
+    console.log('ok profile self-read allowed columns')
+
+    const { error: sensitiveReadError } = await userClient
+      .from('profiles')
+      .select('api_key_hash, stripe_customer_id')
+      .eq('id', userId)
+    if (!sensitiveReadError) {
+      fail('sensitive profile columns were unexpectedly readable')
+    }
+    console.log('ok sensitive profile columns cannot be self-read')
+
     const { error: profileUpdateError } = await userClient
       .from('profiles')
       .update({ full_name: 'Nexdo Smoke Test Updated' })

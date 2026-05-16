@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { CLIENT_PROFILE_SELECT, toClientProfile } from '@/lib/profile'
 import type { WorkType } from '@/lib/database.types'
 
 const WORK_TYPES = ['founder', 'developer', 'marketer', 'student', 'other'] as const
@@ -94,7 +95,7 @@ export async function PATCH(request: Request) {
       .from('profiles')
       .update(updates)
       .eq('id', user.id)
-      .select()
+      .select(CLIENT_PROFILE_SELECT)
       .single()
 
     if (error) {
@@ -105,7 +106,7 @@ export async function PATCH(request: Request) {
       )
     }
 
-    return NextResponse.json(profile)
+    return NextResponse.json(toClientProfile(profile))
   } catch (error) {
     console.error('Error updating profile:', error)
     return NextResponse.json(

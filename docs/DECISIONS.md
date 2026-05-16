@@ -10,15 +10,15 @@ API keys are the external-agent trust boundary. They should not be copied into b
 ### Impact
 Users must copy new keys when generated. Existing keys continue to validate through their hash, and the MCP settings page uses key hints plus an explicit paste field for connection tests.
 
-## 2026-05-16 - Profile self-updates are column-limited
+## 2026-05-16 - Profile browser access is column-limited
 ### Decision
-Direct authenticated profile updates are limited to `full_name`, `timezone`, and `work_type`. Credential, billing, quota, Stripe, and entitlement fields must be changed by server routes, provider webhooks, or service-role jobs.
+Direct authenticated profile reads expose only the fields the app needs for account preferences, plan display, key hints, and usage display. Direct authenticated profile updates are limited to `full_name`, `timezone`, and `work_type`. Credential, billing, quota, Stripe, and entitlement fields must be changed by server routes, provider webhooks, or service-role jobs.
 
 ### Why
-RLS ownership alone does not prevent a signed-in user from updating sensitive columns on their own profile through the Supabase client. Billing and agent trust state need a server-side boundary.
+RLS ownership alone does not prevent a signed-in user from reading or updating sensitive columns on their own profile through the Supabase client. Billing and agent trust state need a server-side boundary.
 
 ### Impact
-Profile preference updates still work through `PATCH /api/profile`; API-key rotation and Stripe customer persistence use service-role server routes. Real Supabase smoke must verify both allowed profile edits and denied sensitive-column edits.
+Profile preference updates still work through `PATCH /api/profile`; API-key rotation and Stripe customer persistence use service-role server routes. Real Supabase smoke must verify allowed profile reads/edits and denied sensitive-column reads/edits.
 
 ## 2026-05-16 - Profile updates must be allowlisted
 ### Decision

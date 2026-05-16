@@ -38,8 +38,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get the user's profile
-    const { data: profileData } = await (supabase as any)
+    const service = await createServiceClient()
+    if (!service) {
+      return NextResponse.json(
+        { error: 'Billing persistence is not configured yet.' },
+        { status: 503 }
+      )
+    }
+
+    // Get billing identifiers through the server trust boundary.
+    const { data: profileData } = await (service as any)
       .from('profiles')
       .select('stripe_customer_id')
       .eq('id', user.id)
@@ -50,14 +58,6 @@ export async function POST(request: NextRequest) {
 
     // Create a Stripe customer if one doesn't exist
     if (!customerId) {
-      const service = await createServiceClient()
-      if (!service) {
-        return NextResponse.json(
-          { error: 'Billing persistence is not configured yet.' },
-          { status: 503 }
-        )
-      }
-
       const customer = await createCustomer(user.email || '', user.user_metadata?.full_name)
       if (!customer) {
         return NextResponse.json(
