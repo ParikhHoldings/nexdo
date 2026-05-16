@@ -60,6 +60,12 @@ Write Supabase smoke that creates and deletes a disposable auth user, task, and 
 npm run smoke:supabase -- --write
 ```
 
+OpenAI provider smoke:
+
+```bash
+npm run smoke:openai
+```
+
 ## Rollback notes
 - Keep the last known-good deploy available in the deploy platform.
 - If a release breaks auth, billing, or task writes, roll back before attempting live data fixes.

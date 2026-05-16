@@ -6,6 +6,7 @@
 - added `docs/COMPLETION_AUDIT.md` to map the active goal to evidence and remaining gaps
 - added deployment rails and an environment preflight verifier
 - added a Supabase provider smoke script for schema, auth/profile trigger, RLS task CRUD, public isolation, and agent audit verification
+- added an OpenAI provider smoke script for JSON-mode parse, prioritization, briefing, and prep execution checks
 - added an authenticated MCP smoke script for real API-key verification
 - exposed MCP create/update metadata for agent-created task traceability
 - added scoped API key permissions, MCP scope filtering/enforcement, and an `agent_action_events` audit trail migration
@@ -26,6 +27,7 @@
 ## High priority
 - configure and verify the real production deploy target
 - run `npm run smoke:supabase -- --write` against a real Supabase project after applying migrations
+- run `npm run smoke:openai` with a real OpenAI key, then verify the authenticated in-app AI routes
 - smoke test auth, profile creation, task CRUD, demo-mode fallback, and app navigation
 - smoke test OpenAI task parse, prioritization, daily briefing, and agent execution with real env
 - smoke test Stripe checkout, portal, webhook idempotency, and plan/quota updates in test mode

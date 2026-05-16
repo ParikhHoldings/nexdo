@@ -11,6 +11,7 @@ The goal is not a broad public launch. The credible Monday target is a verified 
 - Agent task creation now has local idempotency handling through `source_agent_id` plus `external_ref`; real Supabase/API-key replay verification is still required.
 - PR #3 Web rails passed in GitHub Actions and the Vercel preview deployment completed on 2026-05-16.
 - Strict build rails: TypeScript and lint failures block `npm run build`. Verified locally on 2026-05-16.
+- OpenAI provider verification now has a repeatable smoke script, `npm run smoke:openai`; it still needs to be run with a real key and followed by authenticated app-route verification.
 - Supabase provider verification now has a repeatable smoke script, `npm run smoke:supabase`; it still needs to be run with real credentials after migrations are applied.
 - Truthful public copy that describes bounded AI assistance instead of open-ended autonomous task completion. Draft tightened on 2026-05-16; still needs Quill/founder approval before external use.
 - Updated docs that tell future agents what exists, what is verified, and what is still blocked.

@@ -75,6 +75,7 @@ Production environment, Supabase migrations, OpenAI provider calls, Stripe test-
 - Typecheck: `npm run typecheck`
 - E2E smoke: `npm run test:e2e`
 - Env preflight: `npm run verify:env`
+- OpenAI provider smoke: `npm run smoke:openai`
 - Supabase provider smoke: `npm run smoke:supabase`
 - MCP provider smoke: `npm run smoke:mcp`
 

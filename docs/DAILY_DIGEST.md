@@ -7,6 +7,7 @@
 - Added `README.md` as a concise project overview for humans and LLM agents.
 - Added `docs/COMPLETION_AUDIT.md` to map the active goal to concrete evidence and remaining gaps.
 - Added `docs/DEPLOYMENT.md` and `npm run verify:env` for deploy/env preflight rails.
+- Added `npm run smoke:openai` for real OpenAI JSON-mode provider verification.
 - Added `npm run smoke:supabase` for real Supabase schema/auth/RLS/task/audit verification.
 - Added `npm run smoke:mcp` for authenticated MCP/API-key verification against a real deployment.
 - Exposed agent metadata fields in MCP create/update tools so agent-created tasks can carry source identifiers and external references.
