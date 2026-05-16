@@ -40,7 +40,7 @@ Current local verification from 2026-05-16:
 - `npm run lint` passed
 - `npm run typecheck` passed
 - `npm run build` passed with strict TypeScript and ESLint checks enabled
-- `npm run test:e2e` passed for the logged-out `/today` demo flow, All Tasks/Upcoming/Done demo workspace lifecycle, demo task reload persistence, task/agent auth guards, MCP/OpenAPI/action auth smoke tests, and a Stripe checkout plan guard
+- `npm run test:e2e` passed for logged-out demo workflows, task workspace lifecycle, task/agent auth guards, MCP/OpenAPI/action auth smoke tests, billing guardrails, deterministic task-intelligence coverage, import parser coverage, Stripe entitlement mapping, and local validation helper contracts
 - `npm audit --audit-level=moderate` passed with 0 vulnerabilities after the Next.js 16 / ESLint 9 upgrade
 - `npm run verify:env` failed because `.env.local` is absent; only `.env.local.example` exists in this workspace
 
@@ -102,6 +102,7 @@ Use `.env.local.example` as the contract:
 Never invent environment truth. Confirm configured values exist before treating auth, AI, billing, imports, MCP, or production URLs as working.
 Use `lib/env.ts` for runtime placeholder-risk checks so copied example values fail closed consistently.
 `NEXDO_API_KEY` and `NEXDO_READONLY_API_KEY` are smoke-only variables for `npm run smoke:mcp`; they are not app runtime requirements.
+Use `docs/DEPLOYMENT.md` for local no-provider setup, production setup sequence, provider smoke commands, rollback notes, and deployment approval boundaries.
 
 ## General Operating Rules
 - Operate proactively.
