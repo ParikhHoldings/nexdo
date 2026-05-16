@@ -34,7 +34,10 @@ export async function POST() {
     }
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-    const session = await createBillingPortalSession(profile.stripe_customer_id, `${appUrl}/settings`)
+    const session = await createBillingPortalSession(
+      profile.stripe_customer_id,
+      `${appUrl}/settings?tab=billing`
+    )
 
     if (!session?.url) {
       return NextResponse.json({ error: 'Unable to open billing portal' }, { status: 500 })

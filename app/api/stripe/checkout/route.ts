@@ -96,8 +96,8 @@ export async function POST(request: NextRequest) {
     const session = await createCheckoutSession(
       customerId,
       actualPriceId,
-      `${appUrl}/settings?checkout=success`,
-      `${appUrl}/settings?checkout=cancelled`
+      `${appUrl}/settings?tab=billing&checkout=success`,
+      `${appUrl}/settings?tab=billing&checkout=cancelled`
     )
 
     if (!session) {

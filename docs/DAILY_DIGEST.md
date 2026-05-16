@@ -18,6 +18,7 @@
 - Added scoped API key permissions, scope-filtered MCP tool listings, REST/JSON-RPC scope enforcement, and an agent action audit table/migration.
 - Gated API-key generation and MCP API-key validation to Power/team profiles, and disabled free-plan API-key generation in settings.
 - Wired settings tab query parameters so quota/API upgrade links land directly on billing.
+- Pointed Stripe checkout and portal return URLs at the billing settings tab.
 - Added rate limiting to API key rotation for scoped MCP/API keys.
 - Moved MCP/API keys to hashed storage with one-time reveal, display hints, legacy key migration, and fallback validation.
 - Narrowed browser-visible profile columns and direct profile self-updates so signed-in clients cannot read key hashes/Stripe IDs or self-change billing, quota, Stripe, or API-key state.
