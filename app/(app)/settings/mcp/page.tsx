@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useSyncExternalStore } from 'react'
+import { useEffect, useState, useSyncExternalStore } from 'react'
 import Link from 'next/link'
 import {
+  Activity,
   ArrowLeft,
   Copy,
   Check,
@@ -14,6 +15,18 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useUserStore } from '@/lib/store'
+
+type AgentEvent = {
+  id: string
+  tool_name: string
+  source_agent_id: string | null
+  external_ref: string | null
+  ingestion_intent: string | null
+  success: boolean
+  error: string | null
+  duration_ms: number | null
+  created_at: string
+}
 
 /**
  * Resolve the public origin for the MCP URLs shown to users. We prefer the
@@ -50,6 +63,9 @@ export default function MCPSettingsPage() {
   const [copiedOpenApi, setCopiedOpenApi] = useState(false)
   const [testStatus, setTestStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [testMessage, setTestMessage] = useState('')
+  const [events, setEvents] = useState<AgentEvent[]>([])
+  const [isLoadingEvents, setIsLoadingEvents] = useState(false)
+  const [eventsError, setEventsError] = useState<string | null>(null)
 
   const claudeConfig = JSON.stringify(
     {
@@ -71,6 +87,44 @@ export default function MCPSettingsPage() {
     setter(true)
     setTimeout(() => setter(false), 2000)
   }
+
+  useEffect(() => {
+    if (!apiKey) return
+
+    let cancelled = false
+
+    const loadEvents = async () => {
+      setIsLoadingEvents(true)
+      setEventsError(null)
+
+      try {
+        const response = await fetch('/api/mcp/events')
+        const data = await response.json()
+
+        if (cancelled) return
+
+        if (response.ok) {
+          setEvents(data.events || [])
+        } else {
+          setEventsError(data.error || 'Unable to load agent activity')
+        }
+      } catch {
+        if (!cancelled) {
+          setEventsError('Unable to load agent activity')
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoadingEvents(false)
+        }
+      }
+    }
+
+    loadEvents()
+
+    return () => {
+      cancelled = true
+    }
+  }, [apiKey])
 
   const handleTestConnection = async () => {
     if (!apiKey) {
@@ -196,6 +250,80 @@ export default function MCPSettingsPage() {
             </div>
           )}
         </div>
+      </section>
+
+      {/* Agent Activity */}
+      <section className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 mb-6">
+        <div className="flex items-center justify-between gap-4 mb-4">
+          <div>
+            <h2 className="text-lg font-semibold text-zinc-100">
+              Recent Agent Activity
+            </h2>
+            <p className="text-sm text-zinc-500 mt-1">
+              Recent MCP and ChatGPT Actions calls made with your Nexdo API key.
+            </p>
+          </div>
+          <Activity className="h-5 w-5 text-zinc-500" />
+        </div>
+
+        {!apiKey ? (
+          <p className="text-sm text-zinc-500">
+            Generate an API key before agent activity can appear here.
+          </p>
+        ) : isLoadingEvents ? (
+          <div className="flex items-center gap-2 text-sm text-zinc-500">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Loading agent activity
+          </div>
+        ) : eventsError ? (
+          <p className="text-sm text-red-400">{eventsError}</p>
+        ) : events.length === 0 ? (
+          <p className="text-sm text-zinc-500">No agent activity recorded yet.</p>
+        ) : (
+          <div className="space-y-2">
+            {events.map((event) => (
+              <div
+                key={event.id}
+                className="flex flex-col gap-2 rounded-lg bg-zinc-800/50 p-3 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <code className="text-sm text-accent font-mono">
+                      {event.tool_name}
+                    </code>
+                    <span
+                      className={
+                        event.success
+                          ? 'text-xs text-emerald-400'
+                          : 'text-xs text-red-400'
+                      }
+                    >
+                      {event.success ? 'success' : 'failed'}
+                    </span>
+                    {event.source_agent_id && (
+                      <span className="text-xs text-zinc-500">
+                        {event.source_agent_id}
+                      </span>
+                    )}
+                  </div>
+                  {event.error ? (
+                    <p className="mt-1 truncate text-xs text-red-300">
+                      {event.error}
+                    </p>
+                  ) : event.external_ref ? (
+                    <p className="mt-1 truncate text-xs text-zinc-500">
+                      {event.external_ref}
+                    </p>
+                  ) : null}
+                </div>
+                <div className="shrink-0 text-xs text-zinc-500">
+                  {new Date(event.created_at).toLocaleString()}
+                  {event.duration_ms !== null ? ` · ${event.duration_ms}ms` : ''}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* Setup Instructions */}

@@ -79,4 +79,9 @@ test('agent endpoints enforce auth and advertise CORS for action clients', async
   expect(sse.status()).toBe(401)
   const sseBody = await sse.json()
   expect(sseBody.error).toContain('Authorization header')
+
+  const events = await request.get('/api/mcp/events')
+  expect([401, 503]).toContain(events.status())
+  const eventsBody = await events.json()
+  expect(eventsBody.error).toBeTruthy()
 })

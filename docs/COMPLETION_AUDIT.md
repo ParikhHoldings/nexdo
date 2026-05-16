@@ -38,7 +38,7 @@ Make Nexdo a credible, launchable early-access product by Monday, 2026-05-18, wi
 | Provide a repeatable MCP/API-key smoke command | `npm run smoke:mcp` supports read-only and explicit `--write` authenticated checks | Done |
 | Make agent-created tasks distinguishable | MCP create/update schemas and handlers expose `source_agent_id`, `external_ref`, `ingestion_intent`, and `agent_metadata` | Done |
 | Add idempotency and safer conflict handling for agent writes | `create_task` replays by `source_agent_id` + `external_ref`, migration adds `tasks_user_agent_external_ref_unique_idx`, and `npm run smoke:mcp -- --write` checks replay behavior | Implemented locally; provider verification missing |
-| Add scoped API keys and agent audit trails | `supabase/migrations/003_agent_governance.sql`, settings key-scope UI, MCP scope filtering/enforcement, and `agent_action_events` logging exist; real Supabase migration/audit-write smoke still required | Implemented locally; provider verification missing |
+| Add scoped API keys and agent audit trails | `supabase/migrations/003_agent_governance.sql`, settings key-scope UI, MCP scope filtering/enforcement, `agent_action_events` logging, `/api/mcp/events`, and the MCP settings activity list exist; real Supabase migration/audit-write smoke still required | Implemented locally; provider verification missing |
 
 ## Commands verified locally
 - `npm ci`
