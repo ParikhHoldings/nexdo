@@ -1,5 +1,15 @@
 # Decisions
 
+## 2026-05-16 - API-key access is paid-plan gated
+### Decision
+API-key generation requires a Power or Team profile before rate-limit consumption, and MCP/API-key validation rejects keys for profiles outside the API-access tiers. The settings UI disables key generation when the current profile cannot use API access.
+
+### Why
+The product and pricing surfaces say API access belongs to the Power tier and above. Letting free or Pro profiles generate and use API keys would make billing truth, agent access, and quota expectations diverge.
+
+### Impact
+Real MCP smoke tests must use a Power or Team test profile. Future plan changes should update `canUseApiAccess` and rerun API-key/MCP smoke coverage.
+
 ## 2026-05-16 - Demo file imports stay client-side
 ### Decision
 Logged-out visitors can import CSV, JSON, and ICS files in demo mode through client-side parsing and local task-store updates. Authenticated import APIs remain protected and continue to enforce auth, task quotas, and server-side persistence.

@@ -1,8 +1,14 @@
+import type { SubscriptionTier } from './database.types'
+
 export const API_KEY_SCOPES = [
   'tasks:read',
   'tasks:write',
   'briefing:read',
 ] as const
+
+export const API_ACCESS_REQUIRED_MESSAGE = 'API access requires a Power plan or higher.'
+
+const API_ACCESS_TIERS = new Set<SubscriptionTier>(['power', 'team'])
 
 export type ApiKeyScope = (typeof API_KEY_SCOPES)[number]
 
@@ -29,6 +35,10 @@ export function normalizeApiKeyScopes(value: unknown): ApiKeyScope[] {
   )
 
   return scopes.length > 0 ? Array.from(new Set(scopes)) : DEFAULT_API_KEY_SCOPES
+}
+
+export function canUseApiAccess(tier: SubscriptionTier | null | undefined): boolean {
+  return tier ? API_ACCESS_TIERS.has(tier) : false
 }
 
 export function requiredScopeForTool(toolName: string): ApiKeyScope {

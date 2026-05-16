@@ -22,6 +22,8 @@ import { cn } from '@/lib/utils'
 import {
   API_KEY_SCOPE_LABELS,
   API_KEY_SCOPES,
+  API_ACCESS_REQUIRED_MESSAGE,
+  canUseApiAccess,
   normalizeApiKeyScopes,
   type ApiKeyScope,
 } from '@/lib/agent-scopes'
@@ -51,6 +53,7 @@ function SettingsContent() {
     ''
   const hasApiKey = Boolean(copyableApiKey || apiKeyHint)
   const apiKeyScopes = apiKeyScopesDraft ?? normalizeApiKeyScopes(profile?.api_key_scopes)
+  const hasApiAccess = canUseApiAccess(profile?.subscription_tier)
 
   // Notification preferences state
   const defaultNotifications = [
@@ -97,6 +100,8 @@ function SettingsContent() {
   }
 
   const handleGenerateApiKey = async () => {
+    if (!hasApiAccess) return
+
     setApiKeySuccess(false)
     try {
       const response = await fetch('/api/profile/api-key', {
@@ -422,7 +427,12 @@ function SettingsContent() {
                 <h2 className="text-lg font-semibold text-zinc-100">
                   API Key
                 </h2>
-                <Button variant="ghost" size="sm" onClick={handleGenerateApiKey}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleGenerateApiKey}
+                  disabled={!hasApiAccess}
+                >
                   <RefreshCw className="h-4 w-4 mr-2" />
                   Regenerate
                 </Button>
@@ -482,11 +492,13 @@ function SettingsContent() {
                       key={scope}
                       type="button"
                       onClick={() => toggleApiKeyScope(scope)}
+                      disabled={!hasApiAccess}
                       className={cn(
                         'flex items-start gap-2 rounded-lg border p-3 text-left transition-colors',
                         apiKeyScopes.includes(scope)
                           ? 'border-accent/50 bg-accent/10 text-zinc-100'
-                          : 'border-zinc-800 bg-zinc-900 text-zinc-400 hover:border-zinc-700'
+                          : 'border-zinc-800 bg-zinc-900 text-zinc-400 hover:border-zinc-700',
+                        !hasApiAccess && 'cursor-not-allowed opacity-60'
                       )}
                     >
                       <span
@@ -514,10 +526,10 @@ function SettingsContent() {
                 </div>
               </div>
 
-              {profile?.subscription_tier === 'free' && (
+              {!hasApiAccess && (
                 <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg">
                   <p className="text-sm text-amber-400">
-                    API access requires a Power plan or higher.{' '}
+                    {API_ACCESS_REQUIRED_MESSAGE}{' '}
                     <button
                       onClick={() => setActiveTab('billing')}
                       className="underline"

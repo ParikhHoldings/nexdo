@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { normalizeApiKeyScopes } from '@/lib/agent-scopes'
+import {
+  API_ACCESS_REQUIRED_MESSAGE,
+  canUseApiAccess,
+  normalizeApiKeyScopes,
+} from '@/lib/agent-scopes'
 import { consumeRateLimit, RATE_LIMITS, rateLimitResponseHeaders } from '@/lib/rate-limit'
 import { apiKeyHint, generateApiKey, hashApiKey } from '@/lib/api-keys'
 
@@ -20,6 +24,37 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { error: 'Unauthorized' },
       { status: 401 }
+    )
+  }
+
+  const { data: profile, error: profileError } = await (supabase as any)
+    .from('profiles')
+    .select('subscription_tier')
+    .eq('id', user.id)
+    .maybeSingle()
+
+  if (profileError) {
+    console.error('Error loading profile for API key generation:', profileError)
+    return NextResponse.json(
+      { error: 'Failed to load profile' },
+      { status: 500 }
+    )
+  }
+
+  if (!profile) {
+    return NextResponse.json(
+      { error: 'Profile not found' },
+      { status: 404 }
+    )
+  }
+
+  if (!canUseApiAccess(profile.subscription_tier)) {
+    return NextResponse.json(
+      {
+        error: API_ACCESS_REQUIRED_MESSAGE,
+        upgrade_url: '/settings?tab=billing',
+      },
+      { status: 402 }
     )
   }
 

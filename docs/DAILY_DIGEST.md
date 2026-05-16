@@ -16,6 +16,7 @@
 - Exposed agent metadata fields in MCP create/update tools so agent-created tasks can carry source identifiers and external references.
 - Added bounded MCP tool input validation and made MCP `create_task` consume task-create quota.
 - Added scoped API key permissions, scope-filtered MCP tool listings, REST/JSON-RPC scope enforcement, and an agent action audit table/migration.
+- Gated API-key generation and MCP API-key validation to Power/team profiles, and disabled free-plan API-key generation in settings.
 - Added rate limiting to API key rotation for scoped MCP/API keys.
 - Moved MCP/API keys to hashed storage with one-time reveal, display hints, legacy key migration, and fallback validation.
 - Narrowed browser-visible profile columns and direct profile self-updates so signed-in clients cannot read key hashes/Stripe IDs or self-change billing, quota, Stripe, or API-key state.

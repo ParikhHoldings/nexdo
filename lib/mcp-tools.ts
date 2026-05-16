@@ -1,6 +1,6 @@
 import { createServiceClient } from '@/lib/supabase/server'
 import { parseTaskInput, generateBriefing } from '@/lib/openai'
-import { hasRequiredScope, requiredScopeForTool } from '@/lib/agent-scopes'
+import { canUseApiAccess, hasRequiredScope, requiredScopeForTool } from '@/lib/agent-scopes'
 import { apiKeyHint, hashApiKey } from '@/lib/api-keys'
 import { consumeQuota } from '@/lib/quota'
 import type {
@@ -935,14 +935,14 @@ export async function validateApiKey(
   let matchedLegacyKey = false
   let { data: profile, error } = await supabase
     .from('profiles')
-    .select('id, api_key_scopes')
+    .select('id, api_key_scopes, subscription_tier')
     .eq('api_key_hash', apiKeyHash)
     .maybeSingle()
 
   if ((error && isMissingApiKeyHashColumn(error)) || !profile) {
     const legacyResult = await supabase
       .from('profiles')
-      .select('id, api_key_scopes')
+      .select('id, api_key_scopes, subscription_tier')
       .eq('api_key', apiKey)
       .maybeSingle()
 
@@ -952,6 +952,7 @@ export async function validateApiKey(
   }
 
   if (error || !profile) return null
+  if (!canUseApiAccess(profile.subscription_tier)) return null
 
   const usedAt = new Date().toISOString()
   const update = matchedLegacyKey

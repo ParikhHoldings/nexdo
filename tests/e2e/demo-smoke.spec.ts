@@ -108,3 +108,13 @@ test('demo file import adds tasks without configured auth', async ({ page }) => 
     page.getByRole('heading', { name: 'Imported demo smoke task' })
   ).toBeVisible()
 })
+
+test('demo settings does not allow free-plan API key generation', async ({ page }) => {
+  await page.goto('/settings')
+  await page.getByRole('button', { name: 'API' }).click()
+
+  await expect(
+    page.getByText('API access requires a Power plan or higher.')
+  ).toBeVisible()
+  await expect(page.getByRole('button', { name: /Regenerate/ })).toBeDisabled()
+})
