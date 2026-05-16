@@ -14,7 +14,18 @@ import {
 } from 'lucide-react'
 import { ImportSourceCard } from '@/components/import-source-card'
 import { useTaskStore } from '@/lib/store'
-import type { Task } from '@/lib/database.types'
+import {
+  autoMapCSVColumns,
+  normalizeTask,
+  parseCSVContent,
+  parseICSContent,
+  parseJSONExport,
+} from '@/lib/importers'
+import type { Task, TaskInsert } from '@/lib/database.types'
+
+const DEMO_USER_ID = 'demo-user'
+const MAX_DEMO_IMPORT_BYTES = 2 * 1024 * 1024
+const MAX_DEMO_IMPORT_TASKS = 100
 
 interface ImportState {
   isLoading: boolean
@@ -33,6 +44,100 @@ type ImportSource =
   | 'asana'
   | 'trello'
   | 'csv'
+
+type JsonImportSource = 'things3' | 'omnifocus' | 'trello' | 'asana' | 'generic'
+type NormalizeSource = Parameters<typeof normalizeTask>[1]
+
+function normalizeSourceFor(source: ImportSource): NormalizeSource {
+  if (source === 'csv') return 'csv'
+  if (source === 'apple') return 'ics'
+  if (source === 'things3') return 'things3'
+  if (source === 'omnifocus') return 'omnifocus'
+  if (source === 'asana') return 'asana'
+  if (source === 'trello') return 'trello'
+  return 'generic'
+}
+
+function jsonSourceFor(source: ImportSource): JsonImportSource {
+  if (source === 'things3') return 'things3'
+  if (source === 'omnifocus') return 'omnifocus'
+  if (source === 'asana') return 'asana'
+  if (source === 'trello') return 'trello'
+  return 'generic'
+}
+
+function fileExtension(file: File): string {
+  return file.name.split('.').pop()?.toLowerCase() || ''
+}
+
+function demoTaskFromInsert(task: TaskInsert): Task {
+  const now = new Date().toISOString()
+
+  return {
+    id: crypto.randomUUID(),
+    user_id: DEMO_USER_ID,
+    title: task.title || 'Untitled Task',
+    raw_input: task.raw_input ?? null,
+    description: task.description ?? null,
+    status: task.status || 'todo',
+    priority: task.priority || 'medium',
+    due_date: task.due_date ?? null,
+    due_time: task.due_time ?? null,
+    context: task.context ?? null,
+    source: task.source || 'manual',
+    action_type: task.action_type || 'manual',
+    estimated_minutes: task.estimated_minutes ?? null,
+    energy_level: task.energy_level ?? null,
+    people: task.people ?? null,
+    tags: task.tags ?? null,
+    parent_task_id: task.parent_task_id ?? null,
+    related_task_ids: task.related_task_ids ?? null,
+    agent_output: task.agent_output ?? null,
+    completed_at: task.completed_at ?? null,
+    created_at: task.created_at || now,
+    updated_at: task.updated_at || now,
+    source_agent_id: task.source_agent_id ?? null,
+    external_ref: task.external_ref ?? null,
+    ingestion_intent: task.ingestion_intent ?? null,
+    agent_metadata: task.agent_metadata ?? null,
+  }
+}
+
+async function parseDemoFileImport(source: ImportSource, file: File): Promise<TaskInsert[]> {
+  if (file.size > MAX_DEMO_IMPORT_BYTES) {
+    throw new Error('Demo imports support files up to 2 MB.')
+  }
+
+  const content = await file.text()
+  const extension = fileExtension(file)
+  let tasks: TaskInsert[] = []
+
+  if (extension === 'ics' || source === 'apple') {
+    tasks = parseICSContent(content, DEMO_USER_ID)
+  } else if (extension === 'json') {
+    tasks = parseJSONExport(content, jsonSourceFor(source), DEMO_USER_ID)
+  } else if (extension === 'csv') {
+    const rawRows = parseCSVContent(content)
+    const headers = Object.keys(rawRows[0] || {})
+    const mappedRows =
+      headers.length > 0
+        ? parseCSVContent(content, autoMapCSVColumns(headers))
+        : []
+
+    tasks = mappedRows.map((row) =>
+      normalizeTask(row, normalizeSourceFor(source), DEMO_USER_ID, 'manual')
+    )
+  } else {
+    throw new Error('Unsupported demo import file. Use CSV, JSON, or ICS.')
+  }
+
+  const usableTasks = tasks.filter((task) => task.title?.trim())
+  if (usableTasks.length === 0) {
+    throw new Error('No tasks found in this file.')
+  }
+
+  return usableTasks.slice(0, MAX_DEMO_IMPORT_TASKS)
+}
 
 export default function ImportPage() {
   const { addTask, isAuthenticated } = useTaskStore()
@@ -63,6 +168,24 @@ export default function ImportPage() {
     updateState(source, { isLoading: true, error: null })
 
     try {
+      if (!isAuthenticated) {
+        if (!data.file) {
+          throw new Error('Sign in to import from connected apps. File imports work in demo mode.')
+        }
+
+        const importedTasks = await parseDemoFileImport(source, data.file)
+        for (const task of importedTasks) {
+          addTask(demoTaskFromInsert(task))
+        }
+
+        updateState(source, {
+          isLoading: false,
+          isComplete: true,
+          importedCount: importedTasks.length,
+        })
+        return
+      }
+
       let response: Response
 
       if (data.file) {

@@ -89,3 +89,22 @@ test('task mutation endpoints require configured auth', async ({ request }) => {
   })
   expect([401, 503]).toContain(profile.status())
 })
+
+test('demo file import adds tasks without configured auth', async ({ page }) => {
+  await page.goto('/import')
+
+  await page.locator('input[accept=".csv"]').last().setInputFiles({
+    name: 'nexdo-demo-import.csv',
+    mimeType: 'text/csv',
+    buffer: Buffer.from(
+      'title,priority,context\nImported demo smoke task,high,Imported through the demo CSV flow\n'
+    ),
+  })
+
+  await expect(page.getByText('1 task imported successfully')).toBeVisible()
+
+  await page.getByRole('link', { name: 'All Tasks' }).click()
+  await expect(
+    page.getByRole('heading', { name: 'Imported demo smoke task' })
+  ).toBeVisible()
+})

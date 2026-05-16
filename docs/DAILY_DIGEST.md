@@ -26,6 +26,7 @@
 - Updated vision, roadmap, backlog, decisions, metrics, marketing, and research docs to align with the current implementation.
 - Restored stricter build rails by adding typecheck/e2e scripts and removing build-time TypeScript/ESLint ignores.
 - Added deterministic local task intelligence for demo-mode parsing, prioritization, briefing, and bounded research/draft/prep outputs.
+- Added client-side demo file import parsing for CSV, JSON, and ICS, with browser smoke coverage that verifies a logged-out CSV import appears in the task list.
 - Moved AI route body validation before rate-limit consumption for parse, prioritize, and briefing requests.
 - Sanitized prioritization and briefing task arrays before rate-limit consumption and AI provider/fallback execution.
 - Added bounded validation for OpenAI JSON responses before parsed tasks, prioritization, briefings, or research/draft/prep agent outputs are returned or saved.

@@ -22,7 +22,7 @@ The product promise should be grounded in what the code actually supports:
 - daily briefing and prioritization generated from task context
 - limited agent execution for owned `research`, `draft`, and `prep` task records, with server-side output persistence
 - demo-mode task data when Supabase is unavailable or the visitor is logged out
-- imports from Todoist plus CSV, ICS, JSON/Trello/Things-style sources, with task quota enforcement for authenticated imports
+- imports from Todoist plus CSV, ICS, JSON/Trello/Things-style sources, with client-side demo file imports for logged-out visitors and task quota enforcement for authenticated imports
 - API key based MCP/ChatGPT Actions interop for listing, creating, completing, updating, searching, and briefing tasks
 - scoped API-key permissions, rotation rate limits, scope-aware MCP setup UI, and an agent action audit table/migration for MCP/API-key calls
 - hashed API-key storage with one-time key reveal, short key hints in settings, and legacy raw-key migration/fallback

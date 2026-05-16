@@ -1,5 +1,15 @@
 # Decisions
 
+## 2026-05-16 - Demo file imports stay client-side
+### Decision
+Logged-out visitors can import CSV, JSON, and ICS files in demo mode through client-side parsing and local task-store updates. Authenticated import APIs remain protected and continue to enforce auth, task quotas, and server-side persistence.
+
+### Why
+The import page should be usable in the no-env demo, but weakening server import routes would reintroduce unauthenticated body/file parsing and quota bypass risk.
+
+### Impact
+Future demo-only experiences can use client-side local state, but real account imports should continue through authenticated API routes and provider smoke tests.
+
 ## 2026-05-16 - OpenAI responses must be validated before use
 ### Decision
 Runtime OpenAI helpers validate and bound JSON output before returning parsed tasks, prioritization, briefings, or research/draft/prep agent results. Malformed, missing, or incomplete provider output falls back to deterministic local task intelligence.
