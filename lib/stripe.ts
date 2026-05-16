@@ -1,8 +1,9 @@
 import Stripe from 'stripe'
+import { isUsableEnv } from './env'
 
 function getStripeClient(): Stripe | null {
   const secretKey = process.env.STRIPE_SECRET_KEY
-  if (!secretKey || secretKey.includes('placeholder')) {
+  if (!isUsableEnv(secretKey)) {
     return null
   }
   return new Stripe(secretKey, {

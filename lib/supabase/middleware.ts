@@ -1,13 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
-
-function isUsableEnv(value: string | undefined): value is string {
-  return Boolean(
-    value &&
-      !value.toLowerCase().includes('placeholder') &&
-      !value.toLowerCase().includes('your-')
-  )
-}
+import { isUsableEnv } from '@/lib/env'
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({

@@ -8,6 +8,7 @@
 - Added `docs/COMPLETION_AUDIT.md` to map the active goal to concrete evidence and remaining gaps.
 - Added `docs/DEPLOYMENT.md` and `npm run verify:env` for deploy/env preflight rails.
 - Aligned the env verifier with runtime placeholder-risk checks and documented smoke-only MCP API-key variables.
+- Centralized runtime placeholder-risk checks for Supabase, OpenAI, Stripe, login demo-mode detection, and checkout price validation.
 - Made Supabase client, server, middleware, and login demo-mode checks reject placeholder anon/service keys, not only placeholder URLs.
 - Added `npm run smoke:openai` for real OpenAI JSON-mode provider verification.
 - Aligned app OpenAI helpers with the `OPENAI_MODEL` smoke/env contract and placeholder-key fallback behavior.

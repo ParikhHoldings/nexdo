@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createCheckoutSession, createCustomer, PRICE_IDS } from '@/lib/stripe'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { isUsableEnv } from '@/lib/env'
 
 const BILLABLE_PLANS = ['pro', 'power'] as const
 type BillablePlan = (typeof BILLABLE_PLANS)[number]
@@ -81,7 +82,7 @@ export async function POST(request: NextRequest) {
 
     // Guard against running with placeholder env. Failing fast here is far
     // better than sending the user to Stripe with an invalid price id.
-    if (!actualPriceId || actualPriceId.includes('placeholder')) {
+    if (!isUsableEnv(actualPriceId)) {
       console.error('Stripe price id not configured for plan:', plan)
       return NextResponse.json(
         {

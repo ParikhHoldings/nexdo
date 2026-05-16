@@ -33,15 +33,11 @@ import {
   validatePrioritizedTasks,
   validateResearchOutput,
 } from './ai-response-validation'
+import { isUsableEnv } from './env'
 
 function getOpenAIClient(): OpenAI | null {
   const apiKey = process.env.OPENAI_API_KEY
-  if (
-    !apiKey ||
-    apiKey === '' ||
-    apiKey.toLowerCase().includes('your-') ||
-    apiKey.toLowerCase().includes('placeholder')
-  ) {
+  if (!isUsableEnv(apiKey)) {
     return null
   }
   return new OpenAI({ apiKey })

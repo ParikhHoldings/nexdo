@@ -1,14 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import type { Database } from '@/lib/database.types'
-
-function isUsableEnv(value: string | undefined): value is string {
-  return Boolean(
-    value &&
-      !value.toLowerCase().includes('placeholder') &&
-      !value.toLowerCase().includes('your-')
-  )
-}
+import { isUsableEnv } from '@/lib/env'
 
 export async function createClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL

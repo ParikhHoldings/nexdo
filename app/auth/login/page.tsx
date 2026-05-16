@@ -8,14 +8,7 @@ import { Mail, Lock, ArrowRight, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { createClient } from '@/lib/supabase/client'
-
-function isUsableEnv(value: string | undefined): value is string {
-  return Boolean(
-    value &&
-      !value.toLowerCase().includes('placeholder') &&
-      !value.toLowerCase().includes('your-')
-  )
-}
+import { isUsableEnv } from '@/lib/env'
 
 function LoginForm() {
   const router = useRouter()
