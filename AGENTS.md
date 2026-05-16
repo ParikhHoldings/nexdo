@@ -90,7 +90,7 @@ Use the smallest relevant verification. For docs-only changes, a diff review is 
 ## Environment
 Use `.env.local.example` as the contract:
 - Supabase: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
-- OpenAI: `OPENAI_API_KEY`
+- OpenAI: `OPENAI_API_KEY`; optional `OPENAI_MODEL` defaults to `gpt-4o`
 - Stripe: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_PRO_PRICE_ID`, `STRIPE_POWER_PRICE_ID`
 - App origin: `NEXT_PUBLIC_APP_URL`
 

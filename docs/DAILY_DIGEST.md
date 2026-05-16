@@ -8,6 +8,7 @@
 - Added `docs/COMPLETION_AUDIT.md` to map the active goal to concrete evidence and remaining gaps.
 - Added `docs/DEPLOYMENT.md` and `npm run verify:env` for deploy/env preflight rails.
 - Added `npm run smoke:openai` for real OpenAI JSON-mode provider verification.
+- Aligned app OpenAI helpers with the `OPENAI_MODEL` smoke/env contract and placeholder-key fallback behavior.
 - Added `npm run smoke:stripe` for Stripe account, price, Checkout, and Customer Portal verification.
 - Added `npm run smoke:supabase` for real Supabase schema/auth/RLS/task/audit/quota/rate-limit verification.
 - Added `npm run smoke:mcp` for authenticated MCP/API-key verification against a real deployment.

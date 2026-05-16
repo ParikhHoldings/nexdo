@@ -24,7 +24,7 @@ npm run verify:env -- .env.production.local
 
 Required groups:
 - Supabase: URL, anon key, service-role key
-- OpenAI: API key
+- OpenAI: API key; optional `OPENAI_MODEL` defaults to `gpt-4o`
 - Stripe: secret key, webhook secret, publishable key, Pro price ID, Power price ID
 - App: public origin without a trailing slash
 

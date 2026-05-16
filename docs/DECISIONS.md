@@ -1,5 +1,15 @@
 # Decisions
 
+## 2026-05-16 - Keep OpenAI model selection consistent
+### Decision
+App OpenAI helpers use `OPENAI_MODEL` when provided and default to `gpt-4o`, matching the OpenAI smoke script.
+
+### Why
+Provider smoke should verify the same model contract used by runtime AI helpers. Placeholder API keys should trigger local fallback behavior rather than failed provider calls.
+
+### Impact
+Future model changes can happen through environment configuration and should be verified with `npm run smoke:openai`.
+
 ## 2026-05-16 - MCP smoke must verify least-privilege keys
 ### Decision
 `npm run smoke:mcp` supports an optional read-only API key to verify scoped keys hide write tools and reject write calls.

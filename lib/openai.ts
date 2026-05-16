@@ -27,10 +27,19 @@ import {
 
 function getOpenAIClient(): OpenAI | null {
   const apiKey = process.env.OPENAI_API_KEY
-  if (!apiKey || apiKey === '') {
+  if (
+    !apiKey ||
+    apiKey === '' ||
+    apiKey.toLowerCase().includes('your-') ||
+    apiKey.toLowerCase().includes('placeholder')
+  ) {
     return null
   }
   return new OpenAI({ apiKey })
+}
+
+function getOpenAIModel(): string {
+  return process.env.OPENAI_MODEL || 'gpt-4o'
 }
 
 export async function parseTaskInput(rawInput: string): Promise<ParsedTask | null> {
@@ -41,7 +50,7 @@ export async function parseTaskInput(rawInput: string): Promise<ParsedTask | nul
 
   try {
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o',
+      model: getOpenAIModel(),
       messages: [
         { role: 'system', content: TASK_PARSE_PROMPT },
         { role: 'user', content: rawInput },
@@ -79,7 +88,7 @@ export async function prioritizeTasks(tasks: Task[]): Promise<PrioritizedTask[] 
     }))
 
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o',
+      model: getOpenAIModel(),
       messages: [
         { role: 'system', content: PRIORITIZE_PROMPT },
         { role: 'user', content: JSON.stringify(tasksSummary) },
@@ -123,7 +132,7 @@ export async function generateBriefing(
     }))
 
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o',
+      model: getOpenAIModel(),
       messages: [
         { role: 'system', content: BRIEFING_PROMPT },
         {
@@ -153,7 +162,7 @@ export async function executeResearch(
 
   try {
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o',
+      model: getOpenAIModel(),
       messages: [
         { role: 'system', content: RESEARCH_PROMPT },
         {
@@ -181,7 +190,7 @@ export async function executeDraft(task: Task): Promise<DraftOutput | null> {
 
   try {
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o',
+      model: getOpenAIModel(),
       messages: [
         { role: 'system', content: DRAFT_PROMPT },
         {
@@ -209,7 +218,7 @@ export async function executePrep(task: Task): Promise<PrepOutput | null> {
 
   try {
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o',
+      model: getOpenAIModel(),
       messages: [
         { role: 'system', content: PREP_PROMPT },
         {
