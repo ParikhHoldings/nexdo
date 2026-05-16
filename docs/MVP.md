@@ -77,12 +77,13 @@ The daily briefing should summarize urgent work, quick wins, overdue work, and p
 
 Acceptance gate:
 - The briefing is visible in the main daily workspace.
-- It refreshes from current task state after capture/import in demo mode.
+- It refreshes from current task state after capture/import/edit changes.
 - Authenticated briefing requests validate inputs before rate-limit/provider work.
 
 Current evidence:
 - `DailyBriefing` renders on `/today`.
 - Playwright verifies the active-task count updates after adding a task.
+- Authenticated briefing requests refetch when the task-state signature or user name changes.
 - `/api/briefing` uses sanitized task input.
 
 ### 5. Execute bounded work

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Sun,
@@ -14,19 +14,44 @@ import { useBriefingStore, useTaskStore } from '@/lib/store'
 import { BriefingSkeleton } from '@/components/ui/skeleton'
 import { getGreeting } from '@/lib/utils'
 import { generateBriefingHeuristic } from '@/lib/task-intelligence'
-import type { BriefingContent } from '@/lib/database.types'
+import type { BriefingContent, Task } from '@/lib/database.types'
 
 interface DailyBriefingProps {
   userName?: string
+}
+
+function getBriefingSignature(tasks: Task[], userName: string): string {
+  return JSON.stringify({
+    userName,
+    tasks: tasks.map((task) => ({
+      id: task.id,
+      title: task.title,
+      status: task.status,
+      priority: task.priority,
+      due_date: task.due_date,
+      estimated_minutes: task.estimated_minutes,
+      people: task.people,
+      updated_at: task.updated_at,
+    })),
+  })
 }
 
 export function DailyBriefing({ userName = 'there' }: DailyBriefingProps) {
   const { briefing, isLoading, isDismissed, setBriefing, setLoading, dismiss } =
     useBriefingStore()
   const { tasks, selectTask, isAuthenticated } = useTaskStore()
+  const briefingSignature = useMemo(
+    () => getBriefingSignature(tasks, userName),
+    [tasks, userName]
+  )
+  const lastFetchedSignature = useRef<string | null>(null)
 
   useEffect(() => {
-    if (isDismissed || isAuthenticated) return
+    if (isAuthenticated) {
+      lastFetchedSignature.current = null
+      return
+    }
+    if (isDismissed) return
 
     setBriefing(
       tasks.length > 0 ? generateBriefingHeuristic(tasks, userName) : null
@@ -35,11 +60,18 @@ export function DailyBriefing({ userName = 'there' }: DailyBriefingProps) {
 
   useEffect(() => {
     if (!isAuthenticated) return
+    if (isDismissed) return
+
+    if (tasks.length === 0) {
+      lastFetchedSignature.current = null
+      setBriefing(null)
+      return
+    }
+
+    if (lastFetchedSignature.current === briefingSignature) return
 
     const fetchBriefing = async () => {
-      // Don't fetch if already have briefing or dismissed
-      if (briefing || isDismissed) return
-
+      lastFetchedSignature.current = briefingSignature
       setLoading(true)
       try {
         const response = await fetch('/api/briefing', {
@@ -62,11 +94,16 @@ export function DailyBriefing({ userName = 'there' }: DailyBriefingProps) {
       }
     }
 
-    // Only fetch if we have tasks
-    if (tasks.length > 0) {
-      fetchBriefing()
-    }
-  }, [briefing, isAuthenticated, isDismissed, setBriefing, setLoading, tasks, userName])
+    fetchBriefing()
+  }, [
+    briefingSignature,
+    isAuthenticated,
+    isDismissed,
+    setBriefing,
+    setLoading,
+    tasks,
+    userName,
+  ])
 
   const handleTaskClick = (taskId: string) => {
     const task = tasks.find((t) => t.id === taskId)

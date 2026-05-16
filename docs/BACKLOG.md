@@ -33,6 +33,7 @@
 - hardened profile updates with allowlisted timezone/work-type values and name length normalization
 - added deterministic local task intelligence fallbacks for demo/provider-missing flows
 - refreshed logged-out daily briefings from local demo task state after task capture/import
+- refreshed authenticated daily briefings when task state or user name changes instead of keeping the first briefing stale
 - persisted logged-out demo task changes to localStorage so added/imported/edited/completed/deleted demo tasks survive reloads
 - aligned the exported demo task updater with the main store so non-status edits do not clear completion timestamps
 - persisted logged-out demo profile changes to localStorage so no-auth settings saves do not hit authenticated profile APIs

@@ -35,6 +35,7 @@
 - Restored stricter build rails by adding typecheck/e2e scripts and removing build-time TypeScript/ESLint ignores.
 - Added deterministic local task intelligence for demo-mode parsing, prioritization, briefing, and bounded research/draft/prep outputs.
 - Refreshed logged-out daily briefings from local demo task state after task capture/import.
+- Refreshed authenticated daily briefings when task state or user name changes instead of keeping the first briefing stale.
 - Persisted logged-out demo task changes to localStorage so added, imported, edited, completed, and deleted demo tasks survive reloads.
 - Aligned the exported demo task updater with the main store so non-status edits preserve completion timestamps.
 - Persisted logged-out demo profile changes to localStorage so no-auth settings saves stay functional.
