@@ -52,6 +52,7 @@
 - hardened task mutation routes with allowlisted PATCH fields and owned-delete 404 handling
 - made task detail editing functional for title, context, due date, priority, action type, estimate, people, and tags
 - rolled back failed authenticated task edits/deletes and surfaced visible task-store error notifications instead of console-only failures
+- added focused helper coverage for AI task input validation, API-key scope mapping, quota response payloads, and rate-limit response headers
 - removed nonfunctional theme and notification controls from the launch app shell/settings until real behavior exists
 - aligned the Connect AI setup page with the Power-plan API access gate
 - surfaced settings profile/API-key failures in the UI and refreshed local profile state after authenticated saves
@@ -100,7 +101,7 @@
 - identify the fastest revenue angle for an AI-native task manager in this portfolio context
 - tighten landing/waitlist language around the clearest user promise
 - clarify whether Nexdo should lead with founder/operator use case or broader team use case
-- add focused tests for task validation, import normalization, quota/rate-limit helpers, and MCP tool handlers
+- add focused tests for DB-backed MCP tool handlers
 - verify import quota behavior against a real Supabase profile near the monthly task limit
 - document known local-development and production-environment setup steps
 
