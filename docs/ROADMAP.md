@@ -9,6 +9,7 @@
 - A Playwright smoke test covers the core logged-out demo path.
 - Playwright now covers demo workspace navigation across All Tasks search/filtering, Upcoming grouping, and Done task lifecycle.
 - Playwright smoke tests cover OpenAPI action schema availability, MCP/action auth failures, and action CORS headers.
+- Playwright tests cover DB-backed MCP tool handler behavior through an in-memory Supabase double, including owned reads, search, briefing, create idempotency, quota ordering, mutations, and audit logging.
 - GitHub Actions verification exists for install, lint, typecheck, build, and Playwright smoke testing.
 - PR #3 Web rails passed in GitHub Actions, and the Vercel preview deployment completed.
 - Dependency audit is clean after the Next.js 16, ESLint 9, and PostCSS remediation.

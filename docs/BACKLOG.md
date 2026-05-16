@@ -70,6 +70,7 @@
 - added Playwright smoke coverage for the logged-out core product path
 - added Playwright smoke coverage for All Tasks search/filtering, Upcoming grouping, and Done clear/reload lifecycle in demo mode
 - added Playwright smoke coverage for OpenAPI action schema, MCP/action auth failures, and action CORS headers
+- added focused DB-backed MCP tool handler coverage for owned reads, search, briefing, create idempotency, quota ordering, mutations, and audit logging
 - made the ChatGPT Actions OpenAPI spec emit the serving request origin when `NEXT_PUBLIC_APP_URL` is not configured
 - added GitHub Actions verification for install, lint, typecheck, build, and Playwright smoke testing
 - documented local development and production setup sequences in `docs/DEPLOYMENT.md`
@@ -102,7 +103,6 @@
 - identify the fastest revenue angle for an AI-native task manager in this portfolio context
 - tighten landing/waitlist language around the clearest user promise
 - clarify whether Nexdo should lead with founder/operator use case or broader team use case
-- add focused tests for DB-backed MCP tool handlers
 - verify import quota behavior against a real Supabase profile near the monthly task limit
 
 ## Low priority

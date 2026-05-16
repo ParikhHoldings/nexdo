@@ -215,8 +215,23 @@ export const MCP_TOOLS: MCPTool[] = [
 // Tool handlers
 type ToolHandler = (
   args: Record<string, unknown>,
-  userId: string
+  userId: string,
+  deps: MCPToolDependencies
 ) => Promise<ToolResult>
+
+export interface MCPToolDependencies {
+  createServiceClient: typeof createServiceClient
+  parseTaskInput: typeof parseTaskInput
+  generateBriefing: typeof generateBriefing
+  consumeQuota: typeof consumeQuota
+}
+
+const DEFAULT_MCP_TOOL_DEPENDENCIES: MCPToolDependencies = {
+  createServiceClient,
+  parseTaskInput,
+  generateBriefing,
+  consumeQuota,
+}
 
 function formatTaskForResponse(task: Task): Record<string, unknown> {
   return {
@@ -372,8 +387,8 @@ async function logAgentAction(input: {
   success: boolean
   error?: string | null
   durationMs: number
-}) {
-  const supabaseRaw = await createServiceClient()
+}, deps: MCPToolDependencies) {
+  const supabaseRaw = await deps.createServiceClient()
   if (!supabaseRaw) return
 
   const supabase = supabaseRaw as any
@@ -390,8 +405,8 @@ async function logAgentAction(input: {
   })
 }
 
-const listTasks: ToolHandler = async (args, userId) => {
-  const supabaseRaw = await createServiceClient()
+const listTasks: ToolHandler = async (args, userId, deps) => {
+  const supabaseRaw = await deps.createServiceClient()
   const supabase = supabaseRaw as any
   if (!supabaseRaw) {
     return {
@@ -443,8 +458,8 @@ const listTasks: ToolHandler = async (args, userId) => {
   }
 }
 
-const createTask: ToolHandler = async (args, userId) => {
-  const supabaseRaw = await createServiceClient()
+const createTask: ToolHandler = async (args, userId, deps) => {
+  const supabaseRaw = await deps.createServiceClient()
   const supabase = supabaseRaw as any
   if (!supabaseRaw) {
     return {
@@ -491,12 +506,12 @@ const createTask: ToolHandler = async (args, userId) => {
   }
 
   // Parse the natural language input
-  const parsed = await parseTaskInput(input)
+  const parsed = await deps.parseTaskInput(input)
   if (!parsed) {
     return toolError('Error: Failed to parse task input')
   }
 
-  const quota = await consumeQuota(userId, 'task_create')
+  const quota = await deps.consumeQuota(userId, 'task_create')
   if (!quota.allowed) {
     return toolError(
       `Error: ${quota.reason || 'Task quota exceeded for this account'}`
@@ -550,8 +565,8 @@ const createTask: ToolHandler = async (args, userId) => {
   return taskResponse(task)
 }
 
-const completeTask: ToolHandler = async (args, userId) => {
-  const supabaseRaw = await createServiceClient()
+const completeTask: ToolHandler = async (args, userId, deps) => {
+  const supabaseRaw = await deps.createServiceClient()
   const supabase = supabaseRaw as any
   if (!supabaseRaw) {
     return {
@@ -593,8 +608,8 @@ const completeTask: ToolHandler = async (args, userId) => {
   }
 }
 
-const updateTask: ToolHandler = async (args, userId) => {
-  const supabaseRaw = await createServiceClient()
+const updateTask: ToolHandler = async (args, userId, deps) => {
+  const supabaseRaw = await deps.createServiceClient()
   const supabase = supabaseRaw as any
   if (!supabaseRaw) {
     return {
@@ -714,8 +729,8 @@ const updateTask: ToolHandler = async (args, userId) => {
   }
 }
 
-const getBriefing: ToolHandler = async (args, userId) => {
-  const supabaseRaw = await createServiceClient()
+const getBriefing: ToolHandler = async (args, userId, deps) => {
+  const supabaseRaw = await deps.createServiceClient()
   const supabase = supabaseRaw as any
   if (!supabaseRaw) {
     return {
@@ -747,7 +762,7 @@ const getBriefing: ToolHandler = async (args, userId) => {
     }
   }
 
-  const briefing = await generateBriefing(
+  const briefing = await deps.generateBriefing(
     tasks || [],
     profile?.full_name || 'there'
   )
@@ -764,8 +779,8 @@ const getBriefing: ToolHandler = async (args, userId) => {
   }
 }
 
-const searchTasks: ToolHandler = async (args, userId) => {
-  const supabaseRaw = await createServiceClient()
+const searchTasks: ToolHandler = async (args, userId, deps) => {
+  const supabaseRaw = await deps.createServiceClient()
   const supabase = supabaseRaw as any
   if (!supabaseRaw) {
     return {
@@ -814,8 +829,8 @@ const searchTasks: ToolHandler = async (args, userId) => {
   }
 }
 
-const getTask: ToolHandler = async (args, userId) => {
-  const supabaseRaw = await createServiceClient()
+const getTask: ToolHandler = async (args, userId, deps) => {
+  const supabaseRaw = await deps.createServiceClient()
   const supabase = supabaseRaw as any
   if (!supabaseRaw) {
     return {
@@ -884,6 +899,20 @@ export async function executeTool(
   args: Record<string, unknown>,
   userId: string
 ): Promise<ToolResult> {
+  return executeToolWithDependencies(
+    name,
+    args,
+    userId,
+    DEFAULT_MCP_TOOL_DEPENDENCIES
+  )
+}
+
+export async function executeToolWithDependencies(
+  name: string,
+  args: Record<string, unknown>,
+  userId: string,
+  deps: MCPToolDependencies
+): Promise<ToolResult> {
   const handler = TOOL_HANDLERS[name]
   if (!handler) {
     return {
@@ -895,7 +924,7 @@ export async function executeTool(
   const startedAt = Date.now()
   let result: ToolResult
   try {
-    result = await handler(args, userId)
+    result = await handler(args, userId, deps)
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error'
     result = {
@@ -911,7 +940,7 @@ export async function executeTool(
     success: !result.isError,
     error: result.isError ? result.content[0]?.text : null,
     durationMs: Date.now() - startedAt,
-  }).catch(console.error)
+  }, deps).catch(console.error)
 
   return result
 }
