@@ -21,6 +21,7 @@ Make Nexdo a credible, launchable early-access product by Monday, 2026-05-18, wi
 | Make front-end usable for humans today | Logged-out `/today` demo flow supports task capture, structured parsing, briefing, prioritization, task detail, and bounded agent output | Locally verified |
 | Keep demo useful without provider secrets | `lib/task-intelligence.ts`, `lib/openai.ts`, `components/task-input.tsx`, `components/daily-briefing.tsx`, `components/task-detail.tsx`, `app/(app)/today/page.tsx` | Done |
 | Harden core task mutation routes | `PATCH /api/tasks/[id]` now allowlists and validates user-editable fields; `DELETE /api/tasks/[id]` returns 404 when no owned task is deleted; e2e covers unauthenticated/config guardrails | Done |
+| Harden authenticated agent execution | `/api/agent/execute` now requires a `taskId`, loads the owned task from Supabase, rejects non-executable task types, saves `agent_output` server-side, and checks quota-consumption failures | Done |
 | Restore strict build rails | `next.config.mjs` no longer ignores TypeScript/ESLint; scripts include `typecheck`; `npm run build` passes | Done |
 | Add browser smoke coverage | `playwright.config.ts`, `tests/e2e/demo-smoke.spec.ts` | Done |
 | Add AI-agent and billing guard smoke coverage | `tests/e2e/agent-surfaces.spec.ts` covers OpenAPI schema, auth failures, action CORS headers, and unsupported Stripe checkout plan rejection | Done |
@@ -54,7 +55,7 @@ Make Nexdo a credible, launchable early-access product by Monday, 2026-05-18, wi
 - PR #3 Vercel preview
 
 ## Current completion judgment
-The Monday early-access demo, local build/test rails, task mutation guards, and billing route guards are in materially better shape and are locally verified. The broader objective is not complete as a production launch because provider-backed flows, real database/auth, Stripe billing, authenticated MCP tool execution, deployment rails, and approvals remain unverified.
+The Monday early-access demo, local build/test rails, task mutation guards, authenticated agent execution guards, and billing route guards are in materially better shape and are locally verified. The broader objective is not complete as a production launch because provider-backed flows, real database/auth, Stripe billing, authenticated MCP tool execution, deployment rails, and approvals remain unverified.
 
 ## Next required work
 1. Configure a real Supabase project and run `npm run smoke:supabase -- --write` to verify migrations, auth, profile creation, RLS, task CRUD, and audit events.

@@ -2,12 +2,61 @@ import { NextRequest, NextResponse } from 'next/server'
 import { executeResearch, executeDraft, executePrep } from '@/lib/openai'
 import type { Task } from '@/lib/database.types'
 import { requireUser } from '@/lib/api-auth'
+import { createClient } from '@/lib/supabase/server'
 import { consumeRateLimit, RATE_LIMITS, rateLimitResponseHeaders } from '@/lib/rate-limit'
 import { checkQuota, consumeQuota, quotaExceededResponse } from '@/lib/quota'
 
 export async function POST(request: NextRequest) {
   const auth = await requireUser()
   if (!auth.ok) return auth.response
+
+  let body: { taskId?: unknown }
+  try {
+    body = await request.json()
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+  }
+
+  if (typeof body.taskId !== 'string' || body.taskId.trim().length === 0) {
+    return NextResponse.json({ error: 'taskId is required' }, { status: 400 })
+  }
+
+  const supabase = await createClient()
+  if (!supabase) {
+    return NextResponse.json(
+      { error: 'Supabase not configured' },
+      { status: 503 }
+    )
+  }
+
+  const { data: task, error: taskError } = await (supabase as any)
+    .from('tasks')
+    .select('*')
+    .eq('id', body.taskId.trim())
+    .eq('user_id', auth.userId)
+    .maybeSingle()
+
+  if (taskError) {
+    console.error('Error loading task for agent execution:', taskError)
+    return NextResponse.json({ error: 'Failed to load task' }, { status: 500 })
+  }
+
+  if (!task) {
+    return NextResponse.json({ error: 'Task not found' }, { status: 404 })
+  }
+
+  const typedTask = task as Task
+
+  if (typedTask.action_type === 'manual' || typedTask.action_type === 'remind') {
+    return NextResponse.json(
+      { error: 'Task type does not support execution' },
+      { status: 400 }
+    )
+  }
+
+  if (!['research', 'draft', 'prep'].includes(typedTask.action_type)) {
+    return NextResponse.json({ error: 'Unknown action type' }, { status: 400 })
+  }
 
   // Gate 1: rate limit (bursts of calls from a single user).
   const gate = await consumeRateLimit(auth.userId, RATE_LIMITS.aiAgent)
@@ -29,21 +78,6 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { task } = await request.json()
-
-    if (!task || !task.action_type) {
-      return NextResponse.json({ error: 'Invalid task' }, { status: 400 })
-    }
-
-    const typedTask = task as Task
-
-    if (typedTask.action_type === 'manual' || typedTask.action_type === 'remind') {
-      return NextResponse.json(
-        { error: 'Task type does not support execution' },
-        { status: 400 }
-      )
-    }
-
     let result = null
     switch (typedTask.action_type) {
       case 'research':
@@ -63,8 +97,43 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to execute task' }, { status: 500 })
     }
 
+    const { data: updatedTask, error: updateError } = await (supabase as any)
+      .from('tasks')
+      .update({
+        agent_output: result,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', typedTask.id)
+      .eq('user_id', auth.userId)
+      .select('id')
+      .maybeSingle()
+
+    if (updateError) {
+      console.error('Error saving agent output:', updateError)
+      return NextResponse.json(
+        { error: 'Failed to save agent output' },
+        { status: 500 }
+      )
+    }
+
+    if (!updatedTask) {
+      return NextResponse.json({ error: 'Task not found' }, { status: 404 })
+    }
+
     // Only consume quota after a successful run so users aren't charged for failures.
-    await consumeQuota(auth.userId, 'agent_execute')
+    const consumed = await consumeQuota(auth.userId, 'agent_execute')
+    if (!consumed.allowed) {
+      const status =
+        consumed.reason === 'Failed to record usage' ||
+        consumed.reason === 'Service unavailable' ||
+        consumed.reason === 'No profile'
+          ? 500
+          : 402
+      return NextResponse.json(
+        quotaExceededResponse(consumed),
+        { status }
+      )
+    }
 
     return NextResponse.json(result, {
       headers: rateLimitResponseHeaders(gate, RATE_LIMITS.aiAgent.limit),

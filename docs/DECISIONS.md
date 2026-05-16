@@ -1,5 +1,15 @@
 # Decisions
 
+## 2026-05-16 - Agent execution must operate on owned task records
+### Decision
+Authenticated `/api/agent/execute` requests must provide a task ID. The server loads the task for the current user, verifies it is executable, runs the bounded agent action, saves the result to `agent_output`, and then records quota usage.
+
+### Why
+Agent execution is a core trust boundary. It should not execute arbitrary client-supplied task objects or silently ignore quota recording failures.
+
+### Impact
+Future agent execution features should keep the owned-record boundary and add real Supabase/OpenAI smoke coverage before production use.
+
 ## 2026-05-16 - Keep billing entitlements tied to server-known prices
 ### Decision
 Checkout requests may choose only the `pro` or `power` plan key, and the server derives the Stripe price ID from environment configuration. Stripe webhooks must ignore unknown price IDs instead of defaulting to a paid Nexdo tier.

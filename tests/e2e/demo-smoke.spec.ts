@@ -58,4 +58,9 @@ test('task mutation endpoints require configured auth', async ({ request }) => {
 
   const del = await request.delete('/api/tasks/not-a-real-task')
   expect([401, 503]).toContain(del.status())
+
+  const execute = await request.post('/api/agent/execute', {
+    data: { taskId: 'not-a-real-task' },
+  })
+  expect([401, 503]).toContain(execute.status())
 })

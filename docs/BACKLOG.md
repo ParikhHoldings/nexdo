@@ -18,6 +18,8 @@
 - enabled strict lint/typecheck behavior in production builds
 - added deterministic local task intelligence fallbacks for demo/provider-missing flows
 - hardened task mutation routes with allowlisted PATCH fields and owned-delete 404 handling
+- hardened authenticated agent execution so the server runs only owned executable task records and persists output
+- fixed optimistic task updates so agent-output edits do not accidentally clear `completed_at`
 - hardened Stripe checkout so clients can only request server-known `pro` or `power` plans and cannot override price IDs
 - hardened Stripe webhooks so unknown price IDs do not grant paid-tier access by default
 - added Playwright smoke coverage for the logged-out core product path
@@ -37,6 +39,7 @@
 - run `npm run smoke:stripe -- --write` with Stripe test-mode keys, then verify webhook events and quota updates
 - smoke test auth, profile creation, task CRUD, demo-mode fallback, and app navigation
 - smoke test OpenAI task parse, prioritization, daily briefing, and agent execution with real env
+- smoke test authenticated agent execution against an owned Supabase task after provider env is configured
 - smoke test Stripe checkout, portal, webhook idempotency, and plan/quota updates in test mode
 - add webhook-level regression coverage for unknown Stripe price IDs once route-handler tests are in place
 - smoke test MCP JSON-RPC and ChatGPT Actions OpenAPI/API-key flow

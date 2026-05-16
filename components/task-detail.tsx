@@ -177,7 +177,11 @@ export function TaskDetail() {
     setExecutionError(null)
 
     const saveAgentOutput = (output: AgentOutput) => {
-      updateTask(task.id, { agent_output: output as unknown as Task['agent_output'] })
+      updateTask(
+        task.id,
+        { agent_output: output as unknown as Task['agent_output'] },
+        { persist: false }
+      )
     }
 
     if (!isAuthenticated) {
@@ -193,7 +197,7 @@ export function TaskDetail() {
       const response = await fetch('/api/agent/execute', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ taskId: task.id, task }),
+        body: JSON.stringify({ taskId: task.id }),
       })
 
       if (!response.ok) {
@@ -208,7 +212,7 @@ export function TaskDetail() {
       }
 
       const result = await response.json()
-      updateTask(task.id, { agent_output: result })
+      saveAgentOutput(result)
     } catch {
       if (!isAuthenticated) {
         const fallback = executeTaskHeuristic(task)

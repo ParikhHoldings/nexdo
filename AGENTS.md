@@ -20,7 +20,7 @@ The product promise should be grounded in what the code actually supports:
 - natural-language task capture with AI parsing
 - priority, due date, context, people, tags, action type, estimate, and energy metadata
 - daily briefing and prioritization generated from task context
-- limited agent execution for `research`, `draft`, and `prep` task types
+- limited agent execution for owned `research`, `draft`, and `prep` task records, with server-side output persistence
 - demo-mode task data when Supabase is unavailable or the visitor is logged out
 - imports from Todoist plus CSV, ICS, JSON/Trello/Things-style sources, with some UI cards for future OAuth sources
 - API key based MCP/ChatGPT Actions interop for listing, creating, completing, updating, searching, and briefing tasks
@@ -36,7 +36,7 @@ Current local verification from 2026-05-16:
 - `npm run lint` passed
 - `npm run typecheck` passed
 - `npm run build` passed with strict TypeScript and ESLint checks enabled
-- `npm run test:e2e` passed for the logged-out `/today` demo flow plus MCP/OpenAPI/action auth smoke tests and a Stripe checkout plan guard
+- `npm run test:e2e` passed for the logged-out `/today` demo flow plus task/agent auth guards, MCP/OpenAPI/action auth smoke tests, and a Stripe checkout plan guard
 - `npm audit --audit-level=moderate` passed with 0 vulnerabilities after the Next.js 16 / ESLint 9 upgrade
 
 Current PR verification from 2026-05-16:

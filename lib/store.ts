@@ -14,7 +14,7 @@ interface TaskState {
   // Actions
   setTasks: (tasks: Task[]) => void
   addTask: (task: Task) => void
-  updateTask: (id: string, updates: TaskUpdate) => void
+  updateTask: (id: string, updates: TaskUpdate, options?: { persist?: boolean }) => void
   deleteTask: (id: string) => void
   selectTask: (task: Task | null) => void
   openDetail: () => void
@@ -39,33 +39,34 @@ export const useTaskStore = create<TaskState>((set, get) => ({
       tasks: [task, ...state.tasks],
     })),
 
-  updateTask: (id, updates) => {
+  updateTask: (id, updates, options) => {
+    const updatedAt = new Date().toISOString()
+    const applyUpdates = (task: Task): Task => ({
+      ...task,
+      ...updates,
+      updated_at: updatedAt,
+      completed_at:
+        updates.completed_at !== undefined
+          ? updates.completed_at
+          : updates.status === 'done' && !task.completed_at
+            ? updatedAt
+            : updates.status !== undefined && updates.status !== 'done'
+              ? null
+              : task.completed_at,
+    })
+
     // Optimistic update
     set((state) => ({
-      tasks: state.tasks.map((t) =>
-        t.id === id
-          ? {
-              ...t,
-              ...updates,
-              updated_at: new Date().toISOString(),
-              completed_at:
-                updates.status === 'done' && !t.completed_at
-                  ? new Date().toISOString()
-                  : updates.status !== 'done'
-                    ? null
-                    : t.completed_at,
-            }
-          : t
-      ),
+      tasks: state.tasks.map((t) => (t.id === id ? applyUpdates(t) : t)),
       selectedTask:
         state.selectedTask?.id === id
-          ? { ...state.selectedTask, ...updates }
+          ? applyUpdates(state.selectedTask)
           : state.selectedTask,
     }))
 
     // Persist to Supabase if authenticated
     const { isAuthenticated } = get()
-    if (isAuthenticated) {
+    if (isAuthenticated && options?.persist !== false) {
       fetch(`/api/tasks/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
