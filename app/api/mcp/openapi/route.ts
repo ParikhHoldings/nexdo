@@ -92,6 +92,19 @@ const openApiSpec = {
                     type: 'string',
                     description: 'Natural language task description (e.g., "Call John about the project tomorrow at 2pm - high priority")',
                   },
+                  source_agent_id: {
+                    type: 'string',
+                    description: 'Optional stable identifier for the agent creating the task',
+                  },
+                  external_ref: {
+                    type: 'string',
+                    description: 'Optional idempotency/reference id from the calling agent system',
+                  },
+                  agent_metadata: {
+                    type: 'object',
+                    additionalProperties: true,
+                    description: 'Optional structured metadata from the calling agent',
+                  },
                 },
               },
             },
@@ -198,6 +211,24 @@ const openApiSpec = {
                   context: {
                     type: 'string',
                     description: 'Additional context or notes about the task',
+                  },
+                  source_agent_id: {
+                    type: 'string',
+                    description: 'Optional stable identifier for the agent updating the task',
+                  },
+                  external_ref: {
+                    type: 'string',
+                    description: 'Optional idempotency/reference id from the calling agent system',
+                  },
+                  ingestion_intent: {
+                    type: 'string',
+                    enum: ['create', 'update', 'complete', 'auto'],
+                    description: 'How the agent intended this task mutation to be interpreted',
+                  },
+                  agent_metadata: {
+                    type: 'object',
+                    additionalProperties: true,
+                    description: 'Optional structured metadata from the calling agent',
                   },
                 },
               },
@@ -363,6 +394,10 @@ const openApiSpec = {
         properties: {
           id: { type: 'string' },
           title: { type: 'string' },
+          source: {
+            type: 'string',
+            enum: ['manual', 'email', 'voice', 'api', 'agent'],
+          },
           priority: {
             type: 'string',
             enum: ['urgent', 'high', 'medium', 'low'],
@@ -374,6 +409,10 @@ const openApiSpec = {
           due_date: { type: 'string', format: 'date', nullable: true },
           due_time: { type: 'string', nullable: true },
           context: { type: 'string', nullable: true },
+          action_type: {
+            type: 'string',
+            enum: ['manual', 'research', 'draft', 'prep', 'remind'],
+          },
           tags: {
             type: 'array',
             items: { type: 'string' },
@@ -385,6 +424,13 @@ const openApiSpec = {
             nullable: true,
           },
           estimated_minutes: { type: 'integer', nullable: true },
+          source_agent_id: { type: 'string', nullable: true },
+          external_ref: { type: 'string', nullable: true },
+          ingestion_intent: {
+            type: 'string',
+            enum: ['create', 'update', 'complete', 'auto'],
+            nullable: true,
+          },
         },
       },
       TaskDetails: {
@@ -395,10 +441,6 @@ const openApiSpec = {
             properties: {
               description: { type: 'string', nullable: true },
               raw_input: { type: 'string', nullable: true },
-              action_type: {
-                type: 'string',
-                enum: ['manual', 'research', 'draft', 'prep', 'remind'],
-              },
               energy_level: {
                 type: 'string',
                 enum: ['deep', 'light', 'quick'],

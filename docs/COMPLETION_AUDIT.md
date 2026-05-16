@@ -33,6 +33,7 @@ Make Nexdo a credible, launchable early-access product by Monday, 2026-05-18, wi
 | Verify Stripe checkout/portal/webhook/quota updates | Code exists; Stripe test-mode flow not exercised | Missing |
 | Verify authenticated MCP/API-key flow against real task data | OpenAPI/auth guardrails pass; real API-key tool execution not exercised | Missing |
 | Provide a repeatable MCP/API-key smoke command | `npm run smoke:mcp` supports read-only and explicit `--write` authenticated checks | Done |
+| Make agent-created tasks distinguishable | MCP create/update schemas and handlers expose `source_agent_id`, `external_ref`, `ingestion_intent`, and `agent_metadata` | Done |
 | Add scoped API keys and agent audit trails | Current API key and agent metadata fields exist; scoped permissions and audit trails are not implemented | Deferred |
 
 ## Commands verified locally

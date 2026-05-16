@@ -6,6 +6,7 @@
 - added `docs/COMPLETION_AUDIT.md` to map the active goal to evidence and remaining gaps
 - added deployment rails and an environment preflight verifier
 - added an authenticated MCP smoke script for real API-key verification
+- exposed MCP create/update metadata for agent-created task traceability
 - opened PR #3 and verified GitHub Actions Web rails plus Vercel preview deployment
 - enabled strict lint/typecheck behavior in production builds
 - added deterministic local task intelligence fallbacks for demo/provider-missing flows

@@ -61,6 +61,18 @@ export const MCP_TOOLS: MCPTool[] = [
           description:
             'Natural language task description (e.g., "Call John about the project tomorrow at 2pm - high priority")',
         },
+        source_agent_id: {
+          type: 'string',
+          description: 'Optional stable identifier for the agent creating the task',
+        },
+        external_ref: {
+          type: 'string',
+          description: 'Optional idempotency/reference id from the calling agent system',
+        },
+        agent_metadata: {
+          type: 'object',
+          description: 'Optional structured metadata from the calling agent',
+        },
       },
       required: ['input'],
     },
@@ -110,6 +122,23 @@ export const MCP_TOOLS: MCPTool[] = [
         context: {
           type: 'string',
           description: 'Additional context or notes about the task',
+        },
+        source_agent_id: {
+          type: 'string',
+          description: 'Optional stable identifier for the agent updating the task',
+        },
+        external_ref: {
+          type: 'string',
+          description: 'Optional idempotency/reference id from the calling agent system',
+        },
+        ingestion_intent: {
+          type: 'string',
+          enum: ['create', 'update', 'complete', 'auto'],
+          description: 'How the agent intended this task mutation to be interpreted',
+        },
+        agent_metadata: {
+          type: 'object',
+          description: 'Optional structured metadata from the calling agent',
         },
       },
       required: ['task_id'],
@@ -169,15 +198,30 @@ function formatTaskForResponse(task: Task): Record<string, unknown> {
   return {
     id: task.id,
     title: task.title,
+    source: task.source,
     priority: task.priority,
     status: task.status,
     due_date: task.due_date,
     due_time: task.due_time,
     context: task.context,
+    action_type: task.action_type,
     tags: task.tags,
     people: task.people,
     estimated_minutes: task.estimated_minutes,
+    source_agent_id: task.source_agent_id,
+    external_ref: task.external_ref,
+    ingestion_intent: task.ingestion_intent,
   }
+}
+
+function optionalString(value: unknown): string | null {
+  return typeof value === 'string' && value.trim() ? value.trim() : null
+}
+
+function optionalMetadata(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null
 }
 
 const listTasks: ToolHandler = async (args, userId) => {
@@ -243,6 +287,8 @@ const createTask: ToolHandler = async (args, userId) => {
     }
   }
 
+  const sourceAgentId = optionalString(args.source_agent_id)
+
   // Parse the natural language input
   const parsed = await parseTaskInput(input)
   if (!parsed) {
@@ -268,7 +314,11 @@ const createTask: ToolHandler = async (args, userId) => {
       estimated_minutes: parsed.estimated_minutes,
       energy_level: parsed.energy_level,
       status: 'todo',
-      source: 'api',
+      source: sourceAgentId ? 'agent' : 'api',
+      source_agent_id: sourceAgentId,
+      external_ref: optionalString(args.external_ref),
+      ingestion_intent: 'create',
+      agent_metadata: optionalMetadata(args.agent_metadata),
     })
     .select()
     .single()
@@ -373,6 +423,13 @@ const updateTask: ToolHandler = async (args, userId) => {
     }
   }
   if (args.context !== undefined) updates.context = args.context
+  if (args.source_agent_id !== undefined) {
+    updates.source_agent_id = optionalString(args.source_agent_id)
+    if (updates.source_agent_id) updates.source = 'agent'
+  }
+  if (args.external_ref !== undefined) updates.external_ref = optionalString(args.external_ref)
+  if (args.ingestion_intent !== undefined) updates.ingestion_intent = args.ingestion_intent
+  if (args.agent_metadata !== undefined) updates.agent_metadata = optionalMetadata(args.agent_metadata)
 
   const { data: task, error } = await supabase
     .from('tasks')

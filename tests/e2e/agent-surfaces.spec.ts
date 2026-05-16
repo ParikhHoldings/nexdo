@@ -33,6 +33,15 @@ test('OpenAPI exposes the agent action contract', async ({ request }) => {
   }
 
   expect(operationIds.size).toBe(actionTools.length)
+  const createTaskSchema =
+    spec.paths['/api/mcp/actions/create_task'].post.requestBody.content[
+      'application/json'
+    ].schema
+  expect(createTaskSchema.properties.source_agent_id).toBeTruthy()
+  expect(createTaskSchema.properties.external_ref).toBeTruthy()
+  expect(createTaskSchema.properties.agent_metadata).toBeTruthy()
+  expect(spec.components.schemas.Task.properties.source_agent_id).toBeTruthy()
+  expect(spec.components.schemas.Task.properties.ingestion_intent).toBeTruthy()
 })
 
 test('agent endpoints enforce auth and advertise CORS for action clients', async ({
