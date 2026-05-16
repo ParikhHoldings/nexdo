@@ -6,6 +6,7 @@
 - added `docs/COMPLETION_AUDIT.md` to map the active goal to evidence and remaining gaps
 - added deployment rails and an environment preflight verifier
 - added an authenticated MCP smoke script for real API-key verification
+- opened PR #3 and verified GitHub Actions Web rails plus Vercel preview deployment
 - enabled strict lint/typecheck behavior in production builds
 - added deterministic local task intelligence fallbacks for demo/provider-missing flows
 - added Playwright smoke coverage for the logged-out core product path
@@ -19,7 +20,6 @@
 - verified `npm ci`, `npm run lint`, `npm run typecheck`, `npm run build`, and `npm run test:e2e` locally
 
 ## High priority
-- let the new GitHub Actions workflow run on a PR and fix any CI-runner differences
 - configure and verify the real production deploy target
 - verify Supabase migrations against a real project, including RLS and service-role RPCs
 - smoke test auth, profile creation, task CRUD, demo-mode fallback, and app navigation

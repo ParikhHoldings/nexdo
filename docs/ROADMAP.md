@@ -9,6 +9,7 @@
 - A Playwright smoke test covers the core logged-out demo path.
 - Playwright smoke tests cover OpenAPI action schema availability, MCP/action auth failures, and action CORS headers.
 - GitHub Actions verification exists for install, lint, typecheck, build, and Playwright smoke testing.
+- PR #3 Web rails passed in GitHub Actions, and the Vercel preview deployment completed.
 - Dependency audit is clean after the Next.js 16, ESLint 9, and PostCSS remediation.
 - `npm ci`, `npm run lint`, `npm run typecheck`, `npm run build`, and `npm run test:e2e` passed locally on 2026-05-16.
 - Import, billing/quota, MCP, and ChatGPT Actions surfaces exist.

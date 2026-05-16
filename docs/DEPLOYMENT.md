@@ -1,7 +1,7 @@
 # Deployment
 
 ## Current status
-No production deploy target has been verified in this operating pass. Treat Nexdo as locally verified, not production-ready, until the checks below pass against the real deployment environment.
+PR #3 passed the GitHub Actions Web rails workflow and completed a Vercel preview deployment on 2026-05-16. No production deploy target or production provider credentials were verified in this operating pass. Treat Nexdo as preview-verified, not production-ready, until the checks below pass against the real deployment environment.
 
 ## Branch and release rails
 - Use `main` as the production branch unless a deploy platform is configured differently.

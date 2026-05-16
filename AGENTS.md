@@ -36,6 +36,10 @@ Current local verification from 2026-05-16:
 - `npm run test:e2e` passed for the logged-out `/today` demo flow plus MCP/OpenAPI/action auth smoke tests
 - `npm audit --audit-level=moderate` passed with 0 vulnerabilities after the Next.js 16 / ESLint 9 upgrade
 
+Current PR verification from 2026-05-16:
+- PR #3 Web rails passed in GitHub Actions
+- PR #3 Vercel preview deployment completed
+
 Production environment, Supabase migrations, OpenAI provider calls, Stripe test-mode flows, MCP/API-key flows, and deployment rails remain unverified in this pass.
 
 ## ICP And Positioning

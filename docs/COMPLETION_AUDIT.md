@@ -23,10 +23,11 @@ Make Nexdo a credible, launchable early-access product by Monday, 2026-05-18, wi
 | Restore strict build rails | `next.config.mjs` no longer ignores TypeScript/ESLint; scripts include `typecheck`; `npm run build` passes | Done |
 | Add browser smoke coverage | `playwright.config.ts`, `tests/e2e/demo-smoke.spec.ts` | Done |
 | Add AI-agent surface smoke coverage | `tests/e2e/agent-surfaces.spec.ts` covers OpenAPI schema, auth failures, and action CORS headers | Done |
-| Add CI verification | `.github/workflows/verify.yml` runs install, lint, typecheck, build, and Playwright smoke tests | Added, not yet observed in GitHub |
+| Add CI verification | `.github/workflows/verify.yml` runs install, lint, typecheck, build, and Playwright smoke tests; PR #3 Web rails passed | Done |
 | Tighten public copy | `app/(marketing)/page.tsx`, auth pages, metadata, docs guardrails | Draft tightened; Quill/founder approval still required before public use |
 | Remove dependency audit blocker | Next.js 16, ESLint 9 flat config, PostCSS override; `npm audit --audit-level=moderate` reports 0 vulnerabilities | Done |
 | Verify deploy target and production env | No production env or deploy target credentials/config were exercised in this pass | Missing |
+| Verify preview deploy rail | PR #3 Vercel preview deployment completed | Done |
 | Verify Supabase migrations/auth/RLS/task CRUD against real project | Migrations and code exist, but real project smoke test was not run | Missing |
 | Verify OpenAI provider-backed parse/prioritize/briefing/execution | Fallbacks and UI path work; real provider calls not exercised | Missing |
 | Verify Stripe checkout/portal/webhook/quota updates | Code exists; Stripe test-mode flow not exercised | Missing |
@@ -42,14 +43,15 @@ Make Nexdo a credible, launchable early-access product by Monday, 2026-05-18, wi
 - `npm run test:e2e`
 - `npm audit --audit-level=moderate`
 - `git diff --check`
+- PR #3 GitHub Actions Web rails
+- PR #3 Vercel preview
 
 ## Current completion judgment
 The Monday early-access demo and local build/test rails are in materially better shape and are locally verified. The broader objective is not complete as a production launch because provider-backed flows, real database/auth, Stripe billing, authenticated MCP tool execution, deployment rails, and approvals remain unverified.
 
 ## Next required work
-1. Run the GitHub Actions workflow on a PR/branch and fix any CI-only issues.
-2. Configure a real Supabase project and verify migrations, auth, profile creation, RLS, and task CRUD.
-3. Exercise OpenAI-backed parse, prioritization, briefing, and bounded agent execution with real credentials.
-4. Exercise Stripe checkout, portal, webhook, plan updates, quota enforcement, and idempotency in test mode.
-5. Generate an API key and run authenticated MCP/ChatGPT Actions tool execution against real task data with `npm run smoke:mcp`.
-6. Route public copy through Quill/founder approval before external launch use.
+1. Configure a real Supabase project and verify migrations, auth, profile creation, RLS, and task CRUD.
+2. Exercise OpenAI-backed parse, prioritization, briefing, and bounded agent execution with real credentials.
+3. Exercise Stripe checkout, portal, webhook, plan updates, quota enforcement, and idempotency in test mode.
+4. Generate an API key and run authenticated MCP/ChatGPT Actions tool execution against real task data with `npm run smoke:mcp`.
+5. Route public copy through Quill/founder approval before external launch use.

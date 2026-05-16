@@ -8,6 +8,7 @@
 - Added `docs/COMPLETION_AUDIT.md` to map the active goal to concrete evidence and remaining gaps.
 - Added `docs/DEPLOYMENT.md` and `npm run verify:env` for deploy/env preflight rails.
 - Added `npm run smoke:mcp` for authenticated MCP/API-key verification against a real deployment.
+- Opened PR #3 and verified GitHub Actions Web rails plus Vercel preview deployment.
 - Updated vision, roadmap, backlog, decisions, metrics, marketing, and research docs to align with the current implementation.
 - Restored stricter build rails by adding typecheck/e2e scripts and removing build-time TypeScript/ESLint ignores.
 - Added deterministic local task intelligence for demo-mode parsing, prioritization, briefing, and bounded research/draft/prep outputs.

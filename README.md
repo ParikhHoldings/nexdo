@@ -21,6 +21,8 @@ Last checked on 2026-05-16:
 - `npm run typecheck` passed
 - `npm run build` passed
 - `npm run test:e2e` passed for the logged-out `/today` demo flow plus MCP/OpenAPI/action auth smoke tests
+- PR #3 Web rails passed in GitHub Actions
+- PR #3 Vercel preview deployment completed
 
 Still unverified: production env, Supabase migrations/auth against a real project, OpenAI provider calls, Stripe test-mode flows, MCP/API-key flows, and deployment rails. `npm audit --audit-level=moderate` passes with 0 vulnerabilities after the Next.js 16 / ESLint 9 upgrade.
 
