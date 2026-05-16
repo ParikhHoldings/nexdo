@@ -48,6 +48,18 @@ Write smoke that creates and completes a disposable task:
 NEXDO_API_KEY=nxd_... npm run smoke:mcp -- --url=https://your-deploy.example --write
 ```
 
+Read-only Supabase schema smoke:
+
+```bash
+npm run smoke:supabase
+```
+
+Write Supabase smoke that creates and deletes a disposable auth user, task, and audit event:
+
+```bash
+npm run smoke:supabase -- --write
+```
+
 ## Rollback notes
 - Keep the last known-good deploy available in the deploy platform.
 - If a release breaks auth, billing, or task writes, roll back before attempting live data fixes.

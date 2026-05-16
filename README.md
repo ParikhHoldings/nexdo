@@ -45,6 +45,7 @@ npm run typecheck
 npm run build
 npm run test:e2e
 npm run verify:env
+npm run smoke:supabase
 npm run smoke:mcp
 ```
 

@@ -29,6 +29,7 @@ Make Nexdo a credible, launchable early-access product by Monday, 2026-05-18, wi
 | Verify deploy target and production env | No production env or deploy target credentials/config were exercised in this pass | Missing |
 | Verify preview deploy rail | PR #3 Vercel preview deployment completed | Done |
 | Verify Supabase migrations/auth/RLS/task CRUD against real project | Migrations and code exist, but real project smoke test was not run | Missing |
+| Provide a repeatable Supabase smoke command | `npm run smoke:supabase` checks schema columns; `npm run smoke:supabase -- --write` creates/deletes a smoke auth user, verifies profile trigger, task CRUD through RLS, public RLS isolation, and audit-event access | Done |
 | Verify OpenAI provider-backed parse/prioritize/briefing/execution | Fallbacks and UI path work; real provider calls not exercised | Missing |
 | Verify Stripe checkout/portal/webhook/quota updates | Code exists; Stripe test-mode flow not exercised | Missing |
 | Verify authenticated MCP/API-key flow against real task data | OpenAPI/auth/scope guardrails pass; real API-key tool execution not exercised | Missing |
@@ -52,7 +53,7 @@ Make Nexdo a credible, launchable early-access product by Monday, 2026-05-18, wi
 The Monday early-access demo and local build/test rails are in materially better shape and are locally verified. The broader objective is not complete as a production launch because provider-backed flows, real database/auth, Stripe billing, authenticated MCP tool execution, deployment rails, and approvals remain unverified.
 
 ## Next required work
-1. Configure a real Supabase project and verify migrations, auth, profile creation, RLS, and task CRUD.
+1. Configure a real Supabase project and run `npm run smoke:supabase -- --write` to verify migrations, auth, profile creation, RLS, task CRUD, and audit events.
 2. Exercise OpenAI-backed parse, prioritization, briefing, and bounded agent execution with real credentials.
 3. Exercise Stripe checkout, portal, webhook, plan updates, quota enforcement, and idempotency in test mode.
 4. Generate scoped API keys and run authenticated MCP/ChatGPT Actions tool execution, idempotency replay, and audit-write checks against real task data with `npm run smoke:mcp -- --write`.

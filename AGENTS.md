@@ -75,6 +75,8 @@ Production environment, Supabase migrations, OpenAI provider calls, Stripe test-
 - Typecheck: `npm run typecheck`
 - E2E smoke: `npm run test:e2e`
 - Env preflight: `npm run verify:env`
+- Supabase provider smoke: `npm run smoke:supabase`
+- MCP provider smoke: `npm run smoke:mcp`
 
 Use the smallest relevant verification. For docs-only changes, a diff review is usually enough. For code changes, prefer `npm run lint`, `npm run typecheck`, and `npm run build` when dependencies and environment allow it. For launch-facing app behavior, run `npm run test:e2e` as well. If a check cannot run, record why and add a follow-up task.
 

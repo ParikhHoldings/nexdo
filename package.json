@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test:e2e": "playwright test",
     "verify:env": "node scripts/verify-env.mjs",
-    "smoke:mcp": "node scripts/smoke-mcp.mjs"
+    "smoke:mcp": "node scripts/smoke-mcp.mjs",
+    "smoke:supabase": "node scripts/smoke-supabase.mjs"
   },
   "dependencies": {
     "@fontsource/inter": "^5.0.0",
