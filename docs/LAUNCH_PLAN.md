@@ -7,7 +7,7 @@ The goal is not a broad public launch. The credible Monday target is a verified 
 - A local app that passes clean install, lint, typecheck, build, and Playwright smoke tests. Verified locally on 2026-05-16.
 - A usable logged-out demo flow: load `/today`, inspect demo tasks, add a natural-language task, see prioritization, open an executable task, and generate a bounded agent output. Verified locally on 2026-05-16.
 - Public AI-agent surfaces expose a valid OpenAPI action contract and enforce bearer auth before tool execution. Smoke-tested locally on 2026-05-16.
-- MCP/API keys now have local scope modeling, scope-filtered tool listings, scope enforcement, and an agent action audit table. Real Supabase/API-key verification is still required before treating this as production-ready.
+- MCP/API keys now have local scope modeling, scope-aware setup UI, scope-filtered tool listings, scope enforcement, and an agent action audit table. Real Supabase/API-key verification is still required before treating this as production-ready.
 - The MCP settings page now exposes recent agent activity from the audit table when a user is authenticated.
 - Agent task creation now has local idempotency handling through `source_agent_id` plus `external_ref`; real Supabase/API-key replay verification is still required.
 - PR #3 Web rails passed in GitHub Actions and the Vercel preview deployment completed on 2026-05-16.

@@ -11,6 +11,7 @@
 - added an authenticated MCP smoke script for real API-key verification
 - exposed MCP create/update metadata for agent-created task traceability
 - added scoped API key permissions, MCP scope filtering/enforcement, and an `agent_action_events` audit trail migration
+- made the MCP settings tool list reflect the current API key scopes
 - added an MCP settings activity list backed by `/api/mcp/events`
 - added agent write idempotency for `create_task` through `source_agent_id` plus `external_ref`
 - opened PR #3 and verified GitHub Actions Web rails plus Vercel preview deployment

@@ -15,6 +15,21 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useUserStore } from '@/lib/store'
+import {
+  API_KEY_SCOPE_LABELS,
+  normalizeApiKeyScopes,
+  requiredScopeForTool,
+} from '@/lib/agent-scopes'
+
+const MCP_TOOL_DETAILS = [
+  { name: 'list_tasks', desc: 'List and filter your tasks' },
+  { name: 'create_task', desc: 'Create tasks with natural language' },
+  { name: 'complete_task', desc: 'Mark tasks as done' },
+  { name: 'update_task', desc: 'Update task details' },
+  { name: 'get_briefing', desc: 'Get your daily AI briefing' },
+  { name: 'search_tasks', desc: 'Search tasks by keyword' },
+  { name: 'get_task', desc: 'Get full task details' },
+]
 
 type AgentEvent = {
   id: string
@@ -47,6 +62,7 @@ function subscribeToOrigin(_onStoreChange: () => void) {
 export default function MCPSettingsPage() {
   const { profile } = useUserStore()
   const apiKey = profile?.api_key || ''
+  const apiKeyScopes = normalizeApiKeyScopes(profile?.api_key_scopes)
 
   const origin = useSyncExternalStore(
     subscribeToOrigin,
@@ -221,6 +237,24 @@ export default function MCPSettingsPage() {
                 Generate one in Settings &gt; API
               </Link>
             </p>
+          </div>
+        )}
+
+        {apiKey && (
+          <div className="mt-4 border-t border-zinc-800 pt-4">
+            <p className="text-xs uppercase tracking-wide text-zinc-600">
+              Current key scopes
+            </p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {apiKeyScopes.map((scope) => (
+                <span
+                  key={scope}
+                  className="rounded-md border border-zinc-700 bg-zinc-800 px-2 py-1 text-xs text-zinc-300"
+                >
+                  {API_KEY_SCOPE_LABELS[scope]}
+                </span>
+              ))}
+            </div>
           </div>
         )}
       </section>
@@ -413,25 +447,38 @@ export default function MCPSettingsPage() {
       <section className="mt-8 bg-zinc-900/50 border border-zinc-800 rounded-xl p-6">
         <h2 className="text-lg font-semibold text-zinc-100 mb-4">Available Tools</h2>
         <div className="grid gap-3 sm:grid-cols-2">
-          {[
-            { name: 'list_tasks', desc: 'List and filter your tasks' },
-            { name: 'create_task', desc: 'Create tasks with natural language' },
-            { name: 'complete_task', desc: 'Mark tasks as done' },
-            { name: 'update_task', desc: 'Update task details' },
-            { name: 'get_briefing', desc: 'Get your daily AI briefing' },
-            { name: 'search_tasks', desc: 'Search tasks by keyword' },
-            { name: 'get_task', desc: 'Get full task details' },
-          ].map((tool) => (
-            <div
-              key={tool.name}
-              className="flex items-start gap-3 p-3 bg-zinc-800/50 rounded-lg"
-            >
-              <code className="text-sm text-accent font-mono whitespace-nowrap">
-                {tool.name}
-              </code>
-              <span className="text-sm text-zinc-500">{tool.desc}</span>
-            </div>
-          ))}
+          {MCP_TOOL_DETAILS.map((tool) => {
+            const requiredScope = requiredScopeForTool(tool.name)
+            const isEnabled = Boolean(apiKey) && apiKeyScopes.includes(requiredScope)
+
+            return (
+              <div
+                key={tool.name}
+                className={
+                  isEnabled
+                    ? 'flex items-start gap-3 p-3 bg-zinc-800/50 rounded-lg'
+                    : 'flex items-start gap-3 p-3 bg-zinc-900/60 rounded-lg opacity-75'
+                }
+              >
+                {isEnabled ? (
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />
+                ) : (
+                  <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-zinc-600" />
+                )}
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <code className="text-sm text-accent font-mono">
+                      {tool.name}
+                    </code>
+                    <span className="text-xs text-zinc-500">
+                      {API_KEY_SCOPE_LABELS[requiredScope]}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-sm text-zinc-500">{tool.desc}</p>
+                </div>
+              </div>
+            )
+          })}
         </div>
       </section>
     </div>
