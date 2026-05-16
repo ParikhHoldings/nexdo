@@ -10,6 +10,25 @@ function resolveServerUrl(request: Request): string {
   return new URL(request.url).origin
 }
 
+function errorResponse(description: string) {
+  return {
+    description,
+    content: {
+      'application/json': {
+        schema: { $ref: '#/components/schemas/ErrorResponse' },
+      },
+    },
+  }
+}
+
+const actionErrorResponses = {
+  '400': errorResponse('Tool validation or execution error'),
+  '401': errorResponse('Unauthorized'),
+  '403': errorResponse('API key missing the required scope'),
+  '500': errorResponse('Server error'),
+  '503': errorResponse('Service unavailable'),
+}
+
 // OpenAPI 3.0 spec for ChatGPT Actions
 const openApiSpec = {
   openapi: '3.0.0',
@@ -74,9 +93,7 @@ const openApiSpec = {
               },
             },
           },
-          '401': { description: 'Unauthorized' },
-          '403': { description: 'API key missing the required scope' },
-          '500': { description: 'Server error' },
+          ...actionErrorResponses,
         },
         security: [{ BearerAuth: [] }],
       },
@@ -134,9 +151,7 @@ const openApiSpec = {
               },
             },
           },
-          '401': { description: 'Unauthorized' },
-          '403': { description: 'API key missing the required scope' },
-          '500': { description: 'Server error' },
+          ...actionErrorResponses,
         },
         security: [{ BearerAuth: [] }],
       },
@@ -177,9 +192,7 @@ const openApiSpec = {
               },
             },
           },
-          '401': { description: 'Unauthorized' },
-          '403': { description: 'API key missing the required scope' },
-          '500': { description: 'Server error' },
+          ...actionErrorResponses,
         },
         security: [{ BearerAuth: [] }],
       },
@@ -265,9 +278,7 @@ const openApiSpec = {
               },
             },
           },
-          '401': { description: 'Unauthorized' },
-          '403': { description: 'API key missing the required scope' },
-          '500': { description: 'Server error' },
+          ...actionErrorResponses,
         },
         security: [{ BearerAuth: [] }],
       },
@@ -297,9 +308,7 @@ const openApiSpec = {
               },
             },
           },
-          '401': { description: 'Unauthorized' },
-          '403': { description: 'API key missing the required scope' },
-          '500': { description: 'Server error' },
+          ...actionErrorResponses,
         },
         security: [{ BearerAuth: [] }],
       },
@@ -350,9 +359,7 @@ const openApiSpec = {
               },
             },
           },
-          '401': { description: 'Unauthorized' },
-          '403': { description: 'API key missing the required scope' },
-          '500': { description: 'Server error' },
+          ...actionErrorResponses,
         },
         security: [{ BearerAuth: [] }],
       },
@@ -393,9 +400,7 @@ const openApiSpec = {
               },
             },
           },
-          '401': { description: 'Unauthorized' },
-          '403': { description: 'API key missing the required scope' },
-          '500': { description: 'Server error' },
+          ...actionErrorResponses,
         },
         security: [{ BearerAuth: [] }],
       },
@@ -410,6 +415,13 @@ const openApiSpec = {
       },
     },
     schemas: {
+      ErrorResponse: {
+        type: 'object',
+        required: ['error'],
+        properties: {
+          error: { type: 'string' },
+        },
+      },
       Task: {
         type: 'object',
         properties: {

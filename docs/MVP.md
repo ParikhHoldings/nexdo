@@ -125,6 +125,7 @@ Required tool surface:
 
 Acceptance gate:
 - OpenAPI and MCP surfaces advertise the same core task contract.
+- ChatGPT Actions responses match advertised task, briefing, and error shapes.
 - Bearer auth is required before action execution.
 - Scope-limited keys hide and deny unauthorized tools.
 - Write tools validate bounded inputs and consume quotas where appropriate.
@@ -133,6 +134,7 @@ Acceptance gate:
 Current evidence:
 - `/api/mcp/openapi` exposes the ChatGPT Actions schema.
 - `/api/mcp/actions/[tool]` enforces bearer auth and scopes.
+- `/api/mcp/actions/[tool]` uses a shared formatter for action responses.
 - `search_tasks` filters title, context, and tags in the MCP handler.
 - `npm run test:e2e` covers OpenAPI, action auth, CORS, and unsupported billing guardrails.
 - `npm run smoke:mcp` exists for real API-key read/write/idempotency checks once a real environment is configured.

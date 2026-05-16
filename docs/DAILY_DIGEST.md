@@ -32,6 +32,7 @@
 - Added a recent agent activity surface on the MCP settings page backed by `/api/mcp/events`.
 - Explicitly filtered `/api/mcp/events` by the authenticated user in addition to RLS.
 - Added idempotency handling for agent task creation using `source_agent_id` plus `external_ref`, including write-smoke replay coverage.
+- Aligned ChatGPT Actions response formatting through a shared helper and advertised tool validation/service-unavailable errors in the OpenAPI schema.
 - Opened PR #3 and verified GitHub Actions Web rails plus Vercel preview deployment.
 - Updated vision, roadmap, backlog, decisions, metrics, marketing, and research docs to align with the current implementation.
 - Restored stricter build rails by adding typecheck/e2e scripts and removing build-time TypeScript/ESLint ignores.

@@ -6,6 +6,7 @@ import {
   missingScopeMessage,
   validateApiKey,
 } from '@/lib/mcp-tools'
+import { formatActionToolResult } from '@/lib/mcp-action-results'
 
 const ACTION_CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -77,35 +78,12 @@ export async function POST(
   // Execute tool
   try {
     const result = await executeTool(toolName, args, auth.userId)
+    const actionResult = formatActionToolResult(toolName, result)
 
-    if (result.isError) {
-      return NextResponse.json(
-        { error: result.content[0]?.text || 'Unknown error' },
-        { status: 400, headers: ACTION_CORS_HEADERS }
-      )
-    }
-
-    // Parse the JSON result from the tool
-    try {
-      const data = JSON.parse(result.content[0]?.text || '{}')
-      // Wrap single objects in appropriate key
-      if (toolName === 'list_tasks' || toolName === 'search_tasks') {
-        return NextResponse.json(
-          { tasks: Array.isArray(data) ? data : [] },
-          { headers: ACTION_CORS_HEADERS }
-        )
-      } else if (toolName === 'get_briefing') {
-        return NextResponse.json(data, { headers: ACTION_CORS_HEADERS })
-      } else {
-        return NextResponse.json({ task: data }, { headers: ACTION_CORS_HEADERS })
-      }
-    } catch {
-      // Return raw text if not JSON
-      return NextResponse.json(
-        { result: result.content[0]?.text },
-        { headers: ACTION_CORS_HEADERS }
-      )
-    }
+    return NextResponse.json(actionResult.body, {
+      status: actionResult.status,
+      headers: ACTION_CORS_HEADERS,
+    })
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error'
     return NextResponse.json(

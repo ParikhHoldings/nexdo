@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { formatActionToolResult } from '../../lib/mcp-action-results'
 
 const actionTools = [
   'list_tasks',
@@ -31,8 +32,19 @@ test('OpenAPI exposes the agent action contract', async ({ request }) => {
     const path = spec.paths[`/api/mcp/actions/${tool}`]
     expect(path, `${tool} path should exist`).toBeTruthy()
     expect(path.post.security).toEqual([{ BearerAuth: [] }])
-    expect(path.post.responses['401']).toBeTruthy()
+    expect(path.post.responses['400'].content['application/json'].schema).toEqual({
+      $ref: '#/components/schemas/ErrorResponse',
+    })
+    expect(path.post.responses['401'].content['application/json'].schema).toEqual({
+      $ref: '#/components/schemas/ErrorResponse',
+    })
     expect(path.post.responses['403'].description).toContain('scope')
+    expect(path.post.responses['500'].content['application/json'].schema).toEqual({
+      $ref: '#/components/schemas/ErrorResponse',
+    })
+    expect(path.post.responses['503'].content['application/json'].schema).toEqual({
+      $ref: '#/components/schemas/ErrorResponse',
+    })
     expect(path.post.operationId).toBeTruthy()
     operationIds.add(path.post.operationId)
   }
@@ -61,9 +73,68 @@ test('OpenAPI exposes the agent action contract', async ({ request }) => {
       'application/json'
     ].schema
   expect(searchTaskSchema.properties.query.maxLength).toBe(200)
+  expect(spec.components.schemas.ErrorResponse.required).toContain('error')
   expect(spec.components.schemas.Task.properties.source_agent_id).toBeTruthy()
   expect(spec.components.schemas.Task.properties.idempotent_replay).toBeTruthy()
   expect(spec.components.schemas.Task.properties.ingestion_intent).toBeTruthy()
+})
+
+test('ChatGPT Action formatter matches advertised response shapes', () => {
+  expect(
+    formatActionToolResult('list_tasks', {
+      content: [{ type: 'text', text: JSON.stringify([{ id: 'task-1' }]) }],
+    })
+  ).toEqual({
+    body: { tasks: [{ id: 'task-1' }] },
+    status: 200,
+  })
+
+  expect(
+    formatActionToolResult('search_tasks', {
+      content: [{ type: 'text', text: JSON.stringify([{ id: 'task-2' }]) }],
+    })
+  ).toEqual({
+    body: { tasks: [{ id: 'task-2' }] },
+    status: 200,
+  })
+
+  expect(
+    formatActionToolResult('get_briefing', {
+      content: [{ type: 'text', text: JSON.stringify({ greeting: 'Good morning' }) }],
+    })
+  ).toEqual({
+    body: { greeting: 'Good morning' },
+    status: 200,
+  })
+
+  expect(
+    formatActionToolResult('get_task', {
+      content: [{ type: 'text', text: JSON.stringify({ id: 'task-3' }) }],
+    })
+  ).toEqual({
+    body: { task: { id: 'task-3' } },
+    status: 200,
+  })
+
+  expect(
+    formatActionToolResult('create_task', {
+      content: [{ type: 'text', text: 'Error: input is required' }],
+      isError: true,
+    })
+  ).toEqual({
+    body: { error: 'Error: input is required' },
+    status: 400,
+  })
+
+  expect(
+    formatActionToolResult('list_tasks', {
+      content: [{ type: 'text', text: 'Database not configured' }],
+      isError: true,
+    })
+  ).toEqual({
+    body: { error: 'Database not configured' },
+    status: 503,
+  })
 })
 
 test('agent endpoints enforce auth and advertise CORS for action clients', async ({

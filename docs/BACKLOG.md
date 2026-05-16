@@ -30,6 +30,7 @@
 - added an MCP settings activity list backed by `/api/mcp/events`
 - explicitly filtered `/api/mcp/events` by the authenticated user in addition to RLS
 - added agent write idempotency for `create_task` through `source_agent_id` plus `external_ref`
+- aligned ChatGPT Actions response formatting with a shared helper and OpenAPI error schemas for tool validation and service-unavailable responses
 - opened PR #3 and verified GitHub Actions Web rails plus Vercel preview deployment
 - enabled strict lint/typecheck behavior in production builds
 - hardened profile updates with allowlisted timezone/work-type values and name length normalization
@@ -101,7 +102,6 @@
 - add unit tests for deterministic task intelligence fallbacks
 - verify import routes with representative Todoist, CSV, ICS, Trello, and Things-style files
 - verify import quota behavior against a real Supabase profile near the monthly task limit
-- improve OpenAPI/action response consistency where wrappers differ from MCP tool payloads
 - document known local-development and production-environment setup steps
 
 ## Low priority
