@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { generateBriefing } from '@/lib/openai'
-import type { Task } from '@/lib/database.types'
 import { requireUser } from '@/lib/api-auth'
 import { consumeRateLimit, RATE_LIMITS, rateLimitResponseHeaders } from '@/lib/rate-limit'
+import { sanitizeAiTasks, sanitizeUserName } from '@/lib/ai-task-input'
 
 export async function POST(request: NextRequest) {
   const auth = await requireUser()
@@ -17,15 +17,9 @@ export async function POST(request: NextRequest) {
 
   const { tasks, userName } = body
 
-  if (!tasks || !Array.isArray(tasks)) {
-    return NextResponse.json({ error: 'Invalid tasks array' }, { status: 400 })
-  }
-
-  if (tasks.length > 200) {
-    return NextResponse.json(
-      { error: 'Too many tasks (max 200 per briefing)' },
-      { status: 400 }
-    )
+  const sanitized = sanitizeAiTasks(tasks, 200)
+  if (!sanitized.ok) {
+    return NextResponse.json({ error: sanitized.error }, { status: 400 })
   }
 
   const gate = await consumeRateLimit(auth.userId, RATE_LIMITS.aiBriefing)
@@ -42,8 +36,8 @@ export async function POST(request: NextRequest) {
 
   try {
     const briefing = await generateBriefing(
-      tasks as Task[],
-      typeof userName === 'string' && userName.trim() ? userName : 'there'
+      sanitized.tasks,
+      sanitizeUserName(userName)
     )
 
     if (!briefing) {

@@ -27,6 +27,7 @@
 - Restored stricter build rails by adding typecheck/e2e scripts and removing build-time TypeScript/ESLint ignores.
 - Added deterministic local task intelligence for demo-mode parsing, prioritization, briefing, and bounded research/draft/prep outputs.
 - Moved AI route body validation before rate-limit consumption for parse, prioritize, and briefing requests.
+- Sanitized prioritization and briefing task arrays before rate-limit consumption and AI provider/fallback execution.
 - Hardened task mutation routes so PATCH only accepts user-editable fields and DELETE reports missing owned tasks.
 - Hardened authenticated agent execution so it runs only owned task records and saves output server-side.
 - Hardened agent execution quota ordering so output is not saved or returned when usage recording fails.

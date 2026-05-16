@@ -1,5 +1,15 @@
 # Decisions
 
+## 2026-05-16 - AI task arrays are sanitized before provider calls
+### Decision
+Authenticated prioritization and briefing routes sanitize client-supplied task arrays into bounded task summaries before rate-limit consumption and OpenAI/fallback execution.
+
+### Why
+Briefing and prioritization are provider-backed surfaces. Oversized or malformed task payloads should fail or be trimmed before they can drive prompt size, spend, or brittle task-intelligence behavior.
+
+### Impact
+Future AI routes that accept client task payloads should share this pattern or load owned task records server-side.
+
 ## 2026-05-16 - Task creation payloads are normalized before quota
 ### Decision
 Authenticated `POST /api/tasks` validates and normalizes title, raw input, description, due date/time, context, source, action type, estimates, energy, people, and tags before consuming task quota or inserting a task.
