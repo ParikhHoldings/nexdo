@@ -40,6 +40,7 @@ Current local verification from 2026-05-16:
 - `npm run build` passed with strict TypeScript and ESLint checks enabled
 - `npm run test:e2e` passed for the logged-out `/today` demo flow plus task/agent auth guards, MCP/OpenAPI/action auth smoke tests, and a Stripe checkout plan guard
 - `npm audit --audit-level=moderate` passed with 0 vulnerabilities after the Next.js 16 / ESLint 9 upgrade
+- `npm run verify:env` failed because `.env.local` is absent; only `.env.local.example` exists in this workspace
 
 Current PR verification from 2026-05-16:
 - PR #3 Web rails passed in GitHub Actions

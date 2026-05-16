@@ -32,7 +32,7 @@ Make Nexdo a credible, launchable early-access product by Monday, 2026-05-18, wi
 | Add CI verification | `.github/workflows/verify.yml` runs install, lint, typecheck, build, and Playwright smoke tests; PR #3 Web rails passed | Done |
 | Tighten public copy | `app/(marketing)/page.tsx`, auth pages, metadata, docs guardrails | Draft tightened; Quill/founder approval still required before public use |
 | Remove dependency audit blocker | Next.js 16, ESLint 9 flat config, PostCSS override; `npm audit --audit-level=moderate` reports 0 vulnerabilities | Done |
-| Verify deploy target and production env | No production env or deploy target credentials/config were exercised in this pass | Missing |
+| Verify deploy target and production env | `npm run verify:env` was run on 2026-05-16 and failed because `.env.local` is absent; no production env or deploy target credentials/config were exercised in this pass | Missing |
 | Verify preview deploy rail | PR #3 Vercel preview deployment completed | Done |
 | Verify Supabase migrations/auth/RLS/task CRUD against real project | Migrations and code exist, but real project smoke test was not run | Missing |
 | Provide a repeatable Supabase smoke command | `npm run smoke:supabase` checks schema columns; `npm run smoke:supabase -- --write` creates/deletes a smoke auth user, verifies profile trigger, allowed profile reads/edits, denied sensitive profile reads/edits, task CRUD through RLS, public RLS isolation, audit-event access, quota increments, quota no-op behavior, and rate-limit allow/block behavior | Done |
@@ -59,6 +59,9 @@ Make Nexdo a credible, launchable early-access product by Monday, 2026-05-18, wi
 - `git diff --check`
 - PR #3 GitHub Actions Web rails
 - PR #3 Vercel preview
+
+## Commands attempted but blocked
+- `npm run verify:env` failed because `.env.local` is not present in this workspace. `.env.local.example` is present, but it is only the contract and cannot support provider smoke checks.
 
 ## Current completion judgment
 The Monday early-access demo, local build/test rails, task mutation guards, authenticated agent execution guards, import quota guards, and billing route guards are in materially better shape and are locally verified. The broader objective is not complete as a production launch because provider-backed flows, real database/auth, Stripe billing, authenticated MCP tool execution, deployment rails, and approvals remain unverified.

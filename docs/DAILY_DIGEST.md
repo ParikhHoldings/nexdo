@@ -58,6 +58,7 @@
 
 ### Blocked
 - Production readiness cannot be claimed until env, migrations, auth, AI, Stripe, MCP, and deployment are verified.
+- `npm run verify:env` currently fails because `.env.local` is absent; only `.env.local.example` exists in this workspace.
 
 ### Approvals needed
 - Approval is still required before public launch copy, pricing changes, production deploys, or customer-facing commitments.
