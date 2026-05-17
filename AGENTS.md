@@ -134,7 +134,9 @@ full-access and read-only Power-plan API keys instead of using pre-generated
 keys. Add
 `--audit` to the write smoke when
 `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are loaded and the
-run must prove `agent_action_events` audit rows were written.
+run must prove `agent_action_events` audit rows were written. The write smoke
+also verifies `complete_task` returns the completed task with agent trace
+metadata persisted on the task row.
 
 `npm run smoke:supabase -- --write` should verify real migrations, profile
 column grants, direct task column-grant denials for server-managed fields,

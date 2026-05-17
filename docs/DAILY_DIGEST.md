@@ -104,6 +104,7 @@
 - Added demo smoke coverage for the Cmd/Ctrl+K task-capture shortcut and made the shortcut case-insensitive.
 - Persisted MCP `complete_task` source-agent trace metadata onto the completed task row so agent-completed work remains visible in human task surfaces.
 - Added rendered Done-page coverage that agent-completed demo tasks expose trace metadata on cards and in task detail.
+- Tightened `npm run smoke:mcp -- --write` so real endpoint verification checks `complete_task` returns persisted source-agent trace fields.
 
 ### In progress
 - Provider-backed Supabase, OpenAI, Stripe, and MCP smokes remain the main launch-readiness gap.

@@ -673,8 +673,15 @@ async function main() {
         },
       })
       const completed = parseToolContent(completedResult)
-      if (completed?.status !== 'done') {
-        throw new Error('complete_task did not mark the smoke task done.')
+      if (
+        completed?.id !== created.id ||
+        completed?.status !== 'done' ||
+        completed?.source !== 'agent' ||
+        completed?.source_agent_id !== sourceAgentId ||
+        completed?.external_ref !== completeRef ||
+        completed?.ingestion_intent !== 'complete'
+      ) {
+        throw new Error('complete_task did not return the completed smoke task with agent trace metadata.')
       }
       console.log('ok complete_task')
 

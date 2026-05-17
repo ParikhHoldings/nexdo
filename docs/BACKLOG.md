@@ -101,6 +101,7 @@
 - added demo smoke coverage for the Cmd/Ctrl+K task-capture shortcut and made the shortcut case-insensitive so Playwright `Control+K` focuses capture reliably
 - persisted MCP `complete_task` source-agent trace metadata onto the completed task row so agent-completed work remains visible in human task surfaces
 - added rendered Done-page coverage that agent-completed demo tasks expose trace metadata on cards and in task detail
+- tightened `npm run smoke:mcp -- --write` so real endpoint verification checks `complete_task` returns persisted source-agent trace fields
 
 ## Completed 2026-05-16
 - read and updated the repo-level agent context and all existing Markdown/text operating files

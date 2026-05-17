@@ -158,7 +158,7 @@ Current evidence:
 - `update_task` accepts the same core planning fields humans can edit: status, due time, action type, estimate, energy level, people, and tags.
 - `add_task_note` lets external agents append bounded, human-reviewable notes to owned tasks without changing task status, and `get_task` returns recent task notes.
 - `npm run test:e2e` covers OpenAPI, action auth, CORS, and unsupported billing guardrails.
-- `npm run smoke:mcp` exists for real API-key initialized-notification handshake, SSE endpoint discovery, list/search/briefing/get/structured-update/add-note/complete/idempotency checks, ChatGPT Actions list/search/add-note response-shape checks, optional read-only scope denial, provisioned disposable scoped keys, and required `agent_action_events` audit verification with `--provision --write --audit` once a real environment is configured.
+- `npm run smoke:mcp` exists for real API-key initialized-notification handshake, SSE endpoint discovery, list/search/briefing/get/structured-update/add-note/complete/idempotency checks, ChatGPT Actions list/search/add-note response-shape checks, optional read-only scope denial, provisioned disposable scoped keys, completed-task trace persistence, and required `agent_action_events` audit verification with `--provision --write --audit` once a real environment is configured.
 
 ### 2. Agent traceability
 Agent-created work must be distinguishable from human-created work.
@@ -180,7 +180,7 @@ Current evidence:
 - The idempotency migration and handler logic exist.
 - `npm run smoke:supabase -- --write` can verify the unique database index rejects duplicate `source_agent_id` plus `external_ref` task rows.
 - `npm run smoke:app` can verify authenticated app-cookie task CRUD plus task-note validation, creation, and readback against a real Supabase-backed app session.
-- `npm run smoke:mcp -- --provision --write --audit` can verify real `create_task`, `update_task`, `add_task_note`, and `complete_task` audit rows with `source_agent_id` plus `external_ref` when Supabase service-role env is loaded.
+- `npm run smoke:mcp -- --provision --write --audit` can verify real `create_task`, `update_task`, `add_task_note`, and `complete_task` audit rows with `source_agent_id` plus `external_ref`, and `complete_task` task-row trace persistence, when Supabase service-role env is loaded.
 - Real Supabase/MCP smoke is still required before claiming production readiness.
 
 ### 3. Least privilege and audit

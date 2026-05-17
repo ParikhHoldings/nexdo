@@ -101,7 +101,7 @@ npm run smoke:launch -- --env=.env.production.local --url=https://your-productio
 - Authenticated app API: run `npm run smoke:app` against the same app URL and Supabase project to verify app-cookie auth, task list/create/update/delete, and task-note validation/create/readback through the deployed API routes. For protected Vercel previews, export `VERCEL_AUTOMATION_BYPASS_SECRET` first.
 - OpenAI: verify parse, prioritization, briefing, and owned-task research/draft/prep execution with real credentials, server-side output persistence, quota use, and rate-limit behavior.
 - Stripe: verify checkout, portal, signed webhook handling, duplicate webhook idempotency, subscription tier updates/deletes, quota enforcement, authenticated task-create quota behavior after entitlement changes, and unknown-price behavior in test mode.
-- MCP/ChatGPT Actions: provision real scoped API keys or provide existing smoke keys, then run authenticated SSE endpoint discovery and list/create/update/add-note/complete/search/briefing/get-task calls against real task data, including `create_task` replay with a repeated `source_agent_id` plus `external_ref`, `add_task_note` note readback, and `agent_action_events` audit rows.
+- MCP/ChatGPT Actions: provision real scoped API keys or provide existing smoke keys, then run authenticated SSE endpoint discovery and list/create/update/add-note/complete/search/briefing/get-task calls against real task data, including `create_task` replay with a repeated `source_agent_id` plus `external_ref`, `complete_task` task-row trace persistence, `add_task_note` note readback, and `agent_action_events` audit rows.
 
 Read-only MCP smoke:
 
