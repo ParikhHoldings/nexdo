@@ -113,6 +113,15 @@ OpenAI provider smoke:
 npm run smoke:openai
 ```
 
+OpenAI app-route smoke. Run this against a local or preview app with matching
+OpenAI and Supabase env loaded; it creates and deletes a disposable Supabase
+user and verifies authenticated parse, prioritize, briefing, and
+research/draft/prep execution routes:
+
+```bash
+npm run smoke:openai -- --app
+```
+
 Read-only Stripe billing smoke:
 
 ```bash

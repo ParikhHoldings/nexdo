@@ -1,9 +1,19 @@
 #!/usr/bin/env node
 
+import { randomUUID } from 'node:crypto'
 import OpenAI from 'openai'
+import { createBrowserClient } from '@supabase/ssr'
+import { createClient as createSupabaseJsClient } from '@supabase/supabase-js'
+
+const args = new Set(process.argv.slice(2))
+const shouldSmokeAppRoutes = args.has('--app')
 
 const apiKey = process.env.OPENAI_API_KEY
 const model = process.env.OPENAI_MODEL || 'gpt-4o'
+const appUrl = (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000').replace(/\/$/, '')
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 const PLACEHOLDER_FRAGMENTS = [
   'placeholder',
   'your-',
@@ -24,6 +34,18 @@ function isUsableSecret(value) {
 
 if (!isUsableSecret(apiKey)) {
   console.error('Missing OPENAI_API_KEY or value looks like a placeholder.')
+  process.exit(1)
+}
+
+if (
+  shouldSmokeAppRoutes &&
+  (!isUsableSecret(supabaseUrl) ||
+    !isUsableSecret(supabaseAnonKey) ||
+    !isUsableSecret(supabaseServiceRoleKey))
+) {
+  console.error(
+    'OpenAI app-route smoke requires NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, and SUPABASE_SERVICE_ROLE_KEY.'
+  )
   process.exit(1)
 }
 
@@ -63,6 +85,169 @@ function assertArray(value, label) {
 function assertNonEmptyArray(value, label) {
   assertArray(value, label)
   if (value.length === 0) throw new Error(`${label} missing at least one item`)
+}
+
+function createSupabaseAdminClient() {
+  return createSupabaseJsClient(supabaseUrl, supabaseServiceRoleKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  })
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+function createCookieJar() {
+  const cookies = new Map()
+
+  return {
+    getAll() {
+      return Array.from(cookies.entries()).map(([name, value]) => ({ name, value }))
+    },
+    setAll(cookiesToSet) {
+      for (const { name, value, options } of cookiesToSet) {
+        if (!value || options?.maxAge === 0) {
+          cookies.delete(name)
+        } else {
+          cookies.set(name, value)
+        }
+      }
+    },
+    header() {
+      return Array.from(cookies.entries())
+        .map(([name, value]) => `${name}=${value}`)
+        .join('; ')
+    },
+  }
+}
+
+async function createSmokeUser(supabase) {
+  const email = `nexdo-openai-app-smoke-${Date.now()}@example.com`
+  const password = `Nexdo-openai-smoke-${randomUUID()}!aA1`
+  const { data, error } = await supabase.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+    user_metadata: {
+      full_name: 'Nexdo OpenAI App Smoke',
+    },
+  })
+
+  if (error || !data.user?.id) {
+    throw new Error(`failed to create Supabase smoke user: ${error?.message ?? 'unknown error'}`)
+  }
+
+  const userId = data.user.id
+
+  try {
+    for (let attempt = 0; attempt < 10; attempt += 1) {
+      const { data: profile, error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          full_name: 'Nexdo OpenAI App Smoke',
+          subscription_tier: 'power',
+          task_count_this_month: 0,
+          agent_executions_this_month: 0,
+        })
+        .eq('id', userId)
+        .select('id')
+        .maybeSingle()
+
+      if (updateError) {
+        throw new Error(`failed to prepare smoke profile: ${updateError.message}`)
+      }
+
+      if (profile?.id) return { userId, email, password }
+      await sleep(500)
+    }
+
+    throw new Error('profile trigger did not create an OpenAI app smoke profile in time')
+  } catch (error) {
+    const { error: deleteError } = await supabase.auth.admin.deleteUser(userId)
+    if (deleteError) {
+      console.error('warning: failed to delete OpenAI app smoke user after setup failure', deleteError)
+    }
+    throw error
+  }
+}
+
+async function createSmokeSessionCookie({ email, password }) {
+  const jar = createCookieJar()
+  const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey, {
+    isSingleton: false,
+    cookies: {
+      getAll: () => jar.getAll(),
+      setAll: (cookiesToSet) => jar.setAll(cookiesToSet),
+    },
+    auth: {
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+    },
+  })
+
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+  if (error || !data.session) {
+    throw new Error(`failed to create authenticated smoke session: ${error?.message ?? 'unknown error'}`)
+  }
+
+  const cookieHeader = jar.header()
+  if (!cookieHeader) throw new Error('authenticated smoke session did not set Supabase cookies')
+  return cookieHeader
+}
+
+async function postAppJson(cookieHeader, path, body) {
+  const response = await fetch(`${appUrl}${path}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Cookie: cookieHeader,
+    },
+    body: JSON.stringify(body),
+  })
+
+  const text = await response.text()
+  let data = null
+  try {
+    data = text ? JSON.parse(text) : null
+  } catch {
+    data = { raw: text }
+  }
+
+  if (!response.ok) {
+    throw new Error(`${path} failed with ${response.status}: ${JSON.stringify(data)}`)
+  }
+
+  return data
+}
+
+async function createExecutableTask(supabase, userId, actionType) {
+  const { data, error } = await supabase
+    .from('tasks')
+    .insert({
+      user_id: userId,
+      title: `OpenAI app smoke ${actionType}`,
+      raw_input: `OpenAI app smoke ${actionType}`,
+      context: 'Verify provider-backed app route execution before launch.',
+      description: 'Disposable task created by scripts/smoke-openai.mjs.',
+      priority: 'high',
+      status: 'todo',
+      action_type: actionType,
+      estimated_minutes: 20,
+      energy_level: 'deep',
+      tags: ['smoke', 'openai'],
+      people: [],
+    })
+    .select('id, action_type')
+    .single()
+
+  if (error || !data?.id) {
+    throw new Error(`failed to create ${actionType} app smoke task: ${error?.message ?? 'unknown error'}`)
+  }
+
+  return data
 }
 
 async function smokeParse() {
@@ -184,6 +369,114 @@ async function smokePrepExecution() {
   console.log('ok OpenAI prep execution')
 }
 
+async function smokeOpenAiAppRoutes() {
+  const supabase = createSupabaseAdminClient()
+  let userId = null
+
+  try {
+    const smokeUser = await createSmokeUser(supabase)
+    userId = smokeUser.userId
+    const cookieHeader = await createSmokeSessionCookie(smokeUser)
+    console.log('ok OpenAI app smoke auth')
+
+    const parsed = await postAppJson(cookieHeader, '/api/tasks/parse', {
+      input: 'Research competitor onboarding pages by tomorrow morning, high priority.',
+    })
+    assertString(parsed.title, 'app.parse.title')
+    assertString(parsed.priority, 'app.parse.priority')
+    assertString(parsed.action_type, 'app.parse.action_type')
+    console.log('ok OpenAI app parse route')
+
+    const today = new Date().toISOString().slice(0, 10)
+    const prioritized = await postAppJson(cookieHeader, '/api/tasks/prioritize', {
+      tasks: [
+        {
+          id: 'app-task-1',
+          title: 'Reply to launch partner',
+          status: 'todo',
+          priority: 'urgent',
+          due_date: today,
+          due_time: null,
+          context: 'Partner is waiting on launch details.',
+          people: ['Alex'],
+          estimated_minutes: 10,
+          energy_level: 'quick',
+        },
+        {
+          id: 'app-task-2',
+          title: 'Draft agent launch notes',
+          status: 'todo',
+          priority: 'medium',
+          due_date: null,
+          due_time: null,
+          context: 'Needed before public copy review.',
+          people: [],
+          estimated_minutes: 45,
+          energy_level: 'deep',
+        },
+      ],
+    })
+    assertNonEmptyArray(prioritized.tasks, 'app.prioritize.tasks')
+    assertString(prioritized.tasks[0]?.task_id, 'app.prioritize.tasks[0].task_id')
+    console.log('ok OpenAI app prioritize route')
+
+    const briefing = await postAppJson(cookieHeader, '/api/briefing', {
+      userName: 'Nexdo',
+      tasks: [
+        {
+          id: 'app-task-1',
+          title: 'Prepare launch-readiness review',
+          status: 'todo',
+          priority: 'high',
+          due_date: today,
+          due_time: null,
+          context: 'Blocks Monday early-access decision.',
+          people: ['Founder'],
+          estimated_minutes: 30,
+          energy_level: 'deep',
+        },
+      ],
+    })
+    assertString(briefing.greeting, 'app.briefing.greeting')
+    assertArray(briefing.top_priorities, 'app.briefing.top_priorities')
+    assertString(briefing.summary, 'app.briefing.summary')
+    console.log('ok OpenAI app briefing route')
+
+    for (const actionType of ['research', 'draft', 'prep']) {
+      const task = await createExecutableTask(supabase, userId, actionType)
+      const output = await postAppJson(cookieHeader, '/api/agent/execute', {
+        taskId: task.id,
+      })
+
+      if (output.schema_version !== 1 || !output.current || !Array.isArray(output.history)) {
+        throw new Error(`app agent ${actionType} route did not return an agent output envelope`)
+      }
+
+      if (output.history[0]?.action_type !== actionType) {
+        throw new Error(`app agent ${actionType} route returned wrong action type`)
+      }
+
+      const { data: saved, error } = await supabase
+        .from('tasks')
+        .select('agent_output')
+        .eq('id', task.id)
+        .eq('user_id', userId)
+        .maybeSingle()
+
+      if (error || saved?.agent_output?.schema_version !== 1) {
+        throw new Error(`app agent ${actionType} route did not persist output`)
+      }
+
+      console.log(`ok OpenAI app ${actionType} execution route`)
+    }
+  } finally {
+    if (userId) {
+      const { error } = await supabase.auth.admin.deleteUser(userId)
+      if (error) console.error('warning: failed to delete OpenAI app smoke user', error)
+    }
+  }
+}
+
 async function main() {
   console.log(`Smoking OpenAI model ${model}`)
   await smokeParse()
@@ -192,6 +485,13 @@ async function main() {
   await smokeResearchExecution()
   await smokeDraftExecution()
   await smokePrepExecution()
+
+  if (shouldSmokeAppRoutes) {
+    await smokeOpenAiAppRoutes()
+  } else {
+    console.log('skip app-route checks; pass --app to verify authenticated app OpenAI routes')
+  }
+
   console.log('OpenAI smoke passed.')
 }
 

@@ -95,7 +95,10 @@ Production environment, Supabase migrations, OpenAI provider calls, Stripe test-
 
 `npm run smoke:openai` rejects missing/placeholder keys and verifies provider
 JSON-mode output for parse, prioritization, briefing, and all bounded execution
-types: research, draft, and prep.
+types: research, draft, and prep. Add `-- --app` when Supabase service-role
+env and the target app URL are loaded to create a disposable user and verify
+authenticated parse, prioritize, briefing, and research/draft/prep execution
+routes against the app.
 
 `npm run smoke:stripe -- --write --webhook` posts signed test-mode
 subscription events to the configured app URL, verifies unknown-price

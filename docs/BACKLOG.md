@@ -36,6 +36,7 @@
 - expanded `npm run smoke:stripe -- --write --webhook` to verify free/pro/power quota plan-state boundaries after signed webhook tier changes
 - expanded `npm run smoke:stripe -- --write --webhook` to sign in the disposable Supabase user and verify authenticated `POST /api/tasks` quota behavior under free/pro/power entitlement states
 - expanded `npm run smoke:openai` to reject placeholder keys and verify research, draft, and prep execution output shapes instead of only prep
+- added `npm run smoke:openai -- --app` to verify authenticated app parse, prioritize, briefing, and research/draft/prep execution routes with disposable Supabase data
 - added migration `007_task_column_grants.sql` to keep agent output, source-agent metadata, ingestion intent, and completion timestamps server-managed for direct browser Supabase writes
 - moved authenticated import persistence to service-role writes after auth/quota checks so imported completion timestamps and external source refs survive the new browser task column grants
 - expanded `npm run smoke:supabase -- --write` to verify browser clients cannot write task server-managed columns, cannot insert agent audit events, public clients cannot read audit events, and duplicate agent external refs are rejected
@@ -134,7 +135,7 @@
 ## High priority
 - configure and verify the real production deploy target
 - run `npm run smoke:supabase -- --write` against a real Supabase project after applying migrations, including hashed API-key columns, profile column read/update grants, direct task column-grant denials, audit-event privacy, and agent external-ref uniqueness
-- run `npm run smoke:openai` with a real OpenAI key, then verify the authenticated in-app AI routes
+- run `npm run smoke:openai -- --app` with real OpenAI, Supabase, and target app env
 - run `npm run smoke:stripe -- --write --webhook` with Stripe test-mode keys and target Supabase/app env to verify checkout, portal, webhook events, quota plan-state boundaries, authenticated task-create quota behavior, and idempotency
 - smoke test auth, profile creation, task CRUD, demo-mode fallback, and app navigation
 - smoke test OpenAI task parse, prioritization, daily briefing, and agent execution with real env

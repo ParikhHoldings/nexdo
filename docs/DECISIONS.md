@@ -13,6 +13,7 @@ Authenticated task imports now save through the service-role path after auth/quo
 ## 2026-05-17 - OpenAI smoke must cover every bounded execution type
 ### Decision
 `npm run smoke:openai` should reject obvious placeholder keys and verify JSON-mode output for parsing, prioritization, briefing, and each supported bounded execution type: research, draft, and prep.
+When run with `--app`, it should also create disposable Supabase data and verify the authenticated app parse, prioritize, briefing, and research/draft/prep execution routes.
 
 ### Why
 Nexdo's MVP promise includes bounded execution across three action types. Verifying only a prep-shaped response leaves research and draft provider behavior weakly covered.

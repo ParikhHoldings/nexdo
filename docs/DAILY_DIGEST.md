@@ -37,6 +37,7 @@
 - Expanded Stripe webhook smoke to verify free/pro/power quota plan-state boundaries after signed tier-change events.
 - Expanded Stripe webhook smoke to sign in the disposable Supabase user and exercise authenticated `POST /api/tasks` quota behavior under free/pro/power entitlement states.
 - Expanded `npm run smoke:openai` to fail on placeholder keys and cover research, draft, and prep execution output shapes.
+- Added `npm run smoke:openai -- --app` coverage for authenticated app parse, prioritize, briefing, and research/draft/prep execution routes using disposable Supabase data.
 - Added task column grants so direct browser Supabase writes cannot spoof server-managed agent output, source-agent metadata, ingestion intent, or completion timestamps.
 - Moved authenticated import persistence to service-role writes after auth/quota checks so imported completion timestamps and external source refs stay compatible with browser column limits.
 - Expanded Supabase write smoke for task server-managed column denial, agent external-ref uniqueness, private audit-event reads, and audit-event insert denial.

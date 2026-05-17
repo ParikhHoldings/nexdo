@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { readFileSync } from 'node:fs'
 import {
   canUseApiAccess,
   hasRequiredScope,
@@ -404,4 +405,19 @@ test('task patch validation allowlists human-editable fields only', () => {
       'people',
     ])
   )
+})
+
+test('OpenAI smoke can verify authenticated app routes with disposable data', () => {
+  const source = readFileSync('scripts/smoke-openai.mjs', 'utf8')
+
+  expect(source).toContain("const shouldSmokeAppRoutes = args.has('--app')")
+  expect(source).toContain("import { createBrowserClient } from '@supabase/ssr'")
+  expect(source).toContain('await supabase.auth.signInWithPassword({ email, password })')
+  expect(source).toContain("postAppJson(cookieHeader, '/api/tasks/parse'")
+  expect(source).toContain("postAppJson(cookieHeader, '/api/tasks/prioritize'")
+  expect(source).toContain("postAppJson(cookieHeader, '/api/briefing'")
+  expect(source).toContain("postAppJson(cookieHeader, '/api/agent/execute'")
+  expect(source).toContain("for (const actionType of ['research', 'draft', 'prep'])")
+  expect(source).toContain("subscription_tier: 'power'")
+  expect(source).toContain("select('agent_output')")
 })
