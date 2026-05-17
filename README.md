@@ -40,7 +40,7 @@ Last checked on 2026-05-17:
 - `npm run smoke:launch -- --skip-local --skip-providers --technical-only` passed as a partial technical launch smoke; provider smokes, copy approval, and production deploy approval remain separate gates
 - GitHub Actions Web rails run on pull requests and pushes to `main`/`staging`, with install, lint, typecheck, build, dependency audit, and Playwright smoke testing
 - PR #3 GitHub Actions Web rails passed on the latest inspected pushed head in this pass; inspect current checks after every newer push before treating the branch as current-green
-- Vercel preview deployment passed on recent inspected implementation heads, but the latest inspected docs-inclusive head hit the known Vercel account build-rate limit, so preview-deploy evidence is not current until Vercel reruns successfully on the latest head
+- Vercel preview deployment is per-head evidence: inspected heads in this pass included successful previews and known account build-rate-limit failures, so inspect current PR checks before treating a head as preview-deploy verified
 - direct remote route smoke against protected previews is blocked by Vercel Deployment Protection until `VERCEL_AUTOMATION_BYPASS_SECRET` is provided locally or an unprotected preview URL is used
 
 `npm run verify:env` currently fails because `.env.local` is absent; only `.env.local.example` exists in this workspace. Still unverified: production env, Supabase migrations/auth/profile plus task, task-relationship, and task-note column grants against a real project, OpenAI provider calls, Stripe test-mode flows, scoped MCP/API-key execution, idempotency replay against real task data, agent audit writes, and production deployment rails.

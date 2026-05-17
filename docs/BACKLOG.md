@@ -53,7 +53,7 @@
 - expanded `npm run smoke:mcp` across search, briefing, get-task, update, complete, and ChatGPT Actions search/list checks
 - expanded MCP `update_task`, OpenAPI, local handler coverage, and the provider smoke path so agents can update due time, action type, estimate, energy, people, and tags
 - expanded MCP `update_task`, OpenAPI, local handler coverage, and the provider smoke path so agents can update owned parent/related task links through the same ownership-checked relationship validation used by human task detail
-- verified PR #3 Web rails on the latest inspected relationship-update head; Vercel preview deployment passed on the prior relationship-update implementation head but the latest docs-inclusive head hit the known account build-rate limit, and protected-preview route smoke remains blocked by Vercel Deployment Protection without `VERCEL_AUTOMATION_BYPASS_SECRET` or an unprotected URL
+- verified PR #3 Web rails on inspected relationship-update heads; Vercel preview evidence remained per-head with both successful previews and known account build-rate-limit failures, and protected-preview route smoke remains blocked by Vercel Deployment Protection without `VERCEL_AUTOMATION_BYPASS_SECRET` or an unprotected URL
 - hardened MCP JSON-RPC and ChatGPT Action wrappers so non-object tool arguments are rejected before tool execution
 - centralized MCP/ChatGPT Actions Bearer parsing so real agent clients can use case-insensitive schemes and harmless extra spacing without failing auth
 - hardened the MCP JSON-RPC route so malformed non-object request bodies fail with a JSON-RPC validation error before field access
