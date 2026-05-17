@@ -173,10 +173,11 @@ Annual pricing can be added later with explicit annual price IDs, checkout plan 
 
 ## 2026-05-16 - API key rotation uses rate limits
 ### Decision
-Scoped API-key rotation goes through the shared user rate-limit rail before a new key is issued.
+Scoped API-key rotation goes through the shared user rate-limit rail before a new key is issued. The one-time key is returned only after the server writes the hashed key, key hint, scopes, and last-used reset to the user's profile.
 
 ### Why
 API keys are the trust boundary for MCP and ChatGPT Actions. Rotation should remain easy for users but bounded enough to reduce accidental or automated abuse.
+Returning an unstored key would leave users with a credential that cannot authenticate and would make external agent setup fail in a confusing way.
 
 ### Impact
 Real Supabase smoke verification should include `consume_rate_limit` behavior for API-key rotation.

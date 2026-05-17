@@ -14,6 +14,7 @@
 - Moved MCP `create_task` to idempotency replay, quota pre-check, post-insert usage accounting, and cleanup when accounting fails.
 - Moved authenticated imports to quota pre-check, post-save accounting for successfully inserted rows, and cleanup when accounting fails.
 - Hardened billing profile persistence so checkout and webhook entitlement updates no longer silently ignore failed profile writes.
+- Hardened API-key rotation persistence so generated one-time keys are not returned unless the hashed key and scopes are written.
 
 ### In progress
 - Provider-backed Supabase, OpenAI, Stripe, and MCP smokes remain the main launch-readiness gap.

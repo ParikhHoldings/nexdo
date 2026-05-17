@@ -6,7 +6,8 @@ import {
   normalizeApiKeyScopes,
 } from '@/lib/agent-scopes'
 import { consumeRateLimit, RATE_LIMITS, rateLimitResponseHeaders } from '@/lib/rate-limit'
-import { apiKeyHint, generateApiKey, hashApiKey } from '@/lib/api-keys'
+import { generateApiKey } from '@/lib/api-keys'
+import { persistApiKeyRotation } from '@/lib/api-key-rotation'
 
 export async function POST(request: Request) {
   const supabase = await createClient()
@@ -77,7 +78,6 @@ export async function POST(request: Request) {
     const body = await request.json().catch(() => ({}))
     const scopes = normalizeApiKeyScopes(body?.scopes)
     const newKey = generateApiKey()
-    const newKeyHint = apiKeyHint(newKey)
     const service = await createServiceClient()
 
     if (!service) {
@@ -88,24 +88,12 @@ export async function POST(request: Request) {
     }
 
     const db = service as any
-    const { error } = await db
-      .from('profiles')
-      .update({
-        api_key: null,
-        api_key_hash: hashApiKey(newKey),
-        api_key_hint: newKeyHint,
-        api_key_scopes: scopes,
-        api_key_last_used_at: null,
-      })
-      .eq('id', user.id)
-
-    if (error) {
-      console.error('Error generating API key:', error)
-      return NextResponse.json(
-        { error: 'Failed to generate API key' },
-        { status: 500 }
-      )
-    }
+    const { hint: newKeyHint } = await persistApiKeyRotation(
+      db,
+      user.id,
+      newKey,
+      scopes
+    )
 
     return NextResponse.json(
       { api_key: newKey, api_key_hint: newKeyHint, api_key_scopes: scopes },

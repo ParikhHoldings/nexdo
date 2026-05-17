@@ -5,6 +5,8 @@ import {
   normalizeApiKeyScopes,
   requiredScopeForTool,
 } from '../../lib/agent-scopes'
+import { apiKeyHint, hashApiKey } from '../../lib/api-keys'
+import { persistApiKeyRotation } from '../../lib/api-key-rotation'
 import { sanitizeAiTasks, sanitizeUserName } from '../../lib/ai-task-input'
 import {
   appendAgentExecution,
@@ -108,6 +110,71 @@ test('API key scope helpers map plans and tools to least-privilege permissions',
   expect(requiredScopeForTool('get_briefing')).toBe('briefing:read')
   expect(hasRequiredScope(['tasks:read'], 'list_tasks')).toBe(true)
   expect(hasRequiredScope(['tasks:read'], 'create_task')).toBe(false)
+})
+
+function apiKeyRotationClient({
+  profile,
+  error = null,
+}: {
+  profile?: Record<string, unknown>
+  error?: { message: string } | null
+}) {
+  return {
+    from: (table: string) => {
+      expect(table).toBe('profiles')
+      return {
+        update: (fields: Record<string, unknown>) => ({
+          eq: (field: string, value: string) => ({
+            select: (columns: string) => ({
+              maybeSingle: async () => {
+                expect(field).toBe('id')
+                expect(value).toBe('user-1')
+                expect(columns).toBe('id')
+                if (error) return { data: null, error }
+                if (!profile || profile.id !== value) {
+                  return { data: null, error: null }
+                }
+
+                Object.assign(profile, fields)
+                return { data: { id: profile.id }, error: null }
+              },
+            }),
+          }),
+        }),
+      }
+    },
+  }
+}
+
+test('API key rotation persistence stores hashed keys and requires a profile row', async () => {
+  const apiKey = 'nxd_test_launch_key'
+  const scopes = ['tasks:read', 'briefing:read']
+  const profile: Record<string, unknown> = { id: 'user-1' }
+
+  await expect(
+    persistApiKeyRotation(apiKeyRotationClient({ profile }), 'user-1', apiKey, scopes)
+  ).resolves.toEqual({ hint: apiKeyHint(apiKey) })
+
+  expect(profile).toMatchObject({
+    api_key: null,
+    api_key_hash: hashApiKey(apiKey),
+    api_key_hint: apiKeyHint(apiKey),
+    api_key_scopes: scopes,
+    api_key_last_used_at: null,
+  })
+
+  await expect(
+    persistApiKeyRotation(apiKeyRotationClient({}), 'user-1', apiKey, scopes)
+  ).rejects.toThrow('No profile found')
+
+  await expect(
+    persistApiKeyRotation(
+      apiKeyRotationClient({ error: { message: 'database unavailable' } }),
+      'user-1',
+      apiKey,
+      scopes
+    )
+  ).rejects.toThrow('Failed to persist API key')
 })
 
 test('quota and rate-limit response helpers expose stable client contracts', () => {
