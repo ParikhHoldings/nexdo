@@ -22,6 +22,7 @@
 - surfaced authenticated task-capture server messages so profile/quota/save failures are visible instead of a generic save error
 - surfaced authenticated task edit/delete server messages while still rolling back optimistic local changes
 - surfaced authenticated import server messages before generic import errors so quota/profile failures remain actionable
+- hydrated authenticated import results into the visible task workspace so successful server-side imports do not require a reload before imported tasks appear
 - surfaced authenticated Done-page bulk-delete server messages while restoring failed deletes locally
 - made Google Tasks and Microsoft To Do imports fail closed when a nested provider task-list fetch fails instead of silently importing partial data
 - exposed Google Tasks and Microsoft To Do as honest manual access-token imports while keeping full OAuth marked as post-launch

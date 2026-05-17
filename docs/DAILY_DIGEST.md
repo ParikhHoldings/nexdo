@@ -23,6 +23,7 @@
 - Surfaced authenticated task-capture server messages for profile, quota, and save failures.
 - Surfaced authenticated task edit/delete server messages while preserving optimistic rollback.
 - Surfaced authenticated import server messages before generic import errors.
+- Hydrated authenticated import results into the visible task workspace so successful imports no longer need a reload before the new tasks appear.
 - Surfaced authenticated Done-page bulk-delete server messages while preserving local rollback.
 - Made Google Tasks and Microsoft To Do imports fail closed on nested provider task-list fetch failures.
 - Exposed Google Tasks and Microsoft To Do as manual access-token imports and kept full OAuth explicitly post-launch.

@@ -220,8 +220,8 @@ export default function ImportPage() {
         throw new Error(result.message || result.error || 'Import failed')
       }
 
-      // Add imported tasks to store if in demo mode
-      if (!isAuthenticated && result.tasks) {
+      // Keep the visible workspace in sync with server-side imports.
+      if (Array.isArray(result.tasks)) {
         for (const task of result.tasks as Task[]) {
           addTask({
             ...task,

@@ -600,6 +600,9 @@ test('authenticated imports surface server failure messages before generic error
   const source = readFileSync('app/(app)/import/page.tsx', 'utf8')
 
   expect(source).toContain("result.message || result.error || 'Import failed'")
+  expect(source).toContain('Array.isArray(result.tasks)')
+  expect(source).toContain('Keep the visible workspace in sync with server-side imports.')
+  expect(source).not.toContain('if (!isAuthenticated && result.tasks)')
 })
 
 test('billing actions surface server messages before generic errors', () => {
