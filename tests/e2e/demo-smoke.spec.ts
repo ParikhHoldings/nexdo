@@ -113,9 +113,11 @@ test('demo task capture, briefing, prioritization, and agent output work', async
   await expect(page.getByRole('heading', { name: 'Today', exact: true })).toBeVisible()
   await expect(page.getByText('Top Priorities')).toBeVisible()
 
-  await page
-    .getByPlaceholder('What needs to get done? Be specific...')
-    .fill('Research competitor pricing with Sarah today high priority 45 minutes')
+  const taskCapture = page.getByPlaceholder('What needs to get done? Be specific...')
+  await page.keyboard.press('Control+K')
+  await expect(taskCapture).toBeFocused()
+
+  await taskCapture.fill('Research competitor pricing with Sarah today high priority 45 minutes')
   await page.keyboard.press('Enter')
 
   await expect(
@@ -124,7 +126,6 @@ test('demo task capture, briefing, prioritization, and agent output work', async
   await expect(page.getByText(/6 active tasks/)).toBeVisible()
   await expect(page.getByText('Why now:').first()).toBeVisible()
 
-  const taskCapture = page.getByPlaceholder('What needs to get done? Be specific...')
   await taskCapture.fill('/quick')
   await page.keyboard.press('Enter')
   await expect(taskCapture).toHaveValue('/quick ')

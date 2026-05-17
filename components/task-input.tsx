@@ -22,10 +22,10 @@ export function TaskInput({ onTaskCreated }: TaskInputProps) {
   const { addTask, isAuthenticated } = useTaskStore()
   const toast = useToast()
 
-  // Global keyboard shortcut: Cmd+K to focus
+  // Global keyboard shortcut: Cmd/Ctrl+K to focus capture.
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault()
         inputRef.current?.focus()
       }
