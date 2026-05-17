@@ -979,6 +979,16 @@ test('connect ai page treats paid API access as the usable-key gate', () => {
   expect(source).toContain('const isEnabled = hasUsableApiKey && apiKeyScopes.includes(requiredScope)')
 })
 
+test('API settings hands usable keys off to Connect AI setup', () => {
+  const source = readFileSync('app/(app)/settings/page.tsx', 'utf8')
+
+  expect(source).toContain('hasApiAccess && hasApiKey')
+  expect(source).toContain('Ready to connect AI tools')
+  expect(source).toContain('Keep the full one-time key available')
+  expect(source).toContain('href="/settings/mcp"')
+  expect(source).toContain('Open Connect AI setup')
+})
+
 test('connect ai page normalizes MCP setup error messages', () => {
   const source = readFileSync('app/(app)/settings/mcp/page.tsx', 'utf8')
   const eventsRouteSource = readFileSync('app/api/mcp/events/route.ts', 'utf8')

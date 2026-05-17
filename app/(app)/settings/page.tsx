@@ -1,6 +1,7 @@
 'use client'
 
 import { Suspense, useState } from 'react'
+import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import {
   Bell,
@@ -637,6 +638,26 @@ function SettingsContent() {
                 <p className="text-xs text-zinc-500">
                   Existing keys cannot be revealed. Regenerate to copy a new key.
                 </p>
+              )}
+
+              {hasApiAccess && hasApiKey && (
+                <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-4 sm:flex sm:items-center sm:justify-between sm:gap-4">
+                  <div>
+                    <h3 className="text-sm font-medium text-emerald-300">
+                      Ready to connect AI tools
+                    </h3>
+                    <p className="mt-1 text-xs text-emerald-100/70">
+                      Keep the full one-time key available, then open the guided MCP and ChatGPT Actions setup.
+                    </p>
+                  </div>
+                  <Link
+                    href="/settings/mcp"
+                    className="mt-3 inline-flex items-center justify-center rounded-md bg-emerald-500 px-3 py-1.5 text-sm font-medium text-zinc-950 transition-colors hover:bg-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 focus:ring-offset-zinc-950 sm:mt-0"
+                  >
+                    <ExternalLink className="mr-2 h-4 w-4" />
+                    Open Connect AI setup
+                  </Link>
+                </div>
               )}
 
               <div className="space-y-3">
