@@ -67,7 +67,7 @@ Make Nexdo a credible, launchable early-access product by Monday, 2026-05-18, wi
 | Verify deploy target and production env | `npm run verify:env` was rerun on 2026-05-17 and failed because `.env.local` is absent; no production env or deploy target credentials/config were exercised in this pass | Missing |
 | Keep env verification aligned with runtime placeholder rules | `scripts/verify-env.mjs` and shared runtime helper `lib/env.ts` reject common placeholder fragments across URL and secret values; `.env.local.example` documents smoke-only MCP API-key variables separately from deployed app env | Done |
 | Document local and production setup steps | `docs/DEPLOYMENT.md` now separates no-provider local setup, env preflight, production setup sequence, provider smoke commands, rollback notes, and approval boundaries | Done |
-| Verify preview deploy rail | PR #3 Web rails passed and the latest Vercel preview deployment is green; direct remote route smoke against that preview is blocked by Vercel Deployment Protection until `VERCEL_AUTOMATION_BYPASS_SECRET` or an unprotected preview URL is available | Deploy green; remote route smoke blocked by Vercel auth |
+| Verify preview deploy rail | PR #3 Web rails passed on the latest head after dependency audit was added to CI; Vercel preview deployment passed on earlier branch heads, but the latest head is blocked by Vercel's account build-rate limit; direct remote route smoke against protected previews is blocked by Vercel Deployment Protection until `VERCEL_AUTOMATION_BYPASS_SECRET` or an unprotected preview URL is available | Prior deploy green; latest preview evidence blocked by Vercel account limit and preview auth |
 | Verify Supabase migrations/auth/RLS/task CRUD against real project | Migrations and code exist, but real project smoke test was not run | Missing |
 | Provide a repeatable Supabase smoke command | `npm run smoke:supabase` checks schema columns; `npm run smoke:supabase -- --write` creates/deletes a smoke auth user, verifies profile trigger, allowed profile reads/edits, denied sensitive profile reads/edits, task CRUD through RLS, direct browser denial for task server-managed columns, agent external-ref uniqueness, public audit-event privacy, browser audit-event insert denial, quota increments, quota no-op behavior, and rate-limit allow/block behavior | Done |
 | Provide a repeatable authenticated app API smoke command | `npm run smoke:app` creates and deletes a disposable Supabase user, signs in through the app cookie flow, verifies `GET/POST /api/tasks`, `PATCH/DELETE /api/tasks/[id]`, task-note validation, `POST /api/tasks/[id]/notes`, `GET /api/tasks/[id]/notes`, and uses `VERCEL_AUTOMATION_BYPASS_SECRET` for protected Vercel previews when present | Done |
@@ -102,8 +102,8 @@ Make Nexdo a credible, launchable early-access product by Monday, 2026-05-18, wi
 - `npm audit --audit-level=moderate`
 - `npm run smoke:launch -- --skip-local --skip-providers --technical-only`
 - `git diff --check`
-- PR #3 GitHub Actions Web rails
-- a PR #3 Vercel deployment
+- PR #3 GitHub Actions Web rails on latest head `1680b3c`
+- a prior PR #3 Vercel deployment; latest-head Vercel preview evidence is blocked by the account build-rate limit
 
 ## Commands attempted but blocked
 - `npm run verify:env` failed because `.env.local` is not present in this workspace. `.env.local.example` is present, but it is only the contract and cannot support provider smoke checks.

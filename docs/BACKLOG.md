@@ -95,6 +95,7 @@
 - wired `npm run smoke:app` into the launch smoke between Supabase and OpenAI provider checks
 - refreshed repo-facing verification summaries for the latest 93-test local rail
 - added dependency audit to the GitHub Actions Web rails and source coverage so CI matches the documented launch/deploy checklist
+- verified PR #3 Web rails on latest head `1680b3c`; Vercel preview evidence for that head is blocked by the account build-rate limit
 
 ## Completed 2026-05-16
 - read and updated the repo-level agent context and all existing Markdown/text operating files

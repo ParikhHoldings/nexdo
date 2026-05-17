@@ -98,6 +98,7 @@
 - Wired `npm run smoke:app` into the launch smoke between Supabase and OpenAI provider checks.
 - Refreshed repo-facing verification summaries for the latest 93-test local rail.
 - Added dependency audit to the GitHub Actions Web rails and source coverage so CI matches the documented launch/deploy checklist.
+- Verified PR #3 Web rails on latest head `1680b3c`; Vercel preview evidence for that head is blocked by the account build-rate limit.
 
 ### In progress
 - Provider-backed Supabase, OpenAI, Stripe, and MCP smokes remain the main launch-readiness gap.
