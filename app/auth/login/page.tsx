@@ -1,7 +1,6 @@
 'use client'
 
-import { Suspense } from 'react'
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Mail, Lock, ArrowRight, Sparkles } from 'lucide-react'
@@ -31,6 +30,11 @@ function LoginForm() {
     setIsLoading(true)
     setError(null)
 
+    const normalizedEmail = email.trim()
+    if (normalizedEmail !== email) {
+      setEmail(normalizedEmail)
+    }
+
     const supabase = createClient()
 
     // Demo mode: if Supabase isn't configured, go straight to app
@@ -41,7 +45,7 @@ function LoginForm() {
 
     try {
       const { error: authError } = await supabase.auth.signInWithPassword({
-        email,
+        email: normalizedEmail,
         password,
       })
 

@@ -122,6 +122,8 @@ test('login surfaces callback errors and uses safe redirect helpers', async ({ p
   const loginSource = readFileSync('app/auth/login/page.tsx', 'utf8')
   const callbackSource = readFileSync('app/auth/callback/route.ts', 'utf8')
 
+  expect(loginSource).toContain('const normalizedEmail = email.trim()')
+  expect(loginSource).toContain('email: normalizedEmail')
   expect(loginSource).toContain("safeAuthRedirect(searchParams.get('redirect'))")
   expect(loginSource).toContain("authErrorMessage(searchParams.get('error'))")
   expect(callbackSource).toContain("safeAuthRedirect(searchParams.get('next'))")
