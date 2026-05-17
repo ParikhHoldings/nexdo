@@ -54,6 +54,7 @@ Current local verification from 2026-05-17:
 - `npm run verify:env` failed because `.env.local` is absent; only `.env.local.example` exists in this workspace
 
 Current PR verification:
+- GitHub Actions Web rails include install, lint, typecheck, build, dependency audit, and Playwright smoke testing.
 - PR #3 Web rails passed.
 - Vercel preview deployment is green on the latest head, but direct remote route smoke is blocked by Vercel Deployment Protection until `VERCEL_AUTOMATION_BYPASS_SECRET` is available locally or an unprotected preview URL is used.
 - Some PR pushes have hit Vercel account build-rate limits.

@@ -17,7 +17,7 @@
 - `npm run smoke:routes` now verifies launch-facing routes at desktop and mobile widths against a supplied app URL.
 - `npm run smoke:app` now verifies authenticated app-cookie task CRUD and task-note routes against a supplied app URL and real Supabase env.
 - Playwright tests cover DB-backed MCP tool handler and API-key validation behavior through an in-memory Supabase double, including owned reads, search, briefing, create idempotency, quota ordering, mutations, agent task-note append/readback, audit logging, hashed-key lookup, legacy-key migration, and paid-plan gating.
-- GitHub Actions verification exists for install, lint, typecheck, build, and Playwright smoke testing.
+- GitHub Actions verification exists for install, lint, typecheck, build, dependency audit, and Playwright smoke testing.
 - PR #3 Web rails passed, and Vercel preview deployment passed on a recent code head after the route-smoke rail.
 - Latest Vercel preview deployment is green, but direct remote route smoke is blocked by Vercel Deployment Protection until an automation bypass secret or unprotected preview URL is available.
 - Dependency audit is clean after the Next.js 16, ESLint 9, and PostCSS remediation.

@@ -94,6 +94,7 @@
 - added `npm run smoke:app` to verify authenticated app-cookie task list/create/update/delete and task-note validation/create/readback with disposable Supabase data
 - wired `npm run smoke:app` into the launch smoke between Supabase and OpenAI provider checks
 - refreshed repo-facing verification summaries for the latest 93-test local rail
+- added dependency audit to the GitHub Actions Web rails and source coverage so CI matches the documented launch/deploy checklist
 
 ## Completed 2026-05-16
 - read and updated the repo-level agent context and all existing Markdown/text operating files
