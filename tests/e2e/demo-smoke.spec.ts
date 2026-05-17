@@ -863,6 +863,12 @@ test('demo settings does not allow free-plan API key generation', async ({ page 
 })
 
 test('settings tab query opens billing tab', async ({ page }) => {
+  const source = readFileSync('app/(app)/settings/page.tsx', 'utf8')
+
+  expect(source).toContain('const requestedActiveTab = isSettingsTab(requestedTab) ? requestedTab :')
+  expect(source).toContain('if (tabState.requestedTab !== requestedTab)')
+  expect(source).toContain('setTabState({ requestedTab, activeTab })')
+
   await page.goto('/settings?tab=billing')
 
   await expect(page.getByRole('heading', { name: 'Current Plan' })).toBeVisible()

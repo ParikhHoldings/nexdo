@@ -47,6 +47,7 @@ function SettingsContent() {
   const searchParams = useSearchParams()
   const checkoutStatus = searchParams.get('checkout')
   const requestedTab = searchParams.get('tab')
+  const requestedActiveTab = isSettingsTab(requestedTab) ? requestedTab : 'profile'
 
   const { profile, isAuthenticated, setProfile } = useUserStore()
   const {
@@ -58,9 +59,26 @@ function SettingsContent() {
     setNotificationPermission,
   } = useUIStore()
 
-  const [activeTab, setActiveTab] = useState<Tab>(
-    isSettingsTab(requestedTab) ? requestedTab : 'profile'
-  )
+  const [tabState, setTabState] = useState<{
+    requestedTab: string | null
+    activeTab: Tab
+  }>({
+    requestedTab,
+    activeTab: requestedActiveTab,
+  })
+
+  if (tabState.requestedTab !== requestedTab) {
+    setTabState({
+      requestedTab,
+      activeTab: requestedActiveTab,
+    })
+  }
+
+  const activeTab = tabState.activeTab
+  const setActiveTab = (activeTab: Tab) => {
+    setTabState({ requestedTab, activeTab })
+  }
+
   const [copied, setCopied] = useState(false)
   const [generatedApiKey, setGeneratedApiKey] = useState('')
   const [generatedApiKeyHint, setGeneratedApiKeyHint] = useState('')
