@@ -26,7 +26,7 @@ The goal is not a broad public launch. The credible Monday target is a verified 
 - Agent task creation now has local idempotency handling through `source_agent_id` plus `external_ref`; real Supabase/API-key replay verification is still required.
 - PR #3 Web rails passed on the latest head after dependency audit was added to CI.
 - GitHub Actions Web rails include install, lint, typecheck, build, dependency audit, and Playwright smoke testing so CI matches the documented launch/deploy checklist.
-- Vercel preview deployment passed on earlier branch heads, but the latest head is blocked by Vercel's account build-rate limit, so it does not have fresh preview-deploy evidence.
+- Vercel preview deployment and Vercel Preview Comments passed on the latest checked PR head.
 - Remote route smoke against protected previews needs `VERCEL_AUTOMATION_BYPASS_SECRET` or an unprotected preview URL because those previews are behind Vercel Deployment Protection.
 - Strict build rails: TypeScript and lint failures block `npm run build`. Verified locally on 2026-05-17.
 - OpenAI provider verification now has a repeatable smoke script, `npm run smoke:openai`; it rejects placeholder keys and verifies parse, prioritization, briefing, research, draft, and prep output shapes. With `--app`, it also creates a disposable Supabase user and verifies authenticated app parse, prioritize, briefing, and research/draft/prep execution routes. It still needs to be run with real OpenAI, Supabase, and target app env.

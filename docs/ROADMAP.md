@@ -19,7 +19,7 @@
 - Playwright tests cover DB-backed MCP tool handler and API-key validation behavior through an in-memory Supabase double, including owned reads, search, briefing, create idempotency, quota ordering, mutations, agent task-note append/readback, audit logging, hashed-key lookup, legacy-key migration, and paid-plan gating.
 - GitHub Actions verification exists for install, lint, typecheck, build, dependency audit, and Playwright smoke testing.
 - PR #3 Web rails passed on the latest head after dependency audit was added to CI.
-- Vercel preview deployment passed on earlier branch heads, but the latest head is blocked by Vercel's account build-rate limit, so it does not have fresh preview-deploy evidence.
+- Vercel preview deployment and Vercel Preview Comments passed on the latest checked PR head.
 - Direct remote route smoke against protected previews is blocked by Vercel Deployment Protection until an automation bypass secret or unprotected preview URL is available.
 - Dependency audit is clean after the Next.js 16, ESLint 9, and PostCSS remediation.
 - `npm ci`, `npm run lint`, `npm run typecheck`, `npm run build`, `npm run test:e2e` with 94 tests, dependency audit, and the technical launch smoke partial passed locally on 2026-05-17.

@@ -98,7 +98,7 @@
 - Wired `npm run smoke:app` into the launch smoke between Supabase and OpenAI provider checks.
 - Refreshed repo-facing verification summaries for the latest 94-test local rail.
 - Added dependency audit to the GitHub Actions Web rails and source coverage so CI matches the documented launch/deploy checklist.
-- Verified PR #3 Web rails on the latest checked PR head; Vercel preview evidence for that head is blocked by the account build-rate limit.
+- Verified PR #3 Web rails, Vercel preview deployment, and Vercel Preview Comments on the latest checked PR head.
 - Added a paid-key handoff from Settings > API to the Connect AI setup page so generated API keys lead directly into MCP/ChatGPT Actions setup.
 
 ### In progress
