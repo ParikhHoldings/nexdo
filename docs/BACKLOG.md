@@ -248,6 +248,7 @@
 - added real persisted dark/light appearance support before reintroducing theme controls
 - added real local browser due-task reminders before reintroducing notification controls
 - made local browser due-task reminders order due-today work by due time before priority and show due time in today's reminder body
+- clarified the first revenue wedge around founder/operator AI power users, with agent interoperability as the differentiating Power-user layer instead of the only front-door promise
 - tightened launch-facing copy away from open-ended autonomy, unverified traction, and unverified enterprise-security claims
 - verified `npm ci`, `npm run lint`, `npm run typecheck`, `npm run build`, and `npm run test:e2e` locally
 
@@ -271,9 +272,8 @@
 - complete Quill/founder review of `app/(marketing)/page.tsx` before public launch
 
 ## Medium priority
-- identify the fastest revenue angle for an AI-native task manager in this portfolio context
-- tighten landing/waitlist language around the clearest user promise
-- clarify whether Nexdo should lead with founder/operator use case or broader team use case
+- validate the founder/operator AI-power-user wedge with 5 to 10 design partners
+- tighten landing/waitlist language around the founder/operator execution promise after Quill/founder review
 - verify import quota behavior against a real Supabase profile near the monthly task limit
 
 ## Low priority
@@ -282,8 +282,6 @@
 - expand unsupported OAuth imports before core import and task flows are verified
 
 ## Research / open questions
-- what is the strongest differentiated workflow for Nexdo?
-- what exact user segment should feel the first pull?
-- what minimum product behavior would make Nexdo clearly better than a standard task manager?
-- which agent-executable task types create enough trust without promising open-ended autonomy?
-- should the first public wedge emphasize founder/operator planning or agent task-layer interoperability?
+- which founder/operator subsegment feels the first pull strongest?
+- which bounded execution output creates the strongest early value moment?
+- what proof is needed before MCP/ChatGPT Actions should become a front-door marketing claim?

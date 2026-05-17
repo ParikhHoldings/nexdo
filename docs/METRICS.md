@@ -15,10 +15,13 @@
 - qualified user conversations or signals
 - landing page conversion once active
 - activation rate from signup to first structured task
+- first-session activation for the revenue wedge: capture at least 3 real tasks, inspect prioritization or briefing, and generate or copy one bounded output/handoff
+- founder/operator design partner count and feedback completion rate
 - import completion rate for users migrating from another task tool
 
 ## Business
 - path-to-revenue clarity
+- Power-tier validation signal: at least one AI power user confirms scoped agent/API access would be worth testing after provider smokes pass
 - time from concept to verified MVP execution
 - first monetization milestone readiness
 - free-to-paid upgrade intent once quotas are encountered

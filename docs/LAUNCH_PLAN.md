@@ -67,6 +67,8 @@ The goal is not a broad public launch. The credible Monday target is a verified 
 5. Execute bounded work: support useful research, draft, and prep outputs with clear review expectations.
 6. Trust: deepen edit history, verification notes, and failure states before increasing autonomy.
 
+First revenue wedge: founder/operator AI power users. The launch story should start with daily execution for humans and use agent interoperability as the Power-user differentiator, not as a broad promise that agents will autonomously finish arbitrary work.
+
 ## AI-agent product path
 1. Stabilize the API-key based task layer around list, create, update, add notes, complete, search, get, and brief.
 2. Make agent-created, agent-updated, agent-noted, and agent-completed task mutations distinguishable with `source_agent_id`, `external_ref`, `ingestion_intent`, and `agent_metadata`.
