@@ -180,7 +180,7 @@ Current evidence:
 - Task cards and task detail show agent-origin trace metadata for agent-created, agent-updated, or agent-completed tasks.
 - The idempotency migration and handler logic exist.
 - `npm run smoke:supabase -- --write` can verify the unique database index rejects duplicate `source_agent_id` plus `external_ref` task rows.
-- `npm run smoke:app` can verify authenticated app-cookie task CRUD plus task-note validation, creation, and readback against a real Supabase-backed app session.
+- `npm run smoke:app` can verify authenticated app-cookie task CRUD, task-note validation/create/readback, and agent-review validation/save behavior against a real Supabase-backed app session.
 - `npm run smoke:mcp -- --provision --write --audit` can verify real `create_task`, `update_task`, `add_task_note`, and `complete_task` audit rows with `source_agent_id` plus `external_ref`, and `complete_task` task-row trace persistence, when Supabase service-role env is loaded.
 - Real Supabase/MCP smoke is still required before claiming production readiness.
 
@@ -217,7 +217,7 @@ Monday is not credible if:
 
 ## Launch blockers
 - Real Supabase migrations, auth, RLS, task CRUD, profile/task column grants, quota, uniqueness, and audit smoke.
-- Real authenticated app API task CRUD and task-note route smoke with `npm run smoke:app`.
+- Real authenticated app API task CRUD, task-note, and agent-review route smoke with `npm run smoke:app`.
 - Real OpenAI parse, prioritize, briefing, and execution smoke. `npm run smoke:openai -- --app` can verify the authenticated app routes against a disposable Supabase user once real OpenAI/Supabase/app env is loaded.
 - Stripe test-mode checkout, portal, signed webhook, entitlement, quota, and idempotency smoke. `npm run smoke:stripe -- --write --webhook` now covers signed webhook delivery, unknown-price fail-closed behavior, free/pro/power tier transitions, quota plan-state boundaries, authenticated `POST /api/tasks` quota behavior under those tiers, and duplicate webhook replay.
 - Real MCP/API-key execution, read-only denial, idempotency replay, and audit-write smoke.

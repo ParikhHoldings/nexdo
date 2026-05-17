@@ -182,7 +182,56 @@ async function appJson(cookieHeader, path, options = {}) {
   return data
 }
 
-async function smokeAuthenticatedTaskRoutes(cookieHeader) {
+function reviewableAgentOutput() {
+  const createdAt = new Date().toISOString()
+  const output = {
+    overview: 'Authenticated app smoke prep output.',
+    key_points: ['Confirm launch owner', 'Review smoke evidence'],
+    questions_to_ask: ['Is the handoff ready?'],
+    materials_needed: ['Nexdo launch checklist'],
+    time_estimate: '15 minutes',
+  }
+
+  return {
+    schema_version: 1,
+    current: output,
+    history: [
+      {
+        id: `app-smoke-agent-${randomUUID()}`,
+        action_type: 'prep',
+        output,
+        created_at: createdAt,
+      },
+    ],
+    review: {
+      status: 'unreviewed',
+      note: null,
+      updated_at: null,
+    },
+  }
+}
+
+async function seedReviewableAgentOutput(supabase, taskId) {
+  const seededOutput = reviewableAgentOutput()
+  const { data, error } = await supabase
+    .from('tasks')
+    .update({
+      agent_output: seededOutput,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', taskId)
+    .select('id')
+    .maybeSingle()
+
+  if (error) {
+    throw new Error(`failed to seed reviewable agent output: ${error.message}`)
+  }
+  if (!data?.id) {
+    throw new Error('failed to seed reviewable agent output: task not found')
+  }
+}
+
+async function smokeAuthenticatedTaskRoutes(cookieHeader, supabase) {
   const listedBefore = await appJson(cookieHeader, '/api/tasks')
   if (!Array.isArray(listedBefore.tasks)) {
     throw new Error('/api/tasks did not return a tasks array')
@@ -257,6 +306,34 @@ async function smokeAuthenticatedTaskRoutes(cookieHeader) {
   }
   console.log('ok authenticated task note list')
 
+  await seedReviewableAgentOutput(supabase, created.id)
+  console.log('ok authenticated task agent output seed')
+
+  const invalidReview = await appJson(cookieHeader, `/api/tasks/${created.id}/agent-review`, {
+    method: 'PATCH',
+    body: { status: 'approved' },
+    expectedStatus: 400,
+  })
+  if (!String(invalidReview?.error || '').includes('status must be one of')) {
+    throw new Error('/api/tasks/[id]/agent-review did not reject invalid review status')
+  }
+  console.log('ok authenticated agent review validation')
+
+  const reviewNote = 'Authenticated app smoke verified the agent output.'
+  const reviewedOutput = await appJson(cookieHeader, `/api/tasks/${created.id}/agent-review`, {
+    method: 'PATCH',
+    body: { status: 'verified', note: `  ${reviewNote}  ` },
+  })
+  if (
+    reviewedOutput?.review?.status !== 'verified' ||
+    reviewedOutput.review.note !== reviewNote ||
+    !reviewedOutput.review.updated_at ||
+    reviewedOutput?.history?.[0]?.action_type !== 'prep'
+  ) {
+    throw new Error('/api/tasks/[id]/agent-review did not return the reviewed agent output')
+  }
+  console.log('ok authenticated agent review save')
+
   const deleted = await appJson(cookieHeader, `/api/tasks/${created.id}`, {
     method: 'DELETE',
   })
@@ -279,7 +356,7 @@ async function main() {
     const cookieHeader = await createSmokeSessionCookie(user)
     console.log('ok app smoke auth')
 
-    await smokeAuthenticatedTaskRoutes(cookieHeader)
+    await smokeAuthenticatedTaskRoutes(cookieHeader, supabase)
     console.log('Authenticated app smoke passed.')
   } finally {
     if (userId) {

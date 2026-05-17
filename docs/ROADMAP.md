@@ -15,7 +15,7 @@
 - Playwright now covers demo workspace navigation across mobile sidebar open/close, All Tasks search/filtering, Upcoming grouping, and Done task lifecycle.
 - Playwright smoke tests cover OpenAPI action schema availability, MCP/action auth failures, and action CORS headers.
 - `npm run smoke:routes` now verifies launch-facing routes at desktop and mobile widths against a supplied app URL.
-- `npm run smoke:app` now verifies authenticated app-cookie task CRUD and task-note routes against a supplied app URL and real Supabase env.
+- `npm run smoke:app` now verifies authenticated app-cookie task CRUD, task-note routes, and seeded agent-review save behavior against a supplied app URL and real Supabase env.
 - Playwright tests cover DB-backed MCP tool handler and API-key validation behavior through an in-memory Supabase double, including owned reads, search, briefing, create idempotency, quota ordering, mutations, agent task-note append/readback, audit logging, hashed-key lookup, legacy-key migration, and paid-plan gating.
 - GitHub Actions verification exists for install, lint, typecheck, build, dependency audit, and Playwright smoke testing.
 - PR #3 Web rails have passed on recent checked heads after dependency audit was added to CI.

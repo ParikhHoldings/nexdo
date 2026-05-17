@@ -35,7 +35,7 @@ The goal is not a broad public launch. The credible Monday target is a verified 
 - Stripe checkout now accepts only server-known `pro` and `power` plans, derives price IDs from env, requires billing profile persistence, and skips unknown webhook price IDs instead of granting paid access.
 - Pricing UI now shows only monthly prices because annual Stripe prices are not configured.
 - Supabase provider verification now has a repeatable smoke script, `npm run smoke:supabase`; it still needs to be run with real credentials after migrations are applied.
-- Authenticated app-route verification now has a repeatable smoke script, `npm run smoke:app`; it still needs to be run with real Supabase credentials against the target app URL.
+- Authenticated app-route verification now has a repeatable smoke script, `npm run smoke:app`, including task CRUD, task notes, and agent-review save behavior; it still needs to be run with real Supabase credentials against the target app URL.
 - Supabase migrations now include quota cleanup so usage read probes reset monthly counters without writing zero-quantity audit events.
 - Supabase migrations now column-limit direct browser task inserts/updates so agent output, source-agent metadata, ingestion intent, and completion timestamps stay server-managed; authenticated imports use service-role persistence after auth/quota checks to preserve imported completion timestamps and external refs.
 - Truthful public copy that describes bounded AI assistance instead of open-ended autonomous task completion. Draft tightened on 2026-05-16; still needs Quill/founder approval before external use.

@@ -541,7 +541,7 @@ test('OpenAI smoke can verify authenticated app routes with disposable data', ()
   expect(source).toContain("select('agent_output')")
 })
 
-test('authenticated app smoke verifies task CRUD and task notes', () => {
+test('authenticated app smoke verifies task CRUD, task notes, and agent review', () => {
   const packageJson = JSON.parse(readFileSync('package.json', 'utf8'))
   const source = readFileSync('scripts/smoke-app.mjs', 'utf8')
 
@@ -554,6 +554,10 @@ test('authenticated app smoke verifies task CRUD and task notes', () => {
   expect(source).toContain("appJson(cookieHeader, `/api/tasks/${created.id}/notes`")
   expect(source).toContain('Note content is required')
   expect(source).toContain('Authenticated app smoke note for launch handoff.')
+  expect(source).toContain('seedReviewableAgentOutput(supabase, created.id)')
+  expect(source).toContain("appJson(cookieHeader, `/api/tasks/${created.id}/agent-review`")
+  expect(source).toContain('status must be one of')
+  expect(source).toContain('Authenticated app smoke verified the agent output.')
   expect(source).toContain('VERCEL_AUTOMATION_BYPASS_SECRET')
   expect(source).toContain("'x-vercel-protection-bypass'")
   expect(source).toContain('await supabase.auth.admin.deleteUser(userId)')

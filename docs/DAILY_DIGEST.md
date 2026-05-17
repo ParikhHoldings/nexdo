@@ -109,6 +109,7 @@
 - Fixed deterministic fallback parsing so relative-date phrases such as `by tomorrow` and `due today` do not leave dangling connector words in task titles.
 - Refreshed repo-facing verification summaries for the latest 96-test local rail.
 - Strengthened Connect AI connection testing so pasted full keys must initialize MCP and return available tools through `tools/list`.
+- Expanded `npm run smoke:app` so real app-session verification covers seeded agent-review validation and save behavior.
 
 ### In progress
 - Provider-backed Supabase, OpenAI, Stripe, and MCP smokes remain the main launch-readiness gap.
