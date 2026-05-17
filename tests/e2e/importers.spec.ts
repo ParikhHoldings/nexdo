@@ -3,8 +3,12 @@ import {
   autoMapCSVColumns,
   normalizeTask,
   parseCSVContent,
+  parseDate,
+  parseGoogleTask,
   parseICSContent,
   parseJSONExport,
+  parseMicrosoftTask,
+  parseTime,
   parseTodoistTask,
   saveImportedTasks,
 } from '../../lib/importers'
@@ -86,6 +90,88 @@ test('ICS parser handles VTODO metadata, folded text, tags, and due time', () =>
     due_time: '14:30',
     tags: ['fundraising', 'launch'],
     external_ref: 'ics-1',
+  })
+})
+
+test('import schedule parsing rejects invalid calendar dates and times', () => {
+  expect(parseDate('2026-02-30')).toBeNull()
+  expect(parseDate('20260230')).toBeNull()
+  expect(parseDate('2026-02-30T10:00:00Z')).toBeNull()
+  expect(parseTime('29:00')).toBeNull()
+  expect(parseTime('14:99')).toBeNull()
+  expect(parseTime('14:30:00 extra')).toBeNull()
+  expect(parseTime('143000')).toBe('14:30')
+  expect(parseTime('20260518T143000Z')).toBe('14:30')
+
+  const task = normalizeTask(
+    {
+      title: 'Imported task with invalid schedule',
+      due_date: '2026-13-01',
+      due_time: '29:00',
+    },
+    'csv',
+    USER_ID,
+    'manual'
+  )
+  expect(task.due_date).toBeNull()
+  expect(task.due_time).toBeNull()
+
+  const [icsTask] = parseICSContent(
+    [
+      'BEGIN:VCALENDAR',
+      'BEGIN:VTODO',
+      'SUMMARY:Invalid schedule',
+      'DUE:20260230T296000Z',
+      'END:VTODO',
+      'END:VCALENDAR',
+    ].join('\n'),
+    USER_ID
+  )
+  expect(icsTask.due_date).toBeNull()
+  expect(icsTask.due_time).toBeNull()
+})
+
+test('provider import parsers preserve valid due times from datetimes', () => {
+  expect(
+    parseGoogleTask(
+      {
+        id: 'google-1',
+        title: 'Review launch notes',
+        due: '2026-05-18T11:45:00Z',
+      },
+      USER_ID
+    )
+  ).toMatchObject({
+    due_date: '2026-05-18',
+    due_time: '11:45',
+  })
+
+  expect(
+    parseMicrosoftTask(
+      {
+        id: 'microsoft-1',
+        title: 'Review launch notes',
+        dueDateTime: { dateTime: '2026-05-18T10:15:00Z' },
+      },
+      USER_ID
+    )
+  ).toMatchObject({
+    due_date: '2026-05-18',
+    due_time: '10:15',
+  })
+
+  expect(
+    parseGoogleTask(
+      {
+        id: 'google-date-only',
+        title: 'Date-only Google task',
+        due: '2026-05-18T00:00:00Z',
+      },
+      USER_ID
+    )
+  ).toMatchObject({
+    due_date: '2026-05-18',
+    due_time: null,
   })
 })
 
