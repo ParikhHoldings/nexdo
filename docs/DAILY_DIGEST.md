@@ -6,6 +6,7 @@
 - Made generic task create/update routes reject protected or server-managed fields before quota or database mutation.
 - Added focused coverage for task creation normalization and task patch allowlisting.
 - Tightened the landing page draft around the verified demo path and bounded AI assistance.
+- Tightened landing/signup copy further around bounded AI outputs, scoped Power-plan API access, reviewable agent changes, and non-absolute people/security wording.
 - Added Playwright coverage for the landing page primary CTA routing to `/today`.
 - Added a direct signup-page demo path with browser coverage.
 - Deep-linked Connect AI no-key guidance to `/settings?tab=api` and covered it with a regression check.

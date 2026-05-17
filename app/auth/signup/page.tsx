@@ -11,7 +11,7 @@ import { createClient } from '@/lib/supabase/client'
 const features = [
   'AI-powered task parsing',
   'Smart prioritization',
-  'Agent execution (research, draft, prep)',
+  'Bounded AI outputs for research, draft, and prep tasks',
   'Daily briefings',
 ]
 const MAX_FULL_NAME = 120

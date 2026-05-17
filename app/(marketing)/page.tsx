@@ -136,7 +136,7 @@ export default function LandingPage() {
                   "You waste mental energy deciding what to do next instead of just doing it.",
               },
               {
-                title: 'Zero execution',
+                title: 'Little execution support',
                 description:
                   'The app stores tasks but gives little help preparing the next move.',
               },
@@ -252,15 +252,15 @@ export default function LandingPage() {
               },
               {
                 icon: Zap,
-                title: 'Agent Execution',
+                title: 'Bounded AI Outputs',
                 description:
-                  'Research, draft, and prep tasks get bounded AI-generated outputs.',
+                  'Research, draft, and prep tasks can get reviewable AI-generated starting points.',
               },
               {
                 icon: Users,
                 title: 'People Context',
                 description:
-                  "Track who's waiting on what and never drop the ball.",
+                  'See who is involved, waiting, or relevant to the next step.',
               },
               {
                 icon: CheckCircle2,
@@ -314,7 +314,7 @@ export default function LandingPage() {
               <ul className="space-y-3">
                 {[
                   'Natural language task input',
-                  'AI-powered daily briefings',
+                  'Contextual daily briefings',
                   'Smart prioritization',
                   'Reviewable AI output',
                 ].map((item) => (
@@ -335,15 +335,16 @@ export default function LandingPage() {
                 Agent Workflows
               </h3>
               <p className="text-zinc-400 mb-6">
-                A task layer designed for external AI tools to inspect and
-                update through a controlled API surface.
+                A task layer for external AI tools to inspect and update
+                through scoped, reviewable access.
               </p>
               <ul className="space-y-3">
                 {[
-                  'API access for agents',
+                  'Power-plan API access',
                   'MCP-style tool definitions',
                   'ChatGPT Actions schema',
                   'Human-readable task state',
+                  'Reviewable task changes',
                   'Scoped key permissions',
                 ].map((item) => (
                   <li key={item} className="flex items-center gap-3 text-sm text-zinc-300">
@@ -405,11 +406,11 @@ export default function LandingPage() {
               },
               {
                 q: 'Can I connect my own AI agents?',
-                a: 'Nexdo includes API-key based MCP-style tools and a ChatGPT Actions OpenAPI surface for task access. External-agent use should start with scoped keys and reviewed task changes.',
+                a: 'Nexdo includes Power-plan API-key access, MCP-style tools, and a ChatGPT Actions OpenAPI surface for task access. External-agent use should start with scoped keys and reviewed task changes.',
               },
               {
                 q: 'Is my data secure?',
-                a: 'Nexdo uses Supabase auth, row-level security, and server-side API checks. Production security should still be verified before relying on it for sensitive workloads.',
+                a: 'Nexdo is designed around Supabase auth, row-level security, and server-side API checks. Production security should still be verified before relying on it for sensitive workloads.',
               },
               {
                 q: 'Can I use Nexdo offline?',
