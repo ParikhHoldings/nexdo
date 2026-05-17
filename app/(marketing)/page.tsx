@@ -369,7 +369,20 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <PricingTable showCurrentPlan={false} />
+          <PricingTable
+            showCurrentPlan={false}
+            planLinks={{
+              free: '/today',
+              pro: '/auth/signup',
+              power: '/auth/signup',
+              team: 'mailto:sales@nexdo.ai?subject=Team Plan Inquiry',
+            }}
+            planCtaLabels={{
+              free: 'Try demo',
+              pro: 'Create account',
+              power: 'Create account',
+            }}
+          />
         </div>
       </section>
 

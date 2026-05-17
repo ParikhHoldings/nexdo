@@ -37,6 +37,7 @@
 - Made the MCP endpoint accept the standard initialized notification without a JSON-RPC `id`, and added it to the real-key MCP smoke.
 - Added MCP smoke `--provision` mode to create disposable full/read-only Power-plan API keys for scoped real endpoint verification.
 - Added `npm run smoke:launch` to load a real env file, run local rails, execute Supabase/OpenAI/Stripe/MCP provider smokes in order, and keep public-copy/deploy approvals explicit.
+- Made landing-page pricing CTAs route to demo, signup, or sales email instead of rendering inert upgrade buttons before production checkout is verified.
 - Added optional trace metadata to `complete_task` so agent completion calls can carry `source_agent_id`, `external_ref`, `ingestion_intent`, and bounded metadata into audit rows.
 - Expanded `npm run smoke:stripe -- --write --webhook` so Stripe test-mode verification can post signed webhook events, check unknown-price fail-closed behavior, verify paid/free tier transitions, and prove duplicate-event idempotency with disposable test data.
 - Expanded Stripe webhook smoke to verify free/pro/power quota plan-state boundaries after signed tier-change events.

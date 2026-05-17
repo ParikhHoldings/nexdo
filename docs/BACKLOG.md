@@ -36,6 +36,7 @@
 - made the MCP JSON-RPC endpoint accept the standard initialized notification without an `id`, with real-key smoke coverage for the handshake
 - added MCP smoke `--provision` mode to create disposable full/read-only Power-plan API keys for scoped real endpoint verification
 - added `npm run smoke:launch` to load a real env file, run local rails, run Supabase/OpenAI/Stripe/MCP provider smokes in order, and keep manual launch approval gates explicit
+- made landing-page pricing CTAs functional without implying verified production checkout: Free opens the demo, Pro/Power open signup, and Team opens the sales email path
 - added optional trace metadata to MCP `complete_task` so completion calls can be audited with source agent and external reference context
 - expanded `npm run smoke:stripe -- --write --webhook` to post signed subscription events, verify unknown-price fail-closed behavior, verify paid/free tier transitions, and verify duplicate webhook idempotency against disposable Supabase/Stripe test data
 - expanded `npm run smoke:stripe -- --write --webhook` to verify free/pro/power quota plan-state boundaries after signed webhook tier changes

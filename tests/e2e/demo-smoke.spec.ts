@@ -14,6 +14,24 @@ test('landing page routes the primary CTA to the working demo path', async ({
 
   const demoLink = page.getByRole('link', { name: 'Try the demo' }).first()
   await expect(demoLink).toHaveAttribute('href', '/today')
+
+  const pricingSection = page.locator('#pricing')
+  await expect(
+    pricingSection.getByRole('link', { name: 'Try demo' })
+  ).toHaveAttribute('href', '/today')
+  await expect(
+    pricingSection.getByRole('link', { name: 'Create account' })
+  ).toHaveCount(2)
+  await expect(
+    pricingSection.getByRole('link', { name: 'Create account' }).first()
+  ).toHaveAttribute('href', '/auth/signup')
+  await expect(
+    pricingSection.getByRole('link', { name: 'Create account' }).nth(1)
+  ).toHaveAttribute('href', '/auth/signup')
+  await expect(
+    pricingSection.getByRole('link', { name: 'Contact Sales' })
+  ).toHaveAttribute('href', 'mailto:sales@nexdo.ai?subject=Team Plan Inquiry')
+
   await Promise.all([page.waitForURL('**/today'), demoLink.click()])
   await expect(
     page.getByRole('heading', { name: 'Today', exact: true })
