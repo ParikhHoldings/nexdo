@@ -105,6 +105,7 @@
 - added a labeled task-capture submit button and demo smoke coverage for click-submit behavior
 - fixed deterministic fallback parsing so relative-date phrases such as `by tomorrow` and `due today` do not leave dangling connector words in task titles
 - refreshed repo-facing verification summaries for the latest 96-test local rail
+- strengthened Connect AI connection testing so pasted full keys must initialize MCP and return available tools through `tools/list`
 
 ## Completed 2026-05-16
 - read and updated the repo-level agent context and all existing Markdown/text operating files

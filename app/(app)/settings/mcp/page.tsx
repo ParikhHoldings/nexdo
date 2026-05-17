@@ -119,6 +119,29 @@ function eventArgumentKeys(event: AgentEvent): string[] {
     .slice(0, 6)
 }
 
+function mcpServerVersion(payload: unknown): string {
+  if (!payload || typeof payload !== 'object') return '1.0.0'
+
+  const result = (payload as { result?: unknown }).result
+  if (!result || typeof result !== 'object') return '1.0.0'
+
+  const serverInfo = (result as { serverInfo?: unknown }).serverInfo
+  if (!serverInfo || typeof serverInfo !== 'object') return '1.0.0'
+
+  const version = (serverInfo as { version?: unknown }).version
+  return typeof version === 'string' && version.trim() ? version : '1.0.0'
+}
+
+function mcpToolCount(payload: unknown): number | null {
+  if (!payload || typeof payload !== 'object') return null
+
+  const result = (payload as { result?: unknown }).result
+  if (!result || typeof result !== 'object') return null
+
+  const tools = (result as { tools?: unknown }).tools
+  return Array.isArray(tools) ? tools.length : null
+}
+
 export default function MCPSettingsPage() {
   const { profile } = useUserStore()
   const apiKeyHint = profile?.api_key_hint || ''
@@ -230,7 +253,7 @@ export default function MCPSettingsPage() {
     setTestMessage('')
 
     try {
-      const response = await fetch('/api/mcp', {
+      const initializeResponse = await fetch('/api/mcp', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -243,15 +266,51 @@ export default function MCPSettingsPage() {
         }),
       })
 
-      const data = await response.json()
+      const initializeData = await initializeResponse.json()
+      const hasInitializeResult = Boolean(
+        initializeData &&
+          typeof initializeData === 'object' &&
+          'result' in initializeData
+      )
 
-      if (response.ok && data.result) {
-        setTestStatus('success')
-        setTestMessage(`Connected to Nexdo MCP v${data.result.serverInfo?.version || '1.0.0'}`)
-      } else {
+      if (!initializeResponse.ok || !hasInitializeResult) {
         setTestStatus('error')
-        setTestMessage(apiErrorMessage(data, 'Connection failed'))
+        setTestMessage(apiErrorMessage(initializeData, 'Connection failed'))
+        return
       }
+
+      const toolsResponse = await fetch('/api/mcp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${connectionKey}`,
+        },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: 2,
+          method: 'tools/list',
+        }),
+      })
+
+      const toolsData = await toolsResponse.json()
+      const toolCount = mcpToolCount(toolsData)
+
+      if (!toolsResponse.ok || toolCount === null) {
+        setTestStatus('error')
+        setTestMessage(apiErrorMessage(toolsData, 'Connected, but tool discovery failed.'))
+        return
+      }
+
+      if (toolCount === 0) {
+        setTestStatus('error')
+        setTestMessage('Connection succeeded, but this key does not expose any tools.')
+        return
+      }
+
+      setTestStatus('success')
+      setTestMessage(
+        `Connected to Nexdo MCP v${mcpServerVersion(initializeData)} with ${toolCount} available tool${toolCount === 1 ? '' : 's'}.`
+      )
     } catch (error) {
       setTestStatus('error')
       setTestMessage('Network error. Check your connection.')

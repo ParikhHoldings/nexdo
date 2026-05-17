@@ -197,7 +197,7 @@ Acceptance gate:
 Current evidence:
 - API-key generation and validation are Power/team gated.
 - Hashed key storage and key hints exist.
-- `/settings/mcp` includes prerequisite- and scope-aware setup, disabled no-key connection testing, full-key guidance, and activity surfaces with mutation intent and safe argument-key summaries.
+- `/settings/mcp` includes prerequisite- and scope-aware setup, disabled no-key connection testing, full-key guidance, connection testing that initializes MCP and verifies tool discovery, and activity surfaces with mutation intent and safe argument-key summaries.
 - `/api/mcp/events` filters activity by the authenticated user as well as relying on database policies.
 - `npm run smoke:mcp` can verify read-only scoped keys deny writes and, with `--provision --write --audit`, create disposable scoped keys and verify real audit writes.
 - Real Supabase/API-key smoke remains a launch blocker.

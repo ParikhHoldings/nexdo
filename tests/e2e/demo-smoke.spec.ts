@@ -1041,6 +1041,9 @@ test('connect ai page treats paid API access as the usable-key gate', () => {
   expect(source).toContain('if (!hasUsableApiKey) return')
   expect(source).toContain('Existing API keys are disabled until API access is active again.')
   expect(source).toContain('const isEnabled = hasUsableApiKey && apiKeyScopes.includes(requiredScope)')
+  expect(source).toContain("method: 'tools/list'")
+  expect(source).toContain('mcpToolCount(toolsData)')
+  expect(source).toContain('available tool')
 })
 
 test('API settings hands usable keys off to Connect AI setup', () => {
@@ -1062,7 +1065,10 @@ test('connect ai page normalizes MCP setup error messages', () => {
   expect(source).toContain('function eventArgumentKeys')
   expect(source).toContain('agent metadata included')
   expect(source).toContain("setEventsError(apiErrorMessage(data, 'Unable to load agent activity'))")
-  expect(source).toContain("setTestMessage(apiErrorMessage(data, 'Connection failed'))")
+  expect(source).toContain("setTestMessage(apiErrorMessage(initializeData, 'Connection failed'))")
+  expect(source).toContain(
+    "setTestMessage(apiErrorMessage(toolsData, 'Connected, but tool discovery failed.'))"
+  )
   expect(source).toContain("'message' in data.error")
   expect(eventsRouteSource).toContain('ingestion_intent, metadata, success')
 })
