@@ -13,7 +13,7 @@ import {
   Trash2,
   Edit3,
 } from 'lucide-react'
-import { cn, formatRelativeDate, getPriorityColor } from '@/lib/utils'
+import { cn, formatDueTime, formatRelativeDate, getPriorityColor } from '@/lib/utils'
 import { agentTraceLabel, hasAgentTrace } from '@/lib/agent-trace'
 import { useTaskStore } from '@/lib/store'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -113,7 +113,10 @@ export const TaskCard = forwardRef<HTMLDivElement, TaskCardProps>(function TaskC
               {task.due_date && (
                 <div className="flex items-center gap-1 text-xs text-zinc-500">
                   <Calendar className="h-3 w-3" />
-                  <span>{formatRelativeDate(task.due_date)}</span>
+                  <span>
+                    {formatRelativeDate(task.due_date)}
+                    {task.due_time ? ` at ${formatDueTime(task.due_time)}` : ''}
+                  </span>
                 </div>
               )}
 

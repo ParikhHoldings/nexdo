@@ -31,6 +31,11 @@ export function formatRelativeDate(date: Date | string | null): string {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
+export function formatDueTime(time: string | null): string {
+  if (!time) return ''
+  return time.slice(0, 5)
+}
+
 export function getPriorityColor(priority: string): string {
   const colors: Record<string, string> = {
     urgent: 'border-l-red-500',

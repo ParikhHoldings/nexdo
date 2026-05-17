@@ -55,7 +55,7 @@ Acceptance gate:
 - Direct browser Supabase writes cannot spoof server-managed agent output, source-agent metadata, ingestion intent, or completion timestamps.
 
 Current evidence:
-- `TaskDetail` edit mode supports the MVP task fields.
+- `TaskDetail` edit mode supports the MVP task fields, including optional due time and energy level.
 - The task store rolls back failed authenticated edit/delete mutations and surfaces visible app notifications.
 - `lib/ai-response-validation.ts` bounds OpenAI output.
 - `PATCH /api/tasks/[id]` uses `lib/task-validation.ts` to allowlist user-editable fields and reject protected/server-managed fields such as `user_id`, `completed_at`, `source_agent_id`, and `agent_output`.

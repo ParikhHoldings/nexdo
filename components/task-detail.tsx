@@ -20,7 +20,7 @@ import {
   Save,
   Bot,
 } from 'lucide-react'
-import { cn, formatRelativeDate } from '@/lib/utils'
+import { cn, formatDueTime, formatRelativeDate } from '@/lib/utils'
 import {
   agentMetadataKeys,
   agentTraceLabel,
@@ -47,6 +47,7 @@ import type {
   PrepOutput,
   ResearchOutput,
   Task,
+  EnergyLevel,
   TaskPriority,
   TaskUpdate,
 } from '@/lib/database.types'
@@ -188,6 +189,7 @@ function AgentResult({ output, actionType }: AgentResultProps) {
 
 const PRIORITIES: TaskPriority[] = ['urgent', 'high', 'medium', 'low']
 const ACTION_TYPES: ActionType[] = ['manual', 'research', 'draft', 'prep', 'remind']
+const ENERGY_LEVELS: EnergyLevel[] = ['deep', 'light', 'quick']
 const REVIEW_STATUS_LABELS: Record<AgentReviewStatus, string> = {
   unreviewed: 'Unreviewed',
   verified: 'Verified',
@@ -366,9 +368,11 @@ export function TaskDetail() {
   const [editTitle, setEditTitle] = useState('')
   const [editContext, setEditContext] = useState('')
   const [editDueDate, setEditDueDate] = useState('')
+  const [editDueTime, setEditDueTime] = useState('')
   const [editPriority, setEditPriority] = useState<TaskPriority>('medium')
   const [editActionType, setEditActionType] = useState<ActionType>('manual')
   const [editEstimate, setEditEstimate] = useState('')
+  const [editEnergyLevel, setEditEnergyLevel] = useState<EnergyLevel | ''>('')
   const [editPeople, setEditPeople] = useState('')
   const [editTags, setEditTags] = useState('')
 
@@ -388,9 +392,11 @@ export function TaskDetail() {
     setEditTitle(task.title)
     setEditContext(task.context ?? '')
     setEditDueDate(task.due_date ?? '')
+    setEditDueTime(task.due_time ? formatDueTime(task.due_time) : '')
     setEditPriority(task.priority)
     setEditActionType(task.action_type)
     setEditEstimate(task.estimated_minutes !== null ? String(task.estimated_minutes) : '')
+    setEditEnergyLevel(task.energy_level ?? '')
     setEditPeople(listToText(task.people))
     setEditTags(listToText(task.tags))
   }
@@ -430,14 +436,22 @@ export function TaskDetail() {
       return
     }
 
+    const dueTime = editDueTime.trim()
+    if (dueTime && !/^\d{2}:\d{2}$/.test(dueTime)) {
+      setEditError('Due time must use HH:MM format.')
+      return
+    }
+
     const updates: TaskUpdate = {
       title,
       context: editContext.trim() || null,
       due_date: editDueDate || null,
+      due_time: dueTime || null,
       priority: editPriority,
       action_type: editActionType,
       estimated_minutes:
         estimatedMinutes === null ? null : Math.round(estimatedMinutes),
+      energy_level: editEnergyLevel || null,
       people: textToList(editPeople),
       tags: textToList(editTags),
     }
@@ -648,6 +662,18 @@ export function TaskDetail() {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-zinc-300 mb-1.5">
+                        Due time
+                      </label>
+                      <input
+                        aria-label="Task due time"
+                        type="time"
+                        value={editDueTime}
+                        onChange={(event) => setEditDueTime(event.target.value)}
+                        className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/50"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-zinc-300 mb-1.5">
                         Estimate
                       </label>
                       <input
@@ -660,6 +686,26 @@ export function TaskDetail() {
                         placeholder="Minutes"
                         className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-500 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/50"
                       />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-zinc-300 mb-1.5">
+                        Energy
+                      </label>
+                      <select
+                        aria-label="Task energy level"
+                        value={editEnergyLevel}
+                        onChange={(event) =>
+                          setEditEnergyLevel(event.target.value as EnergyLevel | '')
+                        }
+                        className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/50"
+                      >
+                        <option value="">No energy level</option>
+                        {ENERGY_LEVELS.map((energyLevel) => (
+                          <option key={energyLevel} value={energyLevel}>
+                            {energyLevel}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                   </div>
 
@@ -765,11 +811,27 @@ export function TaskDetail() {
                     </span>
                   </div>
                 )}
+                {task.due_time && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Clock className="h-4 w-4 text-zinc-500" />
+                    <span className="text-zinc-300">
+                      {formatDueTime(task.due_time)}
+                    </span>
+                  </div>
+                )}
                 {task.estimated_minutes && (
                   <div className="flex items-center gap-2 text-sm">
                     <Clock className="h-4 w-4 text-zinc-500" />
                     <span className="text-zinc-300">
                       {task.estimated_minutes} minutes
+                    </span>
+                  </div>
+                )}
+                {task.energy_level && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Sparkles className="h-4 w-4 text-zinc-500" />
+                    <span className="text-zinc-300">
+                      {task.energy_level} energy
                     </span>
                   </div>
                 )}

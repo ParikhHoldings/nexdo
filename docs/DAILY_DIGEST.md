@@ -27,6 +27,7 @@
 - Made Google Tasks and Microsoft To Do imports fail closed on nested provider task-list fetch failures.
 - Exposed Google Tasks and Microsoft To Do as manual access-token imports and kept full OAuth explicitly post-launch.
 - Surfaced authenticated agent-execution and agent-review server messages in task detail.
+- Added due-time and energy-level editing/display to task detail so the MVP task structure is editable from the core workspace.
 - Surfaced authenticated AI briefing/prioritization fallback notices when provider or rate-limit failures force local heuristics.
 - Surfaced billing checkout and portal server messages before generic settings errors.
 - Kept Connect AI setup, activity, and tool indicators bound to active paid API access instead of stale key hints.
