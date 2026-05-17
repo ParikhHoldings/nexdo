@@ -341,6 +341,75 @@ const openApiSpec = {
         security: [{ BearerAuth: [] }],
       },
     },
+    '/api/mcp/actions/add_task_note': {
+      post: {
+        operationId: 'addTaskNote',
+        summary: 'Add a task note',
+        description:
+          'Append a bounded, human-reviewable note to an owned Nexdo task for decisions, links, handoff context, or agent findings.',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['task_id', 'content'],
+                properties: {
+                  task_id: {
+                    type: 'string',
+                    description: 'The ID of the task to add a note to',
+                  },
+                  content: {
+                    type: 'string',
+                    maxLength: 2000,
+                    description: 'Note content to append to the task',
+                  },
+                  source_agent_id: {
+                    type: 'string',
+                    maxLength: 160,
+                    description: 'Optional stable identifier for the agent adding the note',
+                  },
+                  external_ref: {
+                    type: 'string',
+                    maxLength: 160,
+                    description:
+                      'Optional reference id from the calling agent system for audit traceability. Requires source_agent_id.',
+                  },
+                  ingestion_intent: {
+                    type: 'string',
+                    enum: ['create', 'update', 'complete', 'auto'],
+                    description: 'How the agent intended this task note to be interpreted',
+                  },
+                  agent_metadata: {
+                    type: 'object',
+                    additionalProperties: true,
+                    description: 'Optional structured metadata from the calling agent',
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          '200': {
+            description: 'Created task note',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    note: { $ref: '#/components/schemas/TaskNote' },
+                    task: { $ref: '#/components/schemas/Task' },
+                  },
+                },
+              },
+            },
+          },
+          ...actionErrorResponses,
+        },
+        security: [{ BearerAuth: [] }],
+      },
+    },
     '/api/mcp/actions/get_briefing': {
       post: {
         operationId: 'getBriefing',
@@ -545,12 +614,29 @@ const openApiSpec = {
                 nullable: true,
               },
               agent_output: { type: 'object', nullable: true },
+              notes: {
+                type: 'array',
+                items: { $ref: '#/components/schemas/TaskNote' },
+              },
               completed_at: { type: 'string', format: 'date-time', nullable: true },
               created_at: { type: 'string', format: 'date-time' },
               updated_at: { type: 'string', format: 'date-time' },
             },
           },
         ],
+      },
+      TaskNote: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          task_id: { type: 'string' },
+          content: { type: 'string' },
+          note_type: {
+            type: 'string',
+            enum: ['note', 'agent_result', 'link', 'file'],
+          },
+          created_at: { type: 'string', format: 'date-time' },
+        },
       },
       Briefing: {
         type: 'object',

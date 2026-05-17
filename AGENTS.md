@@ -19,14 +19,14 @@ Nexdo is not only a concept. The repo already contains a Next.js product shell w
 The product promise should be grounded in what the code actually supports:
 - natural-language task capture with AI parsing, including due-date and due-time extraction; local fallback parsing should keep titles concise by moving schedule, priority, and estimate phrases into structured metadata
 - priority, due date, context, people, tags, action type, estimate, and energy metadata
-- task-detail notes for human context, decisions, links, and future agent handoff context, with demo localStorage persistence and authenticated owned-task note routes
+- task-detail notes for human context, decisions, links, and future agent handoff context, with demo localStorage persistence, authenticated owned-task note routes, and MCP/ChatGPT Actions support for external agents to append reviewable task notes
 - daily briefing and prioritization generated from task context
 - limited agent execution for owned `research`, `draft`, and `prep` task records, with server-side output persistence, run history, and user verification notes; `manual` and `remind` tasks are not executable AI-agent tasks
 - localStorage-backed demo-mode task and profile data when Supabase is unavailable or the visitor is logged out, so logged-out changes survive reloads
 - persistent dark/light appearance preferences for the app workspace
 - local-date-aware browser due-task reminders for active tasks due today or overdue, permission-gated and sent once per task per day while the app is open
 - imports from Todoist, manual Google/Microsoft access-token imports, plus CSV, ICS, JSON/Trello/Things-style sources, with client-side demo file imports, file previews before mutation, and task quota enforcement for authenticated imports
-- API key based MCP/ChatGPT Actions interop for listing, creating, completing, updating, searching, and briefing tasks; agent task updates can maintain core planning metadata such as due time, action type, estimate, energy, people, tags, and the full task status contract including `cancelled`; cancelled work remains visible and restorable in the human All Tasks flow
+- API key based MCP/ChatGPT Actions interop for listing, creating, completing, updating, adding notes to, searching, reading, and briefing tasks; agent task updates can maintain core planning metadata such as due time, action type, estimate, energy, people, tags, and the full task status contract including `cancelled`; cancelled work remains visible and restorable in the human All Tasks flow
 - Power/team-gated API-key access, scoped API-key permissions, rotation rate limits, prerequisite- and scope-aware MCP setup UI, and an agent action audit table/migration for MCP/API-key calls
 - Connect AI setup and settings UI should keep API access clearly gated to Power/team plans until pricing or entitlement truth changes
 - hashed API-key storage with one-time key reveal, short key hints in settings, and legacy raw-key migration/fallback
@@ -38,7 +38,7 @@ The product promise should be grounded in what the code actually supports:
 - shared local date/time normalizers in `lib/dates.ts`; human task validation, AI task sanitization/output validation, deterministic fallback parsing, import parsing, and MCP task updates should reject impossible due dates and out-of-range due times before persistence or planning use
 - a recent agent activity surface under `/settings/mcp`
 - idempotent agent task creation when callers provide `source_agent_id` plus `external_ref`
-- agent trace metadata on create, update, and complete MCP writes so source agents and external references can be audited
+- agent trace metadata on create, update, complete, and task-note MCP writes so source agents and external references can be audited
 - Stripe-backed plan surfaces, quotas, and rate-limit scaffolding, with checkout price IDs derived from server configuration and unknown webhook prices skipped instead of granting paid access
 
 Do not claim verified production readiness until build, lint, environment, database migrations, auth, Stripe, OpenAI, MCP, and deployment target have been checked in the current environment.
@@ -48,7 +48,7 @@ Current local verification from 2026-05-17:
 - `npm run lint` passed
 - `npm run typecheck` passed
 - `npm run build` passed with strict TypeScript and ESLint checks enabled
-- `npm run test:e2e` passed for 91 tests covering public landing/signup demo CTA smoke, logged-out demo workflows, task workspace lifecycle, task-detail notes save/reload behavior, Today focus/sidebar/briefing alignment for undated active tasks and cancelled-only work, mobile navigation open/close behavior, local-date due-today behavior, file-import preview/confirm flow, agent output history/review notes, persistent appearance and browser reminder settings, task/agent auth guards, shared executable action-type rails that keep `manual`/`remind` tasks out of AI execution controls, owned task-note route guardrails, MCP/OpenAPI/action auth smoke tests, DB-backed MCP handler and API-key validation coverage, billing guardrails, deterministic task-intelligence coverage, import parser coverage, Stripe entitlement mapping, task route validation, local validation helper contracts, invalid date/time rails, MCP/OpenAPI `cancelled` status contract alignment, and cancelled-task UI review/restore coverage
+- `npm run test:e2e` passed for 92 tests covering public landing/signup demo CTA smoke, logged-out demo workflows, task workspace lifecycle, task-detail notes save/reload behavior, Today focus/sidebar/briefing alignment for undated active tasks and cancelled-only work, mobile navigation open/close behavior, local-date due-today behavior, file-import preview/confirm flow, agent output history/review notes, persistent appearance and browser reminder settings, task/agent auth guards, shared executable action-type rails that keep `manual`/`remind` tasks out of AI execution controls, owned task-note route guardrails, MCP/OpenAPI/action auth smoke tests, DB-backed MCP handler and API-key validation coverage including `add_task_note` append/readback behavior, billing guardrails, deterministic task-intelligence coverage, import parser coverage, Stripe entitlement mapping, task route validation, local validation helper contracts, invalid date/time rails, MCP/OpenAPI `cancelled` status contract alignment, and cancelled-task UI review/restore coverage
 - `npm audit --audit-level=moderate` passed with 0 vulnerabilities after the Next.js 16 / ESLint 9 upgrade
 - `npm run smoke:launch -- --skip-local --skip-providers --technical-only` passed; provider smokes, public-copy approval, and production deploy approval remain separate manual gates
 - `npm run verify:env` failed because `.env.local` is absent; only `.env.local.example` exists in this workspace
@@ -83,7 +83,7 @@ Production environment, Supabase migrations, OpenAI provider calls, Stripe test-
 - Billing: Stripe helpers and plan limits in `lib/stripe.ts`; checkout, portal, and webhook routes under `app/api/stripe/`. Checkout accepts only server-known `pro`/`power` plan keys, and webhook tier updates require explicit Stripe price ID mappings.
 - Agent interop: MCP definitions and handlers in `lib/mcp-tools.ts`; JSON-RPC MCP endpoint at `app/api/mcp/route.ts`; ChatGPT Actions OpenAPI at `app/api/mcp/openapi/route.ts`; action wrappers under `app/api/mcp/actions/[tool]/route.ts`. Keep MCP tool schemas, OpenAPI enums, and handler validation aligned when task statuses or fields change.
 - Agent governance: API key scopes are modeled in `lib/agent-scopes.ts`; key generation/hashing helpers live in `lib/api-keys.ts`; hashed keys and key hints are persisted on profiles; agent calls are intended to log to `agent_action_events`.
-- Task notes: shared note validation and demo persistence live in `lib/task-notes.ts`; authenticated owned-task note routes live at `app/api/tasks/[id]/notes/route.ts`; task detail is the human-facing notes surface.
+- Task notes: shared note validation and demo persistence live in `lib/task-notes.ts`; authenticated owned-task note routes live at `app/api/tasks/[id]/notes/route.ts`; `add_task_note` in `lib/mcp-tools.ts` is the external-agent note append path; task detail is the human-facing notes surface.
 - Imports: source-specific and generic normalization in `lib/importers.ts`; import routes under `app/api/import/`.
 - Demo mode: `lib/tasks.ts` provides local demo tasks and `lib/demo-profile.ts` provides a local demo profile when Supabase is not configured or no user is authenticated; browser demo changes persist to localStorage and must never be treated as authenticated product data.
 
@@ -119,8 +119,8 @@ disposable Stripe/Supabase data.
 `npm run smoke:mcp` accepts `NEXDO_API_KEY` for authenticated MCP initialized
 notification, SSE, JSON-RPC, and ChatGPT Actions checks, optional
 `NEXDO_READONLY_API_KEY` for scoped read-only denial checks, and `-- --write`
-for disposable task creation, structured task update, completion, plus
-idempotency checks. Add
+for disposable task creation, structured task update, note append, completion,
+plus idempotency checks. Add
 `--provision` when Supabase service-role env is loaded to create disposable
 full-access and read-only Power-plan API keys instead of using pre-generated
 keys. Add

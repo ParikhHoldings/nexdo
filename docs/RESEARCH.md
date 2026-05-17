@@ -4,7 +4,7 @@
 - traditional task managers
 - AI add-ons layered onto project/task tools
 - founder/operator workflow systems built from docs, spreadsheets, and chat tools
-- agent workspaces and MCP-connected tools that can create or update tasks
+- agent workspaces and MCP-connected tools that can create, update, annotate, or complete tasks
 
 ## Insights
 - productivity software often overpromises intelligence and underdelivers execution leverage

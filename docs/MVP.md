@@ -136,6 +136,7 @@ Required tool surface:
 - create task
 - complete task
 - update task
+- add task note
 - get briefing
 - search tasks
 - get task
@@ -155,8 +156,9 @@ Current evidence:
 - `/api/mcp/actions/[tool]` uses a shared formatter for action responses.
 - `search_tasks` and All Tasks search use the shared metadata search helper across title, context, description, people, and tags.
 - `update_task` accepts the same core planning fields humans can edit: status, due time, action type, estimate, energy level, people, and tags.
+- `add_task_note` lets external agents append bounded, human-reviewable notes to owned tasks without changing task status, and `get_task` returns recent task notes.
 - `npm run test:e2e` covers OpenAPI, action auth, CORS, and unsupported billing guardrails.
-- `npm run smoke:mcp` exists for real API-key initialized-notification handshake, SSE endpoint discovery, list/search/briefing/get/structured-update/complete/idempotency checks, ChatGPT Actions list/search response-shape checks, optional read-only scope denial, provisioned disposable scoped keys, and required `agent_action_events` audit verification with `--provision --write --audit` once a real environment is configured.
+- `npm run smoke:mcp` exists for real API-key initialized-notification handshake, SSE endpoint discovery, list/search/briefing/get/structured-update/add-note/complete/idempotency checks, ChatGPT Actions list/search/add-note response-shape checks, optional read-only scope denial, provisioned disposable scoped keys, and required `agent_action_events` audit verification with `--provision --write --audit` once a real environment is configured.
 
 ### 2. Agent traceability
 Agent-created work must be distinguishable from human-created work.
@@ -173,11 +175,11 @@ Acceptance gate:
 - Agent calls write audit events in real Supabase verification.
 
 Current evidence:
-- MCP create/update/complete schemas expose agent metadata fields.
+- MCP create/update/add-note/complete schemas expose agent metadata fields.
 - Task cards and task detail show agent-origin trace metadata for agent-created or agent-updated tasks.
 - The idempotency migration and handler logic exist.
 - `npm run smoke:supabase -- --write` can verify the unique database index rejects duplicate `source_agent_id` plus `external_ref` task rows.
-- `npm run smoke:mcp -- --provision --write --audit` can verify real `create_task`, `update_task`, and `complete_task` audit rows with `source_agent_id` plus `external_ref` when Supabase service-role env is loaded.
+- `npm run smoke:mcp -- --provision --write --audit` can verify real `create_task`, `update_task`, `add_task_note`, and `complete_task` audit rows with `source_agent_id` plus `external_ref` when Supabase service-role env is loaded.
 - Real Supabase/MCP smoke is still required before claiming production readiness.
 
 ### 3. Least privilege and audit

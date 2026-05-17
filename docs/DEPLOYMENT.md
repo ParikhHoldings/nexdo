@@ -96,7 +96,7 @@ npm run smoke:launch -- --env=.env.production.local --url=https://your-productio
 - Supabase: apply migrations to a real project, create a user, verify profile creation, RLS, task CRUD, import quota enforcement, hashed API-key storage, API key scope persistence and rotation rate limits, profile column read/update grants, direct task column-grant denial for server-managed fields, agent external-ref uniqueness, `agent_action_events` audit writes/privacy, quota no-op behavior, and service-role RPCs.
 - OpenAI: verify parse, prioritization, briefing, and owned-task research/draft/prep execution with real credentials, server-side output persistence, quota use, and rate-limit behavior.
 - Stripe: verify checkout, portal, signed webhook handling, duplicate webhook idempotency, subscription tier updates/deletes, quota enforcement, authenticated task-create quota behavior after entitlement changes, and unknown-price behavior in test mode.
-- MCP/ChatGPT Actions: provision real scoped API keys or provide existing smoke keys, then run authenticated SSE endpoint discovery and list/create/update/complete/search/briefing/get-task calls against real task data, including `create_task` replay with a repeated `source_agent_id` plus `external_ref` and `agent_action_events` audit rows.
+- MCP/ChatGPT Actions: provision real scoped API keys or provide existing smoke keys, then run authenticated SSE endpoint discovery and list/create/update/add-note/complete/search/briefing/get-task calls against real task data, including `create_task` replay with a repeated `source_agent_id` plus `external_ref`, `add_task_note` note readback, and `agent_action_events` audit rows.
 
 Read-only MCP smoke:
 

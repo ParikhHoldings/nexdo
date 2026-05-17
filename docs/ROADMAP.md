@@ -15,21 +15,21 @@
 - Playwright now covers demo workspace navigation across mobile sidebar open/close, All Tasks search/filtering, Upcoming grouping, and Done task lifecycle.
 - Playwright smoke tests cover OpenAPI action schema availability, MCP/action auth failures, and action CORS headers.
 - `npm run smoke:routes` now verifies launch-facing routes at desktop and mobile widths against a supplied app URL.
-- Playwright tests cover DB-backed MCP tool handler and API-key validation behavior through an in-memory Supabase double, including owned reads, search, briefing, create idempotency, quota ordering, mutations, audit logging, hashed-key lookup, legacy-key migration, and paid-plan gating.
+- Playwright tests cover DB-backed MCP tool handler and API-key validation behavior through an in-memory Supabase double, including owned reads, search, briefing, create idempotency, quota ordering, mutations, agent task-note append/readback, audit logging, hashed-key lookup, legacy-key migration, and paid-plan gating.
 - GitHub Actions verification exists for install, lint, typecheck, build, and Playwright smoke testing.
 - PR #3 Web rails passed, and Vercel preview deployment passed on a recent code head after the route-smoke rail.
 - Latest Vercel preview deployment is green, but direct remote route smoke is blocked by Vercel Deployment Protection until an automation bypass secret or unprotected preview URL is available.
 - Dependency audit is clean after the Next.js 16, ESLint 9, and PostCSS remediation.
-- `npm ci`, `npm run lint`, `npm run typecheck`, `npm run build`, `npm run test:e2e` with 91 tests, dependency audit, and the technical launch smoke partial passed locally on 2026-05-17.
+- `npm ci`, `npm run lint`, `npm run typecheck`, `npm run build`, `npm run test:e2e` with 92 tests, dependency audit, and the technical launch smoke partial passed locally on 2026-05-17.
 - `docs/MVP.md` now defines the smallest trustworthy MVP path around capture, structure, prioritize, brief, bounded execution, and scoped agent task-layer access.
 - Import, billing/quota, MCP, and ChatGPT Actions surfaces exist.
 - File imports now preview task count, sample titles, and plan/cap warnings before tasks are added.
 - Google Tasks and Microsoft To Do are usable through manual access-token imports; full OAuth is still a post-launch integration path.
 - Due-today task filters, Today/sidebar/briefing focus counts, browser reminders, MCP filtering, date-only imports, and relative labels now use local calendar dates instead of UTC day strings.
-- Task detail now exposes human task notes backed by demo localStorage and authenticated owned-task note routes.
+- Task detail now exposes human task notes backed by demo localStorage and authenticated owned-task note routes; external agents can append bounded task notes through MCP/ChatGPT Actions.
 - Bounded agent outputs now keep execution history plus verification status and notes in the task detail panel.
 - The bounded executable action contract is centralized in `lib/task-actions.ts` so UI surfaces, authenticated execution, and agent-output history agree that only research, draft, and prep tasks can run AI execution.
-- Agent `update_task` can now maintain the core planning fields humans can edit, including due time, action type, estimate, energy level, people, and tags.
+- Agent `update_task` can now maintain the core planning fields humans can edit, including due time, action type, estimate, energy level, people, and tags; `add_task_note` lets agents append reviewable handoff context without changing task status.
 - Human task-create and task-patch routes now share `lib/task-validation.ts` so protected/server-managed fields are rejected before quota or database mutation.
 - Direct browser task writes are now column-limited so agent output, source-agent metadata, ingestion intent, and completion timestamps stay server-managed; server import routes persist imported external refs/completion timestamps through the service-role path after auth/quota checks.
 - The landing/signup draft now routes demo CTAs to the verified demo path and avoids treating unverified agent flows as a broad launch claim.

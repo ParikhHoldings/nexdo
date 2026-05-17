@@ -5,10 +5,12 @@ import { apiKeyHint, hashApiKey } from '@/lib/api-keys'
 import { checkQuota, consumeQuota } from '@/lib/quota'
 import { getLocalDateKey, normalizeLocalDateKey, normalizeLocalTime } from '@/lib/dates'
 import { taskMatchesSearch } from '@/lib/task-search'
+import { MAX_TASK_NOTE_LENGTH, validateTaskNoteContent } from '@/lib/task-notes'
 import type {
   ActionType,
   EnergyLevel,
   Task,
+  TaskNote,
   TaskStatus,
   TaskPriority,
   BriefingContent,
@@ -226,6 +228,46 @@ export const MCP_TOOLS: MCPTool[] = [
     },
   },
   {
+    name: 'add_task_note',
+    description:
+      'Append a bounded, human-reviewable note to an owned Nexdo task. Use this for decisions, links, handoff context, or agent findings that should remain visible on the task without changing task status.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        task_id: {
+          type: 'string',
+          description: 'The ID of the task to add a note to',
+        },
+        content: {
+          type: 'string',
+          maxLength: MAX_TASK_NOTE_LENGTH,
+          description: 'Note content to append to the task',
+        },
+        source_agent_id: {
+          type: 'string',
+          maxLength: MAX_AGENT_REF,
+          description: 'Optional stable identifier for the agent adding the note',
+        },
+        external_ref: {
+          type: 'string',
+          maxLength: MAX_AGENT_REF,
+          description:
+            'Optional reference id from the calling agent system for audit traceability. Requires source_agent_id.',
+        },
+        ingestion_intent: {
+          type: 'string',
+          enum: ['create', 'update', 'complete', 'auto'],
+          description: 'How the agent intended this task note to be interpreted',
+        },
+        agent_metadata: {
+          type: 'object',
+          description: 'Optional structured metadata from the calling agent',
+        },
+      },
+      required: ['task_id', 'content'],
+    },
+  },
+  {
     name: 'get_briefing',
     description:
       "Get today's AI-generated briefing including top priorities, overdue tasks, quick wins, and tasks where someone is waiting.",
@@ -311,6 +353,16 @@ function formatTaskForResponse(task: Task): Record<string, unknown> {
     source_agent_id: task.source_agent_id,
     external_ref: task.external_ref,
     ingestion_intent: task.ingestion_intent,
+  }
+}
+
+function formatTaskNoteForResponse(note: TaskNote): Record<string, unknown> {
+  return {
+    id: note.id,
+    task_id: note.task_id,
+    content: note.content,
+    note_type: note.note_type,
+    created_at: note.created_at,
   }
 }
 
@@ -920,6 +972,102 @@ const updateTask: ToolHandler = async (args, userId, deps) => {
   }
 }
 
+const addTaskNote: ToolHandler = async (args, userId, deps) => {
+  const supabaseRaw = await deps.createServiceClient()
+  const supabase = supabaseRaw as any
+  if (!supabaseRaw) {
+    return {
+      content: [{ type: 'text', text: 'Database not configured' }],
+      isError: true,
+    }
+  }
+
+  const taskIdResult = stringArg(args, 'task_id', { required: true })
+  if (taskIdResult.error) return toolError(taskIdResult.error)
+  const taskId = taskIdResult.value as string
+
+  const contentResult = validateTaskNoteContent(args.content)
+  if ('error' in contentResult) return toolError(`Error: ${contentResult.error}`)
+
+  const sourceAgentResult = stringArg(args, 'source_agent_id', {
+    maxLength: MAX_AGENT_REF,
+  })
+  if (sourceAgentResult.error) return toolError(sourceAgentResult.error)
+  const externalRefResult = stringArg(args, 'external_ref', {
+    maxLength: MAX_AGENT_REF,
+  })
+  if (externalRefResult.error) return toolError(externalRefResult.error)
+
+  if (externalRefResult.value && !sourceAgentResult.value) {
+    return toolError('Error: source_agent_id is required when external_ref is provided')
+  }
+
+  if (args.ingestion_intent !== undefined) {
+    const intent = optionalIngestionIntent(args.ingestion_intent)
+    if (!intent) {
+      return toolError(`Error: ingestion_intent must be one of ${INGESTION_INTENTS.join(', ')}`)
+    }
+  }
+
+  const metadataResult = metadataArg(args.agent_metadata)
+  if (metadataResult.error) return toolError(metadataResult.error)
+
+  const { data: task, error: taskError } = await supabase
+    .from('tasks')
+    .select('*')
+    .eq('id', taskId)
+    .eq('user_id', userId)
+    .maybeSingle()
+
+  if (taskError) {
+    return {
+      content: [{ type: 'text', text: `Error: ${taskError.message}` }],
+      isError: true,
+    }
+  }
+
+  if (!task) {
+    return toolError('Error: Task not found')
+  }
+
+  const { data: note, error: noteError } = await supabase
+    .from('task_notes')
+    .insert({
+      task_id: task.id,
+      content: contentResult.content,
+      note_type: 'note',
+    })
+    .select()
+    .single()
+
+  if (noteError) {
+    return {
+      content: [{ type: 'text', text: `Error: ${noteError.message}` }],
+      isError: true,
+    }
+  }
+
+  if (!note) {
+    return toolError('Error: Failed to add task note')
+  }
+
+  return {
+    content: [
+      {
+        type: 'text',
+        text: JSON.stringify(
+          {
+            note: formatTaskNoteForResponse(note),
+            task: formatTaskForResponse(task),
+          },
+          null,
+          2
+        ),
+      },
+    ],
+  }
+}
+
 const getBriefing: ToolHandler = async (args, userId, deps) => {
   const supabaseRaw = await deps.createServiceClient()
   const supabase = supabaseRaw as any
@@ -1052,6 +1200,20 @@ const getTask: ToolHandler = async (args, userId, deps) => {
     return toolError('Error: Task not found')
   }
 
+  const { data: notes, error: notesError } = await supabase
+    .from('task_notes')
+    .select('*')
+    .eq('task_id', task.id)
+    .order('created_at', { ascending: false })
+    .limit(20)
+
+  if (notesError) {
+    return {
+      content: [{ type: 'text', text: `Error: ${notesError.message}` }],
+      isError: true,
+    }
+  }
+
   // Include full task details with agent_output
   return {
     content: [
@@ -1065,6 +1227,7 @@ const getTask: ToolHandler = async (args, userId, deps) => {
             action_type: task.action_type,
             energy_level: task.energy_level,
             agent_output: task.agent_output,
+            notes: (notes || []).map(formatTaskNoteForResponse),
             completed_at: task.completed_at,
             created_at: task.created_at,
             updated_at: task.updated_at,
@@ -1083,6 +1246,7 @@ const TOOL_HANDLERS: Record<string, ToolHandler> = {
   create_task: createTask,
   complete_task: completeTask,
   update_task: updateTask,
+  add_task_note: addTaskNote,
   get_briefing: getBriefing,
   search_tasks: searchTasks,
   get_task: getTask,

@@ -89,7 +89,11 @@
 - Refreshed repo-facing verification summaries for the then-current 89-test local rail.
 - Added task-detail notes backed by demo localStorage and authenticated owned-task note routes for human decisions, links, and future agent handoff context.
 - Added regression coverage for demo task note save/reload behavior and task-note route validation/ownership rails.
-- Refreshed repo-facing verification summaries for the latest 91-test local rail.
+- Refreshed repo-facing verification summaries for the then-current 91-test local rail.
+- Added MCP/ChatGPT Actions `add_task_note` so external agents can append bounded, human-reviewable notes to owned tasks.
+- Made MCP `get_task` return recent task notes and covered note append/readback through local handler, OpenAPI, action formatter, and scope tests.
+- Expanded `npm run smoke:mcp -- --write` to verify JSON-RPC and ChatGPT Actions task-note appends plus note audit rows when `--audit` is enabled.
+- Refreshed repo-facing verification summaries for the latest 92-test local rail.
 
 ### In progress
 - Provider-backed Supabase, OpenAI, Stripe, and MCP smokes remain the main launch-readiness gap.

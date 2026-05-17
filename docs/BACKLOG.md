@@ -86,7 +86,11 @@
 - refreshed README, launch plan, roadmap, and completion audit verification summaries for the then-current 89-test local rail
 - added task-detail notes backed by demo localStorage and authenticated owned-task note routes for human decisions, links, and future agent handoff context
 - added regression coverage for demo task note save/reload behavior and task-note route validation/ownership rails
-- refreshed repo-facing verification summaries for the latest 91-test local rail
+- refreshed repo-facing verification summaries for the then-current 91-test local rail
+- added MCP/ChatGPT Actions `add_task_note` so external agents can append bounded, human-reviewable notes to owned tasks without changing task status
+- made MCP `get_task` return recent task notes for agent context and expanded local handler/OpenAPI/action coverage for note append/readback behavior
+- expanded `npm run smoke:mcp -- --write` to verify JSON-RPC and ChatGPT Actions task-note appends plus note audit rows when `--audit` is enabled
+- refreshed repo-facing verification summaries for the latest 92-test local rail
 
 ## Completed 2026-05-16
 - read and updated the repo-level agent context and all existing Markdown/text operating files
@@ -191,6 +195,7 @@
 - smoke test MCP JSON-RPC and ChatGPT Actions OpenAPI/API-key flow
 - smoke test authenticated MCP tool execution against real task data
 - smoke test MCP `create_task` idempotency replay against real task data
+- smoke test MCP `add_task_note` and `get_task` note readback against real task data
 - smoke test scoped MCP key behavior and `agent_action_events` writes against a real Supabase project with `npm run smoke:mcp -- --provision --write --audit`
 - complete Quill/founder review of `app/(marketing)/page.tsx` before public launch
 

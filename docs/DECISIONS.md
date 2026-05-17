@@ -1,5 +1,15 @@
 # Decisions
 
+## 2026-05-17 - Agent task notes are reviewable context, not execution
+### Decision
+MCP and ChatGPT Actions expose `add_task_note` as a bounded write tool for appending human-reviewable notes to owned tasks. The tool uses the shared task-note validator, requires `tasks:write`, records source-agent trace metadata through `agent_action_events`, and does not change task status or agent output. `get_task` returns recent notes so external agents can read handoff context before acting.
+
+### Why
+Nexdo's agent layer should make tasks a useful coordination object without turning every agent interaction into a status mutation or opaque output blob. Notes give agents a safe place to leave findings, decisions, links, and handoff context for the human owner.
+
+### Impact
+Future note-like agent capabilities should preserve ownership checks, note length limits, scoped write access, OpenAPI/action schema alignment, and smoke/audit coverage before being treated as part of the external-agent contract.
+
 ## 2026-05-17 - Executable AI task types are a shared contract
 ### Decision
 `research`, `draft`, and `prep` are the only MVP task action types that can expose AI-agent execution. `manual` and `remind` tasks remain structured planning/reminder tasks, not executable agent jobs. The shared contract lives in `lib/task-actions.ts` and should be used by task cards, task detail, authenticated execution, and agent-output history.
@@ -63,7 +73,7 @@ Before production billing is treated as launch-ready, run the webhook smoke agai
 
 ## 2026-05-17 - Agent write smokes must exercise the full task tool path
 ### Decision
-`npm run smoke:mcp` should call the authenticated MCP initialized notification, SSE discovery endpoint, actual MCP JSON-RPC and ChatGPT Actions read surfaces, and its write mode should create, replay, read, update, complete, and optionally audit a disposable task. MCP `complete_task` accepts optional source-agent metadata so completion events can be traced like create and update events.
+`npm run smoke:mcp` should call the authenticated MCP initialized notification, SSE discovery endpoint, actual MCP JSON-RPC and ChatGPT Actions read surfaces, and its write mode should create, replay, read, update, add a task note, complete, and optionally audit a disposable task. MCP `complete_task` and `add_task_note` accept optional source-agent metadata so completion and note events can be traced like create and update events.
 When run with `--provision`, it should create disposable Power-plan profiles with full-access and read-only scoped API keys so external-agent verification does not depend on manual key generation.
 
 ### Why

@@ -6,10 +6,10 @@ The goal is not a broad public launch. The credible Monday target is a verified 
 `docs/MVP.md` is the working product contract for this target: capture -> structure -> prioritize -> brief -> bounded execution, plus scoped task-layer access for AI agents.
 
 ### Must ship
-- A local app that passes clean install, lint, typecheck, build, dependency audit, and Playwright smoke tests. Latest full local rail passed 91 tests on 2026-05-17.
+- A local app that passes clean install, lint, typecheck, build, dependency audit, and Playwright smoke tests. Latest full local rail passed 92 tests on 2026-05-17.
 - A usable logged-out demo flow: load `/today`, inspect demo tasks, add a natural-language task, see prioritization, open an executable task, and generate a bounded agent output. Verified locally through the 2026-05-17 Playwright suite.
 - Core task mutation routes now validate allowlisted fields and protect owned-task updates/deletes.
-- Task detail now supports notes for launch context and handoffs, with logged-out demo persistence and authenticated owned-task note routes.
+- Task detail now supports notes for launch context and handoffs, with logged-out demo persistence, authenticated owned-task note routes, and external-agent note appends through MCP/ChatGPT Actions.
 - Authenticated agent execution now loads owned task records by `taskId`, rejects unsupported action types through the shared executable-action contract, saves output server-side, and checks quota-consumption failures.
 - Bounded agent outputs now include execution history and user verification notes in task detail; authenticated review-note persistence still needs real Supabase verification.
 - Manual and reminder tasks do not expose AI-agent run controls in the task card or detail surfaces.
@@ -19,7 +19,7 @@ The goal is not a broad public launch. The credible Monday target is a verified 
 - Agent-side cancelled tasks remain visible in All Tasks through an explicit `cancelled` status filter and can be restored from task detail.
 - API key rotation now uses the shared rate-limit rail and verifies hashed-key persistence before revealing a new scoped MCP/API key.
 - MCP/API keys now have local scope modeling, scope-aware setup UI, scope-filtered tool listings, scope enforcement, and an agent action audit table. Real Supabase/API-key verification is still required before treating this as production-ready.
-- MCP smoke can now verify OpenAPI availability, initialized-notification handshake, authenticated SSE endpoint discovery, JSON-RPC list/search/briefing/get/update/complete execution, ChatGPT Actions list/search response shape, read-only scoped key denial, provisioned disposable scoped keys, write idempotency, and required audit rows when run with `--provision --write --audit`.
+- MCP smoke can now verify OpenAPI availability, initialized-notification handshake, authenticated SSE endpoint discovery, JSON-RPC list/search/briefing/get/update/add-note/complete execution, ChatGPT Actions list/search/add-note response shape, read-only scoped key denial, provisioned disposable scoped keys, write idempotency, and required audit rows when run with `--provision --write --audit`.
 - Route smoke can now verify launch-facing marketing, app, auth, import, settings, MCP setup, privacy, and terms routes at desktop and mobile widths against a preview/production URL.
 - The MCP settings page now exposes recent agent activity from the audit table when a user is authenticated.
 - Agent task creation now has local idempotency handling through `source_agent_id` plus `external_ref`; real Supabase/API-key replay verification is still required.
@@ -60,8 +60,8 @@ The goal is not a broad public launch. The credible Monday target is a verified 
 6. Trust: deepen edit history, verification notes, and failure states before increasing autonomy.
 
 ## AI-agent product path
-1. Stabilize the API-key based task layer around list, create, update, complete, search, and brief.
-2. Make agent-created and agent-completed task mutations distinguishable with `source_agent_id`, `external_ref`, `ingestion_intent`, and `agent_metadata`.
+1. Stabilize the API-key based task layer around list, create, update, add notes, complete, search, get, and brief.
+2. Make agent-created, agent-updated, agent-noted, and agent-completed task mutations distinguishable with `source_agent_id`, `external_ref`, `ingestion_intent`, and `agent_metadata`.
 3. Verify idempotency, direct browser column denial, and safer conflict handling for agent writes against a real Supabase project.
 4. Verify scoped API keys and least-privilege permissions against a real Supabase project.
 5. Verify audit trails for agent actions with real MCP/API-key execution.

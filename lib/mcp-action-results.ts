@@ -40,6 +40,13 @@ export function formatActionToolResult(
       }
     }
 
+    if (toolName === 'add_task_note') {
+      return {
+        body: data && typeof data === 'object' && !Array.isArray(data) ? data : {},
+        status: 200,
+      }
+    }
+
     return {
       body: { task: data },
       status: 200,

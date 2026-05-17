@@ -7,6 +7,7 @@ const actionTools = [
   'create_task',
   'complete_task',
   'update_task',
+  'add_task_note',
   'get_briefing',
   'search_tasks',
   'get_task',
@@ -112,6 +113,21 @@ test('OpenAPI exposes the agent action contract', async ({ request }) => {
   ])
   expect(updateTaskSchema.properties.people.maxItems).toBe(50)
   expect(updateTaskSchema.properties.tags.items.maxLength).toBe(120)
+  const addTaskNoteSchema =
+    spec.paths['/api/mcp/actions/add_task_note'].post.requestBody.content[
+      'application/json'
+    ].schema
+  expect(addTaskNoteSchema.required).toEqual(['task_id', 'content'])
+  expect(addTaskNoteSchema.properties.content.maxLength).toBe(2000)
+  expect(addTaskNoteSchema.properties.source_agent_id.maxLength).toBe(160)
+  expect(addTaskNoteSchema.properties.external_ref.description).toContain(
+    'source_agent_id'
+  )
+  expect(
+    spec.paths['/api/mcp/actions/add_task_note'].post.responses['200'].content[
+      'application/json'
+    ].schema.properties.note
+  ).toEqual({ $ref: '#/components/schemas/TaskNote' })
   const searchTaskSchema =
     spec.paths['/api/mcp/actions/search_tasks'].post.requestBody.content[
       'application/json'
@@ -132,6 +148,15 @@ test('OpenAPI exposes the agent action contract', async ({ request }) => {
   expect(spec.components.schemas.Task.properties.idempotent_replay).toBeTruthy()
   expect(spec.components.schemas.Task.properties.ingestion_intent).toBeTruthy()
   expect(spec.components.schemas.Task.properties.energy_level).toBeTruthy()
+  expect(spec.components.schemas.TaskDetails.allOf[1].properties.notes.items).toEqual({
+    $ref: '#/components/schemas/TaskNote',
+  })
+  expect(spec.components.schemas.TaskNote.properties.note_type.enum).toEqual([
+    'note',
+    'agent_result',
+    'link',
+    'file',
+  ])
 })
 
 test('ChatGPT Action formatter matches advertised response shapes', () => {
@@ -168,6 +193,26 @@ test('ChatGPT Action formatter matches advertised response shapes', () => {
     })
   ).toEqual({
     body: { task: { id: 'task-3' } },
+    status: 200,
+  })
+
+  expect(
+    formatActionToolResult('add_task_note', {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify({
+            note: { id: 'note-1', task_id: 'task-3' },
+            task: { id: 'task-3' },
+          }),
+        },
+      ],
+    })
+  ).toEqual({
+    body: {
+      note: { id: 'note-1', task_id: 'task-3' },
+      task: { id: 'task-3' },
+    },
     status: 200,
   })
 
@@ -343,6 +388,8 @@ test('MCP smoke can provision disposable scoped API keys', () => {
   expect(source).toContain('async function assertMcpSseEndpoint')
   expect(source).toContain('async function rpcNotification')
   expect(source).toContain("await rpcNotification('notifications/initialized')")
+  expect(source).toContain("'add_task_note'")
+  expect(source).toContain("'/api/mcp/actions/add_task_note'")
   expect(source).toContain("contentType.includes('text/event-stream')")
   expect(source).toContain("text.includes('event: endpoint')")
   expect(source).toContain('await assertMcpSseEndpoint()')

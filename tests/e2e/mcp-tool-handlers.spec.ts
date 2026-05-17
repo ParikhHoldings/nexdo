@@ -12,10 +12,11 @@ import type {
   BriefingContent,
   ParsedTask,
   Task,
+  TaskNote,
   TaskStatus,
 } from '../../lib/database.types'
 
-type TableName = 'tasks' | 'profiles' | 'agent_action_events'
+type TableName = 'tasks' | 'profiles' | 'agent_action_events' | 'task_notes'
 type Row = Record<string, any>
 type QueryError = { message: string; code?: string } | null
 type QueryResult = { data: any; error: QueryError }
@@ -62,18 +63,31 @@ function makeTask(overrides: Partial<Task> = {}): Task {
   }
 }
 
+function makeTaskNote(overrides: Partial<TaskNote> = {}): TaskNote {
+  return {
+    id: 'note-1',
+    task_id: 'task-1',
+    content: 'Preserve this handoff context.',
+    note_type: 'note',
+    created_at: '2026-05-16T12:05:00.000Z',
+    ...overrides,
+  }
+}
+
 function parseResult<T>(result: ToolResult): T {
   return JSON.parse(result.content[0].text) as T
 }
 
 class FakeSupabase {
   tasks: Row[]
+  taskNotes: Row[]
   profiles: Row[]
   agentActionEvents: Row[]
   private idCounter = 1
 
-  constructor(input: { tasks?: Row[]; profiles?: Row[] } = {}) {
+  constructor(input: { tasks?: Row[]; taskNotes?: Row[]; profiles?: Row[] } = {}) {
     this.tasks = input.tasks ? [...input.tasks] : []
+    this.taskNotes = input.taskNotes ? [...input.taskNotes] : []
     this.profiles = input.profiles ? [...input.profiles] : []
     this.agentActionEvents = []
   }
@@ -90,6 +104,7 @@ class FakeSupabase {
 
   tableRows(table: TableName) {
     if (table === 'tasks') return this.tasks
+    if (table === 'task_notes') return this.taskNotes
     if (table === 'profiles') return this.profiles
     return this.agentActionEvents
   }
@@ -320,6 +335,13 @@ test('DB-backed MCP read handlers filter, search, brief, and audit owned tasks',
   const today = getLocalDateKey()
   const db = new FakeSupabase({
     profiles: [{ id: 'user-1', full_name: 'Maya' }],
+    taskNotes: [
+      makeTaskNote({
+        id: 'waiting-note',
+        task_id: 'waiting-task',
+        content: 'Casey owns the approval context.',
+      }),
+    ],
     tasks: [
       makeTask({
         id: 'today-task',
@@ -376,7 +398,11 @@ test('DB-backed MCP read handlers filter, search, brief, and audit owned tasks',
   )
   expect(searched.map((task) => task.id)).toEqual(['waiting-task'])
 
-  const task = parseResult<{ id: string; agent_output: unknown }>(
+  const task = parseResult<{
+    id: string
+    agent_output: unknown
+    notes: Array<{ id: string; content: string }>
+  }>(
     await executeToolWithDependencies(
       'get_task',
       { task_id: 'waiting-task' },
@@ -386,6 +412,12 @@ test('DB-backed MCP read handlers filter, search, brief, and audit owned tasks',
   )
   expect(task.id).toBe('waiting-task')
   expect(task.agent_output).toBeNull()
+  expect(task.notes).toEqual([
+    expect.objectContaining({
+      id: 'waiting-note',
+      content: 'Casey owns the approval context.',
+    }),
+  ])
 
   const missingTask = await executeToolWithDependencies(
     'get_task',
@@ -423,6 +455,7 @@ test('DB-backed MCP read handlers filter, search, brief, and audit owned tasks',
 test('MCP tool schemas advertise all accepted task statuses', () => {
   const listTasks = MCP_TOOLS.find((tool) => tool.name === 'list_tasks')
   const updateTask = MCP_TOOLS.find((tool) => tool.name === 'update_task')
+  const addTaskNote = MCP_TOOLS.find((tool) => tool.name === 'add_task_note')
 
   expect(listTasks?.inputSchema.properties.status).toMatchObject({
     enum: ['todo', 'in_progress', 'waiting', 'done', 'cancelled'],
@@ -430,6 +463,10 @@ test('MCP tool schemas advertise all accepted task statuses', () => {
   expect(updateTask?.inputSchema.properties.status).toMatchObject({
     enum: ['todo', 'in_progress', 'waiting', 'done', 'cancelled'],
   })
+  expect(addTaskNote?.inputSchema.properties.content).toMatchObject({
+    maxLength: 2000,
+  })
+  expect(addTaskNote?.inputSchema.required).toEqual(['task_id', 'content'])
 })
 
 test('DB-backed MCP create_task pre-checks quota, inserts parsed agent tasks, records quota, and logs metadata', async () => {
@@ -842,6 +879,125 @@ test('DB-backed MCP mutation handlers update owned tasks and log failures', asyn
     false,
     false,
     false,
+    false,
+    false,
+    false,
+  ])
+})
+
+test('DB-backed MCP add_task_note appends owned notes, validates input, and logs trace metadata', async () => {
+  const db = new FakeSupabase({
+    tasks: [
+      makeTask({
+        id: 'owned-task',
+        user_id: 'user-1',
+        title: 'Task with agent handoff',
+      }),
+      makeTask({
+        id: 'other-task',
+        user_id: 'user-2',
+        title: 'Other user task',
+      }),
+    ],
+  })
+  const deps = dependenciesFor(db)
+
+  const added = parseResult<{
+    note: { id: string; task_id: string; content: string; note_type: string }
+    task: { id: string; title: string }
+  }>(
+    await executeToolWithDependencies(
+      'add_task_note',
+      {
+        task_id: 'owned-task',
+        content: '  Agent found the decision link and next owner.  ',
+        source_agent_id: 'agent-notes',
+        external_ref: 'note-123',
+        ingestion_intent: 'update',
+        agent_metadata: { confidence: 'medium' },
+      },
+      'user-1',
+      deps
+    )
+  )
+
+  expect(added).toMatchObject({
+    note: {
+      task_id: 'owned-task',
+      content: 'Agent found the decision link and next owner.',
+      note_type: 'note',
+    },
+    task: {
+      id: 'owned-task',
+      title: 'Task with agent handoff',
+    },
+  })
+  expect(db.taskNotes).toHaveLength(1)
+  expect(db.taskNotes[0]).toMatchObject({
+    task_id: 'owned-task',
+    content: 'Agent found the decision link and next owner.',
+    note_type: 'note',
+  })
+  expect(db.agentActionEvents[0]).toMatchObject({
+    tool_name: 'add_task_note',
+    source_agent_id: 'agent-notes',
+    external_ref: 'note-123',
+    ingestion_intent: 'update',
+    success: true,
+  })
+
+  const details = parseResult<{
+    id: string
+    notes: Array<{ task_id: string; content: string }>
+  }>(
+    await executeToolWithDependencies(
+      'get_task',
+      { task_id: 'owned-task' },
+      'user-1',
+      deps
+    )
+  )
+  expect(details.notes).toEqual([
+    expect.objectContaining({
+      task_id: 'owned-task',
+      content: 'Agent found the decision link and next owner.',
+    }),
+  ])
+
+  const invalidContent = await executeToolWithDependencies(
+    'add_task_note',
+    { task_id: 'owned-task', content: ' ' },
+    'user-1',
+    deps
+  )
+  expect(invalidContent.isError).toBe(true)
+  expect(invalidContent.content[0].text).toContain('Note content is required')
+
+  const invalidTrace = await executeToolWithDependencies(
+    'add_task_note',
+    {
+      task_id: 'owned-task',
+      content: 'Trace without a source should fail.',
+      external_ref: 'missing-source',
+    },
+    'user-1',
+    deps
+  )
+  expect(invalidTrace.isError).toBe(true)
+  expect(invalidTrace.content[0].text).toContain('source_agent_id is required')
+
+  const missingTask = await executeToolWithDependencies(
+    'add_task_note',
+    { task_id: 'other-task', content: 'Should not attach across users.' },
+    'user-1',
+    deps
+  )
+  expect(missingTask.isError).toBe(true)
+  expect(missingTask.content[0].text).toContain('Task not found')
+  expect(db.taskNotes).toHaveLength(1)
+  expect(db.agentActionEvents.map((event) => event.success)).toEqual([
+    true,
+    true,
     false,
     false,
     false,

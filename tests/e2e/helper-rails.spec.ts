@@ -165,6 +165,7 @@ test('API key scope helpers map plans and tools to least-privilege permissions',
   expect(requiredScopeForTool('create_task')).toBe('tasks:write')
   expect(requiredScopeForTool('update_task')).toBe('tasks:write')
   expect(requiredScopeForTool('complete_task')).toBe('tasks:write')
+  expect(requiredScopeForTool('add_task_note')).toBe('tasks:write')
   expect(requiredScopeForTool('get_briefing')).toBe('briefing:read')
   expect(hasRequiredScope(['tasks:read'], 'list_tasks')).toBe(true)
   expect(hasRequiredScope(['tasks:read'], 'create_task')).toBe(false)

@@ -25,7 +25,7 @@ const requiredReadTools = [
   'get_task',
   'get_briefing',
 ]
-const requiredWriteTools = ['create_task', 'complete_task', 'update_task']
+const requiredWriteTools = ['create_task', 'complete_task', 'update_task', 'add_task_note']
 
 if (!apiKey && !provisionKeys) {
   console.error('Missing NEXDO_API_KEY or NEXDO_MCP_API_KEY.')
@@ -447,6 +447,9 @@ async function main() {
     if (!openApi.paths?.['/api/mcp/actions/list_tasks']) {
       throw new Error('OpenAPI spec missing list_tasks action path.')
     }
+    if (!openApi.paths?.['/api/mcp/actions/add_task_note']) {
+      throw new Error('OpenAPI spec missing add_task_note action path.')
+    }
     console.log('ok openapi')
 
     const auditClient = createAuditClient()
@@ -606,6 +609,58 @@ async function main() {
       }
       console.log('ok update_task')
 
+      const noteRef = `${externalRef}-note`
+      const noteContent = 'MCP smoke note: preserve this handoff context.'
+      const noteResult = await rpc('tools/call', {
+        name: 'add_task_note',
+        arguments: {
+          task_id: created.id,
+          content: noteContent,
+          source_agent_id: sourceAgentId,
+          external_ref: noteRef,
+          ingestion_intent: 'update',
+          agent_metadata: { smoke: true },
+        },
+      })
+      const noted = parseToolContent(noteResult)
+      if (
+        noted?.note?.task_id !== created.id ||
+        noted?.note?.content !== noteContent ||
+        noted?.task?.id !== created.id
+      ) {
+        throw new Error('add_task_note did not return the created note and task.')
+      }
+      console.log('ok add_task_note')
+
+      const taskWithNoteResult = await rpc('tools/call', {
+        name: 'get_task',
+        arguments: { task_id: created.id },
+      })
+      const taskWithNote = parseToolContent(taskWithNoteResult)
+      if (!taskWithNote?.notes?.some((note) => note.content === noteContent)) {
+        throw new Error('get_task did not return the smoke task note.')
+      }
+      console.log('ok get_task notes')
+
+      const actionNoteRef = `${externalRef}-action-note`
+      const actionNoteContent = 'ChatGPT Action smoke note.'
+      const actionNote = await postJson('/api/mcp/actions/add_task_note', {
+        task_id: created.id,
+        content: actionNoteContent,
+        source_agent_id: sourceAgentId,
+        external_ref: actionNoteRef,
+        ingestion_intent: 'update',
+        agent_metadata: { smoke: true },
+      })
+      if (
+        actionNote?.note?.task_id !== created.id ||
+        actionNote?.note?.content !== actionNoteContent ||
+        actionNote?.task?.id !== created.id
+      ) {
+        throw new Error('ChatGPT Actions add_task_note did not return the created note and task.')
+      }
+      console.log('ok actions/add_task_note')
+
       const completeRef = `${externalRef}-complete`
       const completedResult = await rpc('tools/call', {
         name: 'complete_task',
@@ -642,6 +697,16 @@ async function main() {
             event.tool_name === 'update_task' &&
             event.source_agent_id === sourceAgentId &&
             event.external_ref === updateRef &&
+            event.success === true
+        )
+        await assertAuditEvent(
+          auditClient,
+          auditUserId,
+          'add_task_note write',
+          (event) =>
+            event.tool_name === 'add_task_note' &&
+            event.source_agent_id === sourceAgentId &&
+            event.external_ref === noteRef &&
             event.success === true
         )
         await assertAuditEvent(

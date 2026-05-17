@@ -43,7 +43,12 @@ export function canUseApiAccess(tier: SubscriptionTier | null | undefined): bool
 
 export function requiredScopeForTool(toolName: string): ApiKeyScope {
   if (toolName === 'get_briefing') return 'briefing:read'
-  if (toolName === 'create_task' || toolName === 'update_task' || toolName === 'complete_task') {
+  if (
+    toolName === 'create_task' ||
+    toolName === 'update_task' ||
+    toolName === 'complete_task' ||
+    toolName === 'add_task_note'
+  ) {
     return 'tasks:write'
   }
   return 'tasks:read'
