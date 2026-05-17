@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { consumeQuota, quotaExceededResponse } from '@/lib/quota'
+import {
+  checkQuota,
+  consumeQuota,
+  quotaExceededResponse,
+  quotaFailureStatus,
+} from '@/lib/quota'
 import { validateTaskInput } from '@/lib/task-validation'
 
 export async function GET() {
@@ -50,10 +55,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Validation failed', errors }, { status: 400 })
   }
 
-  // Enforce monthly task-creation quota for free-tier users.
-  const quota = await consumeQuota(user.id, 'task_create')
-  if (!quota.allowed) {
-    return NextResponse.json(quotaExceededResponse(quota), { status: 402 })
+  // Pre-check quota so failed inserts do not spend monthly task budget.
+  const preQuota = await checkQuota(user.id, 'task_create')
+  if (!preQuota.allowed) {
+    return NextResponse.json(quotaExceededResponse(preQuota), {
+      status: quotaFailureStatus(preQuota),
+    })
   }
 
   try {
@@ -87,6 +94,29 @@ export async function POST(request: Request) {
     if (error) {
       console.error('Error creating task:', error)
       return NextResponse.json({ error: 'Failed to create task' }, { status: 500 })
+    }
+
+    if (!task) {
+      return NextResponse.json({ error: 'Failed to create task' }, { status: 500 })
+    }
+
+    // Account only after the task exists. If accounting fails closed, remove
+    // the created row so users do not get unmetered task creation.
+    const consumed = await consumeQuota(user.id, 'task_create')
+    if (!consumed.allowed) {
+      const { error: cleanupError } = await db
+        .from('tasks')
+        .delete()
+        .eq('id', task.id)
+        .eq('user_id', user.id)
+
+      if (cleanupError) {
+        console.error('Error rolling back task after quota failure:', cleanupError)
+      }
+
+      return NextResponse.json(quotaExceededResponse(consumed), {
+        status: quotaFailureStatus(consumed),
+      })
     }
 
     return NextResponse.json(task)

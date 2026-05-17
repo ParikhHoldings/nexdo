@@ -11,7 +11,7 @@ import {
   normalizeAgentOutput,
   updateAgentReview,
 } from '../../lib/agent-output'
-import { quotaExceededResponse } from '../../lib/quota'
+import { quotaExceededResponse, quotaFailureStatus } from '../../lib/quota'
 import { rateLimitResponseHeaders } from '../../lib/rate-limit'
 import { validateTaskInput, validateTaskPatch } from '../../lib/task-validation'
 
@@ -127,6 +127,26 @@ test('quota and rate-limit response helpers expose stable client contracts', () 
     tier: 'free',
     upgrade_url: '/settings?tab=billing',
   })
+
+  expect(
+    quotaFailureStatus({
+      allowed: false,
+      limit: 25,
+      used: 25,
+      tier: 'free',
+      reason: 'Monthly limit reached',
+    })
+  ).toBe(402)
+
+  expect(
+    quotaFailureStatus({
+      allowed: false,
+      limit: 25,
+      used: 24,
+      tier: 'free',
+      reason: 'Failed to record usage',
+    })
+  ).toBe(500)
 
   const resetAt = new Date('2026-05-16T12:00:00.000Z')
   expect(rateLimitResponseHeaders({ allowed: false, remaining: -3, resetAt }, 30)).toEqual({

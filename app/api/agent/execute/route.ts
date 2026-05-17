@@ -4,7 +4,12 @@ import type { Task } from '@/lib/database.types'
 import { requireUser } from '@/lib/api-auth'
 import { createClient } from '@/lib/supabase/server'
 import { consumeRateLimit, RATE_LIMITS, rateLimitResponseHeaders } from '@/lib/rate-limit'
-import { checkQuota, consumeQuota, quotaExceededResponse } from '@/lib/quota'
+import {
+  checkQuota,
+  consumeQuota,
+  quotaExceededResponse,
+  quotaFailureStatus,
+} from '@/lib/quota'
 import { appendAgentExecution } from '@/lib/agent-output'
 
 export async function POST(request: NextRequest) {
@@ -103,15 +108,9 @@ export async function POST(request: NextRequest) {
     // exposed or saved without accounting.
     const consumed = await consumeQuota(auth.userId, 'agent_execute')
     if (!consumed.allowed) {
-      const status =
-        consumed.reason === 'Failed to record usage' ||
-        consumed.reason === 'Service unavailable' ||
-        consumed.reason === 'No profile'
-          ? 500
-          : 402
       return NextResponse.json(
         quotaExceededResponse(consumed),
-        { status }
+        { status: quotaFailureStatus(consumed) }
       )
     }
 

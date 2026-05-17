@@ -12,6 +12,12 @@ export interface QuotaResult {
   reason?: string
 }
 
+const QUOTA_SERVICE_FAILURE_REASONS = new Set([
+  'Failed to record usage',
+  'Service unavailable',
+  'No profile',
+])
+
 function normalizeQuantity(quantity: number): number {
   if (!Number.isFinite(quantity)) return 1
   return Math.max(1, Math.ceil(quantity))
@@ -149,4 +155,11 @@ export function quotaExceededResponse(result: QuotaResult) {
     tier: result.tier,
     upgrade_url: '/settings?tab=billing',
   }
+}
+
+/** Map quota denials to a client-facing status code. */
+export function quotaFailureStatus(result: QuotaResult): 402 | 500 {
+  return result.reason && QUOTA_SERVICE_FAILURE_REASONS.has(result.reason)
+    ? 500
+    : 402
 }

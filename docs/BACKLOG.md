@@ -9,6 +9,7 @@
 - added a direct signup-page demo path so preview visitors are not forced through account creation before trying the product
 - deep-linked Connect AI no-key guidance to `/settings?tab=api` so paid users land on API-key generation instead of the profile settings tab
 - restored failed authenticated Done-page bulk deletes back into local state immediately instead of making users refresh to see failed deletions
+- moved authenticated human task creation to quota pre-check plus post-insert usage accounting, with best-effort task cleanup if accounting fails
 
 ## Completed 2026-05-16
 - read and updated the repo-level agent context and all existing Markdown/text operating files
