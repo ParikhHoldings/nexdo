@@ -499,6 +499,16 @@ test('connect ai page reflects the paid API access gate', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Test Connection' })).toBeDisabled()
 })
 
+test('connect ai page treats paid API access as the usable-key gate', () => {
+  const source = readFileSync('app/(app)/settings/mcp/page.tsx', 'utf8')
+
+  expect(source).toContain('const hasUsableApiKey = hasApiAccess && hasApiKey')
+  expect(source).toContain('const canTestConnection = hasUsableApiKey')
+  expect(source).toContain('if (!hasUsableApiKey) return')
+  expect(source).toContain('Existing API keys are disabled until API access is active again.')
+  expect(source).toContain('const isEnabled = hasUsableApiKey && apiKeyScopes.includes(requiredScope)')
+})
+
 test('demo tasks persist across reloads', async ({ page }) => {
   await page.goto('/today')
   await page

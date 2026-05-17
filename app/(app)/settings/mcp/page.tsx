@@ -68,7 +68,8 @@ export default function MCPSettingsPage() {
   const hasApiKey = Boolean(apiKeyHint)
   const apiKeyScopes = normalizeApiKeyScopes(profile?.api_key_scopes)
   const hasApiAccess = canUseApiAccess(profile?.subscription_tier)
-  const canTestConnection = hasApiAccess && hasApiKey
+  const hasUsableApiKey = hasApiAccess && hasApiKey
+  const canTestConnection = hasUsableApiKey
   const setupStatusMessage = !hasApiAccess
     ? 'Upgrade to Power or Team before connecting external AI tools.'
     : hasApiKey
@@ -116,7 +117,7 @@ export default function MCPSettingsPage() {
   }
 
   useEffect(() => {
-    if (!hasApiKey) return
+    if (!hasUsableApiKey) return
 
     let cancelled = false
 
@@ -151,7 +152,7 @@ export default function MCPSettingsPage() {
     return () => {
       cancelled = true
     }
-  }, [hasApiKey])
+  }, [hasUsableApiKey])
 
   const handleTestConnection = async () => {
     if (!canTestConnection) {
@@ -237,13 +238,7 @@ export default function MCPSettingsPage() {
       {/* API Key */}
       <section className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 mb-6">
         <h2 className="text-lg font-semibold text-zinc-100 mb-4">Your API Key</h2>
-        {hasApiKey ? (
-          <div className="flex gap-2">
-            <code className="flex-1 bg-zinc-800 px-4 py-2.5 rounded-lg text-sm text-zinc-300 font-mono">
-              {apiKeyHint}
-            </code>
-          </div>
-        ) : !hasApiAccess ? (
+        {!hasApiAccess ? (
           <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg">
             <p className="text-sm text-amber-400">
               {API_ACCESS_REQUIRED_MESSAGE}{' '}
@@ -251,6 +246,17 @@ export default function MCPSettingsPage() {
                 Open billing
               </Link>
             </p>
+            {hasApiKey && (
+              <p className="mt-2 text-xs text-amber-300">
+                Existing API keys are disabled until API access is active again.
+              </p>
+            )}
+          </div>
+        ) : hasApiKey ? (
+          <div className="flex gap-2">
+            <code className="flex-1 bg-zinc-800 px-4 py-2.5 rounded-lg text-sm text-zinc-300 font-mono">
+              {apiKeyHint}
+            </code>
           </div>
         ) : (
           <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg">
@@ -263,13 +269,13 @@ export default function MCPSettingsPage() {
           </div>
         )}
 
-        {hasApiKey && (
+        {hasUsableApiKey && (
           <p className="mt-3 text-xs text-zinc-500">
             Existing keys are stored as hashes and cannot be revealed. The hint above identifies the key but cannot be used as a token. Regenerate a key in Settings &gt; API when you need a new copy.
           </p>
         )}
 
-        {hasApiKey && (
+        {hasUsableApiKey && (
           <div className="mt-4 border-t border-zinc-800 pt-4">
             <p className="text-xs uppercase tracking-wide text-zinc-600">
               Current key scopes
@@ -348,7 +354,11 @@ export default function MCPSettingsPage() {
           <Activity className="h-5 w-5 text-zinc-500" />
         </div>
 
-        {!hasApiKey ? (
+        {!hasApiAccess ? (
+          <p className="text-sm text-zinc-500">
+            Upgrade to Power or Team before agent activity can appear here.
+          </p>
+        ) : !hasApiKey ? (
           <p className="text-sm text-zinc-500">
             Generate an API key before agent activity can appear here.
           </p>
@@ -520,7 +530,7 @@ export default function MCPSettingsPage() {
         <div className="grid gap-3 sm:grid-cols-2">
           {MCP_TOOL_DETAILS.map((tool) => {
             const requiredScope = requiredScopeForTool(tool.name)
-            const isEnabled = hasApiKey && apiKeyScopes.includes(requiredScope)
+            const isEnabled = hasUsableApiKey && apiKeyScopes.includes(requiredScope)
 
             return (
               <div

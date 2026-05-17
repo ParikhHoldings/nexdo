@@ -27,6 +27,7 @@
 - surfaced authenticated agent-execution and agent-review server messages in task detail instead of masking quota/rate-limit/save failures
 - surfaced authenticated AI briefing and prioritization fallback notices when provider/rate-limit failures force local heuristics
 - surfaced billing checkout and portal server messages before generic settings errors
+- kept Connect AI setup, activity, and available-tool indicators bound to active paid API access instead of treating old key hints as usable
 
 ## Completed 2026-05-16
 - read and updated the repo-level agent context and all existing Markdown/text operating files
