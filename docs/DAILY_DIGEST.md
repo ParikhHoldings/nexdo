@@ -96,13 +96,14 @@
 - Refreshed repo-facing verification summaries for the then-current 92-test local rail.
 - Added `npm run smoke:app` to verify authenticated app-cookie task list/create/update/delete plus task-note validation/create/readback with disposable Supabase data.
 - Wired `npm run smoke:app` into the launch smoke between Supabase and OpenAI provider checks.
-- Refreshed repo-facing verification summaries for the latest 94-test local rail.
+- Refreshed repo-facing verification summaries for the latest 95-test local rail.
 - Added dependency audit to the GitHub Actions Web rails and source coverage so CI matches the documented launch/deploy checklist.
 - Verified PR #3 Web rails and Vercel preview deployment on recent checked heads; later heads still need fresh PR-check evidence.
 - Added a paid-key handoff from Settings > API to the Connect AI setup page so generated API keys lead directly into MCP/ChatGPT Actions setup.
 - Added `.env.production.local.example` so preview/production launch smokes have a concrete env template separate from no-provider local development.
 - Added demo smoke coverage for the Cmd/Ctrl+K task-capture shortcut and made the shortcut case-insensitive.
 - Persisted MCP `complete_task` source-agent trace metadata onto the completed task row so agent-completed work remains visible in human task surfaces.
+- Added rendered Done-page coverage that agent-completed demo tasks expose trace metadata on cards and in task detail.
 
 ### In progress
 - Provider-backed Supabase, OpenAI, Stripe, and MCP smokes remain the main launch-readiness gap.

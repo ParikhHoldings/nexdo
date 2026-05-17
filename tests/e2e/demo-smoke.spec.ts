@@ -304,6 +304,65 @@ test('agent-created tasks expose trace metadata in task surfaces', async ({ page
   await expect(trace.getByText('channel, confidence')).toBeVisible()
 })
 
+test('agent-completed tasks expose trace metadata in done surfaces', async ({ page }) => {
+  const now = new Date().toISOString()
+  const completedTask = {
+    id: 'agent-completed-task',
+    user_id: 'demo-user',
+    title: 'Archive agent-completed launch follow-up',
+    raw_input: 'Archive agent-completed launch follow-up',
+    description: null,
+    status: 'done',
+    priority: 'medium',
+    due_date: null,
+    due_time: null,
+    context: 'Completed by an external agent after syncing the source system',
+    source: 'agent',
+    action_type: 'manual',
+    estimated_minutes: 10,
+    energy_level: 'quick',
+    people: ['Ops'],
+    tags: ['agent-review'],
+    parent_task_id: null,
+    related_task_ids: null,
+    agent_output: null,
+    completed_at: now,
+    created_at: now,
+    updated_at: now,
+    source_agent_id: 'agent-completer',
+    external_ref: 'done-42',
+    ingestion_intent: 'complete',
+    agent_metadata: { channel: 'mcp', confidence: 'medium' },
+  }
+
+  await page.addInitScript((task: unknown) => {
+    window.localStorage.setItem('nexdo_demo_tasks', JSON.stringify([task]))
+  }, completedTask)
+
+  await page.goto('/done')
+
+  await expect(page.getByRole('heading', { name: 'Done' })).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Archive agent-completed launch follow-up' })
+  ).toBeVisible()
+  await expect(page.getByText('agent-completer').first()).toBeVisible()
+
+  await page
+    .getByRole('heading', { name: 'Archive agent-completed launch follow-up' })
+    .click()
+
+  const trace = page.getByLabel('Agent trace')
+  await expect(trace).toBeVisible()
+  await expect(trace.getByText('Source agent')).toBeVisible()
+  await expect(trace.getByText('agent-completer')).toBeVisible()
+  await expect(trace.getByText('External ref')).toBeVisible()
+  await expect(trace.getByText('done-42')).toBeVisible()
+  await expect(trace.getByText('Intent')).toBeVisible()
+  await expect(trace.getByText('Complete', { exact: true })).toBeVisible()
+  await expect(trace.getByText('Metadata keys')).toBeVisible()
+  await expect(trace.getByText('channel, confidence')).toBeVisible()
+})
+
 test('remind tasks do not expose AI agent execution controls', async ({ page }) => {
   const now = new Date().toISOString()
   const remindTask = {
