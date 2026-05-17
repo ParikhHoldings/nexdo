@@ -32,8 +32,8 @@ Last checked on 2026-05-17:
 - `npm run build` passed
 - `npm run test:e2e` passed for public landing/signup demo CTA smoke, logged-out demo workflows, task workspace lifecycle, local-date due-today behavior, file-import preview/confirm flow, agent output history/review notes, persistent appearance and browser reminder settings, MCP/OpenAPI/action auth smoke tests, DB-backed MCP handler and API-key validation coverage, billing guardrails, deterministic task-intelligence coverage, import parser coverage, Stripe entitlement mapping, task route validation, and local validation helper contracts
 - PR #3 Web rails passed in GitHub Actions after the workflow action-runtime update
-- a PR #3 Vercel deployment completed on 2026-05-17 after an earlier preview deployment completed on 2026-05-16
-- the latest pushed PR head is blocked by Vercel's build-rate limit and reports: "Deployment rate limited - retry in 24 hours"
+- PR #3 Vercel deployments completed on 2026-05-16 and 2026-05-17
+- repeated PR pushes have intermittently hit Vercel account build-rate limits, so inspect current PR checks before treating preview deploy as current-green
 
 `npm run verify:env` currently fails because `.env.local` is absent; only `.env.local.example` exists in this workspace. Still unverified: production env, Supabase migrations/auth/profile and task column grants against a real project, OpenAI provider calls, Stripe test-mode flows, scoped MCP/API-key execution, idempotency replay against real task data, agent audit writes, and production deployment rails. `npm audit --audit-level=moderate` passes with 0 vulnerabilities after the Next.js 16 / ESLint 9 upgrade.
 

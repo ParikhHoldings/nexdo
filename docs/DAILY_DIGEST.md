@@ -43,14 +43,13 @@
 - Added regression coverage for the task column-grant/service-role write boundary across task mutation, agent execution/review, and import routes.
 - Moved agent execution service-role output persistence preflight ahead of rate-limit, quota, and provider work.
 - Updated the GitHub Actions verify workflow to Node-24-runtime action releases while keeping the app test runtime on Node 22.
-- Verified PR #3 Web rails on the latest pushed head and recorded that Vercel has a recent successful PR deployment but is again blocked on the current head by account build-rate limits.
+- Verified PR #3 Web rails and Vercel deployment on the latest pushed head; recorded that repeated pushes can intermittently hit Vercel account build-rate limits.
 
 ### In progress
 - Provider-backed Supabase, OpenAI, Stripe, and MCP smokes remain the main launch-readiness gap.
 
 ### Blocked
 - `npm run verify:env` still cannot pass until `.env.local` is created with real provider values.
-- Latest Vercel deploy check for PR #3 is blocked by Vercel's build-rate limit; GitHub Actions Web rails passed on the same head.
 
 ### Approvals needed
 - Public launch copy, pricing changes, production deploys, and customer-facing commitments still require approval.
