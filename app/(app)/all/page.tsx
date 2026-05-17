@@ -7,6 +7,7 @@ import { TaskInput } from '@/components/task-input'
 import { TaskCard } from '@/components/task-card'
 import { TaskListSkeleton } from '@/components/ui/skeleton'
 import { useTaskStore } from '@/lib/store'
+import { taskMatchesSearch } from '@/lib/task-search'
 import { cn } from '@/lib/utils'
 import type { TaskPriority, TaskStatus } from '@/lib/database.types'
 
@@ -46,13 +47,7 @@ export default function AllTasksPage() {
 
     // Search filter
     if (search) {
-      const searchLower = search.toLowerCase()
-      result = result.filter(
-        (t) =>
-          t.title.toLowerCase().includes(searchLower) ||
-          t.context?.toLowerCase().includes(searchLower) ||
-          t.tags?.some((tag) => tag.toLowerCase().includes(searchLower))
-      )
+      result = result.filter((task) => taskMatchesSearch(task, search))
     }
 
     // Priority filter

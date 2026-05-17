@@ -117,6 +117,9 @@ test('OpenAPI exposes the agent action contract', async ({ request }) => {
       'application/json'
     ].schema
   expect(searchTaskSchema.properties.query.maxLength).toBe(200)
+  expect(
+    spec.paths['/api/mcp/actions/search_tasks'].post.description
+  ).toContain('people')
   expect(spec.components.schemas.ErrorResponse.required).toContain('error')
   expect(spec.components.schemas.Task.properties.status.enum).toEqual([
     'todo',

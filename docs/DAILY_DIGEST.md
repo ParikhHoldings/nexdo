@@ -74,6 +74,7 @@
 - Tightened the Microsoft To Do import token placeholder so the rendered import card does not clip the input text.
 - Tightened deterministic fallback task parsing so captured task titles stay concise while schedule, priority, and estimate phrases become structured metadata.
 - Hardened `/quick` capture so empty quick-mode submissions are rejected and extra spacing is trimmed before task creation.
+- Moved All Tasks and MCP `search_tasks` onto shared metadata search so people and descriptions are searchable alongside title, context, and tags.
 - Aligned MCP tool schemas and ChatGPT Actions OpenAPI with handler support for the `cancelled` task status.
 - Made cancelled tasks human-reviewable from All Tasks and restorable from task detail so agent-side cancellation remains visible.
 - Verified PR #3 Web rails and a Vercel preview deployment after the route-smoke rail; later docs-only heads can still be Vercel rate-limited.
@@ -111,7 +112,7 @@
 - Expanded MCP smoke coverage so an optional read-only scoped key can verify write tools are hidden and denied.
 - Exposed agent metadata fields in MCP create/update tools so agent-created tasks can carry source identifiers and external references.
 - Added bounded MCP tool input validation and made MCP `create_task` consume task-create quota.
-- Aligned MCP `search_tasks` with its advertised contract by searching title, context, and tags.
+- Aligned MCP `search_tasks` with its advertised contract by searching task metadata.
 - Added scoped API key permissions, scope-filtered MCP tool listings, REST/JSON-RPC scope enforcement, and an agent action audit table/migration.
 - Gated API-key generation and MCP API-key validation to Power/team profiles, and disabled free-plan API-key generation in settings.
 - Wired settings tab query parameters so quota/API upgrade links land directly on billing.

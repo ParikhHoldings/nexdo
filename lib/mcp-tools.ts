@@ -4,6 +4,7 @@ import { canUseApiAccess, hasRequiredScope, requiredScopeForTool } from '@/lib/a
 import { apiKeyHint, hashApiKey } from '@/lib/api-keys'
 import { checkQuota, consumeQuota } from '@/lib/quota'
 import { getLocalDateKey, normalizeLocalDateKey, normalizeLocalTime } from '@/lib/dates'
+import { taskMatchesSearch } from '@/lib/task-search'
 import type {
   ActionType,
   EnergyLevel,
@@ -236,7 +237,7 @@ export const MCP_TOOLS: MCPTool[] = [
   {
     name: 'search_tasks',
     description:
-      'Search tasks by keyword. Searches in title, context, and tags.',
+      'Search tasks by keyword. Searches in title, context, description, people, and tags.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -433,15 +434,6 @@ function stringArrayArg(value: unknown, field: string) {
   }
 
   return { value: normalized.length > 0 ? normalized : null }
-}
-
-function taskMatchesSearch(task: Task, query: string): boolean {
-  const needle = query.toLowerCase()
-  return (
-    task.title.toLowerCase().includes(needle) ||
-    Boolean(task.context?.toLowerCase().includes(needle)) ||
-    Boolean(task.tags?.some((tag) => tag.toLowerCase().includes(needle)))
-  )
 }
 
 function metadataArg(value: unknown) {

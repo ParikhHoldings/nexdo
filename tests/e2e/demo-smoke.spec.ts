@@ -462,6 +462,15 @@ test('demo workspace supports all, upcoming, and done lifecycle', async ({
   ).toHaveCount(0)
   await expect(page.getByText('Showing 1 task (filtered from 5)')).toBeVisible()
 
+  await page.getByPlaceholder('Search tasks...').fill('sequoia')
+  await expect(
+    page.getByRole('heading', { name: 'Prepare for investor meeting' })
+  ).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Reply to customer feedback email' })
+  ).toHaveCount(0)
+  await expect(page.getByText('Showing 1 task (filtered from 5)')).toBeVisible()
+
   await page.getByPlaceholder('Search tasks...').fill('')
   await page.getByRole('button', { name: 'Filters' }).click()
   await page.getByRole('button', { name: 'High' }).click()

@@ -332,10 +332,11 @@ test('DB-backed MCP read handlers filter, search, brief, and audit owned tasks',
       makeTask({
         id: 'waiting-task',
         user_id: 'user-1',
-        title: 'Follow up with design',
+        title: 'Follow up with approval',
         due_date: null,
         status: 'waiting',
         context: 'Client approval needed',
+        people: ['Casey Lee'],
         tags: ['client'],
       }),
       makeTask({
@@ -368,7 +369,7 @@ test('DB-backed MCP read handlers filter, search, brief, and audit owned tasks',
   const searched = parseResult<Array<{ id: string }>>(
     await executeToolWithDependencies(
       'search_tasks',
-      { query: 'client', limit: 10 },
+      { query: 'casey', limit: 10 },
       'user-1',
       deps
     )

@@ -375,7 +375,8 @@ const openApiSpec = {
       post: {
         operationId: 'searchTasks',
         summary: 'Search tasks',
-        description: 'Search tasks by keyword. Searches in title, context, and tags.',
+        description:
+          'Search tasks by keyword. Searches in title, context, description, people, and tags.',
         requestBody: {
           required: true,
           content: {

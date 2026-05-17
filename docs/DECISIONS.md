@@ -1,5 +1,15 @@
 # Decisions
 
+## 2026-05-17 - Search includes structured people metadata
+### Decision
+All Tasks search and MCP/ChatGPT Actions `search_tasks` use the same metadata search behavior across title, context, description, people, and tags.
+
+### Why
+People are a first-class planning field in the MVP. If a collaborator is attached only as structured metadata, humans and agents should still be able to find that work without relying on the name appearing in the title or tag list.
+
+### Impact
+Future task-search changes should update the shared search helper, MCP tool description, OpenAPI action description, local MCP handler coverage, and rendered All Tasks coverage together.
+
 ## 2026-05-17 - Browser task writes are column-limited
 ### Decision
 Direct authenticated browser Supabase inserts and updates on `tasks` are limited to user-editable task columns. Server-managed fields such as `agent_output`, `source_agent_id`, `external_ref`, `ingestion_intent`, `agent_metadata`, and `completed_at` are written by API routes, MCP handlers, import routes, or service-role jobs after auth and quota checks.
