@@ -180,6 +180,16 @@ Imports are task creation. Free-tier limits and future plan limits should not be
 ### Impact
 Future import UX should show remaining task capacity before upload and real Supabase smoke tests should verify behavior near monthly limits.
 
+## 2026-05-16 - Keep agent outputs reviewable, not just overwritten
+### Decision
+Store bounded research/draft/prep results as a versioned `agent_output` envelope with the current result, execution history, and a user review status/note.
+
+### Why
+Early AI execution should build trust through review and traceability. Replacing the prior output on every run made it harder to know what changed, whether the result had been checked, or whether another pass was needed.
+
+### Impact
+Future agent execution work should preserve the envelope contract or migrate it deliberately. Real Supabase smoke still needs to verify authenticated review-note persistence against a deployed task record.
+
 ## 2026-05-16 - Agent execution must operate on owned task records
 ### Decision
 Authenticated `/api/agent/execute` requests must provide a task ID. The server loads the task for the current user, verifies it is executable, runs the bounded agent action, records quota usage, then saves the result to `agent_output`.

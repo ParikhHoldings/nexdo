@@ -43,6 +43,15 @@ test('demo task capture, briefing, prioritization, and agent output work', async
   await page.getByRole('button', { name: /Run draft/i }).click()
   await expect(page.getByText('Completed')).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Draft' })).toBeVisible()
+  await expect(page.getByText('Verification notes')).toBeVisible()
+  await page.getByRole('button', { name: 'Verified' }).click()
+  await page.getByLabel('Agent review note').fill('Checked tone and next step.')
+  await page.getByRole('button', { name: 'Save review' }).click()
+  await expect(page.getByText('Review saved.')).toBeVisible()
+  await expect(page.getByText('Execution history')).toBeVisible()
+  await expect(page.getByText('1 run')).toBeVisible()
+  await page.getByRole('button', { name: 'Run again' }).click()
+  await expect(page.getByText('2 runs')).toBeVisible()
   await page.screenshot({ path: '/tmp/nexdo-smoke-desktop.png', fullPage: false })
 
   await page.setViewportSize({ width: 390, height: 844 })
@@ -72,6 +81,11 @@ test('task mutation endpoints require configured auth', async ({ request }) => {
     data: { taskId: 'not-a-real-task' },
   })
   expect([401, 503]).toContain(execute.status())
+
+  const review = await request.patch('/api/tasks/not-a-real-task/agent-review', {
+    data: { status: 'verified', note: 'Checked by smoke test' },
+  })
+  expect([401, 503]).toContain(review.status())
 
   const csvImport = await request.post('/api/import/csv', {
     data: { content: 'title\nImported smoke task' },

@@ -17,6 +17,7 @@ Nexdo helps users organize, prioritize, and execute meaningful work by turning p
 - OpenAI-backed task parsing, prioritization, daily briefing, and agent execution helpers exist.
 - Deterministic fallback intelligence exists for demo/provider-missing task parsing, prioritization, briefing, and bounded execution outputs.
 - Agent execution is currently bounded to research, draft, and prep task types.
+- Bounded agent outputs now support execution history plus user verification status and notes.
 - MCP and ChatGPT Actions surfaces exist for external agents to interact with tasks through an API key.
 - OpenAPI action schema, MCP/action unauthenticated guardrails, and action CORS headers are smoke-tested locally.
 - Demo mode exists so the app can be explored without a configured Supabase session.

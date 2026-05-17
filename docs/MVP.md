@@ -105,11 +105,11 @@ Acceptance gate:
 - The UI exposes execution only for supported task types.
 - The server loads an owned task by ID before executing.
 - Agent output is saved only after quota/rate checks succeed.
-- Output remains reviewable by the user.
+- Output remains reviewable by the user with run history and verification notes.
 
 Current evidence:
 - `/api/agent/execute` requires `taskId`, loads owned task records, rejects unsupported action types, and saves output server-side.
-- Playwright verifies demo draft execution produces reviewable output.
+- Playwright verifies demo draft execution produces reviewable output, verification notes, and execution history.
 
 ## AI-agent MVP
 
@@ -201,6 +201,6 @@ Monday is not credible if:
 ## Next product hardening after MVP
 - Add focused route/helper tests for task validation, quota/rate-limit helpers, and MCP handlers.
 - Verify import preview quota warnings against a real Supabase profile near the monthly task limit.
-- Add execution history and verification notes for agent outputs.
+- Verify agent output history and review-note persistence against a real authenticated Supabase task.
 - Add notification delivery only after real notification behavior exists.
 - Add theme controls only after real theme support exists.

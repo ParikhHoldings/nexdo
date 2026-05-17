@@ -6,6 +6,11 @@ import {
   requiredScopeForTool,
 } from '../../lib/agent-scopes'
 import { sanitizeAiTasks, sanitizeUserName } from '../../lib/ai-task-input'
+import {
+  appendAgentExecution,
+  normalizeAgentOutput,
+  updateAgentReview,
+} from '../../lib/agent-output'
 import { quotaExceededResponse } from '../../lib/quota'
 import { rateLimitResponseHeaders } from '../../lib/rate-limit'
 
@@ -133,4 +138,51 @@ test('quota and rate-limit response helpers expose stable client contracts', () 
     'X-RateLimit-Limit': '30',
     'X-RateLimit-Remaining': '12',
   })
+})
+
+test('agent output helper preserves run history and verification notes', () => {
+  const first = appendAgentExecution(
+    null,
+    {
+      draft: 'First draft',
+      tone: 'Concise',
+      suggested_subject: 'Launch note',
+      word_count: 2,
+    },
+    'draft'
+  )
+  const second = appendAgentExecution(
+    first,
+    {
+      draft: 'Second draft',
+      tone: 'Concise',
+      suggested_subject: 'Launch note',
+      word_count: 2,
+    },
+    'draft'
+  )
+  const reviewed = updateAgentReview(
+    second,
+    'verified',
+    'Checked tone and next step.'
+  )
+
+  expect(reviewed.current).toMatchObject({ draft: 'Second draft' })
+  expect(reviewed.history).toHaveLength(2)
+  expect(reviewed.review).toMatchObject({
+    status: 'verified',
+    note: 'Checked tone and next step.',
+  })
+
+  const legacy = normalizeAgentOutput(
+    {
+      draft: 'Legacy draft',
+      tone: 'Concise',
+      suggested_subject: 'Legacy',
+      word_count: 2,
+    },
+    'draft'
+  )
+  expect(legacy?.history).toHaveLength(1)
+  expect(legacy?.review.status).toBe('unreviewed')
 })

@@ -20,7 +20,7 @@ The product promise should be grounded in what the code actually supports:
 - natural-language task capture with AI parsing
 - priority, due date, context, people, tags, action type, estimate, and energy metadata
 - daily briefing and prioritization generated from task context
-- limited agent execution for owned `research`, `draft`, and `prep` task records, with server-side output persistence
+- limited agent execution for owned `research`, `draft`, and `prep` task records, with server-side output persistence, run history, and user verification notes
 - localStorage-backed demo-mode task and profile data when Supabase is unavailable or the visitor is logged out, so logged-out changes survive reloads
 - persistent dark/light appearance preferences for the app workspace
 - local-date-aware browser due-task reminders for active tasks due today or overdue, permission-gated and sent once per task per day while the app is open
@@ -42,7 +42,7 @@ Current local verification from 2026-05-16:
 - `npm run lint` passed
 - `npm run typecheck` passed
 - `npm run build` passed with strict TypeScript and ESLint checks enabled
-- `npm run test:e2e` passed for logged-out demo workflows, task workspace lifecycle, local-date due-today behavior, file-import preview/confirm flow, persistent appearance and browser reminder settings, task/agent auth guards, MCP/OpenAPI/action auth smoke tests, DB-backed MCP handler and API-key validation coverage, billing guardrails, deterministic task-intelligence coverage, import parser coverage, Stripe entitlement mapping, and local validation helper contracts
+- `npm run test:e2e` passed for logged-out demo workflows, task workspace lifecycle, local-date due-today behavior, file-import preview/confirm flow, agent output history/review notes, persistent appearance and browser reminder settings, task/agent auth guards, MCP/OpenAPI/action auth smoke tests, DB-backed MCP handler and API-key validation coverage, billing guardrails, deterministic task-intelligence coverage, import parser coverage, Stripe entitlement mapping, and local validation helper contracts
 - `npm audit --audit-level=moderate` passed with 0 vulnerabilities after the Next.js 16 / ESLint 9 upgrade
 - `npm run verify:env` failed because `.env.local` is absent; only `.env.local.example` exists in this workspace
 

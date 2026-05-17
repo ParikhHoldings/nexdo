@@ -5,6 +5,7 @@ import { requireUser } from '@/lib/api-auth'
 import { createClient } from '@/lib/supabase/server'
 import { consumeRateLimit, RATE_LIMITS, rateLimitResponseHeaders } from '@/lib/rate-limit'
 import { checkQuota, consumeQuota, quotaExceededResponse } from '@/lib/quota'
+import { appendAgentExecution } from '@/lib/agent-output'
 
 export async function POST(request: NextRequest) {
   const auth = await requireUser()
@@ -114,10 +115,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    const agentOutput = appendAgentExecution(
+      typedTask.agent_output,
+      result,
+      typedTask.action_type
+    )
+
     const { data: updatedTask, error: updateError } = await (supabase as any)
       .from('tasks')
       .update({
-        agent_output: result,
+        agent_output: agentOutput,
         updated_at: new Date().toISOString(),
       })
       .eq('id', typedTask.id)
@@ -137,7 +144,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Task not found' }, { status: 404 })
     }
 
-    return NextResponse.json(result, {
+    return NextResponse.json(agentOutput, {
       headers: rateLimitResponseHeaders(gate, RATE_LIMITS.aiAgent.limit),
     })
   } catch (error) {

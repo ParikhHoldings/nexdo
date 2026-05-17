@@ -10,6 +10,7 @@ The goal is not a broad public launch. The credible Monday target is a verified 
 - A usable logged-out demo flow: load `/today`, inspect demo tasks, add a natural-language task, see prioritization, open an executable task, and generate a bounded agent output. Verified locally on 2026-05-16.
 - Core task mutation routes now validate allowlisted fields and protect owned-task updates/deletes.
 - Authenticated agent execution now loads owned task records by `taskId`, rejects unsupported action types, saves output server-side, and checks quota-consumption failures.
+- Bounded agent outputs now include execution history and user verification notes in task detail; authenticated review-note persistence still needs real Supabase verification.
 - Authenticated task imports now consume monthly task quota in batch before saving imported tasks.
 - Public AI-agent surfaces expose a valid OpenAPI action contract and enforce bearer auth before tool execution. Smoke-tested locally on 2026-05-16.
 - API key rotation now uses the shared rate-limit rail before issuing a new scoped MCP/API key.
@@ -48,7 +49,7 @@ The goal is not a broad public launch. The credible Monday target is a verified 
 3. Prioritize: rank the day with a visible reason for each recommendation.
 4. Brief: generate a concise daily view of priorities, overdue work, quick wins, and people waiting.
 5. Execute bounded work: support useful research, draft, and prep outputs with clear review expectations.
-6. Trust: add edit history, verification notes, and better failure states before increasing autonomy.
+6. Trust: deepen edit history, verification notes, and failure states before increasing autonomy.
 
 ## AI-agent product path
 1. Stabilize the API-key based task layer around list, create, update, complete, search, and brief.

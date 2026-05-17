@@ -35,7 +35,7 @@ export function Sidebar() {
   const router = useRouter()
   const { sidebarCollapsed, toggleSidebar, setSidebarCollapsed } = useUIStore()
   const { profile, isAuthenticated } = useUserStore()
-  const { tasks } = useTaskStore()
+  const { tasks, isDetailOpen } = useTaskStore()
 
   // Count today's tasks
   const today = getLocalDateKey()
@@ -222,13 +222,15 @@ export function Sidebar() {
       </aside>
 
       {/* Mobile menu button */}
-      <button
-        onClick={toggleSidebar}
-        aria-label="Open navigation"
-        className="fixed bottom-4 left-4 z-40 p-3 bg-accent rounded-full shadow-lg lg:hidden"
-      >
-        <Menu className="h-6 w-6 text-white" />
-      </button>
+      {!isDetailOpen && (
+        <button
+          onClick={toggleSidebar}
+          aria-label="Open navigation"
+          className="fixed bottom-4 left-4 z-40 p-3 bg-accent rounded-full shadow-lg lg:hidden"
+        >
+          <Menu className="h-6 w-6 text-white" />
+        </button>
+      )}
     </>
   )
 }

@@ -14,6 +14,7 @@ import {
   CheckCircle2,
   AlertCircle,
   FileText,
+  History,
   Trash2,
   Edit3,
   Save,
@@ -21,6 +22,15 @@ import {
 import { cn, formatRelativeDate } from '@/lib/utils'
 import { useTaskStore } from '@/lib/store'
 import { executeTaskHeuristic } from '@/lib/task-intelligence'
+import {
+  AGENT_REVIEW_STATUSES,
+  appendAgentExecution,
+  isAgentOutputEnvelope,
+  normalizeAgentOutput,
+  updateAgentReview,
+  type AgentOutput,
+  type AgentReviewStatus,
+} from '@/lib/agent-output'
 import { Button } from '@/components/ui/button'
 import { Badge, TagBadge, PersonBadge } from '@/components/ui/badge'
 import type {
@@ -32,8 +42,6 @@ import type {
   TaskPriority,
   TaskUpdate,
 } from '@/lib/database.types'
-
-type AgentOutput = ResearchOutput | DraftOutput | PrepOutput
 
 interface AgentResultProps {
   output: AgentOutput
@@ -172,6 +180,11 @@ function AgentResult({ output, actionType }: AgentResultProps) {
 
 const PRIORITIES: TaskPriority[] = ['urgent', 'high', 'medium', 'low']
 const ACTION_TYPES: ActionType[] = ['manual', 'research', 'draft', 'prep', 'remind']
+const REVIEW_STATUS_LABELS: Record<AgentReviewStatus, string> = {
+  unreviewed: 'Unreviewed',
+  verified: 'Verified',
+  needs_revision: 'Needs revision',
+}
 
 function listToText(value: string[] | null): string {
   return value?.join(', ') ?? ''
@@ -184,6 +197,151 @@ function textToList(value: string): string[] | null {
     .filter(Boolean)
 
   return items.length > 0 ? Array.from(new Set(items)) : null
+}
+
+interface AgentReviewPanelProps {
+  task: Task
+  agentOutput: NonNullable<ReturnType<typeof normalizeAgentOutput>>
+  isAuthenticated: boolean
+  updateTask: (
+    id: string,
+    updates: TaskUpdate,
+    options?: { persist?: boolean }
+  ) => void
+}
+
+function AgentReviewPanel({
+  task,
+  agentOutput,
+  isAuthenticated,
+  updateTask,
+}: AgentReviewPanelProps) {
+  const [reviewStatus, setReviewStatus] = useState<AgentReviewStatus>(
+    agentOutput.review.status
+  )
+  const [reviewNote, setReviewNote] = useState(agentOutput.review.note ?? '')
+  const [reviewError, setReviewError] = useState<string | null>(null)
+  const [reviewSaved, setReviewSaved] = useState(false)
+  const [isSavingReview, setIsSavingReview] = useState(false)
+
+  const handleSaveReview = async () => {
+    setReviewError(null)
+    setReviewSaved(false)
+    setIsSavingReview(true)
+
+    const nextOutput = updateAgentReview(
+      agentOutput,
+      reviewStatus,
+      reviewNote.trim() || null
+    )
+
+    try {
+      if (!isAuthenticated) {
+        updateTask(
+          task.id,
+          { agent_output: nextOutput as unknown as Task['agent_output'] },
+          { persist: false }
+        )
+        setReviewSaved(true)
+        return
+      }
+
+      const response = await fetch(`/api/tasks/${task.id}/agent-review`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status: reviewStatus,
+          note: reviewNote.trim() || null,
+        }),
+      })
+
+      const payload = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        throw new Error(payload?.error || 'Could not save review')
+      }
+
+      const savedOutput = normalizeAgentOutput(
+        payload as Task['agent_output'],
+        task.action_type
+      )
+      updateTask(
+        task.id,
+        {
+          agent_output: (savedOutput ?? nextOutput) as unknown as Task['agent_output'],
+        },
+        { persist: false }
+      )
+      setReviewSaved(true)
+    } catch (error) {
+      setReviewError(
+        error instanceof Error ? error.message : 'Could not save review'
+      )
+    } finally {
+      setIsSavingReview(false)
+    }
+  }
+
+  return (
+    <div className="rounded-lg border border-zinc-800 bg-zinc-950/40 p-4 space-y-4">
+      <div>
+        <h4 className="text-sm font-medium text-zinc-200">
+          Verification notes
+        </h4>
+        <p className="mt-1 text-xs text-zinc-500">
+          Mark whether this agent result is ready to use or needs another pass.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+        {AGENT_REVIEW_STATUSES.map((status) => (
+          <button
+            key={status}
+            type="button"
+            aria-pressed={reviewStatus === status}
+            onClick={() => setReviewStatus(status)}
+            className={cn(
+              'rounded-lg border px-3 py-2 text-sm transition-colors',
+              reviewStatus === status
+                ? 'border-accent bg-accent/10 text-accent'
+                : 'border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-100'
+            )}
+          >
+            {REVIEW_STATUS_LABELS[status]}
+          </button>
+        ))}
+      </div>
+
+      <textarea
+        aria-label="Agent review note"
+        value={reviewNote}
+        onChange={(event) => {
+          setReviewNote(event.target.value)
+          setReviewSaved(false)
+        }}
+        rows={3}
+        maxLength={1000}
+        placeholder="Add what you verified, changed, or still need to check."
+        className="w-full resize-none rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-500 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/50"
+      />
+
+      {reviewError && (
+        <p className="text-sm text-red-400">{reviewError}</p>
+      )}
+      {reviewSaved && (
+        <p className="text-sm text-emerald-400">Review saved.</p>
+      )}
+
+      <div className="flex justify-end">
+        <Button
+          size="sm"
+          onClick={handleSaveReview}
+          isLoading={isSavingReview}
+        >
+          Save review
+        </Button>
+      </div>
+    </div>
+  )
 }
 
 export function TaskDetail() {
@@ -206,7 +364,8 @@ export function TaskDetail() {
 
   const task = selectedTask
   const isExecutable = ['research', 'draft', 'prep'].includes(task.action_type)
-  const hasAgentOutput = task.agent_output !== null
+  const agentOutput = normalizeAgentOutput(task.agent_output, task.action_type)
+  const hasAgentOutput = agentOutput !== null
 
   const resetEditForm = () => {
     setEditError(null)
@@ -277,11 +436,30 @@ export function TaskDetail() {
     setExecutionError(null)
 
     const saveAgentOutput = (output: AgentOutput) => {
+      const nextOutput = appendAgentExecution(
+        task.agent_output,
+        output,
+        task.action_type
+      )
       updateTask(
         task.id,
-        { agent_output: output as unknown as Task['agent_output'] },
+        { agent_output: nextOutput as unknown as Task['agent_output'] },
         { persist: false }
       )
+    }
+
+    const saveAgentEnvelope = (output: unknown) => {
+      const nextOutput = normalizeAgentOutput(
+        output as Task['agent_output'],
+        task.action_type
+      )
+      if (!nextOutput) return false
+      updateTask(
+        task.id,
+        { agent_output: nextOutput as unknown as Task['agent_output'] },
+        { persist: false }
+      )
+      return true
     }
 
     if (!isAuthenticated) {
@@ -312,7 +490,9 @@ export function TaskDetail() {
       }
 
       const result = await response.json()
-      saveAgentOutput(result)
+      if (!isAgentOutputEnvelope(result) || !saveAgentEnvelope(result)) {
+        saveAgentOutput(result)
+      }
     } catch {
       if (!isAuthenticated) {
         const fallback = executeTaskHeuristic(task)
@@ -669,18 +849,67 @@ export function TaskDetail() {
                     </div>
                   )}
 
-                  {hasAgentOutput && (
-                    <div className="bg-zinc-800/50 rounded-lg p-4">
-                      <div className="flex items-center gap-2 mb-4">
-                        <CheckCircle2 className="h-5 w-5 text-emerald-400" />
-                        <span className="text-sm text-emerald-400 font-medium">
-                          Completed
-                        </span>
+                  {agentOutput && (
+                    <div className="space-y-4">
+                      <div className="bg-zinc-800/50 rounded-lg p-4">
+                        <div className="flex items-center justify-between gap-3 mb-4">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle2 className="h-5 w-5 text-emerald-400" />
+                            <span className="text-sm text-emerald-400 font-medium">
+                              Completed
+                            </span>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={handleExecute}
+                            disabled={isExecuting}
+                          >
+                            {isExecuting ? 'Running...' : 'Run again'}
+                          </Button>
+                        </div>
+                        <AgentResult
+                          output={agentOutput.current}
+                          actionType={task.action_type}
+                        />
                       </div>
-                      <AgentResult
-                        output={task.agent_output as unknown as AgentOutput}
-                        actionType={task.action_type}
+
+                      <AgentReviewPanel
+                        key={`${task.id}-${agentOutput.history[0]?.id ?? 'new'}`}
+                        task={task}
+                        agentOutput={agentOutput}
+                        isAuthenticated={isAuthenticated}
+                        updateTask={updateTask}
                       />
+
+                      <div className="rounded-lg border border-zinc-800 bg-zinc-950/40 p-4">
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-2">
+                            <History className="h-4 w-4 text-zinc-500" />
+                            <h4 className="text-sm font-medium text-zinc-200">
+                              Execution history
+                            </h4>
+                          </div>
+                          <span className="text-xs text-zinc-500">
+                            {agentOutput.history.length} run{agentOutput.history.length !== 1 ? 's' : ''}
+                          </span>
+                        </div>
+                        <ol className="mt-3 space-y-2">
+                          {agentOutput.history.map((run) => (
+                            <li
+                              key={run.id}
+                              className="flex items-center justify-between gap-3 rounded-lg bg-zinc-900 px-3 py-2"
+                            >
+                              <span className="text-sm text-zinc-300">
+                                {run.action_type}
+                              </span>
+                              <span className="text-xs text-zinc-500">
+                                {new Date(run.created_at).toLocaleString()}
+                              </span>
+                            </li>
+                          ))}
+                        </ol>
+                      </div>
                     </div>
                   )}
                 </div>

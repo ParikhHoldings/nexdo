@@ -8,6 +8,7 @@ This repo currently contains a Next.js app with:
 - Supabase-backed profiles, tasks, notes, daily briefings, usage events, and rate-limit tables
 - natural-language task parsing, daily briefing, prioritization, and limited agent execution through OpenAI
 - bounded validation for OpenAI JSON output before parsed tasks, briefings, prioritization, or agent results are returned or saved
+- reviewable agent output history with verification status and notes for bounded research, draft, and prep runs
 - localStorage-backed demo-mode task and profile data when Supabase is unavailable or the visitor is logged out
 - persistent dark/light appearance preferences for the app workspace
 - local-date-aware browser due-task reminders for active tasks due today or overdue
@@ -27,7 +28,7 @@ Last checked on 2026-05-16:
 - `npm run lint` passed
 - `npm run typecheck` passed
 - `npm run build` passed
-- `npm run test:e2e` passed for logged-out demo workflows, task workspace lifecycle, local-date due-today behavior, file-import preview/confirm flow, persistent appearance and browser reminder settings, MCP/OpenAPI/action auth smoke tests, DB-backed MCP handler and API-key validation coverage, billing guardrails, deterministic task-intelligence coverage, import parser coverage, Stripe entitlement mapping, and local validation helper contracts
+- `npm run test:e2e` passed for logged-out demo workflows, task workspace lifecycle, local-date due-today behavior, file-import preview/confirm flow, agent output history/review notes, persistent appearance and browser reminder settings, MCP/OpenAPI/action auth smoke tests, DB-backed MCP handler and API-key validation coverage, billing guardrails, deterministic task-intelligence coverage, import parser coverage, Stripe entitlement mapping, and local validation helper contracts
 - PR #3 Web rails passed in GitHub Actions
 - PR #3 Vercel preview deployment completed
 

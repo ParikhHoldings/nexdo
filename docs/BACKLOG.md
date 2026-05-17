@@ -45,6 +45,7 @@
 - added client-side demo file import parsing for CSV, JSON, and ICS so logged-out visitors can exercise imports without weakening authenticated API import guards
 - added file-import previews with sample task titles and plan/cap warnings before tasks are added
 - aligned due-today task filters, demo seed dates, notification delivery, MCP due-today filtering, and imported calendar dates on local calendar keys instead of UTC day strings
+- added reviewable agent output history with verification status and notes for bounded research/draft/prep task execution
 - added representative import parser coverage for Todoist, CSV, ICS, Trello JSON, Things-style JSON, and invalid JSON exports
 - prevented authenticated task-capture save failures from creating local-only demo tasks; failed saves now restore the input and surface an error
 - prevented stale authenticated sessions from falling through to local demo task creation when Supabase returns no active user during capture
