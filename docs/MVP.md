@@ -44,6 +44,7 @@ Required fields:
 - due date and optional due time
 - context or description
 - task notes for decisions, links, and handoff context
+- parent and related task links for mapping work dependencies and handoff context
 - action type
 - estimated minutes
 - energy level
@@ -56,12 +57,13 @@ Acceptance gate:
 - Users can save bounded profile preferences that keep account personalization valid.
 - Users can explicitly review and restore cancelled tasks so agent-side cancellation does not hide work from the human owner.
 - Non-default task statuses are visible on task cards so human owners can spot work that is in progress, waiting, done, or cancelled.
+- Users can link a task to an owned parent task or related tasks from task detail.
 - Users can download a portable copy of currently loaded tasks for backup, review, or agent handoff.
 - Failed authenticated edits/deletes do not leave stale optimistic UI without warning.
 - AI/provider output is validated before becoming task data.
 - Generic user edits cannot spoof server-managed agent output.
 - Direct browser Supabase writes cannot spoof server-managed agent output, the broad task source flag, source-agent metadata, ingestion intent, or completion timestamps.
-- Direct browser Supabase writes cannot set task relationship metadata until owned task linking exists.
+- Direct browser Supabase writes cannot set task relationship metadata; owned task linking uses the route-level ownership-checked service path.
 - Direct browser Supabase writes cannot bypass core task content bounds for blank titles, oversized text, impossible estimates, or unbounded people/tag arrays.
 - Direct browser Supabase writes cannot spoof task-note metadata such as note type or creation time.
 - Direct browser Supabase writes cannot bypass the bounded task-note content contract.
@@ -69,13 +71,14 @@ Acceptance gate:
 Current evidence:
 - `TaskDetail` edit mode supports the MVP task fields, including optional due time and energy level.
 - `TaskDetail` supports task notes, with demo localStorage persistence and authenticated owned-task API routes.
+- `TaskDetail` supports parent/related task links, with demo persistence and authenticated writes through `app/api/tasks/[id]/relationships/route.ts`.
 - All Tasks defaults to active work but can filter into `done` and `cancelled`; task detail includes `cancelled` in the human status selector.
 - Task cards show status badges for `in_progress`, `waiting`, `done`, and `cancelled`.
 - Settings > Data exports the tasks currently loaded in the workspace as JSON or CSV through `lib/task-export.ts`.
 - The task store rolls back failed authenticated edit/delete mutations and surfaces visible app notifications.
 - `lib/ai-response-validation.ts` bounds OpenAI output.
 - `PATCH /api/tasks/[id]` uses `lib/task-validation.ts` to allowlist user-editable fields and reject protected/server-managed fields such as `user_id`, `completed_at`, `source_agent_id`, and `agent_output`.
-- Migrations `007_task_column_grants.sql`, `009_task_source_grants.sql`, `010_task_content_constraints.sql`, and `016_task_relationship_grants.sql` limit direct authenticated task inserts/updates to user-editable columns that exclude the broad task source flag, task relationship metadata, and other server-managed fields while still enforcing the core task content bounds; human task creation, task completion, agent output, trace metadata, and imported completion/external refs are written through server/service-role paths.
+- Migrations `007_task_column_grants.sql`, `009_task_source_grants.sql`, `010_task_content_constraints.sql`, and `016_task_relationship_grants.sql` limit direct authenticated task inserts/updates to user-editable columns that exclude the broad task source flag, task relationship metadata, and other server-managed fields while still enforcing the core task content bounds; human task creation, task completion, agent output, trace metadata, task relationships, and imported completion/external refs are written through server/service-role paths.
 - Migration `008_task_note_column_grants.sql` limits direct authenticated task-note inserts to `task_id` and `content`, while also enforcing non-empty note content up to 2,000 characters; authenticated note routes write server-managed note metadata through the service-role path after ownership checks.
 
 ### 3. Prioritize

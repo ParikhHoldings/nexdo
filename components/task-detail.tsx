@@ -19,6 +19,7 @@ import {
   Edit3,
   Save,
   Bot,
+  Link2,
 } from 'lucide-react'
 import { cn, formatDueTime, formatRelativeDate } from '@/lib/utils'
 import {
@@ -548,8 +549,239 @@ function TaskNotesPanel({ task, isAuthenticated }: TaskNotesPanelProps) {
   )
 }
 
+interface TaskRelationshipsPanelProps {
+  task: Task
+  tasks: Task[]
+  isAuthenticated: boolean
+  updateTask: (
+    id: string,
+    updates: TaskUpdate,
+    options?: { persist?: boolean }
+  ) => void
+  selectTask: (task: Task | null) => void
+}
+
+function relationshipTaskLabel(task: Task | undefined, taskId: string) {
+  return task?.title ?? `Task ${taskId.slice(0, 8)}`
+}
+
+function TaskRelationshipsPanel({
+  task,
+  tasks,
+  isAuthenticated,
+  updateTask,
+  selectTask,
+}: TaskRelationshipsPanelProps) {
+  const [isSavingRelationships, setIsSavingRelationships] = useState(false)
+  const [relationshipError, setRelationshipError] = useState<string | null>(null)
+  const relatedTaskIds = task.related_task_ids ?? []
+  const relatedTaskIdSet = new Set(relatedTaskIds)
+  const taskById = new Map(tasks.map((item) => [item.id, item]))
+  const parentTask = task.parent_task_id
+    ? taskById.get(task.parent_task_id)
+    : undefined
+  const parentCandidates = tasks.filter(
+    (item) => item.id !== task.id && !relatedTaskIdSet.has(item.id)
+  )
+  const relatedCandidates = tasks.filter(
+    (item) =>
+      item.id !== task.id &&
+      item.id !== task.parent_task_id &&
+      !relatedTaskIdSet.has(item.id)
+  )
+
+  const saveRelationships = async (
+    parentTaskId: string | null,
+    nextRelatedTaskIds: string[]
+  ) => {
+    setRelationshipError(null)
+    setIsSavingRelationships(true)
+
+    const relationshipUpdate: TaskUpdate = {
+      parent_task_id: parentTaskId,
+      related_task_ids:
+        nextRelatedTaskIds.length > 0
+          ? Array.from(new Set(nextRelatedTaskIds))
+          : null,
+    }
+
+    if (!isAuthenticated) {
+      updateTask(task.id, relationshipUpdate, { persist: false })
+      setIsSavingRelationships(false)
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/tasks/${task.id}/relationships`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(relationshipUpdate),
+      })
+      const payload = await response.json().catch(() => ({}))
+
+      if (!response.ok) {
+        throw new Error(
+          payload?.message ||
+            payload?.error ||
+            'Could not update task relationships'
+        )
+      }
+
+      const savedTask = payload as Task
+      updateTask(
+        task.id,
+        {
+          parent_task_id: savedTask.parent_task_id,
+          related_task_ids: savedTask.related_task_ids,
+        },
+        { persist: false }
+      )
+    } catch (error) {
+      setRelationshipError(
+        error instanceof Error
+          ? error.message
+          : 'Could not update task relationships'
+      )
+    } finally {
+      setIsSavingRelationships(false)
+    }
+  }
+
+  const handleParentChange = (value: string) => {
+    const nextParentTaskId = value || null
+    saveRelationships(
+      nextParentTaskId,
+      relatedTaskIds.filter((id) => id !== nextParentTaskId)
+    )
+  }
+
+  const handleAddRelatedTask = (value: string) => {
+    if (!value) return
+    saveRelationships(task.parent_task_id, [...relatedTaskIds, value])
+  }
+
+  const handleRemoveRelatedTask = (taskId: string) => {
+    saveRelationships(
+      task.parent_task_id,
+      relatedTaskIds.filter((id) => id !== taskId)
+    )
+  }
+
+  return (
+    <section
+      aria-label="Task relationships"
+      className="rounded-lg border border-zinc-800 bg-zinc-950/40 p-4"
+    >
+      <div className="flex items-center gap-2">
+        <Link2 className="h-4 w-4 text-zinc-500" />
+        <h3 className="text-sm font-medium text-zinc-200">
+          Task relationships
+        </h3>
+      </div>
+
+      <div className="mt-4 space-y-4">
+        <div>
+          <label className="mb-1.5 block text-sm text-zinc-400">
+            Parent task
+          </label>
+          <select
+            aria-label="Parent task"
+            value={task.parent_task_id ?? ''}
+            disabled={isSavingRelationships}
+            onChange={(event) => handleParentChange(event.target.value)}
+            className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/50 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <option value="">No parent task</option>
+            {task.parent_task_id && !parentTask && (
+              <option value={task.parent_task_id}>
+                {relationshipTaskLabel(parentTask, task.parent_task_id)}
+              </option>
+            )}
+            {parentCandidates.map((candidate) => (
+              <option key={candidate.id} value={candidate.id}>
+                {candidate.title}
+              </option>
+            ))}
+          </select>
+          {parentTask && (
+            <button
+              type="button"
+              onClick={() => selectTask(parentTask)}
+              className="mt-2 text-left text-sm text-zinc-300 transition-colors hover:text-zinc-100"
+            >
+              {parentTask.title}
+            </button>
+          )}
+        </div>
+
+        <div>
+          <label className="mb-1.5 block text-sm text-zinc-400">
+            Related tasks
+          </label>
+          <select
+            aria-label="Add related task"
+            value=""
+            disabled={isSavingRelationships || relatedCandidates.length === 0}
+            onChange={(event) => handleAddRelatedTask(event.target.value)}
+            className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/50 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <option value="">Add related task</option>
+            {relatedCandidates.map((candidate) => (
+              <option key={candidate.id} value={candidate.id}>
+                {candidate.title}
+              </option>
+            ))}
+          </select>
+
+          <div className="mt-3 space-y-2">
+            {relatedTaskIds.length === 0 && (
+              <p className="text-sm text-zinc-500">No related tasks.</p>
+            )}
+            {relatedTaskIds.map((relatedTaskId) => {
+              const relatedTask = taskById.get(relatedTaskId)
+              const label = relationshipTaskLabel(relatedTask, relatedTaskId)
+
+              return (
+                <div
+                  key={relatedTaskId}
+                  className="flex items-center justify-between gap-3 rounded-lg bg-zinc-900 px-3 py-2"
+                >
+                  <button
+                    type="button"
+                    disabled={!relatedTask}
+                    onClick={() => relatedTask && selectTask(relatedTask)}
+                    className="min-w-0 truncate text-left text-sm text-zinc-300 transition-colors hover:text-zinc-100 disabled:cursor-not-allowed disabled:text-zinc-500"
+                  >
+                    {label}
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={`Remove related task ${label}`}
+                    onClick={() => handleRemoveRelatedTask(relatedTaskId)}
+                    disabled={isSavingRelationships}
+                    className="rounded-md p-1 text-zinc-500 transition-colors hover:bg-zinc-800 hover:text-zinc-200 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
+        {isSavingRelationships && (
+          <p className="text-sm text-zinc-500">Saving relationships...</p>
+        )}
+        {relationshipError && (
+          <p className="text-sm text-red-400">{relationshipError}</p>
+        )}
+      </div>
+    </section>
+  )
+}
+
 export function TaskDetail() {
-  const { selectedTask, isDetailOpen, closeDetail, updateTask, deleteTask, isAuthenticated } =
+  const { selectedTask, tasks, isDetailOpen, closeDetail, updateTask, deleteTask, selectTask, isAuthenticated } =
     useTaskStore()
   const [isExecuting, setIsExecuting] = useState(false)
   const [executionError, setExecutionError] = useState<string | null>(null)
@@ -1081,6 +1313,15 @@ export function TaskDetail() {
                   ))}
                 </div>
               </div>
+
+              <TaskRelationshipsPanel
+                key={`relationships-${task.id}`}
+                task={task}
+                tasks={tasks}
+                isAuthenticated={isAuthenticated}
+                updateTask={updateTask}
+                selectTask={selectTask}
+              />
 
               <TaskNotesPanel
                 key={`${task.id}-${isAuthenticated ? 'auth' : 'demo'}`}

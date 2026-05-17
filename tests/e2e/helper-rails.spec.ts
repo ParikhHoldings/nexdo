@@ -34,6 +34,7 @@ import {
   isExecutableActionType,
 } from '../../lib/task-actions'
 import { MAX_TASK_NOTE_LENGTH, validateTaskNoteContent } from '../../lib/task-notes'
+import { validateTaskRelationshipPatch } from '../../lib/task-relationships'
 import {
   tasksToCsv,
   tasksToExportPayload,
@@ -740,6 +741,68 @@ test('task export helpers preserve portable task metadata', () => {
   expect(csv).toContain('"Export ""launch"", review"')
   expect(csv).toContain('"Casey; Jordan"')
   expect(csv).toContain('"{""reviewed"":true}"')
+})
+
+test('task relationship validation requires bounded owned-link inputs', () => {
+  const currentTaskId = '00000000-0000-4000-8000-000000000001'
+  const parentTaskId = '00000000-0000-4000-8000-000000000002'
+  const relatedTaskId = '00000000-0000-4000-8000-000000000003'
+
+  expect(
+    validateTaskRelationshipPatch(
+      {
+        parent_task_id: parentTaskId,
+        related_task_ids: [relatedTaskId, relatedTaskId, ''],
+      },
+      currentTaskId
+    )
+  ).toEqual({
+    updates: {
+      parent_task_id: parentTaskId,
+      related_task_ids: [relatedTaskId],
+    },
+    referencedTaskIds: [parentTaskId, relatedTaskId],
+    errors: [],
+  })
+
+  const invalid = validateTaskRelationshipPatch(
+    {
+      parent_task_id: currentTaskId,
+      related_task_ids: [parentTaskId, 'not-a-task-id'],
+      agent_output: { spoofed: true },
+    },
+    currentTaskId
+  )
+
+  expect(invalid.errors).toEqual(
+    expect.arrayContaining([
+      {
+        field: 'agent_output',
+        message: 'This field is not editable through this route.',
+      },
+      {
+        field: 'parent_task_id',
+        message: 'Cannot link a task to itself.',
+      },
+      {
+        field: 'related_task_ids',
+        message: 'Must be a valid task id.',
+      },
+    ])
+  )
+
+  expect(
+    validateTaskRelationshipPatch(
+      {
+        parent_task_id: parentTaskId,
+        related_task_ids: [parentTaskId],
+      },
+      currentTaskId
+    ).errors
+  ).toContainEqual({
+    field: 'related_task_ids',
+    message: 'Parent task cannot also be a related task.',
+  })
 })
 
 test('executable action helpers keep agent execution bounded to owned work types', () => {

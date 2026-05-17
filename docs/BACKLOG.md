@@ -66,6 +66,7 @@
 - refreshed current verification summaries for PR #3 head `a9eabf66edc12cee1382d725407c4f591bcb6275`, 105-test local Playwright coverage, passing GitHub Web rails, passing Vercel preview deployment, and protected-preview route-smoke blocker state
 - corrected the README import summary so it describes file uploads from external task exports instead of implying Nexdo already has task export functionality
 - added Settings data export so users can download currently loaded tasks as JSON or CSV for backup, review, or agent handoff
+- added task-detail parent/related links with demo persistence and an authenticated ownership-checked relationship route
 - made landing-page pricing CTAs functional without implying verified production checkout: Free opens the demo, Pro/Power open signup, and Team opens the sales email path
 - narrowed pricing feature bullets away from unverified SSO, admin controls, team collaboration, and custom integration promises
 - tightened site metadata and agent system prompt language around early-access, bounded, reviewable AI assistance instead of broad automation claims

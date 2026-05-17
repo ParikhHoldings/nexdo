@@ -2,13 +2,13 @@
 
 ## 2026-05-17 - Task relationship metadata stays service-owned
 ### Decision
-Direct browser task inserts and updates cannot write `parent_task_id` or `related_task_ids`. Keep task relationship metadata service-owned until an owned-linking UI/API path exists.
+Direct browser task inserts and updates cannot write `parent_task_id` or `related_task_ids`. Task relationship edits now go through task detail and `app/api/tasks/[id]/relationships/route.ts`, which checks that the current task and every linked task belong to the authenticated user before service-role persistence.
 
 ### Why
-RLS ownership on the task row does not prove that referenced task UUIDs are owned by the same user. The launch UI and human task routes do not expose task linking, so direct browser writes would create an unreviewed relationship surface without product behavior around it.
+RLS ownership on the task row does not prove that referenced task UUIDs are owned by the same user. Direct browser writes would let clients attach arbitrary task relationships without route-level validation.
 
 ### Impact
-Future task-linking work needs route-level ownership checks, deliberate grant updates, real Supabase smoke coverage, and docs updates before relationship metadata becomes browser-editable.
+Keep direct browser relationship grants closed unless the ownership model changes deliberately. Real Supabase smoke still needs to verify direct relationship-column denial and the authenticated relationship route against migrated provider data.
 
 ## 2026-05-17 - Daily briefing cache writes are service-owned
 ### Decision

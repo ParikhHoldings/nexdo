@@ -525,6 +525,54 @@ test('demo task notes save and reload from task detail', async ({ page }) => {
   await expect(page.getByLabel('Task notes').getByText(note)).toBeVisible()
 })
 
+test('demo task relationships save and navigate from task detail', async ({ page }) => {
+  await page.goto('/all')
+
+  await page.getByRole('heading', { name: 'Review Q4 marketing proposal' }).click()
+  const relationships = page.getByLabel('Task relationships')
+  await expect(relationships.getByRole('heading', { name: 'Task relationships' })).toBeVisible()
+
+  await relationships.getByLabel('Parent task').selectOption({
+    label: 'Prepare for investor meeting',
+  })
+  await expect(
+    relationships.getByRole('button', { name: 'Prepare for investor meeting' })
+  ).toBeVisible()
+
+  await relationships.getByLabel('Add related task').selectOption({
+    label: 'Send weekly update to team',
+  })
+  await expect(
+    relationships.getByRole('button', {
+      name: 'Send weekly update to team',
+      exact: true,
+    })
+  ).toBeVisible()
+
+  await page.reload()
+  await page.getByRole('heading', { name: 'Review Q4 marketing proposal' }).click()
+  const persistedRelationships = page.getByLabel('Task relationships')
+  await expect(
+    persistedRelationships.getByRole('button', { name: 'Prepare for investor meeting' })
+  ).toBeVisible()
+  await expect(
+    persistedRelationships.getByRole('button', {
+      name: 'Send weekly update to team',
+      exact: true,
+    })
+  ).toBeVisible()
+
+  await persistedRelationships
+    .getByRole('button', {
+      name: 'Send weekly update to team',
+      exact: true,
+    })
+    .click()
+  await expect(
+    page.locator('h2', { hasText: 'Send weekly update to team' })
+  ).toBeVisible()
+})
+
 test('task mutation endpoints require configured auth', async ({ request }) => {
   const patch = await request.patch('/api/tasks/not-a-real-task', {
     data: { title: 'Should not update', user_id: 'someone-else' },

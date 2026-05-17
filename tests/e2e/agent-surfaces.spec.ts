@@ -446,6 +446,18 @@ test('server-managed task fields stay on service-role write paths', () => {
   expect(taskRoute).toContain('.update(updates)')
   expect(taskRoute).toContain(".eq('user_id', user.id)")
 
+  const relationshipRoute = readFileSync(
+    'app/api/tasks/[id]/relationships/route.ts',
+    'utf8'
+  )
+  expect(relationshipRoute).toContain('createClient, createServiceClient')
+  expect(relationshipRoute).toContain('validateTaskRelationshipPatch(body, id)')
+  expect(relationshipRoute).toContain("select('id')")
+  expect(relationshipRoute).toContain(".eq('user_id', user.id)")
+  expect(relationshipRoute).toContain(".in('id', idsToCheck)")
+  expect(relationshipRoute).toContain('.update(updatePayload)')
+  expect(relationshipRoute).toContain('Linked tasks must belong to the current user.')
+
   const createTaskRoute = readFileSync('app/api/tasks/route.ts', 'utf8')
   expect(createTaskRoute).toContain('createClient, createServiceClient')
   expect(createTaskRoute).toContain('const service = await createServiceClient()')
