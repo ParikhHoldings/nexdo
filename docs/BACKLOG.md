@@ -172,6 +172,7 @@
 
 ## High priority
 - configure and verify the real production deploy target
+- provide `VERCEL_AUTOMATION_BYPASS_SECRET` locally or use an unprotected preview URL so remote route smoke can verify the latest Vercel preview instead of stopping at Vercel Deployment Protection
 - run `npm run smoke:supabase -- --write` against a real Supabase project after applying migrations, including hashed API-key columns, profile column read/update grants, direct task column-grant denials, audit-event privacy, and agent external-ref uniqueness
 - run `npm run smoke:openai -- --app` with real OpenAI, Supabase, and target app env
 - run `npm run smoke:stripe -- --write --webhook` with Stripe test-mode keys and target Supabase/app env to verify checkout, portal, webhook events, quota plan-state boundaries, authenticated task-create quota behavior, and idempotency

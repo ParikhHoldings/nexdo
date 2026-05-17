@@ -1,5 +1,15 @@
 # Decisions
 
+## 2026-05-17 - Route smoke must distinguish Vercel protection from app failures
+### Decision
+`npm run smoke:routes` supports Vercel's Deployment Protection automation bypass through `VERCEL_AUTOMATION_BYPASS_SECRET`. When a target preview returns the Vercel login wall, the smoke should fail fast with that specific blocker instead of reporting the preview as an app route failure.
+
+### Why
+The latest Vercel preview deploy can be green while still being inaccessible to route smoke because Deployment Protection returns a Vercel login page. Launch evidence needs to verify Nexdo routes, not Vercel's authentication screen.
+
+### Impact
+Before using a protected Vercel preview as launch evidence, provide `VERCEL_AUTOMATION_BYPASS_SECRET` locally or use an unprotected preview URL. Without that, provider and route smokes remain blocked even if the Vercel deployment status is green.
+
 ## 2026-05-17 - Search includes structured people metadata
 ### Decision
 All Tasks search and MCP/ChatGPT Actions `search_tasks` use the same metadata search behavior across title, context, description, people, and tags.

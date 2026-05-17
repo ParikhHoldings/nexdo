@@ -36,6 +36,7 @@ Last checked on 2026-05-17:
 - PR #3 Web rails passed
 - PR #3 Vercel preview deployment passed on a recent code head after the route-smoke rail
 - repeated PR pushes have intermittently hit Vercel account build-rate limits, so inspect current PR checks before treating the newest head as preview-deploy verified
+- the latest Vercel preview deploy is green, but direct remote route smoke is blocked by Vercel Deployment Protection until `VERCEL_AUTOMATION_BYPASS_SECRET` is provided locally or an unprotected preview URL is used
 
 `npm run verify:env` currently fails because `.env.local` is absent; only `.env.local.example` exists in this workspace. Still unverified: production env, Supabase migrations/auth/profile and task column grants against a real project, OpenAI provider calls, Stripe test-mode flows, scoped MCP/API-key execution, idempotency replay against real task data, agent audit writes, and production deployment rails.
 

@@ -66,7 +66,7 @@ Make Nexdo a credible, launchable early-access product by Monday, 2026-05-18, wi
 | Verify deploy target and production env | `npm run verify:env` was rerun on 2026-05-17 and failed because `.env.local` is absent; no production env or deploy target credentials/config were exercised in this pass | Missing |
 | Keep env verification aligned with runtime placeholder rules | `scripts/verify-env.mjs` and shared runtime helper `lib/env.ts` reject common placeholder fragments across URL and secret values; `.env.local.example` documents smoke-only MCP API-key variables separately from deployed app env | Done |
 | Document local and production setup steps | `docs/DEPLOYMENT.md` now separates no-provider local setup, env preflight, production setup sequence, provider smoke commands, rollback notes, and approval boundaries | Done |
-| Verify preview deploy rail | PR #3 Web rails passed; Vercel preview deployment passed on a recent code head after the route-smoke rail, while later PR heads can still hit the account build-rate limit | Recent route-smoke head verified; inspect current PR checks before merge |
+| Verify preview deploy rail | PR #3 Web rails passed and the latest Vercel preview deployment is green; direct remote route smoke against that preview is blocked by Vercel Deployment Protection until `VERCEL_AUTOMATION_BYPASS_SECRET` or an unprotected preview URL is available | Deploy green; remote route smoke blocked by Vercel auth |
 | Verify Supabase migrations/auth/RLS/task CRUD against real project | Migrations and code exist, but real project smoke test was not run | Missing |
 | Provide a repeatable Supabase smoke command | `npm run smoke:supabase` checks schema columns; `npm run smoke:supabase -- --write` creates/deletes a smoke auth user, verifies profile trigger, allowed profile reads/edits, denied sensitive profile reads/edits, task CRUD through RLS, direct browser denial for task server-managed columns, agent external-ref uniqueness, public audit-event privacy, browser audit-event insert denial, quota increments, quota no-op behavior, and rate-limit allow/block behavior | Done |
 | Verify OpenAI provider-backed parse/prioritize/briefing/execution | Fallbacks and UI path work; real provider calls not exercised | Missing |
@@ -105,12 +105,13 @@ Make Nexdo a credible, launchable early-access product by Monday, 2026-05-18, wi
 
 ## Commands attempted but blocked
 - `npm run verify:env` failed because `.env.local` is not present in this workspace. `.env.local.example` is present, but it is only the contract and cannot support provider smoke checks.
+- `npm run smoke:routes -- --url=<latest-vercel-preview>` failed because the preview is behind Vercel Deployment Protection. The route smoke now supports `VERCEL_AUTOMATION_BYPASS_SECRET` and fails fast with that specific blocker.
 
 ## Current completion judgment
 The Monday early-access demo, local build/test rails, demo task persistence, local-date due-today behavior, file-import preview/confirm flow, agent output history/review notes, persistent appearance and browser reminder settings, task mutation guards, Done-page failure rollback, shared task route validation, AI input/output guards, authenticated agent execution guards, DB-backed MCP handler and API-key validation behavior, import quota guards, and billing route guards are in materially better shape and are locally verified. The broader objective is not complete as a production launch because provider-backed flows, real database/auth, Stripe billing, authenticated MCP tool execution, production deployment rails, and approvals remain unverified.
 
 ## Next required work
-1. Configure a real Supabase/OpenAI/Stripe/app environment and run `npm run smoke:launch -- --env=.env.production.local --url=<preview-url> --technical-only`.
+1. Configure a real Supabase/OpenAI/Stripe/app environment plus `VERCEL_AUTOMATION_BYPASS_SECRET` for protected Vercel previews, or use an unprotected preview URL, then run `npm run smoke:launch -- --env=.env.production.local --url=<preview-url> --technical-only`.
 2. If debugging individual providers, run `npm run smoke:supabase -- --write`, `npm run smoke:openai -- --app`, `npm run smoke:stripe -- --write --webhook`, and `npm run smoke:mcp -- --provision --write --audit` separately against the same target env.
 3. After technical smokes pass, rerun the launch smoke against the production URL only after public-copy approval and production deploy verification can be represented with `--copy-approved --production-deploy-verified`.
 4. Route public copy through Quill/founder approval before external launch use.

@@ -80,6 +80,7 @@
 - Surfaced non-default task statuses on task cards so agent-updated waiting/in-progress/cancelled work is visible while scanning the workspace.
 - Aligned the Today sidebar badge with the Today focus list so undated active tasks count the same way they appear in the daily workspace.
 - Aligned daily briefing, provider briefing inputs, local heuristic briefings, and due-task reminders on the same active-task definition so cancelled work does not inflate focus counts.
+- Added Vercel Deployment Protection handling to the route smoke: protected previews now use `VERCEL_AUTOMATION_BYPASS_SECRET` when provided and otherwise fail with a clear blocker.
 - Verified PR #3 Web rails and a Vercel preview deployment after the route-smoke rail; later PR heads can still be Vercel rate-limited.
 - Added `npm run smoke:routes` and wired it into the launch smoke so preview/production route rendering is checked at desktop and mobile widths.
 - Moved import preview cap warnings into a shared helper with local coverage for demo caps and Free-plan near-limit warning copy.

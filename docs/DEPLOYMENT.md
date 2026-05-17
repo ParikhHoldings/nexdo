@@ -1,7 +1,7 @@
 # Deployment
 
 ## Current status
-PR #3 passed the GitHub Actions Web rails workflow, and Vercel preview deployment passed on a recent code head after the route-smoke rail. Later PR heads have intermittently hit Vercel account build-rate limits, so inspect the current PR checks before treating the newest head as preview-deploy verified. Local `npm run verify:env` currently fails because `.env.local` is absent; only `.env.local.example` exists in this workspace. No production deploy target or production provider credentials were verified in this operating pass. Treat Nexdo as locally and CI verified, with recent preview-deploy evidence on this branch, but not production-ready until the checks below pass against the real deployment environment.
+PR #3 passed the GitHub Actions Web rails workflow, and Vercel preview deployment is green on the latest head. Direct remote route smoke against the latest preview is blocked by Vercel Deployment Protection until `VERCEL_AUTOMATION_BYPASS_SECRET` is supplied locally or an unprotected preview URL is used. Later PR heads have intermittently hit Vercel account build-rate limits, so inspect the current PR checks before treating the newest head as preview-deploy verified. Local `npm run verify:env` currently fails because `.env.local` is absent; only `.env.local.example` exists in this workspace. No production deploy target or production provider credentials were verified in this operating pass. Treat Nexdo as locally and CI verified, with preview-deploy evidence on this branch, but not production-ready until the checks below pass against the real deployment environment.
 
 ## Branch and release rails
 - Use `main` as the production branch unless a deploy platform is configured differently.
@@ -67,6 +67,13 @@ Provider smokes in the launch bundle require a remote HTTPS `--url` or
 debugging provider callbacks against a local app; do not use it as launch
 evidence.
 
+If the target URL is a Vercel preview protected by Deployment Protection, set
+`VERCEL_AUTOMATION_BYPASS_SECRET` in the env file or shell before running route
+or launch smokes. The route smoke sends Vercel's automation bypass headers
+(`x-vercel-protection-bypass` and `x-vercel-set-bypass-cookie`) when that value
+is present. Without it, the smoke fails fast on the Vercel login wall instead of
+treating the preview as route-render verified.
+
 For a final launch gate after approvals and production deploy verification:
 
 ```bash
@@ -85,7 +92,7 @@ npm run smoke:launch -- --env=.env.production.local --url=https://your-productio
 9. Only after the provider smokes and approvals pass, promote to production.
 
 ## Provider smoke tests still required
-- Routes: run `npm run smoke:routes -- --url=<preview-or-production-origin>` to verify launch-facing marketing, app, auth, import, settings, MCP setup, privacy, and terms routes render at desktop and mobile widths without response failures, blank bodies, framework overlays, or console errors.
+- Routes: run `npm run smoke:routes -- --url=<preview-or-production-origin>` to verify launch-facing marketing, app, auth, import, settings, MCP setup, privacy, and terms routes render at desktop and mobile widths without response failures, blank bodies, framework overlays, or console errors. For protected Vercel previews, export `VERCEL_AUTOMATION_BYPASS_SECRET` first.
 - Supabase: apply migrations to a real project, create a user, verify profile creation, RLS, task CRUD, import quota enforcement, hashed API-key storage, API key scope persistence and rotation rate limits, profile column read/update grants, direct task column-grant denial for server-managed fields, agent external-ref uniqueness, `agent_action_events` audit writes/privacy, quota no-op behavior, and service-role RPCs.
 - OpenAI: verify parse, prioritization, briefing, and owned-task research/draft/prep execution with real credentials, server-side output persistence, quota use, and rate-limit behavior.
 - Stripe: verify checkout, portal, signed webhook handling, duplicate webhook idempotency, subscription tier updates/deletes, quota enforcement, authenticated task-create quota behavior after entitlement changes, and unknown-price behavior in test mode.

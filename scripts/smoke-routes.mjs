@@ -12,6 +12,7 @@ const baseUrl = (urlArg?.slice('--url='.length) || process.env.NEXT_PUBLIC_APP_U
   ''
 )
 const screenshotDir = screenshotDirArg?.slice('--screenshot-dir='.length)
+const vercelBypassSecret = process.env.VERCEL_AUTOMATION_BYPASS_SECRET
 
 const routes = [
   '/',
@@ -66,6 +67,22 @@ function hasFrameworkOverlay(text) {
   return /Unhandled Runtime Error|Application error|Hydration failed|Runtime Error|Build Error/i.test(text)
 }
 
+function isVercelProtectionPage(status, title, bodyText) {
+  return (
+    status === 401 &&
+    /vercel/i.test(title) &&
+    /Log in to Vercel|Continue with GitHub|Continue with Email/i.test(bodyText)
+  )
+}
+
+function vercelProtectionMessage(viewport, route) {
+  return [
+    `Route smoke blocked by Vercel Deployment Protection at ${viewport} ${route}.`,
+    'Set VERCEL_AUTOMATION_BYPASS_SECRET for protected Vercel previews, or use an unprotected preview/production URL.',
+    'The smoke sends x-vercel-protection-bypass and x-vercel-set-bypass-cookie headers when that env var is present.',
+  ].join(' ')
+}
+
 async function main() {
   const urlError = validateBaseUrl(baseUrl)
   if (urlError) {
@@ -78,10 +95,20 @@ async function main() {
 
   const browser = await chromium.launch()
   const failures = []
+  const extraHTTPHeaders = vercelBypassSecret
+    ? {
+        'x-vercel-protection-bypass': vercelBypassSecret,
+        'x-vercel-set-bypass-cookie': 'true',
+      }
+    : undefined
 
   try {
     for (const viewport of viewports) {
-      const page = await browser.newPage({ viewport })
+      const context = await browser.newContext({
+        viewport,
+        ...(extraHTTPHeaders ? { extraHTTPHeaders } : {}),
+      })
+      const page = await context.newPage()
       const routeMessages = []
 
       page.on('console', (message) => {
@@ -116,6 +143,14 @@ async function main() {
           await page.screenshot({ path: capturePath, fullPage: false })
         }
 
+        if (isVercelProtectionPage(status, title, bodyText)) {
+          console.log(`issue ${viewport.name} ${route}`)
+          if (capturePath) {
+            console.log(`  screenshot ${capturePath}`)
+          }
+          throw new Error(vercelProtectionMessage(viewport.name, route))
+        }
+
         const routeFailures = []
         if (status >= 400 || status === 0) routeFailures.push(`status ${status}`)
         if (!title) routeFailures.push('missing page title')
@@ -139,7 +174,7 @@ async function main() {
         }
       }
 
-      await page.close()
+      await context.close()
     }
   } finally {
     await browser.close()
