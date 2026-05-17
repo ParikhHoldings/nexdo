@@ -40,6 +40,7 @@
 - expanded `npm run smoke:supabase -- --write` to verify browser clients cannot write task server-managed columns, cannot insert agent audit events, public clients cannot read audit events, and duplicate agent external refs are rejected
 - added focused Playwright regression coverage that checks task column grants exclude server-managed fields and task/import server routes use service-role write paths after auth/quota checks
 - moved authenticated agent execution service-role output persistence preflight ahead of rate-limit, quota, and provider work so runs do not spend work when output cannot be saved
+- updated the GitHub Actions verify workflow to `actions/checkout@v5` and `actions/setup-node@v5` so the CI rail no longer depends on deprecated Node 20 action runtimes
 
 ## Completed 2026-05-16
 - read and updated the repo-level agent context and all existing Markdown/text operating files

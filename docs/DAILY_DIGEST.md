@@ -41,6 +41,7 @@
 - Expanded Supabase write smoke for task server-managed column denial, agent external-ref uniqueness, private audit-event reads, and audit-event insert denial.
 - Added regression coverage for the task column-grant/service-role write boundary across task mutation, agent execution/review, and import routes.
 - Moved agent execution service-role output persistence preflight ahead of rate-limit, quota, and provider work.
+- Updated the GitHub Actions verify workflow to Node-24-runtime action releases while keeping the app test runtime on Node 22.
 
 ### In progress
 - Provider-backed Supabase, OpenAI, Stripe, and MCP smokes remain the main launch-readiness gap.
