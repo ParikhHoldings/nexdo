@@ -23,11 +23,16 @@ export async function POST() {
       return NextResponse.json({ error: 'Billing is not configured yet' }, { status: 503 })
     }
 
-    const { data: profile } = await (service as any)
+    const { data: profile, error: profileError } = await (service as any)
       .from('profiles')
       .select('stripe_customer_id')
       .eq('id', user.id)
-      .single()
+      .maybeSingle()
+
+    if (profileError) {
+      console.error('Error loading billing profile:', profileError)
+      return NextResponse.json({ error: 'Billing profile is not available yet' }, { status: 500 })
+    }
 
     if (!profile?.stripe_customer_id) {
       return NextResponse.json({ error: 'No billing account found' }, { status: 404 })

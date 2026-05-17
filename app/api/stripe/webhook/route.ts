@@ -3,6 +3,7 @@ import Stripe from 'stripe'
 import { stripe } from '@/lib/stripe'
 import { createServiceClient } from '@/lib/supabase/server'
 import { tierForStripePriceId } from '@/lib/stripe-entitlements'
+import { updateCustomerSubscriptionTier } from '@/lib/stripe-webhook'
 
 export async function POST(request: NextRequest) {
   if (!stripe) {
@@ -74,10 +75,7 @@ export async function POST(request: NextRequest) {
           break
         }
 
-        await supabase
-          .from('profiles')
-          .update({ subscription_tier: tier })
-          .eq('stripe_customer_id', customerId)
+        await updateCustomerSubscriptionTier(supabase, customerId, tier)
         break
       }
 
@@ -91,10 +89,7 @@ export async function POST(request: NextRequest) {
           subscription.status !== 'active' &&
           subscription.status !== 'trialing'
         ) {
-          await supabase
-            .from('profiles')
-            .update({ subscription_tier: 'free' })
-            .eq('stripe_customer_id', customerId)
+          await updateCustomerSubscriptionTier(supabase, customerId, 'free')
           break
         }
 
@@ -104,10 +99,7 @@ export async function POST(request: NextRequest) {
           break
         }
 
-        await supabase
-          .from('profiles')
-          .update({ subscription_tier: tier })
-          .eq('stripe_customer_id', customerId)
+        await updateCustomerSubscriptionTier(supabase, customerId, tier)
         break
       }
 
@@ -115,10 +107,7 @@ export async function POST(request: NextRequest) {
         const subscription = event.data.object as Stripe.Subscription
         const customerId = subscription.customer as string
 
-        await supabase
-          .from('profiles')
-          .update({ subscription_tier: 'free' })
-          .eq('stripe_customer_id', customerId)
+        await updateCustomerSubscriptionTier(supabase, customerId, 'free')
         break
       }
 

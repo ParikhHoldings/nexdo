@@ -23,7 +23,7 @@ The goal is not a broad public launch. The credible Monday target is a verified 
 - OpenAI provider verification now has a repeatable smoke script, `npm run smoke:openai`; it still needs to be run with a real key and followed by authenticated app-route verification.
 - App OpenAI helpers now use the same optional `OPENAI_MODEL` default as the smoke script and fall back locally for placeholder keys.
 - Stripe provider verification now has a repeatable smoke script, `npm run smoke:stripe`; it still needs to be run with test-mode keys and followed by webhook/quota verification.
-- Stripe checkout now accepts only server-known `pro` and `power` plans, derives price IDs from env, and skips unknown webhook price IDs instead of granting paid access.
+- Stripe checkout now accepts only server-known `pro` and `power` plans, derives price IDs from env, requires billing profile persistence, and skips unknown webhook price IDs instead of granting paid access.
 - Pricing UI now shows only monthly prices because annual Stripe prices are not configured.
 - Supabase provider verification now has a repeatable smoke script, `npm run smoke:supabase`; it still needs to be run with real credentials after migrations are applied.
 - Supabase migrations now include quota cleanup so usage read probes reset monthly counters without writing zero-quantity audit events.

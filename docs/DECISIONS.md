@@ -214,10 +214,11 @@ Future agent execution features should keep the owned-record boundary and add re
 
 ## 2026-05-16 - Keep billing entitlements tied to server-known prices
 ### Decision
-Checkout requests may choose only the `pro` or `power` plan key, and the server derives the Stripe price ID from environment configuration. Stripe webhooks must ignore unknown, missing, or placeholder price IDs instead of defaulting to a paid Nexdo tier.
+Checkout requests may choose only the `pro` or `power` plan key, and the server derives the Stripe price ID from environment configuration. Checkout must fail if the Stripe customer ID cannot be persisted to the user's profile. Stripe webhooks must ignore unknown, missing, or placeholder price IDs instead of defaulting to a paid Nexdo tier, and entitlement profile writes must fail for Stripe retry on database errors or unmatched customer profiles.
 
 ### Why
 Paid access should not depend on client-supplied price IDs or implicit fallback mappings. Launch billing needs predictable, auditable plan selection before pricing is externally committed.
+The webhook customer lookup depends on the stored `stripe_customer_id`; silently ignoring persistence failures can strand paid users without an entitlement update.
 
 ### Impact
 Future billing changes must update the server-side price mapping and rerun Stripe test-mode checkout, portal, webhook, and quota smoke checks before public use.

@@ -12,6 +12,7 @@
 - moved authenticated human task creation to quota pre-check plus post-insert usage accounting, with best-effort task cleanup if accounting fails
 - moved MCP `create_task` to quota pre-check plus post-insert usage accounting, with inserted-task cleanup if accounting fails
 - moved authenticated imports to quota pre-check plus post-save usage accounting for successfully inserted rows, with inserted-task cleanup if accounting fails
+- hardened billing profile writes so checkout fails if the Stripe customer ID cannot be saved and webhook entitlement updates fail for retry if no profile row is written
 
 ## Completed 2026-05-16
 - read and updated the repo-level agent context and all existing Markdown/text operating files

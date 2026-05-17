@@ -48,11 +48,19 @@ export async function POST(request: NextRequest) {
     }
 
     // Get billing identifiers through the server trust boundary.
-    const { data: profileData } = await (service as any)
+    const { data: profileData, error: profileError } = await (service as any)
       .from('profiles')
       .select('stripe_customer_id')
       .eq('id', user.id)
-      .single()
+      .maybeSingle()
+
+    if (profileError || !profileData) {
+      console.error('Error loading billing profile:', profileError)
+      return NextResponse.json(
+        { error: 'Billing profile is not available yet.' },
+        { status: 500 }
+      )
+    }
 
     const profile = profileData as { stripe_customer_id: string | null } | null
     let customerId = profile?.stripe_customer_id
@@ -70,10 +78,20 @@ export async function POST(request: NextRequest) {
       customerId = customer.id
 
       // Save the customer ID to the profile
-      await (service as any)
+      const { data: updatedProfile, error: updateError } = await (service as any)
         .from('profiles')
         .update({ stripe_customer_id: customerId })
         .eq('id', user.id)
+        .select('id')
+        .maybeSingle()
+
+      if (updateError || !updatedProfile) {
+        console.error('Error saving Stripe customer ID:', updateError)
+        return NextResponse.json(
+          { error: 'Failed to save billing account.' },
+          { status: 500 }
+        )
+      }
     }
 
     // Derive the Stripe price from server configuration only. Clients choose
