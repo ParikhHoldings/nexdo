@@ -42,6 +42,7 @@
 - Surfaced billing checkout and portal server messages before generic settings errors.
 - Trimmed submitted login emails before Supabase sign-in so pasted whitespace does not break otherwise valid account access.
 - Verified the login-email normalization and docs-refresh heads through local rails and GitHub Web rails; Vercel preview deployment remains per-head evidence because one docs-refresh head passed and a later docs-only head hit the known account build-rate limit.
+- Tightened auth redirect helpers so recovery callbacks can still land on update-password while normal login redirects reject auth-page loops, control characters, backslash paths, and encoded authority-like prefixes.
 - Added shared auth redirect guardrails so protected-route login redirects preserve path and query, login/callback redirects stay on same-origin app paths, and callback errors show a visible login message.
 - Kept Settings tab clicks and `?tab=` deep links synchronized with the URL so upgrade and API setup links continue to land on the intended tab after users click around.
 - Kept Connect AI setup, activity, and tool indicators bound to active paid API access instead of stale key hints.

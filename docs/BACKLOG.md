@@ -40,6 +40,7 @@
 - surfaced authenticated AI briefing and prioritization fallback notices when provider/rate-limit failures force local heuristics
 - surfaced billing checkout and portal server messages before generic settings errors
 - trimmed submitted login emails before Supabase sign-in so pasted whitespace does not break otherwise valid account access
+- tightened auth redirect helpers so callback recovery can still land on update-password while normal login redirects reject auth-page loops, control characters, backslash paths, and encoded authority-like prefixes
 - added shared auth redirect guardrails so protected-route login redirects preserve path and query, login/callback redirects stay on same-origin app paths, and callback errors show a visible login message
 - kept Settings tab clicks and `?tab=` deep links synchronized with the URL so billing/API/appearance links continue to land on the intended tab after users click around
 - kept Connect AI setup, activity, and available-tool indicators bound to active paid API access instead of treating old key hints as usable

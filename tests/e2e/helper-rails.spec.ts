@@ -14,7 +14,11 @@ import {
   normalizeAgentOutput,
   updateAgentReview,
 } from '../../lib/agent-output'
-import { authErrorMessage, safeAuthRedirect } from '../../lib/auth-redirect'
+import {
+  authErrorMessage,
+  safeAuthRedirect,
+  safeLoginRedirect,
+} from '../../lib/auth-redirect'
 import { validateParsedTask } from '../../lib/ai-response-validation'
 import { getDueTasksForBrowserNotification } from '../../lib/browser-notifications'
 import { createClientProfileFallback } from '../../lib/profile'
@@ -130,10 +134,17 @@ test('auth redirect helpers keep callback and login redirects same-origin', () =
 
   expect(safeAuthRedirect('/today')).toBe('/today')
   expect(safeAuthRedirect('/settings?tab=billing')).toBe('/settings?tab=billing')
+  expect(safeAuthRedirect('/auth/update-password')).toBe('/auth/update-password')
   expect(safeAuthRedirect(' /all ')).toBe('/all')
   expect(safeAuthRedirect('https://example.com')).toBe('/today')
   expect(safeAuthRedirect('//example.com')).toBe('/today')
+  expect(safeAuthRedirect('/\\example.com')).toBe('/today')
+  expect(safeAuthRedirect('/%5cexample.com')).toBe('/today')
+  expect(safeAuthRedirect('/today\nSet-Cookie: test=1')).toBe('/today')
   expect(safeAuthRedirect(null)).toBe('/today')
+  expect(safeLoginRedirect('/settings?tab=billing')).toBe('/settings?tab=billing')
+  expect(safeLoginRedirect('/auth/login?redirect=/settings')).toBe('/today')
+  expect(safeLoginRedirect('/auth/update-password')).toBe('/today')
 
   expect(authErrorMessage('callback_error')).toBe(
     'Could not finish sign-in. Request a fresh link or sign in again.'

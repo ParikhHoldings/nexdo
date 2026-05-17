@@ -8,12 +8,12 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { createClient } from '@/lib/supabase/client'
 import { isUsableEnv } from '@/lib/env'
-import { authErrorMessage, safeAuthRedirect } from '@/lib/auth-redirect'
+import { authErrorMessage, safeLoginRedirect } from '@/lib/auth-redirect'
 
 function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const redirect = safeAuthRedirect(searchParams.get('redirect'))
+  const redirect = safeLoginRedirect(searchParams.get('redirect'))
   const isDemoModeAvailable =
     !isUsableEnv(process.env.NEXT_PUBLIC_SUPABASE_URL) ||
     !isUsableEnv(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
