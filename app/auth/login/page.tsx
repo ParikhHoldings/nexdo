@@ -9,11 +9,12 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { createClient } from '@/lib/supabase/client'
 import { isUsableEnv } from '@/lib/env'
+import { authErrorMessage, safeAuthRedirect } from '@/lib/auth-redirect'
 
 function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const redirect = searchParams.get('redirect') || '/today'
+  const redirect = safeAuthRedirect(searchParams.get('redirect'))
   const isDemoModeAvailable =
     !isUsableEnv(process.env.NEXT_PUBLIC_SUPABASE_URL) ||
     !isUsableEnv(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
@@ -21,7 +22,9 @@ function LoginForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(() =>
+    authErrorMessage(searchParams.get('error'))
+  )
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()

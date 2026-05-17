@@ -118,6 +118,23 @@ test('password reset keeps recovery links on the serving origin', async ({ page 
   ).toBeVisible()
 })
 
+test('login surfaces callback errors and uses safe redirect helpers', async ({ page }) => {
+  const loginSource = readFileSync('app/auth/login/page.tsx', 'utf8')
+  const callbackSource = readFileSync('app/auth/callback/route.ts', 'utf8')
+
+  expect(loginSource).toContain("safeAuthRedirect(searchParams.get('redirect'))")
+  expect(loginSource).toContain("authErrorMessage(searchParams.get('error'))")
+  expect(callbackSource).toContain("safeAuthRedirect(searchParams.get('next'))")
+
+  await page.goto('/auth/login?error=callback_error&redirect=https://example.com')
+
+  await expect(
+    page.getByText('Could not finish sign-in. Request a fresh link or sign in again.')
+  ).toBeVisible()
+  await page.getByRole('button', { name: 'Try demo mode' }).click()
+  await expect(page).toHaveURL(/\/today$/)
+})
+
 test('demo task capture, briefing, prioritization, and agent output work', async ({
   page,
 }) => {

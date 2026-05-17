@@ -14,6 +14,7 @@ import {
   normalizeAgentOutput,
   updateAgentReview,
 } from '../../lib/agent-output'
+import { authErrorMessage, safeAuthRedirect } from '../../lib/auth-redirect'
 import { validateParsedTask } from '../../lib/ai-response-validation'
 import { getDueTasksForBrowserNotification } from '../../lib/browser-notifications'
 import { createClientProfileFallback } from '../../lib/profile'
@@ -122,6 +123,20 @@ test('AI parsed task validator normalizes due times', () => {
   ).toMatchObject({
     due_time: null,
   })
+})
+
+test('auth redirect helpers keep callback and login redirects same-origin', () => {
+  expect(safeAuthRedirect('/today')).toBe('/today')
+  expect(safeAuthRedirect('/settings?tab=billing')).toBe('/settings?tab=billing')
+  expect(safeAuthRedirect(' /all ')).toBe('/all')
+  expect(safeAuthRedirect('https://example.com')).toBe('/today')
+  expect(safeAuthRedirect('//example.com')).toBe('/today')
+  expect(safeAuthRedirect(null)).toBe('/today')
+
+  expect(authErrorMessage('callback_error')).toBe(
+    'Could not finish sign-in. Request a fresh link or sign in again.'
+  )
+  expect(authErrorMessage('other')).toBeNull()
 })
 
 test('AI task input sanitizer fails closed for invalid arrays and required fields', () => {

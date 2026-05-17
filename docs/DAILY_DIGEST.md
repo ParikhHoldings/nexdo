@@ -40,6 +40,7 @@
 - Fixed date-only task labels so local calendar due dates render as Today/Tomorrow instead of shifting through UTC parsing.
 - Surfaced authenticated AI briefing/prioritization fallback notices when provider or rate-limit failures force local heuristics.
 - Surfaced billing checkout and portal server messages before generic settings errors.
+- Added shared auth redirect guardrails so login redirects and callback `next` paths stay on same-origin app paths, and callback errors show a visible login message.
 - Kept Settings tab clicks and `?tab=` deep links synchronized with the URL so upgrade and API setup links continue to land on the intended tab after users click around.
 - Kept Connect AI setup, activity, and tool indicators bound to active paid API access instead of stale key hints.
 - Normalized Connect AI test-connection and agent-activity error messages across plain, message, and JSON-RPC payloads.
