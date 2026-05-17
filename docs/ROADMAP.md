@@ -12,7 +12,7 @@
 - The app workspace now has permission-gated local browser reminders for active tasks due today or overdue.
 - Strict build rails are restored so lint and TypeScript errors block production builds.
 - A Playwright smoke test covers the core logged-out demo path.
-- Playwright now covers demo workspace navigation across All Tasks search/filtering, Upcoming grouping, and Done task lifecycle.
+- Playwright now covers demo workspace navigation across mobile sidebar open/close, All Tasks search/filtering, Upcoming grouping, and Done task lifecycle.
 - Playwright smoke tests cover OpenAPI action schema availability, MCP/action auth failures, and action CORS headers.
 - Playwright tests cover DB-backed MCP tool handler and API-key validation behavior through an in-memory Supabase double, including owned reads, search, briefing, create idempotency, quota ordering, mutations, audit logging, hashed-key lookup, legacy-key migration, and paid-plan gating.
 - GitHub Actions verification exists for install, lint, typecheck, build, and Playwright smoke testing.

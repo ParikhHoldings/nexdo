@@ -158,6 +158,24 @@ test('demo task capture, briefing, prioritization, and agent output work', async
   await expect(page.getByRole('heading', { name: 'Today', exact: true })).toBeVisible()
   await expect(page.getByPlaceholder('What needs to get done? Be specific...')).toBeVisible()
   await expect(page.getByRole('button', { name: 'Open navigation' })).toBeVisible()
+
+  const sidebarRightEdge = async () => {
+    const box = await page.locator('aside').boundingBox()
+    expect(box).not.toBeNull()
+    return box!.x + box!.width
+  }
+
+  await expect.poll(sidebarRightEdge).toBeLessThanOrEqual(1)
+
+  await page.getByRole('button', { name: 'Open navigation' }).click()
+  await expect(page.getByRole('link', { name: 'Import' })).toBeVisible()
+  await page.getByRole('link', { name: 'Import' }).click()
+  await expect(page).toHaveURL(/\/import$/)
+  await expect(page.getByRole('heading', { name: 'Import Your Tasks' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Open navigation' })).toBeVisible()
+
+  await expect.poll(sidebarRightEdge).toBeLessThanOrEqual(1)
+
   await page.screenshot({ path: '/tmp/nexdo-smoke-mobile.png', fullPage: false })
 
   const unexpectedMessages = consoleMessages.filter(
