@@ -104,7 +104,7 @@
 - tightened `npm run smoke:mcp -- --write` so real endpoint verification checks `complete_task` returns persisted source-agent trace fields
 - added a labeled task-capture submit button and demo smoke coverage for click-submit behavior
 - fixed deterministic fallback parsing so relative-date phrases such as `by tomorrow` and `due today` do not leave dangling connector words in task titles
-- refreshed repo-facing verification summaries for the latest 96-test local rail
+- refreshed repo-facing verification summaries for the latest 97-test local rail
 - strengthened Connect AI connection testing so pasted full keys must initialize MCP and return available tools through `tools/list`
 - expanded `npm run smoke:app` so real app-session verification covers seeded agent-review validation and save behavior
 - expanded `npm run smoke:stripe -- --write --webhook` so protected-preview runs use Vercel bypass headers and verify authenticated checkout/portal app routes
@@ -113,6 +113,7 @@
 - normalized Stripe webhook customer IDs across string and expanded-object event shapes before entitlement updates
 - hardened Stripe webhook idempotency so failed event-record inserts return an error for Stripe retry, and checkout completion handles expanded subscription objects
 - aligned MCP `update_task`, ChatGPT Actions OpenAPI, and local handler coverage so nullable due-date/context clears are advertised and `external_ref` requires `source_agent_id` for traceable updates
+- hardened MCP execution so agent action audit rows are created before tool handlers run, blocking unaudited task mutations when `agent_action_events` cannot be written
 
 ## Completed 2026-05-16
 - read and updated the repo-level agent context and all existing Markdown/text operating files

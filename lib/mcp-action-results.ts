@@ -7,6 +7,7 @@ export type ActionToolResponse = {
 
 function actionErrorStatus(message: string): number {
   if (message === 'Database not configured') return 503
+  if (message.startsWith('Error: Failed to record agent action event')) return 500
   return 400
 }
 

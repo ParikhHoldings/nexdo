@@ -232,6 +232,23 @@ test('ChatGPT Action formatter matches advertised response shapes', () => {
     body: { error: 'Database not configured' },
     status: 503,
   })
+
+  expect(
+    formatActionToolResult('update_task', {
+      content: [
+        {
+          type: 'text',
+          text: 'Error: Failed to record agent action event: audit table unavailable',
+        },
+      ],
+      isError: true,
+    })
+  ).toEqual({
+    body: {
+      error: 'Error: Failed to record agent action event: audit table unavailable',
+    },
+    status: 500,
+  })
 })
 
 test('agent endpoints enforce auth and advertise CORS for action clients', async ({

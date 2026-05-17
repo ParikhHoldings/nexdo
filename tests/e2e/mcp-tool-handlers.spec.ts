@@ -83,13 +83,20 @@ class FakeSupabase {
   taskNotes: Row[]
   profiles: Row[]
   agentActionEvents: Row[]
+  insertErrors: Partial<Record<TableName, NonNullable<QueryError>>>
   private idCounter = 1
 
-  constructor(input: { tasks?: Row[]; taskNotes?: Row[]; profiles?: Row[] } = {}) {
+  constructor(input: {
+    tasks?: Row[]
+    taskNotes?: Row[]
+    profiles?: Row[]
+    insertErrors?: Partial<Record<TableName, NonNullable<QueryError>>>
+  } = {}) {
     this.tasks = input.tasks ? [...input.tasks] : []
     this.taskNotes = input.taskNotes ? [...input.taskNotes] : []
     this.profiles = input.profiles ? [...input.profiles] : []
     this.agentActionEvents = []
+    this.insertErrors = input.insertErrors ?? {}
   }
 
   from(table: TableName) {
@@ -214,6 +221,11 @@ class FakeQuery {
   }
 
   private executeInsert(): QueryResult {
+    const insertError = this.db.insertErrors[this.table]
+    if (insertError) {
+      return { data: null, error: insertError }
+    }
+
     const rows = this.db.tableRows(this.table)
     const inserted = this.insertRows.map((row) => ({
       id:
@@ -450,6 +462,43 @@ test('DB-backed MCP read handlers filter, search, brief, and audit owned tasks',
     false,
     true,
   ])
+})
+
+test('DB-backed MCP execution fails closed before mutation when audit logging is unavailable', async () => {
+  const db = new FakeSupabase({
+    tasks: [
+      makeTask({
+        id: 'owned-task',
+        user_id: 'user-1',
+        title: 'Original task title',
+      }),
+    ],
+    insertErrors: {
+      agent_action_events: { message: 'audit table unavailable' },
+    },
+  })
+  const deps = dependenciesFor(db)
+
+  const result = await executeToolWithDependencies(
+    'update_task',
+    {
+      task_id: 'owned-task',
+      title: 'Unaudited update',
+      source_agent_id: 'agent-audit',
+      external_ref: 'trace-123',
+    },
+    'user-1',
+    deps
+  )
+
+  expect(result.isError).toBe(true)
+  expect(result.content[0].text).toContain(
+    'Failed to record agent action event'
+  )
+  expect(db.tasks.find((task) => task.id === 'owned-task')?.title).toBe(
+    'Original task title'
+  )
+  expect(db.agentActionEvents).toEqual([])
 })
 
 test('MCP tool schemas advertise all accepted task statuses', () => {

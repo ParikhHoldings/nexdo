@@ -102,6 +102,16 @@ Nexdo's agent promise depends on tasks being a useful structured work layer, not
 ### Impact
 Future task fields should be exposed through MCP/OpenAPI deliberately, including nullable clear semantics where supported, and added to local handler coverage plus `npm run smoke:mcp -- --write` before they become part of the agent contract.
 
+## 2026-05-17 - MCP execution fails closed without audit logging
+### Decision
+MCP tool execution should create an `agent_action_events` row before running the tool handler, then finalize that row with success, error, and duration after execution. If the audit row cannot be created, the tool call must fail before any handler mutation runs.
+
+### Why
+Nexdo's agent-readiness depends on external agent actions being observable. A task mutation that succeeds while audit logging is unavailable weakens the human review and governance story.
+
+### Impact
+Future MCP handler changes should preserve audit preflight/finalization behavior. If a transactional implementation becomes available later, prefer moving handler mutation and audit finalization into a single database boundary.
+
 ## 2026-05-17 - Task due dates and times use shared normalizers
 ### Decision
 Human task create/patch validation, AI task sanitization/output validation, deterministic fallback parsing, import parsing, and MCP task updates should use shared local date and time normalizers for due-date and due-time fields.

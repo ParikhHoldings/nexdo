@@ -175,11 +175,13 @@ Required fields:
 Acceptance gate:
 - Agent writes can include source metadata.
 - Agent writes that include `external_ref` must include `source_agent_id`.
+- Agent tool execution creates an `agent_action_events` row before handler mutation, so unavailable audit logging blocks task mutation.
 - Idempotency replay works through `source_agent_id` plus `external_ref`.
 - Agent calls write audit events in real Supabase verification.
 
 Current evidence:
 - MCP create/update/add-note/complete schemas expose agent metadata fields.
+- MCP execution preflights `agent_action_events` and local handler coverage verifies unaudited updates fail before mutating a task.
 - Task cards and task detail show agent-origin trace metadata for agent-created, agent-updated, or agent-completed tasks.
 - The idempotency migration and handler logic exist.
 - `npm run smoke:supabase -- --write` can verify the unique database index rejects duplicate `source_agent_id` plus `external_ref` task rows.

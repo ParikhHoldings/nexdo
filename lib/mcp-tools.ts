@@ -509,33 +509,80 @@ function auditMetadata(args: Record<string, unknown>): Record<string, unknown> {
   }
 }
 
-async function logAgentAction(input: {
+async function createAgentActionEvent(input: {
   userId: string
   toolName: string
   args: Record<string, unknown>
+}, deps: MCPToolDependencies) {
+  const supabaseRaw = await deps.createServiceClient()
+  if (!supabaseRaw) {
+    throw new Error('Database not configured')
+  }
+
+  const supabase = supabaseRaw as any
+  const { data, error } = await supabase
+    .from('agent_action_events')
+    .insert({
+      user_id: input.userId,
+      tool_name: input.toolName,
+      source_agent_id: optionalString(input.args.source_agent_id, {
+        maxLength: MAX_AGENT_REF,
+      }),
+      external_ref: optionalString(input.args.external_ref, {
+        maxLength: MAX_AGENT_REF,
+      }),
+      ingestion_intent: optionalIngestionIntent(input.args.ingestion_intent),
+      metadata: auditMetadata(input.args),
+      success: false,
+      error: 'pending',
+      duration_ms: 0,
+    })
+    .select('id')
+    .single()
+
+  if (error) {
+    throw new Error(error.message || 'Unknown audit write error')
+  }
+
+  if (!data?.id) {
+    throw new Error('No audit event id returned')
+  }
+
+  return String(data.id)
+}
+
+async function finalizeAgentActionEvent(input: {
+  eventId: string
+  userId: string
   success: boolean
   error?: string | null
   durationMs: number
 }, deps: MCPToolDependencies) {
   const supabaseRaw = await deps.createServiceClient()
-  if (!supabaseRaw) return
+  if (!supabaseRaw) {
+    throw new Error('Database not configured')
+  }
 
   const supabase = supabaseRaw as any
-  await supabase.from('agent_action_events').insert({
-    user_id: input.userId,
-    tool_name: input.toolName,
-    source_agent_id: optionalString(input.args.source_agent_id, {
-      maxLength: MAX_AGENT_REF,
-    }),
-    external_ref: optionalString(input.args.external_ref, {
-      maxLength: MAX_AGENT_REF,
-    }),
-    ingestion_intent: optionalIngestionIntent(input.args.ingestion_intent),
-    metadata: auditMetadata(input.args),
-    success: input.success,
-    error: input.error || null,
-    duration_ms: input.durationMs,
-  })
+  const { data, error } = await supabase
+    .from('agent_action_events')
+    .update({
+      success: input.success,
+      error: input.error || null,
+      duration_ms: input.durationMs,
+    })
+    .eq('id', input.eventId)
+    .eq('user_id', input.userId)
+    .select('id')
+    .maybeSingle()
+
+  if (error) {
+    throw new Error(error.message || 'Unknown audit update error')
+  }
+
+  if (!data?.id) {
+    throw new Error('No audit event row updated')
+  }
 }
 
 const listTasks: ToolHandler = async (args, userId, deps) => {
@@ -1306,6 +1353,18 @@ export async function executeToolWithDependencies(
     }
   }
 
+  let auditEventId: string
+  try {
+    auditEventId = await createAgentActionEvent({
+      userId,
+      toolName: name,
+      args,
+    }, deps)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error'
+    return toolError(`Error: Failed to record agent action event: ${message}`)
+  }
+
   const startedAt = Date.now()
   let result: ToolResult
   try {
@@ -1318,14 +1377,18 @@ export async function executeToolWithDependencies(
     }
   }
 
-  await logAgentAction({
-    userId,
-    toolName: name,
-    args,
-    success: !result.isError,
-    error: result.isError ? result.content[0]?.text : null,
-    durationMs: Date.now() - startedAt,
-  }, deps).catch(console.error)
+  try {
+    await finalizeAgentActionEvent({
+      eventId: auditEventId,
+      userId,
+      success: !result.isError,
+      error: result.isError ? result.content[0]?.text : null,
+      durationMs: Date.now() - startedAt,
+    }, deps)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error'
+    return toolError(`Error: Failed to record agent action event: ${message}`)
+  }
 
   return result
 }

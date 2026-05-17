@@ -107,7 +107,7 @@
 - Tightened `npm run smoke:mcp -- --write` so real endpoint verification checks `complete_task` returns persisted source-agent trace fields.
 - Added a labeled task-capture submit button and demo smoke coverage for click-submit behavior.
 - Fixed deterministic fallback parsing so relative-date phrases such as `by tomorrow` and `due today` do not leave dangling connector words in task titles.
-- Refreshed repo-facing verification summaries for the latest 96-test local rail.
+- Refreshed repo-facing verification summaries for the latest 97-test local rail.
 - Strengthened Connect AI connection testing so pasted full keys must initialize MCP and return available tools through `tools/list`.
 - Expanded `npm run smoke:app` so real app-session verification covers seeded agent-review validation and save behavior.
 - Expanded `npm run smoke:stripe -- --write --webhook` so protected-preview runs use Vercel bypass headers and verify authenticated checkout/portal app routes.
@@ -117,6 +117,7 @@
 - Normalized Stripe webhook customer IDs across string and expanded-object event shapes before entitlement updates.
 - Hardened Stripe webhook idempotency so failed event-record inserts return an error for Stripe retry, and checkout completion handles expanded subscription objects.
 - Aligned MCP `update_task`, ChatGPT Actions OpenAPI, and local handler coverage so nullable due-date/context clears are advertised and `external_ref` requires `source_agent_id` for traceable updates.
+- Hardened MCP execution so agent action audit rows are created before tool handlers run, blocking unaudited task mutations when `agent_action_events` cannot be written.
 
 ### In progress
 - Provider-backed Supabase, OpenAI, Stripe, and MCP smokes remain the main launch-readiness gap.
