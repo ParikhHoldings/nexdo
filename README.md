@@ -70,7 +70,9 @@ npm run smoke:launch
 ```
 
 ## Environment
-Use `.env.local.example` as the source of truth for required local variables:
+Use `.env.local.example` as the source of truth for local variables and
+`.env.production.local.example` as the template for preview/production smoke
+runs:
 - Supabase URL, anon key, and service-role key
 - OpenAI API key and optional model override
 - Stripe secret, webhook secret, publishable key, and price IDs
@@ -78,7 +80,9 @@ Use `.env.local.example` as the source of truth for required local variables:
 
 Do not treat auth, AI, billing, MCP, imports, or deployment as verified until the relevant env and flow have been tested in the target environment.
 
-For a full technical launch pass, export or provide real provider env and run:
+For a full technical launch pass, copy `.env.production.local.example` to
+`.env.production.local`, replace every placeholder with real provider values,
+and run:
 
 ```bash
 npm run smoke:launch -- --env=.env.production.local --url=https://your-preview.example --technical-only

@@ -171,6 +171,7 @@ Never invent environment truth. Confirm configured values exist before treating 
 Use `lib/env.ts` for runtime placeholder-risk checks so copied example values fail closed consistently.
 `NEXDO_API_KEY` and `NEXDO_READONLY_API_KEY` are smoke-only variables for `npm run smoke:mcp`; they are not app runtime requirements.
 Use `docs/DEPLOYMENT.md` for local no-provider setup, production setup sequence, provider smoke commands, rollback notes, and deployment approval boundaries.
+Use `.env.production.local.example` as the concrete template for preview or production smoke env files; copy it to `.env.production.local` and keep the copied file untracked.
 
 ## General Operating Rules
 - Operate proactively.

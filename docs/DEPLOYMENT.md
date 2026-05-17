@@ -23,7 +23,10 @@ Known local behavior:
 - Missing MCP API keys should not block the app; MCP smoke keys are shell-only verification inputs.
 
 ## Environment preflight
-Use `.env.local.example` as the contract and run:
+Use `.env.local.example` as the local contract and `.env.production.local.example`
+as the preview/production smoke template.
+
+For local env checks, run:
 
 ```bash
 npm run verify:env
@@ -45,14 +48,15 @@ The verifier only checks presence, shape, and placeholder risk. It does not prov
 
 The verifier intentionally rejects common placeholder fragments such as
 `placeholder`, `your-`, `xxx`, `replace`, `example`, `todo`, and `changeme`.
-Use a copy of `.env.local.example` with real values instead of editing the
-example file directly.
+Use a copy of `.env.local.example` or `.env.production.local.example` with real
+values instead of editing the example files directly.
 
 ## Launch smoke bundle
 Once real provider env is available, the fastest technical verification path is
 the launch smoke bundle:
 
 ```bash
+cp .env.production.local.example .env.production.local
 npm run smoke:launch -- --env=.env.production.local --url=https://your-preview.example --technical-only
 ```
 
@@ -83,7 +87,7 @@ npm run smoke:launch -- --env=.env.production.local --url=https://your-productio
 ## Production setup sequence
 1. Create or select the production Supabase project.
 2. Apply every migration in `supabase/migrations/` to that project.
-3. Configure production environment variables in the deploy platform from `.env.local.example`; do not configure smoke-only `NEXDO_API_KEY` values as app runtime env.
+3. Configure production environment variables in the deploy platform from `.env.production.local.example`; do not configure smoke-only `NEXDO_API_KEY` values as app runtime env.
 4. Configure Stripe test-mode first, including `STRIPE_PRO_PRICE_ID`, `STRIPE_POWER_PRICE_ID`, and `STRIPE_WEBHOOK_SECRET`.
 5. Configure OpenAI with `OPENAI_API_KEY` and optional `OPENAI_MODEL`.
 6. Set `NEXT_PUBLIC_APP_URL` to the public production origin with no trailing slash.

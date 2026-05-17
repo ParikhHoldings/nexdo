@@ -97,6 +97,7 @@
 - added dependency audit to the GitHub Actions Web rails and source coverage so CI matches the documented launch/deploy checklist
 - verified PR #3 Web rails on the latest checked PR head; Vercel preview deployment and Vercel Preview Comments have passed on recent branch heads, but current-head preview evidence depends on current PR checks
 - added a paid-key handoff from Settings > API to the Connect AI setup page so generated API keys lead directly into MCP/ChatGPT Actions setup
+- added `.env.production.local.example` so preview/production launch smokes have a concrete env template separate from no-provider local development
 
 ## Completed 2026-05-16
 - read and updated the repo-level agent context and all existing Markdown/text operating files
