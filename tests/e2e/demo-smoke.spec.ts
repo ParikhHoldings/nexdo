@@ -983,6 +983,7 @@ test('non-default task statuses remain visible and reviewable from all tasks', a
   ).toHaveCount(0)
 
   await originFilter.getByRole('button', { name: 'All' }).click()
+  await expect(page).toHaveURL(/\/all$/)
   const statusFilter = page.getByRole('group', { name: 'Status filter' })
   await statusFilter.getByRole('button', { name: 'cancelled' }).click()
   await expect(
