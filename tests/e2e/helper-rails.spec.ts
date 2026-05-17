@@ -470,6 +470,8 @@ test('OpenAI smoke can verify authenticated app routes with disposable data', ()
   const source = readFileSync('scripts/smoke-openai.mjs', 'utf8')
 
   expect(source).toContain("const shouldSmokeAppRoutes = args.has('--app')")
+  expect(source).toContain('function getLocalDateKey(date = new Date())')
+  expect(source).not.toContain('toISOString().slice(0, 10)')
   expect(source).toContain("import { createBrowserClient } from '@supabase/ssr'")
   expect(source).toContain('await supabase.auth.signInWithPassword({ email, password })')
   expect(source).toContain("postAppJson(cookieHeader, '/api/tasks/parse'")
@@ -479,6 +481,18 @@ test('OpenAI smoke can verify authenticated app routes with disposable data', ()
   expect(source).toContain("for (const actionType of ['research', 'draft', 'prep'])")
   expect(source).toContain("subscription_tier: 'power'")
   expect(source).toContain("select('agent_output')")
+})
+
+test('date-only task surfaces compare local date keys without UTC parsing', () => {
+  const demoTasksSource = readFileSync('lib/tasks.ts', 'utf8')
+  const allTasksSource = readFileSync('app/(app)/all/page.tsx', 'utf8')
+
+  expect(demoTasksSource).toContain('const today = getLocalDateKey()')
+  expect(demoTasksSource).toContain('return t.due_date > today')
+  expect(demoTasksSource).not.toContain('new Date(t.due_date)')
+
+  expect(allTasksSource).toContain('return a.due_date.localeCompare(b.due_date)')
+  expect(allTasksSource).not.toContain('new Date(a.due_date)')
 })
 
 test('launch smoke orchestrates required technical and approval gates', () => {

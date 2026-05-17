@@ -302,12 +302,10 @@ export function filterDemoTasks(filter: {
   }
 
   if (filter.upcoming) {
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
+    const today = getLocalDateKey()
     filtered = filtered.filter((t) => {
       if (!t.due_date) return false
-      const dueDate = new Date(t.due_date)
-      return dueDate > today
+      return t.due_date > today
     })
   }
 

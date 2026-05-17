@@ -24,6 +24,13 @@ const PLACEHOLDER_FRAGMENTS = [
   'changeme',
 ]
 
+function getLocalDateKey(date = new Date()) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 function isUsableSecret(value) {
   if (!value) return false
   const trimmed = value.trim()
@@ -275,7 +282,7 @@ async function smokePrioritize() {
         id: 'task-1',
         title: 'Reply to investor email',
         priority: 'urgent',
-        due_date: new Date().toISOString().slice(0, 10),
+        due_date: getLocalDateKey(),
         estimated_minutes: 10,
       },
       {
@@ -305,7 +312,7 @@ async function smokeBriefing() {
           id: 'task-1',
           title: 'Prepare customer onboarding call',
           priority: 'high',
-          due_date: new Date().toISOString().slice(0, 10),
+          due_date: getLocalDateKey(),
           people: ['Alex'],
           estimated_minutes: 30,
         },
@@ -389,7 +396,7 @@ async function smokeOpenAiAppRoutes() {
     assertString(parsed.due_time, 'app.parse.due_time')
     console.log('ok OpenAI app parse route')
 
-    const today = new Date().toISOString().slice(0, 10)
+    const today = getLocalDateKey()
     const prioritized = await postAppJson(cookieHeader, '/api/tasks/prioritize', {
       tasks: [
         {

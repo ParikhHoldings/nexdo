@@ -59,7 +59,7 @@ export default function AllTasksPage() {
           if (!a.due_date && !b.due_date) return 0
           if (!a.due_date) return 1
           if (!b.due_date) return -1
-          return new Date(a.due_date).getTime() - new Date(b.due_date).getTime()
+          return a.due_date.localeCompare(b.due_date)
         case 'priority':
           return priorityOrder[a.priority] - priorityOrder[b.priority]
         case 'title':
