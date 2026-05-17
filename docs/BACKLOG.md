@@ -33,6 +33,7 @@
 - expanded `npm run smoke:mcp` across search, briefing, get-task, update, complete, and ChatGPT Actions search/list checks
 - added optional trace metadata to MCP `complete_task` so completion calls can be audited with source agent and external reference context
 - expanded `npm run smoke:stripe -- --write --webhook` to post signed subscription events, verify unknown-price fail-closed behavior, verify paid/free tier transitions, and verify duplicate webhook idempotency against disposable Supabase/Stripe test data
+- expanded `npm run smoke:openai` to reject placeholder keys and verify research, draft, and prep execution output shapes instead of only prep
 
 ## Completed 2026-05-16
 - read and updated the repo-level agent context and all existing Markdown/text operating files

@@ -1,5 +1,15 @@
 # Decisions
 
+## 2026-05-17 - OpenAI smoke must cover every bounded execution type
+### Decision
+`npm run smoke:openai` should reject obvious placeholder keys and verify JSON-mode output for parsing, prioritization, briefing, and each supported bounded execution type: research, draft, and prep.
+
+### Why
+Nexdo's MVP promise includes bounded execution across three action types. Verifying only a prep-shaped response leaves research and draft provider behavior weakly covered.
+
+### Impact
+Future execution action types should not be added to the product promise until the OpenAI smoke and response validators cover their provider output shape.
+
 ## 2026-05-17 - Stripe launch smoke must include signed webhook replay
 ### Decision
 `npm run smoke:stripe -- --write --webhook` should create disposable Stripe and Supabase test data, post signed subscription webhook events to the configured app URL, verify unknown prices do not grant paid access, verify active subscriptions grant the expected paid tier, verify deletes return the profile to Free, and verify duplicate event replay is idempotent.

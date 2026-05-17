@@ -90,6 +90,10 @@ Production environment, Supabase migrations, OpenAI provider calls, Stripe test-
 - Supabase provider smoke: `npm run smoke:supabase`
 - MCP provider smoke: `npm run smoke:mcp`
 
+`npm run smoke:openai` rejects missing/placeholder keys and verifies provider
+JSON-mode output for parse, prioritization, briefing, and all bounded execution
+types: research, draft, and prep.
+
 `npm run smoke:stripe -- --write --webhook` posts signed test-mode
 subscription events to the configured app URL, verifies unknown-price
 fail-closed behavior, paid/free profile tier transitions, duplicate webhook
