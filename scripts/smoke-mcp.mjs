@@ -579,6 +579,12 @@ async function main() {
           task_id: created.id,
           status: 'in_progress',
           context: 'Updated by MCP smoke before completion.',
+          due_time: '14:30',
+          action_type: 'prep',
+          estimated_minutes: 45,
+          energy_level: 'deep',
+          people: ['MCP Smoke'],
+          tags: ['smoke', 'agent'],
           source_agent_id: sourceAgentId,
           external_ref: updateRef,
           ingestion_intent: 'update',
@@ -586,8 +592,17 @@ async function main() {
         },
       })
       const updated = parseToolContent(updatedResult)
-      if (updated?.id !== created.id || updated?.status !== 'in_progress') {
-        throw new Error('update_task did not update the smoke task.')
+      if (
+        updated?.id !== created.id ||
+        updated?.status !== 'in_progress' ||
+        updated?.due_time !== '14:30' ||
+        updated?.action_type !== 'prep' ||
+        updated?.estimated_minutes !== 45 ||
+        updated?.energy_level !== 'deep' ||
+        !updated?.people?.includes('MCP Smoke') ||
+        !updated?.tags?.includes('agent')
+      ) {
+        throw new Error('update_task did not update the smoke task structure.')
       }
       console.log('ok update_task')
 

@@ -36,6 +36,7 @@
 - Expanded Connect AI agent activity rows with mutation intent, safe argument-key summaries, and agent-metadata presence.
 - Expanded `npm run smoke:mcp` to cover OpenAPI availability, ChatGPT Actions `list_tasks` shape, and real `agent_action_events` audit rows when run with `--write --audit`.
 - Expanded MCP smoke execution across search, briefing, get-task, update, complete, and ChatGPT Actions search/list checks instead of only checking tool listing.
+- Expanded MCP `update_task`, OpenAPI, local handler coverage, and the provider smoke path so agents can update due time, action type, estimate, energy, people, and tags.
 - Expanded MCP smoke to verify the authenticated SSE endpoint advertises the JSON-RPC endpoint before tool execution.
 - Made the MCP endpoint accept the standard initialized notification without a JSON-RPC `id`, and added it to the real-key MCP smoke.
 - Added MCP smoke `--provision` mode to create disposable full/read-only Power-plan API keys for scoped real endpoint verification.

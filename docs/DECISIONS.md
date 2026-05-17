@@ -42,6 +42,16 @@ Listing tools is not enough evidence that an external agent can use Nexdo as a t
 ### Impact
 Future MCP tools should be added to the smoke script and audit expectations when they become part of the launch contract.
 
+## 2026-05-17 - Agent task updates cover planning metadata
+### Decision
+MCP and ChatGPT Actions `update_task` should let external agents update the same core planning metadata humans can edit: due time, action type, estimated minutes, energy level, people, and tags, while still preserving bounded validation and server-managed trace fields.
+
+### Why
+Nexdo's agent promise depends on tasks being a useful structured work layer, not only a title/status checklist. Agents need to maintain planning metadata without bypassing ownership, scopes, audit logging, or field limits.
+
+### Impact
+Future task fields should be exposed through MCP/OpenAPI deliberately and added to local handler coverage plus `npm run smoke:mcp -- --write` before they become part of the agent contract.
+
 ## 2026-05-17 - Human task routes share validation
 ### Decision
 Human task creation and patch routes use `lib/task-validation.ts` for normalization, allowlisting, and protected-field rejection.

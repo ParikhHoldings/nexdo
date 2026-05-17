@@ -25,7 +25,7 @@ The product promise should be grounded in what the code actually supports:
 - persistent dark/light appearance preferences for the app workspace
 - local-date-aware browser due-task reminders for active tasks due today or overdue, permission-gated and sent once per task per day while the app is open
 - imports from Todoist, manual Google/Microsoft access-token imports, plus CSV, ICS, JSON/Trello/Things-style sources, with client-side demo file imports, file previews before mutation, and task quota enforcement for authenticated imports
-- API key based MCP/ChatGPT Actions interop for listing, creating, completing, updating, searching, and briefing tasks
+- API key based MCP/ChatGPT Actions interop for listing, creating, completing, updating, searching, and briefing tasks; agent task updates can maintain core planning metadata such as due time, action type, estimate, energy, people, and tags
 - Power/team-gated API-key access, scoped API-key permissions, rotation rate limits, prerequisite- and scope-aware MCP setup UI, and an agent action audit table/migration for MCP/API-key calls
 - Connect AI setup and settings UI should keep API access clearly gated to Power/team plans until pricing or entitlement truth changes
 - hashed API-key storage with one-time key reveal, short key hints in settings, and legacy raw-key migration/fallback
@@ -112,7 +112,8 @@ disposable Stripe/Supabase data.
 `npm run smoke:mcp` accepts `NEXDO_API_KEY` for authenticated MCP initialized
 notification, SSE, JSON-RPC, and ChatGPT Actions checks, optional
 `NEXDO_READONLY_API_KEY` for scoped read-only denial checks, and `-- --write`
-for disposable task creation/update/completion plus idempotency checks. Add
+for disposable task creation, structured task update, completion, plus
+idempotency checks. Add
 `--provision` when Supabase service-role env is loaded to create disposable
 full-access and read-only Power-plan API keys instead of using pre-generated
 keys. Add

@@ -5,6 +5,8 @@ import { apiKeyHint, hashApiKey } from '@/lib/api-keys'
 import { checkQuota, consumeQuota } from '@/lib/quota'
 import { getLocalDateKey } from '@/lib/dates'
 import type {
+  ActionType,
+  EnergyLevel,
   Task,
   TaskStatus,
   TaskPriority,
@@ -14,6 +16,8 @@ import type {
 
 const TASK_STATUSES = ['todo', 'in_progress', 'waiting', 'done', 'cancelled'] as const
 const TASK_PRIORITIES = ['urgent', 'high', 'medium', 'low'] as const
+const ACTION_TYPES = ['manual', 'research', 'draft', 'prep', 'remind'] as const
+const ENERGY_LEVELS = ['deep', 'light', 'quick'] as const
 const INGESTION_INTENTS = ['create', 'update', 'complete', 'auto'] as const
 
 const MAX_AGENT_INPUT = 2000
@@ -22,6 +26,10 @@ const MAX_AGENT_METADATA_BYTES = 4000
 const MAX_TITLE = 500
 const MAX_CONTEXT = 4000
 const MAX_SEARCH_QUERY = 200
+const MAX_DUE_TIME = 8
+const MAX_ARRAY_ITEMS = 50
+const MAX_ARRAY_ITEM = 120
+const MAX_ESTIMATED_MINUTES = 60 * 24 * 7
 
 // Tool definition type
 export interface MCPTool {
@@ -45,7 +53,7 @@ export const MCP_TOOLS: MCPTool[] = [
   {
     name: 'list_tasks',
     description:
-      'List tasks from Nexdo. Filter by status, due date, or get all tasks. Returns task id, title, priority, status, due_date, context, and tags.',
+      'List tasks from Nexdo. Filter by status, due date, or get all tasks. Returns task id, title, priority, status, due_date, due_time, context, action type, estimate, energy, people, and tags.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -152,8 +160,12 @@ export const MCP_TOOLS: MCPTool[] = [
           description: 'New priority level',
         },
         due_date: {
-          type: 'string',
+          type: ['string', 'null'],
           description: 'New due date in YYYY-MM-DD format',
+        },
+        due_time: {
+          type: ['string', 'null'],
+          description: 'New due time in HH:MM or HH:MM:SS format, or null to clear it',
         },
         status: {
           type: 'string',
@@ -161,9 +173,33 @@ export const MCP_TOOLS: MCPTool[] = [
           description: 'New status',
         },
         context: {
-          type: 'string',
+          type: ['string', 'null'],
           maxLength: MAX_CONTEXT,
           description: 'Additional context or notes about the task',
+        },
+        action_type: {
+          type: 'string',
+          enum: ['manual', 'research', 'draft', 'prep', 'remind'],
+          description: 'Kind of work this task needs',
+        },
+        estimated_minutes: {
+          type: ['number', 'null'],
+          description: 'Estimated effort in minutes, or null to clear it',
+        },
+        energy_level: {
+          type: ['string', 'null'],
+          enum: ['deep', 'light', 'quick', null],
+          description: 'Energy level needed for the task, or null to clear it',
+        },
+        people: {
+          type: ['array', 'null'],
+          description: 'People connected to this task, or null to clear the list',
+          items: { type: 'string' },
+        },
+        tags: {
+          type: ['array', 'null'],
+          description: 'Tags for this task, or null to clear the list',
+          items: { type: 'string' },
         },
         source_agent_id: {
           type: 'string',
@@ -270,6 +306,7 @@ function formatTaskForResponse(task: Task): Record<string, unknown> {
     tags: task.tags,
     people: task.people,
     estimated_minutes: task.estimated_minutes,
+    energy_level: task.energy_level,
     source_agent_id: task.source_agent_id,
     external_ref: task.external_ref,
     ingestion_intent: task.ingestion_intent,
@@ -372,6 +409,30 @@ function numberLimit(value: unknown, fallback: number, max: number) {
   const n = typeof value === 'number' ? value : Number(value)
   if (!Number.isFinite(n)) return fallback
   return Math.min(Math.max(1, Math.floor(n)), max)
+}
+
+function stringArrayArg(value: unknown, field: string) {
+  if (value === null) return { value: null }
+  if (!Array.isArray(value)) {
+    return { error: `Error: ${field} must be an array of strings or null` }
+  }
+  if (value.length > MAX_ARRAY_ITEMS) {
+    return { error: `Error: ${field} must include ${MAX_ARRAY_ITEMS} items or fewer` }
+  }
+
+  const normalized: string[] = []
+  for (const item of value) {
+    if (typeof item !== 'string') {
+      return { error: `Error: ${field} must be an array of strings or null` }
+    }
+    if (item.length > MAX_ARRAY_ITEM) {
+      return { error: `Error: ${field} items must be ${MAX_ARRAY_ITEM} characters or fewer` }
+    }
+    const trimmed = item.trim()
+    if (trimmed) normalized.push(trimmed)
+  }
+
+  return { value: normalized.length > 0 ? normalized : null }
 }
 
 function taskMatchesSearch(task: Task, query: string): boolean {
@@ -725,6 +786,18 @@ const updateTask: ToolHandler = async (args, userId, deps) => {
     updates.due_date = args.due_date
   }
 
+  if (args.due_time !== undefined) {
+    if (
+      args.due_time !== null &&
+      (typeof args.due_time !== 'string' ||
+        args.due_time.length > MAX_DUE_TIME ||
+        !/^\d{2}:\d{2}(:\d{2})?$/.test(args.due_time))
+    ) {
+      return toolError('Error: due_time must be HH:MM, HH:MM:SS, or null')
+    }
+    updates.due_time = args.due_time
+  }
+
   if (args.status !== undefined) {
     if (!TASK_STATUSES.includes(args.status as TaskStatus)) {
       return toolError(`Error: status must be one of ${TASK_STATUSES.join(', ')}`)
@@ -745,6 +818,53 @@ const updateTask: ToolHandler = async (args, userId, deps) => {
       return toolError(`Error: context must be ${MAX_CONTEXT} characters or fewer`)
     }
     updates.context = typeof args.context === 'string' ? args.context.trim() || null : null
+  }
+
+  if (args.action_type !== undefined) {
+    if (!ACTION_TYPES.includes(args.action_type as ActionType)) {
+      return toolError(`Error: action_type must be one of ${ACTION_TYPES.join(', ')}`)
+    }
+    updates.action_type = args.action_type as ActionType
+  }
+
+  if (args.estimated_minutes !== undefined) {
+    if (args.estimated_minutes === null) {
+      updates.estimated_minutes = null
+    } else {
+      const estimatedMinutes = Number(args.estimated_minutes)
+      if (
+        !Number.isFinite(estimatedMinutes) ||
+        estimatedMinutes < 0 ||
+        estimatedMinutes > MAX_ESTIMATED_MINUTES
+      ) {
+        return toolError(
+          `Error: estimated_minutes must be between 0 and ${MAX_ESTIMATED_MINUTES}, or null`
+        )
+      }
+      updates.estimated_minutes = Math.round(estimatedMinutes)
+    }
+  }
+
+  if (args.energy_level !== undefined) {
+    if (args.energy_level === null) {
+      updates.energy_level = null
+    } else if (!ENERGY_LEVELS.includes(args.energy_level as EnergyLevel)) {
+      return toolError(`Error: energy_level must be one of ${ENERGY_LEVELS.join(', ')}, or null`)
+    } else {
+      updates.energy_level = args.energy_level as EnergyLevel
+    }
+  }
+
+  if (args.people !== undefined) {
+    const peopleResult = stringArrayArg(args.people, 'people')
+    if (peopleResult.error) return toolError(peopleResult.error)
+    updates.people = peopleResult.value
+  }
+
+  if (args.tags !== undefined) {
+    const tagsResult = stringArrayArg(args.tags, 'tags')
+    if (tagsResult.error) return toolError(tagsResult.error)
+    updates.tags = tagsResult.value
   }
 
   if (args.source_agent_id !== undefined) {

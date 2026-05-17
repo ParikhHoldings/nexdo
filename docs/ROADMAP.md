@@ -22,6 +22,7 @@
 - Google Tasks and Microsoft To Do are usable through manual access-token imports; full OAuth is still a post-launch integration path.
 - Due-today task filters, browser reminders, MCP filtering, date-only imports, and relative labels now use local calendar dates instead of UTC day strings.
 - Bounded agent outputs now keep execution history plus verification status and notes in the task detail panel.
+- Agent `update_task` can now maintain the core planning fields humans can edit, including due time, action type, estimate, energy level, people, and tags.
 - Human task-create and task-patch routes now share `lib/task-validation.ts` so protected/server-managed fields are rejected before quota or database mutation.
 - Direct browser task writes are now column-limited so agent output, source-agent metadata, ingestion intent, and completion timestamps stay server-managed; server import routes persist imported external refs/completion timestamps through the service-role path after auth/quota checks.
 - The landing/signup draft now routes demo CTAs to the verified demo path and avoids treating unverified agent flows as a broad launch claim.

@@ -250,6 +250,11 @@ const openApiSpec = {
                     format: 'date',
                     description: 'New due date in YYYY-MM-DD format',
                   },
+                  due_time: {
+                    type: 'string',
+                    nullable: true,
+                    description: 'New due time in HH:MM or HH:MM:SS format, or null to clear it',
+                  },
                   status: {
                     type: 'string',
                     enum: ['todo', 'in_progress', 'waiting', 'done'],
@@ -259,6 +264,38 @@ const openApiSpec = {
                     type: 'string',
                     maxLength: 4000,
                     description: 'Additional context or notes about the task',
+                  },
+                  action_type: {
+                    type: 'string',
+                    enum: ['manual', 'research', 'draft', 'prep', 'remind'],
+                    description: 'Kind of work this task needs',
+                  },
+                  estimated_minutes: {
+                    type: 'integer',
+                    minimum: 0,
+                    maximum: 10080,
+                    nullable: true,
+                    description: 'Estimated effort in minutes, or null to clear it',
+                  },
+                  energy_level: {
+                    type: 'string',
+                    enum: ['deep', 'light', 'quick'],
+                    nullable: true,
+                    description: 'Energy level needed for the task, or null to clear it',
+                  },
+                  people: {
+                    type: 'array',
+                    items: { type: 'string', maxLength: 120 },
+                    maxItems: 50,
+                    nullable: true,
+                    description: 'People connected to this task, or null to clear the list',
+                  },
+                  tags: {
+                    type: 'array',
+                    items: { type: 'string', maxLength: 120 },
+                    maxItems: 50,
+                    nullable: true,
+                    description: 'Tags for this task, or null to clear the list',
                   },
                   source_agent_id: {
                     type: 'string',
@@ -478,6 +515,11 @@ const openApiSpec = {
             nullable: true,
           },
           estimated_minutes: { type: 'integer', nullable: true },
+          energy_level: {
+            type: 'string',
+            enum: ['deep', 'light', 'quick'],
+            nullable: true,
+          },
           source_agent_id: { type: 'string', nullable: true },
           external_ref: { type: 'string', nullable: true },
           idempotent_replay: { type: 'boolean' },

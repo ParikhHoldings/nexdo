@@ -140,8 +140,9 @@ Current evidence:
 - `/api/mcp/actions/[tool]` enforces bearer auth and scopes.
 - `/api/mcp/actions/[tool]` uses a shared formatter for action responses.
 - `search_tasks` filters title, context, and tags in the MCP handler.
+- `update_task` accepts the same core planning fields humans can edit: due time, action type, estimate, energy level, people, and tags.
 - `npm run test:e2e` covers OpenAPI, action auth, CORS, and unsupported billing guardrails.
-- `npm run smoke:mcp` exists for real API-key initialized-notification handshake, SSE endpoint discovery, list/search/briefing/get/update/complete/idempotency checks, ChatGPT Actions list/search response-shape checks, optional read-only scope denial, provisioned disposable scoped keys, and required `agent_action_events` audit verification with `--provision --write --audit` once a real environment is configured.
+- `npm run smoke:mcp` exists for real API-key initialized-notification handshake, SSE endpoint discovery, list/search/briefing/get/structured-update/complete/idempotency checks, ChatGPT Actions list/search response-shape checks, optional read-only scope denial, provisioned disposable scoped keys, and required `agent_action_events` audit verification with `--provision --write --audit` once a real environment is configured.
 
 ### 2. Agent traceability
 Agent-created work must be distinguishable from human-created work.

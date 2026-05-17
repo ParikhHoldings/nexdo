@@ -652,6 +652,12 @@ test('DB-backed MCP mutation handlers update owned tasks and log failures', asyn
     title: string
     status: TaskStatus
     context: string
+    due_time: string
+    action_type: string
+    estimated_minutes: number
+    energy_level: string
+    people: string[]
+    tags: string[]
     source_agent_id: string
     external_ref: string
   }>(
@@ -662,6 +668,12 @@ test('DB-backed MCP mutation handlers update owned tasks and log failures', asyn
         title: 'Updated by agent',
         status: 'waiting',
         context: '  Needs customer input  ',
+        due_time: '14:30',
+        action_type: 'prep',
+        estimated_minutes: 45.4,
+        energy_level: 'deep',
+        people: [' Customer Lead ', 'Ops'],
+        tags: [' launch ', 'customer'],
         source_agent_id: 'agent-beta',
         external_ref: 'ticket-456',
         ingestion_intent: 'update',
@@ -676,11 +688,23 @@ test('DB-backed MCP mutation handlers update owned tasks and log failures', asyn
     title: 'Updated by agent',
     status: 'waiting',
     context: 'Needs customer input',
+    due_time: '14:30',
+    action_type: 'prep',
+    estimated_minutes: 45,
+    energy_level: 'deep',
+    people: ['Customer Lead', 'Ops'],
+    tags: ['launch', 'customer'],
     source_agent_id: 'agent-beta',
     external_ref: 'ticket-456',
   })
   expect(db.tasks.find((task) => task.id === 'owned-task')).toMatchObject({
     source: 'agent',
+    due_time: '14:30',
+    action_type: 'prep',
+    estimated_minutes: 45,
+    energy_level: 'deep',
+    people: ['Customer Lead', 'Ops'],
+    tags: ['launch', 'customer'],
     ingestion_intent: 'update',
     agent_metadata: { confidence: 'high' },
   })
@@ -722,6 +746,18 @@ test('DB-backed MCP mutation handlers update owned tasks and log failures', asyn
   expect(invalid.isError).toBe(true)
   expect(invalid.content[0].text).toContain('agent_metadata must be an object')
 
+  const invalidStructuredField = await executeToolWithDependencies(
+    'update_task',
+    {
+      task_id: 'owned-task',
+      energy_level: 'whenever',
+    },
+    'user-1',
+    deps
+  )
+  expect(invalidStructuredField.isError).toBe(true)
+  expect(invalidStructuredField.content[0].text).toContain('energy_level')
+
   const invalidComplete = await executeToolWithDependencies(
     'complete_task',
     {
@@ -757,6 +793,7 @@ test('DB-backed MCP mutation handlers update owned tasks and log failures', asyn
   expect(db.agentActionEvents.map((event) => event.success)).toEqual([
     true,
     true,
+    false,
     false,
     false,
     false,

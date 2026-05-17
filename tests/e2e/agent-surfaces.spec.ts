@@ -78,6 +78,22 @@ test('OpenAPI exposes the agent action contract', async ({ request }) => {
     ].schema
   expect(updateTaskSchema.properties.title.maxLength).toBe(500)
   expect(updateTaskSchema.properties.context.maxLength).toBe(4000)
+  expect(updateTaskSchema.properties.due_time.nullable).toBe(true)
+  expect(updateTaskSchema.properties.action_type.enum).toEqual([
+    'manual',
+    'research',
+    'draft',
+    'prep',
+    'remind',
+  ])
+  expect(updateTaskSchema.properties.estimated_minutes.maximum).toBe(10080)
+  expect(updateTaskSchema.properties.energy_level.enum).toEqual([
+    'deep',
+    'light',
+    'quick',
+  ])
+  expect(updateTaskSchema.properties.people.maxItems).toBe(50)
+  expect(updateTaskSchema.properties.tags.items.maxLength).toBe(120)
   const searchTaskSchema =
     spec.paths['/api/mcp/actions/search_tasks'].post.requestBody.content[
       'application/json'
@@ -87,6 +103,7 @@ test('OpenAPI exposes the agent action contract', async ({ request }) => {
   expect(spec.components.schemas.Task.properties.source_agent_id).toBeTruthy()
   expect(spec.components.schemas.Task.properties.idempotent_replay).toBeTruthy()
   expect(spec.components.schemas.Task.properties.ingestion_intent).toBeTruthy()
+  expect(spec.components.schemas.Task.properties.energy_level).toBeTruthy()
 })
 
 test('ChatGPT Action formatter matches advertised response shapes', () => {
