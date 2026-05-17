@@ -29,6 +29,7 @@
 - added due-time and energy-level editing/display to task detail so the MVP task structure is editable from the core workspace
 - carried parsed due times from natural-language capture through demo tasks, authenticated task creation, MCP-created tasks, validators, and OpenAI smoke expectations
 - tightened shared task date/time validation so human routes, AI task sanitization/output validation, and MCP updates reject impossible calendar dates and out-of-range local times
+- moved deterministic fallback task parsing onto the shared due-date normalizer for explicit dates
 - moved import date/time parsing onto the shared schedule normalizers and preserved Google/Microsoft due times from imported datetime fields
 - refreshed `AGENTS.md` with the shared date/time validation contract and current PR #3 verification state
 - made prioritization and briefing context due-time-aware, with deterministic ranking for same-day timed tasks

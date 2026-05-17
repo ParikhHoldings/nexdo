@@ -10,6 +10,7 @@ import type {
   Task,
   TaskPriority,
 } from './database.types'
+import { normalizeLocalDateKey } from './dates'
 
 const WEEKDAYS = [
   'sunday',
@@ -62,7 +63,7 @@ function parseDueDate(input: string, now = new Date()): string | null {
   if (inDays) return isoDate(addDays(today, Number(inDays[1])))
 
   const explicit = lower.match(/\b(\d{4}-\d{2}-\d{2})\b/)
-  if (explicit) return explicit[1]
+  if (explicit) return normalizeLocalDateKey(explicit[1])
 
   const slashDate = lower.match(/\b(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?\b/)
   if (slashDate) {
@@ -71,7 +72,9 @@ function parseDueDate(input: string, now = new Date()): string | null {
     const year = slashDate[3]
       ? Number(slashDate[3].length === 2 ? `20${slashDate[3]}` : slashDate[3])
       : today.getFullYear()
-    return isoDate(new Date(year, month - 1, day))
+    return normalizeLocalDateKey(
+      `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+    )
   }
 
   const weekdayIndex = WEEKDAYS.findIndex((day) => lower.includes(day))

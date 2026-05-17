@@ -34,7 +34,7 @@ The product promise should be grounded in what the code actually supports:
 - authenticated import routes persist imported task rows through the service-role path after auth/quota checks so imported completion timestamps and external source references can be kept without reopening those columns to direct browser writes
 - bounded OpenAI response validation for task parsing, prioritization, briefing, and research/draft/prep output before provider content is returned or persisted
 - shared task-create and task-patch validation in `lib/task-validation.ts`, so human task routes reject protected/server-managed fields before quota consumption or database mutation
-- shared local date/time normalizers in `lib/dates.ts`; human task validation, AI task sanitization/output validation, import parsing, and MCP task updates should reject impossible due dates and out-of-range due times before persistence or planning use
+- shared local date/time normalizers in `lib/dates.ts`; human task validation, AI task sanitization/output validation, deterministic fallback parsing, import parsing, and MCP task updates should reject impossible due dates and out-of-range due times before persistence or planning use
 - a recent agent activity surface under `/settings/mcp`
 - idempotent agent task creation when callers provide `source_agent_id` plus `external_ref`
 - agent trace metadata on create, update, and complete MCP writes so source agents and external references can be audited

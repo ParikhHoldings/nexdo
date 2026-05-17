@@ -69,6 +69,29 @@ test('task parsing heuristic extracts launch-relevant metadata', () => {
   expect(parsed.tags).toEqual(expect.arrayContaining(['email', 'customer']))
 })
 
+test('task parsing heuristic rejects invalid explicit due dates', () => {
+  expect(
+    parseTaskHeuristic(
+      'Review launch plan on 2026-02-30',
+      new Date('2026-01-15T12:00:00')
+    ).due_date
+  ).toBeNull()
+
+  expect(
+    parseTaskHeuristic(
+      'Review launch plan on 13/01/2026',
+      new Date('2026-01-15T12:00:00')
+    ).due_date
+  ).toBeNull()
+
+  expect(
+    parseTaskHeuristic(
+      'Review launch plan on 2/28/2026',
+      new Date('2026-01-15T12:00:00')
+    ).due_date
+  ).toBe('2026-02-28')
+})
+
 test('prioritization heuristic ranks urgent and dated tasks first', () => {
   const ranked = prioritizeTasksHeuristic(
     [
