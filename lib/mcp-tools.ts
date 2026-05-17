@@ -107,6 +107,26 @@ export const MCP_TOOLS: MCPTool[] = [
           type: 'string',
           description: 'The ID of the task to complete',
         },
+        source_agent_id: {
+          type: 'string',
+          maxLength: MAX_AGENT_REF,
+          description: 'Optional stable identifier for the agent completing the task',
+        },
+        external_ref: {
+          type: 'string',
+          maxLength: MAX_AGENT_REF,
+          description:
+            'Optional reference id from the calling agent system for audit traceability. Requires source_agent_id.',
+        },
+        ingestion_intent: {
+          type: 'string',
+          enum: ['create', 'update', 'complete', 'auto'],
+          description: 'How the agent intended this task mutation to be interpreted',
+        },
+        agent_metadata: {
+          type: 'object',
+          description: 'Optional structured metadata from the calling agent',
+        },
       },
       required: ['task_id'],
     },
@@ -398,8 +418,12 @@ async function logAgentAction(input: {
   await supabase.from('agent_action_events').insert({
     user_id: input.userId,
     tool_name: input.toolName,
-    source_agent_id: optionalString(input.args.source_agent_id),
-    external_ref: optionalString(input.args.external_ref),
+    source_agent_id: optionalString(input.args.source_agent_id, {
+      maxLength: MAX_AGENT_REF,
+    }),
+    external_ref: optionalString(input.args.external_ref, {
+      maxLength: MAX_AGENT_REF,
+    }),
     ingestion_intent: optionalIngestionIntent(input.args.ingestion_intent),
     metadata: auditMetadata(input.args),
     success: input.success,
@@ -602,6 +626,29 @@ const completeTask: ToolHandler = async (args, userId, deps) => {
   const taskIdResult = stringArg(args, 'task_id', { required: true })
   if (taskIdResult.error) return toolError(taskIdResult.error)
   const taskId = taskIdResult.value as string
+
+  const sourceAgentResult = stringArg(args, 'source_agent_id', {
+    maxLength: MAX_AGENT_REF,
+  })
+  if (sourceAgentResult.error) return toolError(sourceAgentResult.error)
+  const externalRefResult = stringArg(args, 'external_ref', {
+    maxLength: MAX_AGENT_REF,
+  })
+  if (externalRefResult.error) return toolError(externalRefResult.error)
+
+  if (externalRefResult.value && !sourceAgentResult.value) {
+    return toolError('Error: source_agent_id is required when external_ref is provided')
+  }
+
+  if (args.ingestion_intent !== undefined) {
+    const intent = optionalIngestionIntent(args.ingestion_intent)
+    if (!intent) {
+      return toolError(`Error: ingestion_intent must be one of ${INGESTION_INTENTS.join(', ')}`)
+    }
+  }
+
+  const metadataResult = metadataArg(args.agent_metadata)
+  if (metadataResult.error) return toolError(metadataResult.error)
 
   const { data: task, error } = await supabase
     .from('tasks')

@@ -22,6 +22,7 @@ const requiredReadTools = [
   'list_tasks',
   'search_tasks',
   'get_task',
+  'get_briefing',
 ]
 const requiredWriteTools = ['create_task', 'complete_task', 'update_task']
 
@@ -289,6 +290,48 @@ async function main() {
   }
   console.log(`ok actions/list_tasks (${actionList.tasks.length} returned)`)
 
+  const searchResult = await rpc('tools/call', {
+    name: 'search_tasks',
+    arguments: { query: 'smoke', limit: 5 },
+  })
+  const searchedTasks = parseToolContent(searchResult)
+  if (!Array.isArray(searchedTasks)) throw new Error('search_tasks did not return an array.')
+  console.log(`ok search_tasks (${searchedTasks.length} returned)`)
+
+  const actionSearch = await postJson('/api/mcp/actions/search_tasks', {
+    query: 'smoke',
+    limit: 5,
+  })
+  if (!Array.isArray(actionSearch.tasks)) {
+    throw new Error('ChatGPT Actions search_tasks did not return a { tasks } array.')
+  }
+  console.log(`ok actions/search_tasks (${actionSearch.tasks.length} returned)`)
+
+  const briefingResult = await rpc('tools/call', {
+    name: 'get_briefing',
+    arguments: {},
+  })
+  const briefing = parseToolContent(briefingResult)
+  if (!briefing || typeof briefing !== 'object' || typeof briefing.summary !== 'string') {
+    throw new Error('get_briefing did not return a briefing object with a summary.')
+  }
+  console.log('ok get_briefing')
+
+  const taskForReadCheck = tasks[0] || searchedTasks[0] || actionList.tasks?.[0]
+  if (taskForReadCheck?.id) {
+    const taskResult = await rpc('tools/call', {
+      name: 'get_task',
+      arguments: { task_id: taskForReadCheck.id },
+    })
+    const task = parseToolContent(taskResult)
+    if (task?.id !== taskForReadCheck.id) {
+      throw new Error('get_task did not return the requested task.')
+    }
+    console.log('ok get_task')
+  } else {
+    console.log('skip get_task read check; no existing task returned')
+  }
+
   await assertReadOnlyKeyScope()
 
   if (allowWrite) {
@@ -322,9 +365,45 @@ async function main() {
     }
     console.log('ok create_task idempotency')
 
+    const createdTaskResult = await rpc('tools/call', {
+      name: 'get_task',
+      arguments: { task_id: created.id },
+    })
+    const createdTask = parseToolContent(createdTaskResult)
+    if (createdTask?.id !== created.id) {
+      throw new Error('get_task did not return the created smoke task.')
+    }
+    console.log('ok get_task smoke task')
+
+    const updateRef = `${externalRef}-update`
+    const updatedResult = await rpc('tools/call', {
+      name: 'update_task',
+      arguments: {
+        task_id: created.id,
+        status: 'in_progress',
+        context: 'Updated by MCP smoke before completion.',
+        source_agent_id: sourceAgentId,
+        external_ref: updateRef,
+        ingestion_intent: 'update',
+        agent_metadata: { smoke: true },
+      },
+    })
+    const updated = parseToolContent(updatedResult)
+    if (updated?.id !== created.id || updated?.status !== 'in_progress') {
+      throw new Error('update_task did not update the smoke task.')
+    }
+    console.log('ok update_task')
+
+    const completeRef = `${externalRef}-complete`
     const completedResult = await rpc('tools/call', {
       name: 'complete_task',
-      arguments: { task_id: created.id },
+      arguments: {
+        task_id: created.id,
+        source_agent_id: sourceAgentId,
+        external_ref: completeRef,
+        ingestion_intent: 'complete',
+        agent_metadata: { smoke: true },
+      },
     })
     const completed = parseToolContent(completedResult)
     if (completed?.status !== 'done') {
@@ -346,9 +425,21 @@ async function main() {
       await assertAuditEvent(
         auditClient,
         auditUserId,
+        'update_task write',
+        (event) =>
+          event.tool_name === 'update_task' &&
+          event.source_agent_id === sourceAgentId &&
+          event.external_ref === updateRef &&
+          event.success === true
+      )
+      await assertAuditEvent(
+        auditClient,
+        auditUserId,
         'complete_task write',
         (event) =>
           event.tool_name === 'complete_task' &&
+          event.source_agent_id === sourceAgentId &&
+          event.external_ref === completeRef &&
           event.success === true &&
           new Date(event.created_at).getTime() >= writeStartedAt - 5000
       )

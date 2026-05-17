@@ -15,7 +15,7 @@ The goal is not a broad public launch. The credible Monday target is a verified 
 - Public AI-agent surfaces expose a valid OpenAPI action contract and enforce bearer auth before tool execution. Smoke-tested locally on 2026-05-16.
 - API key rotation now uses the shared rate-limit rail and verifies hashed-key persistence before revealing a new scoped MCP/API key.
 - MCP/API keys now have local scope modeling, scope-aware setup UI, scope-filtered tool listings, scope enforcement, and an agent action audit table. Real Supabase/API-key verification is still required before treating this as production-ready.
-- MCP smoke can now verify OpenAPI availability, ChatGPT Actions `list_tasks` response shape, read-only scoped key denial when `NEXDO_READONLY_API_KEY` is provided, write idempotency, and required audit rows when run with `--write --audit`.
+- MCP smoke can now verify OpenAPI availability, JSON-RPC list/search/briefing/get/update/complete execution, ChatGPT Actions list/search response shape, read-only scoped key denial when `NEXDO_READONLY_API_KEY` is provided, write idempotency, and required audit rows when run with `--write --audit`.
 - The MCP settings page now exposes recent agent activity from the audit table when a user is authenticated.
 - Agent task creation now has local idempotency handling through `source_agent_id` plus `external_ref`; real Supabase/API-key replay verification is still required.
 - PR #3 Web rails passed in GitHub Actions and the Vercel preview deployment completed on 2026-05-16.
@@ -53,7 +53,7 @@ The goal is not a broad public launch. The credible Monday target is a verified 
 
 ## AI-agent product path
 1. Stabilize the API-key based task layer around list, create, update, complete, search, and brief.
-2. Make agent-created tasks distinguishable with `source_agent_id`, `external_ref`, `ingestion_intent`, and `agent_metadata`.
+2. Make agent-created and agent-completed task mutations distinguishable with `source_agent_id`, `external_ref`, `ingestion_intent`, and `agent_metadata`.
 3. Verify idempotency and safer conflict handling for agent writes against a real Supabase project.
 4. Verify scoped API keys and least-privilege permissions against a real Supabase project.
 5. Verify audit trails for agent actions with real MCP/API-key execution.

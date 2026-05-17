@@ -688,7 +688,13 @@ test('DB-backed MCP mutation handlers update owned tasks and log failures', asyn
   const completed = parseResult<{ id: string; status: TaskStatus }>(
     await executeToolWithDependencies(
       'complete_task',
-      { task_id: 'owned-task' },
+      {
+        task_id: 'owned-task',
+        source_agent_id: 'agent-beta',
+        external_ref: 'ticket-456-complete',
+        ingestion_intent: 'complete',
+        agent_metadata: { confidence: 'high' },
+      },
       'user-1',
       deps
     )
@@ -696,6 +702,13 @@ test('DB-backed MCP mutation handlers update owned tasks and log failures', asyn
   expect(completed).toMatchObject({ id: 'owned-task', status: 'done' })
   expect(db.tasks.find((task) => task.id === 'owned-task')?.completed_at).toBeTruthy()
   expect(db.tasks.find((task) => task.id === 'other-task')?.status).toBe('todo')
+  expect(db.agentActionEvents[1]).toMatchObject({
+    tool_name: 'complete_task',
+    source_agent_id: 'agent-beta',
+    external_ref: 'ticket-456-complete',
+    ingestion_intent: 'complete',
+    success: true,
+  })
 
   const invalid = await executeToolWithDependencies(
     'update_task',
@@ -708,6 +721,20 @@ test('DB-backed MCP mutation handlers update owned tasks and log failures', asyn
   )
   expect(invalid.isError).toBe(true)
   expect(invalid.content[0].text).toContain('agent_metadata must be an object')
+
+  const invalidComplete = await executeToolWithDependencies(
+    'complete_task',
+    {
+      task_id: 'owned-task',
+      external_ref: 'missing-source',
+    },
+    'user-1',
+    deps
+  )
+  expect(invalidComplete.isError).toBe(true)
+  expect(invalidComplete.content[0].text).toContain(
+    'source_agent_id is required'
+  )
 
   const missingUpdate = await executeToolWithDependencies(
     'update_task',
@@ -730,6 +757,7 @@ test('DB-backed MCP mutation handlers update owned tasks and log failures', asyn
   expect(db.agentActionEvents.map((event) => event.success)).toEqual([
     true,
     true,
+    false,
     false,
     false,
     false,

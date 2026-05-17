@@ -1,5 +1,15 @@
 # Decisions
 
+## 2026-05-17 - Agent write smokes must exercise the full task tool path
+### Decision
+`npm run smoke:mcp` should call the actual MCP and ChatGPT Actions read surfaces, and its write mode should create, replay, read, update, complete, and optionally audit a disposable task. MCP `complete_task` accepts optional source-agent metadata so completion events can be traced like create and update events.
+
+### Why
+Listing tools is not enough evidence that an external agent can use Nexdo as a task layer. Launch verification needs to prove the advertised tools execute against real task data and that agent writes leave useful audit context.
+
+### Impact
+Future MCP tools should be added to the smoke script and audit expectations when they become part of the launch contract.
+
 ## 2026-05-17 - Human task routes share validation
 ### Decision
 Human task creation and patch routes use `lib/task-validation.ts` for normalization, allowlisting, and protected-field rejection.

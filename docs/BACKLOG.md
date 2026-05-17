@@ -30,6 +30,8 @@
 - kept Connect AI setup, activity, and available-tool indicators bound to active paid API access instead of treating old key hints as usable
 - normalized Connect AI test-connection and agent-activity errors across plain, message, and JSON-RPC error payloads
 - expanded `npm run smoke:mcp` to verify OpenAPI availability, ChatGPT Actions `list_tasks` response shape, and required real `agent_action_events` audit writes with `--write --audit`
+- expanded `npm run smoke:mcp` across search, briefing, get-task, update, complete, and ChatGPT Actions search/list checks
+- added optional trace metadata to MCP `complete_task` so completion calls can be audited with source agent and external reference context
 
 ## Completed 2026-05-16
 - read and updated the repo-level agent context and all existing Markdown/text operating files

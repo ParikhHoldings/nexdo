@@ -173,6 +173,27 @@ const openApiSpec = {
                     type: 'string',
                     description: 'The ID of the task to complete',
                   },
+                  source_agent_id: {
+                    type: 'string',
+                    maxLength: 160,
+                    description: 'Optional stable identifier for the agent completing the task',
+                  },
+                  external_ref: {
+                    type: 'string',
+                    maxLength: 160,
+                    description:
+                      'Optional reference id from the calling agent system for audit traceability. Requires source_agent_id.',
+                  },
+                  ingestion_intent: {
+                    type: 'string',
+                    enum: ['create', 'update', 'complete', 'auto'],
+                    description: 'How the agent intended this task mutation to be interpreted',
+                  },
+                  agent_metadata: {
+                    type: 'object',
+                    additionalProperties: true,
+                    description: 'Optional structured metadata from the calling agent',
+                  },
                 },
               },
             },

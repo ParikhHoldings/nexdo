@@ -139,7 +139,7 @@ Current evidence:
 - `/api/mcp/actions/[tool]` uses a shared formatter for action responses.
 - `search_tasks` filters title, context, and tags in the MCP handler.
 - `npm run test:e2e` covers OpenAPI, action auth, CORS, and unsupported billing guardrails.
-- `npm run smoke:mcp` exists for real API-key read/write/idempotency checks, ChatGPT Actions response-shape checks, optional read-only scope denial, and required `agent_action_events` audit verification with `--write --audit` once a real environment is configured.
+- `npm run smoke:mcp` exists for real API-key list/search/briefing/get/update/complete/idempotency checks, ChatGPT Actions list/search response-shape checks, optional read-only scope denial, and required `agent_action_events` audit verification with `--write --audit` once a real environment is configured.
 
 ### 2. Agent traceability
 Agent-created work must be distinguishable from human-created work.
@@ -156,9 +156,9 @@ Acceptance gate:
 - Agent calls write audit events in real Supabase verification.
 
 Current evidence:
-- MCP create/update schemas expose agent metadata fields.
+- MCP create/update/complete schemas expose agent metadata fields.
 - The idempotency migration and handler logic exist.
-- `npm run smoke:mcp -- --write --audit` can verify a real `create_task` audit row with `source_agent_id` plus `external_ref` and a real `complete_task` audit row when Supabase service-role env is loaded.
+- `npm run smoke:mcp -- --write --audit` can verify real `create_task`, `update_task`, and `complete_task` audit rows with `source_agent_id` plus `external_ref` when Supabase service-role env is loaded.
 - Real Supabase/MCP smoke is still required before claiming production readiness.
 
 ### 3. Least privilege and audit

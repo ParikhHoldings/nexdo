@@ -34,6 +34,7 @@ The product promise should be grounded in what the code actually supports:
 - shared task-create and task-patch validation in `lib/task-validation.ts`, so human task routes reject protected/server-managed fields before quota consumption or database mutation
 - a recent agent activity surface under `/settings/mcp`
 - idempotent agent task creation when callers provide `source_agent_id` plus `external_ref`
+- agent trace metadata on create, update, and complete MCP writes so source agents and external references can be audited
 - Stripe-backed plan surfaces, quotas, and rate-limit scaffolding, with checkout price IDs derived from server configuration and unknown webhook prices skipped instead of granting paid access
 
 Do not claim verified production readiness until build, lint, environment, database migrations, auth, Stripe, OpenAI, MCP, and deployment target have been checked in the current environment.
@@ -89,11 +90,12 @@ Production environment, Supabase migrations, OpenAI provider calls, Stripe test-
 - Supabase provider smoke: `npm run smoke:supabase`
 - MCP provider smoke: `npm run smoke:mcp`
 
-`npm run smoke:mcp` accepts `NEXDO_API_KEY` for normal checks, optional
-`NEXDO_READONLY_API_KEY` for scoped read-only denial checks, and `-- --write`
-for disposable task creation/idempotency checks. Add `--audit` to the write
-smoke when `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are loaded
-and the run must prove `agent_action_events` audit rows were written.
+`npm run smoke:mcp` accepts `NEXDO_API_KEY` for normal JSON-RPC and ChatGPT
+Actions checks, optional `NEXDO_READONLY_API_KEY` for scoped read-only denial
+checks, and `-- --write` for disposable task creation/update/completion plus
+idempotency checks. Add `--audit` to the write smoke when
+`NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are loaded and the
+run must prove `agent_action_events` audit rows were written.
 
 Use the smallest relevant verification. For docs-only changes, a diff review is usually enough. For code changes, prefer `npm run lint`, `npm run typecheck`, and `npm run build` when dependencies and environment allow it. For launch-facing app behavior, run `npm run test:e2e` as well. If a check cannot run, record why and add a follow-up task.
 
