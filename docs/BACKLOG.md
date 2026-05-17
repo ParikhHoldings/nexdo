@@ -106,7 +106,7 @@
 - surfaced agent-output review badges on task cards so review state is visible from scan views before opening detail
 - added sidebar Agent Review navigation that deep-links to `/all?review=needs_review` with a live review-queue count
 - added a copyable Agent operating brief to Connect AI setup so external clients get bounded-write, trace-metadata, note-first, and no-side-effect instructions alongside the MCP/OpenAPI config
-- verified PR #3 latest inspected feature head `13c553d911b8648cc543645edc2a9a411dcc25c3` passed GitHub Web rails; Vercel preview on that feature head failed with the account build-rate-limit status, while older head `6e196ed49a5445f404494599f2f4e7af5801d185` remains the latest successful preview at `https://ph-nexdo-39vxlvbl6-nathan-happywpcos-projects.vercel.app`; remote route smoke remains blocked by Vercel Deployment Protection without `VERCEL_AUTOMATION_BYPASS_SECRET` or an unprotected URL
+- verified PR #3 latest inspected product head `5f26355ff496388096cf65a0cfd710718995fb33` passed GitHub Web rails and Vercel preview deployment at `https://ph-nexdo-git-codex-launch-rea-42bdec-nathan-happywpcos-projects.vercel.app`; remote route smoke remains blocked by Vercel Deployment Protection without `VERCEL_AUTOMATION_BYPASS_SECRET` or an unprotected URL
 - aligned the Today sidebar badge with the Today focus list so undated active tasks count the same way they appear in the daily workspace
 - aligned daily briefing, provider briefing inputs, local heuristic briefings, and due-task reminders on the same active-task definition so cancelled work does not inflate focus counts
 - verified PR #3 Web rails and a Vercel preview deployment after the route-smoke rail; later PR heads can still be Vercel rate-limited
