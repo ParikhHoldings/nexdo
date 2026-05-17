@@ -36,7 +36,7 @@ export const PLAN_LIMITS = {
       'AI task parsing',
       'Daily briefing',
       '50 agent executions/month',
-      'Priority support',
+      'Higher usage limits',
     ],
   },
   power: {
@@ -48,7 +48,7 @@ export const PLAN_LIMITS = {
       'Unlimited agent executions',
       'API access',
       'MCP and ChatGPT Actions setup',
-      'Priority support',
+      'Scoped API keys',
     ],
   },
   team: {
@@ -57,10 +57,10 @@ export const PLAN_LIMITS = {
     price: null, // Contact sales
     features: [
       'Everything in Power',
-      'Team collaboration',
-      'Admin controls',
-      'SSO',
-      'Custom integrations',
+      'Custom task and agent limits',
+      'Team rollout planning',
+      'Security review before rollout',
+      'Integration planning by approval',
     ],
   },
 } as const

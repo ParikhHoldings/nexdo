@@ -31,6 +31,10 @@ test('landing page routes the primary CTA to the working demo path', async ({
   await expect(
     pricingSection.getByRole('link', { name: 'Contact Sales' })
   ).toHaveAttribute('href', 'mailto:sales@nexdo.ai?subject=Team Plan Inquiry')
+  await expect(pricingSection.getByText('Team collaboration')).toHaveCount(0)
+  await expect(pricingSection.getByText('Admin controls')).toHaveCount(0)
+  await expect(pricingSection.getByText('SSO')).toHaveCount(0)
+  await expect(pricingSection.getByText('Custom integrations')).toHaveCount(0)
 
   await Promise.all([page.waitForURL('**/today'), demoLink.click()])
   await expect(
