@@ -51,6 +51,17 @@ test('OpenAPI exposes the agent action contract', async ({ request }) => {
   }
 
   expect(operationIds.size).toBe(actionTools.length)
+  const listTaskSchema =
+    spec.paths['/api/mcp/actions/list_tasks'].post.requestBody.content[
+      'application/json'
+    ].schema
+  expect(listTaskSchema.properties.status.enum).toEqual([
+    'todo',
+    'in_progress',
+    'waiting',
+    'done',
+    'cancelled',
+  ])
   const createTaskSchema =
     spec.paths['/api/mcp/actions/create_task'].post.requestBody.content[
       'application/json'
@@ -79,6 +90,13 @@ test('OpenAPI exposes the agent action contract', async ({ request }) => {
   expect(updateTaskSchema.properties.title.maxLength).toBe(500)
   expect(updateTaskSchema.properties.context.maxLength).toBe(4000)
   expect(updateTaskSchema.properties.due_time.nullable).toBe(true)
+  expect(updateTaskSchema.properties.status.enum).toEqual([
+    'todo',
+    'in_progress',
+    'waiting',
+    'done',
+    'cancelled',
+  ])
   expect(updateTaskSchema.properties.action_type.enum).toEqual([
     'manual',
     'research',
@@ -100,6 +118,13 @@ test('OpenAPI exposes the agent action contract', async ({ request }) => {
     ].schema
   expect(searchTaskSchema.properties.query.maxLength).toBe(200)
   expect(spec.components.schemas.ErrorResponse.required).toContain('error')
+  expect(spec.components.schemas.Task.properties.status.enum).toEqual([
+    'todo',
+    'in_progress',
+    'waiting',
+    'done',
+    'cancelled',
+  ])
   expect(spec.components.schemas.Task.properties.source_agent_id).toBeTruthy()
   expect(spec.components.schemas.Task.properties.idempotent_replay).toBeTruthy()
   expect(spec.components.schemas.Task.properties.ingestion_intent).toBeTruthy()

@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test'
 import {
   executeToolWithDependencies,
+  MCP_TOOLS,
   type MCPToolDependencies,
   type ToolResult,
   validateApiKeyWithDependencies,
@@ -418,6 +419,18 @@ test('DB-backed MCP read handlers filter, search, brief, and audit owned tasks',
   ])
 })
 
+test('MCP tool schemas advertise all accepted task statuses', () => {
+  const listTasks = MCP_TOOLS.find((tool) => tool.name === 'list_tasks')
+  const updateTask = MCP_TOOLS.find((tool) => tool.name === 'update_task')
+
+  expect(listTasks?.inputSchema.properties.status).toMatchObject({
+    enum: ['todo', 'in_progress', 'waiting', 'done', 'cancelled'],
+  })
+  expect(updateTask?.inputSchema.properties.status).toMatchObject({
+    enum: ['todo', 'in_progress', 'waiting', 'done', 'cancelled'],
+  })
+})
+
 test('DB-backed MCP create_task pre-checks quota, inserts parsed agent tasks, records quota, and logs metadata', async () => {
   const db = new FakeSupabase()
   const callOrder: string[] = []
@@ -670,7 +683,7 @@ test('DB-backed MCP mutation handlers update owned tasks and log failures', asyn
       {
         task_id: 'owned-task',
         title: 'Updated by agent',
-        status: 'waiting',
+        status: 'cancelled',
         context: '  Needs customer input  ',
         due_date: '2026-05-19',
         due_time: '14:30',
@@ -691,7 +704,7 @@ test('DB-backed MCP mutation handlers update owned tasks and log failures', asyn
   expect(updated).toMatchObject({
     id: 'owned-task',
     title: 'Updated by agent',
-    status: 'waiting',
+    status: 'cancelled',
     context: 'Needs customer input',
     due_date: '2026-05-19',
     due_time: '14:30',

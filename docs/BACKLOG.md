@@ -72,6 +72,7 @@
 - tightened the Microsoft To Do import token placeholder so the rendered import card does not clip the input text
 - tightened deterministic fallback task parsing so captured task titles stay concise while schedule, priority, and estimate phrases become structured metadata
 - hardened `/quick` capture so empty quick-mode submissions are rejected and extra spacing is trimmed before task creation
+- aligned MCP tool schemas and ChatGPT Actions OpenAPI with handler support for the `cancelled` task status
 
 ## Completed 2026-05-16
 - read and updated the repo-level agent context and all existing Markdown/text operating files

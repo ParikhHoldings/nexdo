@@ -58,7 +58,7 @@ const openApiSpec = {
                 properties: {
                   status: {
                     type: 'string',
-                    enum: ['todo', 'in_progress', 'waiting', 'done'],
+                    enum: ['todo', 'in_progress', 'waiting', 'done', 'cancelled'],
                     description: 'Filter by task status',
                   },
                   due_today: {
@@ -257,7 +257,7 @@ const openApiSpec = {
                   },
                   status: {
                     type: 'string',
-                    enum: ['todo', 'in_progress', 'waiting', 'done'],
+                    enum: ['todo', 'in_progress', 'waiting', 'done', 'cancelled'],
                     description: 'New status',
                   },
                   context: {
@@ -495,7 +495,7 @@ const openApiSpec = {
           },
           status: {
             type: 'string',
-            enum: ['todo', 'in_progress', 'waiting', 'done'],
+            enum: ['todo', 'in_progress', 'waiting', 'done', 'cancelled'],
           },
           due_date: { type: 'string', format: 'date', nullable: true },
           due_time: { type: 'string', nullable: true },

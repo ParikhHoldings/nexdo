@@ -59,7 +59,7 @@ export const MCP_TOOLS: MCPTool[] = [
       properties: {
         status: {
           type: 'string',
-          enum: ['todo', 'in_progress', 'waiting', 'done'],
+          enum: ['todo', 'in_progress', 'waiting', 'done', 'cancelled'],
           description: 'Filter by task status',
         },
         due_today: {
@@ -169,7 +169,7 @@ export const MCP_TOOLS: MCPTool[] = [
         },
         status: {
           type: 'string',
-          enum: ['todo', 'in_progress', 'waiting', 'done'],
+          enum: ['todo', 'in_progress', 'waiting', 'done', 'cancelled'],
           description: 'New status',
         },
         context: {

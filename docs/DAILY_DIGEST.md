@@ -74,6 +74,7 @@
 - Tightened the Microsoft To Do import token placeholder so the rendered import card does not clip the input text.
 - Tightened deterministic fallback task parsing so captured task titles stay concise while schedule, priority, and estimate phrases become structured metadata.
 - Hardened `/quick` capture so empty quick-mode submissions are rejected and extra spacing is trimmed before task creation.
+- Aligned MCP tool schemas and ChatGPT Actions OpenAPI with handler support for the `cancelled` task status.
 
 ### In progress
 - Provider-backed Supabase, OpenAI, Stripe, and MCP smokes remain the main launch-readiness gap.
