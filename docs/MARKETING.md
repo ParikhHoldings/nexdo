@@ -40,4 +40,4 @@ Nexdo is an AI-native task manager built to move tasks from capture into priorit
 - tighten MVP/product framing around the clearest differentiated workflow
 - verify the build/deploy path before pushing broader marketing claims
 - test whether the wedge should lead with founder/operator daily execution or AI-agent interoperability
-- current landing page draft leads with the working `/today` demo path and bounded AI assistance; it still needs Quill/founder approval before external use
+- current landing/signup draft leads with the working `/today` demo path and bounded AI assistance; it still needs Quill/founder approval before external use

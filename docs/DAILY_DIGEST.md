@@ -7,6 +7,7 @@
 - Added focused coverage for task creation normalization and task patch allowlisting.
 - Tightened the landing page draft around the verified demo path and bounded AI assistance.
 - Added Playwright coverage for the landing page primary CTA routing to `/today`.
+- Added a direct signup-page demo path with browser coverage.
 
 ### In progress
 - Provider-backed Supabase, OpenAI, Stripe, and MCP smokes remain the main launch-readiness gap.

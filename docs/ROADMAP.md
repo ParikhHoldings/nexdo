@@ -22,7 +22,7 @@
 - Due-today task filters, browser reminders, MCP filtering, and date-only imports now use local calendar dates instead of UTC day strings.
 - Bounded agent outputs now keep execution history plus verification status and notes in the task detail panel.
 - Human task-create and task-patch routes now share `lib/task-validation.ts` so protected/server-managed fields are rejected before quota or database mutation.
-- The landing page draft now routes the primary CTA to the verified demo path and avoids treating unverified agent flows as a broad launch claim.
+- The landing/signup draft now routes demo CTAs to the verified demo path and avoids treating unverified agent flows as a broad launch claim.
 - Production deploy state, environment completeness, and end-to-end flow status are still unverified in the operating layer.
 
 ## Current themes

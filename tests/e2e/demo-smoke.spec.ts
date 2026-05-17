@@ -382,6 +382,13 @@ test('login exposes demo mode when auth env is not configured', async ({ page })
   await expect(page.getByRole('button', { name: /Try demo mode/ })).toBeVisible()
 })
 
+test('signup page exposes a direct demo path', async ({ page }) => {
+  await page.goto('/auth/signup')
+
+  await page.getByRole('button', { name: /Try demo mode/ }).click()
+  await expect(page.getByRole('heading', { name: 'Today', exact: true })).toBeVisible()
+})
+
 test('connect ai page reflects the paid API access gate', async ({ page }) => {
   await page.goto('/settings/mcp')
 
