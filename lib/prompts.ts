@@ -6,6 +6,7 @@ export const TASK_PARSE_PROMPT = `You are a task parsing assistant. Extract stru
 Return a JSON object with these fields:
 - title: string (concise task title, max 80 chars)
 - due_date: string | null (ISO date YYYY-MM-DD, or null if not mentioned)
+- due_time: string | null (local time HH:MM, or null if not mentioned)
 - priority: "urgent" | "high" | "medium" | "low" (infer from context and urgency words)
 - context: string | null (why this matters, who's waiting, what's at stake)
 - people: string[] (people mentioned)

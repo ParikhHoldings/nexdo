@@ -27,6 +27,7 @@
 - exposed Google Tasks and Microsoft To Do as honest manual access-token imports while keeping full OAuth marked as post-launch
 - surfaced authenticated agent-execution and agent-review server messages in task detail instead of masking quota/rate-limit/save failures
 - added due-time and energy-level editing/display to task detail so the MVP task structure is editable from the core workspace
+- carried parsed due times from natural-language capture through demo tasks, authenticated task creation, MCP-created tasks, validators, and OpenAI smoke expectations
 - fixed date-only task labels so local calendar due dates render as Today/Tomorrow instead of shifting through UTC parsing
 - surfaced authenticated AI briefing and prioritization fallback notices when provider/rate-limit failures force local heuristics
 - surfaced billing checkout and portal server messages before generic settings errors

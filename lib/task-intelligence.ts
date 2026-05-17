@@ -83,6 +83,35 @@ function parseDueDate(input: string, now = new Date()): string | null {
   return null
 }
 
+function normalizeHour(hour: number, meridiem: string | undefined): number | null {
+  if (meridiem) {
+    if (hour < 1 || hour > 12) return null
+    if (meridiem === 'am') return hour === 12 ? 0 : hour
+    return hour === 12 ? 12 : hour + 12
+  }
+
+  return hour >= 0 && hour <= 23 ? hour : null
+}
+
+function parseDueTime(input: string): string | null {
+  const lower = input.toLowerCase()
+  const withMinutes = lower.match(/\b(?:at\s*)?(\d{1,2}):([0-5]\d)\s*(am|pm)?\b/)
+  if (withMinutes) {
+    const hour = normalizeHour(Number(withMinutes[1]), withMinutes[3])
+    if (hour === null) return null
+    return `${String(hour).padStart(2, '0')}:${withMinutes[2]}`
+  }
+
+  const hourOnly = lower.match(/\b(?:at\s*)?(\d{1,2})\s*(am|pm)\b/)
+  if (hourOnly) {
+    const hour = normalizeHour(Number(hourOnly[1]), hourOnly[2])
+    if (hour === null) return null
+    return `${String(hour).padStart(2, '0')}:00`
+  }
+
+  return null
+}
+
 function inferPriority(input: string, dueDate: string | null): TaskPriority {
   const lower = input.toLowerCase()
   if (/\b(urgent|asap|critical|blocker|blocked|today|eod)\b/.test(lower)) {
@@ -184,6 +213,7 @@ export function parseTaskHeuristic(rawInput: string, now = new Date()): ParsedTa
   return {
     title: cleanTitle(rawInput),
     due_date: dueDate,
+    due_time: parseDueTime(rawInput),
     priority,
     context: rawInput.length > 90 ? rawInput : null,
     people: inferPeople(rawInput),

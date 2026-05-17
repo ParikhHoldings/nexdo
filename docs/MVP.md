@@ -27,6 +27,7 @@ Acceptance gate:
 
 Current evidence:
 - `TaskInput` supports capture.
+- Natural-language capture now carries parsed due times into demo tasks, authenticated task creation, and MCP-created tasks.
 - `npm run test:e2e` covers logged-out task creation and reload persistence.
 - `POST /api/tasks` uses `lib/task-validation.ts` to validate normalized task input and reject protected fields before quota and insert.
 - Authenticated task-capture save failures or stale sessions restore the input and show an error instead of adding a local demo task.

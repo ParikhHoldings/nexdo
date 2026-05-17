@@ -53,12 +53,13 @@ function task(overrides: Partial<Task>): Task {
 
 test('task parsing heuristic extracts launch-relevant metadata', () => {
   const parsed = parseTaskHeuristic(
-    'Draft launch email to Sarah tomorrow 25 min high priority for customer rollout',
+    'Draft launch email to Sarah tomorrow at 2:30pm 25 min high priority for customer rollout',
     new Date('2026-05-16T12:00:00')
   )
 
   expect(parsed).toMatchObject({
     due_date: '2026-05-17',
+    due_time: '14:30',
     priority: 'high',
     action_type: 'draft',
     estimated_minutes: 25,

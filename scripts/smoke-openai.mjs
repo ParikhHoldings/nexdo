@@ -253,13 +253,14 @@ async function createExecutableTask(supabase, userId, actionType) {
 async function smokeParse() {
   const parsed = await jsonCompletion(
     'task parse',
-    `Return only JSON for a task with fields title, due_date, priority, context, people, tags, action_type, estimated_minutes, energy_level.`,
-    'Research pricing pages for three AI task managers by tomorrow, high priority.'
+    `Return only JSON for a task with fields title, due_date, due_time, priority, context, people, tags, action_type, estimated_minutes, energy_level. due_time must be HH:MM or null.`,
+    'Research pricing pages for three AI task managers by tomorrow at 9:30am, high priority.'
   )
 
   assertString(parsed.title, 'parse.title')
   assertString(parsed.priority, 'parse.priority')
   assertString(parsed.action_type, 'parse.action_type')
+  assertString(parsed.due_time, 'parse.due_time')
   assertArray(parsed.people, 'parse.people')
   assertArray(parsed.tags, 'parse.tags')
   console.log('ok OpenAI task parse')
@@ -380,11 +381,12 @@ async function smokeOpenAiAppRoutes() {
     console.log('ok OpenAI app smoke auth')
 
     const parsed = await postAppJson(cookieHeader, '/api/tasks/parse', {
-      input: 'Research competitor onboarding pages by tomorrow morning, high priority.',
+      input: 'Research competitor onboarding pages by tomorrow at 9:30am, high priority.',
     })
     assertString(parsed.title, 'app.parse.title')
     assertString(parsed.priority, 'app.parse.priority')
     assertString(parsed.action_type, 'app.parse.action_type')
+    assertString(parsed.due_time, 'app.parse.due_time')
     console.log('ok OpenAI app parse route')
 
     const today = new Date().toISOString().slice(0, 10)

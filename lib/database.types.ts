@@ -263,6 +263,7 @@ export type AgentActionEvent = Database['public']['Tables']['agent_action_events
 export interface ParsedTask {
   title: string
   due_date: string | null
+  due_time: string | null
   priority: TaskPriority
   context: string | null
   people: string[]

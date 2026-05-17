@@ -615,6 +615,7 @@ const createTask: ToolHandler = async (args, userId, deps) => {
       raw_input: input,
       priority: parsed.priority,
       due_date: parsed.due_date,
+      due_time: parsed.due_time,
       context: parsed.context,
       people: parsed.people,
       tags: parsed.tags,

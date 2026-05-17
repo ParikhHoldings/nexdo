@@ -62,6 +62,16 @@ Task data is the core product object and the future agent interop boundary. Vali
 ### Impact
 Future task fields should be added to the shared validation helper first, then exposed through UI/API routes deliberately. Server-managed fields such as agent outputs, ownership, source-agent metadata, and completion timestamps should stay out of generic human task mutations unless a dedicated route owns that behavior.
 
+## 2026-05-17 - Parsed task due times are core task metadata
+### Decision
+Parsed tasks should include a nullable `due_time` field, and task capture should preserve it through demo tasks, authenticated task creation, MCP-created tasks, validation, and provider smoke expectations.
+
+### Why
+Due time is now part of the editable MVP task structure. If capture discards times mentioned in natural language, the core promise of turning messy input into structured task context is weaker than the UI suggests.
+
+### Impact
+Future parser, import, or agent-create changes should keep due date and due time together through validation, persistence, response formatting, and smoke coverage.
+
 ## 2026-05-16 - Define the MVP as capture to bounded execution
 ### Decision
 Nexdo's first launchable MVP is the concrete path documented in `docs/MVP.md`: capture plain-language tasks, structure them into useful metadata, prioritize the day, brief the user, execute bounded research/draft/prep work, and expose scoped task-layer access for external agents.

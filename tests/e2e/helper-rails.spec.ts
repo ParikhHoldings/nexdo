@@ -14,6 +14,7 @@ import {
   normalizeAgentOutput,
   updateAgentReview,
 } from '../../lib/agent-output'
+import { validateParsedTask } from '../../lib/ai-response-validation'
 import { createClientProfileFallback } from '../../lib/profile'
 import { quotaExceededResponse, quotaFailureStatus } from '../../lib/quota'
 import { rateLimitResponseHeaders } from '../../lib/rate-limit'
@@ -72,6 +73,34 @@ test('AI task input sanitizer trims, bounds, and defaults task fields', () => {
 
 test('relative date formatter treats date-only strings as local calendar dates', () => {
   expect(formatRelativeDate(getLocalDateKey())).toBe('Today')
+})
+
+test('AI parsed task validator normalizes due times', () => {
+  expect(
+    validateParsedTask({
+      title: 'Call launch partner',
+      due_date: '2026-05-18',
+      due_time: '9:05',
+      priority: 'high',
+      people: [],
+      tags: [],
+      action_type: 'prep',
+      estimated_minutes: 20,
+      energy_level: 'light',
+    })
+  ).toMatchObject({
+    due_date: '2026-05-18',
+    due_time: '09:05',
+  })
+
+  expect(
+    validateParsedTask({
+      title: 'Call launch partner',
+      due_time: '25:00',
+    })
+  ).toMatchObject({
+    due_time: null,
+  })
 })
 
 test('AI task input sanitizer fails closed for invalid arrays and required fields', () => {

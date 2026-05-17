@@ -272,6 +272,7 @@ function dependenciesFor(
   const parsedTask: ParsedTask = {
     title: 'Parsed launch task',
     due_date: '2026-05-18',
+    due_time: '09:30',
     priority: 'high',
     context: 'Parsed context',
     people: ['Nate'],
@@ -436,6 +437,7 @@ test('DB-backed MCP create_task pre-checks quota, inserts parsed agent tasks, re
       return {
         title: 'Draft investor update',
         due_date: '2026-05-18',
+        due_time: '10:15',
         priority: 'urgent',
         context: 'Use launch readiness status',
         people: ['Ari'],
@@ -494,6 +496,7 @@ test('DB-backed MCP create_task pre-checks quota, inserts parsed agent tasks, re
   expect(db.tasks[0]).toMatchObject({
     user_id: 'user-1',
     raw_input: 'Draft an investor update',
+    due_time: '10:15',
     source: 'agent',
     source_agent_id: 'agent-alpha',
     external_ref: 'msg-123',
