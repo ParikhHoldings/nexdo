@@ -59,6 +59,7 @@ Acceptance gate:
 - Non-default task statuses are visible on task cards so human owners can spot work that is in progress, waiting, done, or cancelled.
 - Users can move scanned tasks into started, waiting, to-do, or restored states without opening task detail.
 - Users can filter All Tasks by agent-originated or human-created work for focused review.
+- Users can filter All Tasks by unreviewed/needs-revision versus verified agent outputs.
 - Users can link a task to an owned parent task or related tasks from task detail.
 - Users can download a portable copy of currently loaded tasks for backup, review, or agent handoff.
 - Failed authenticated edits/deletes do not leave stale optimistic UI without warning.
@@ -76,6 +77,7 @@ Current evidence:
 - `TaskDetail` supports parent/related task links, with demo persistence and authenticated writes through `app/api/tasks/[id]/relationships/route.ts`.
 - All Tasks defaults to active work but can filter into `done` and `cancelled`; task detail includes `cancelled` in the human status selector.
 - All Tasks includes an Origin filter for isolating agent-traced tasks from human-created tasks.
+- All Tasks includes an agent-output review filter for isolating unreviewed/needs-revision outputs from verified outputs.
 - Task cards show status badges for `in_progress`, `waiting`, `done`, and `cancelled`.
 - Task-card menus expose quick `Start`, `Mark waiting`, `Move to to-do`, and `Restore` actions, with the controls visible on mobile/touch viewports as well as desktop hover/focus.
 - Settings > Data exports the tasks currently loaded in the workspace as JSON or CSV through `lib/task-export.ts`.

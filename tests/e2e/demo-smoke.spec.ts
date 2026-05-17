@@ -1008,6 +1008,122 @@ test('non-default task statuses remain visible and reviewable from all tasks', a
   ).toBeVisible()
 })
 
+test('all tasks filters reviewable agent outputs', async ({ page }) => {
+  const now = new Date().toISOString()
+  const draftOutput = (status: 'unreviewed' | 'verified' | 'needs_revision') => ({
+    schema_version: 1,
+    current: {
+      draft: `Draft marked ${status}.`,
+      tone: 'clear',
+      suggested_subject: 'Launch follow-up',
+      word_count: 4,
+    },
+    history: [
+      {
+        id: `run-${status}`,
+        action_type: 'draft',
+        output: {
+          draft: `Draft marked ${status}.`,
+          tone: 'clear',
+          suggested_subject: 'Launch follow-up',
+          word_count: 4,
+        },
+        created_at: now,
+      },
+    ],
+    review: {
+      status,
+      note: status === 'verified' ? 'Checked.' : null,
+      updated_at: status === 'unreviewed' ? null : now,
+    },
+  })
+  const baseTask = {
+    user_id: 'demo-user',
+    raw_input: '',
+    description: null,
+    status: 'todo',
+    priority: 'medium',
+    due_date: null,
+    due_time: null,
+    context: null,
+    source: 'manual',
+    action_type: 'draft',
+    estimated_minutes: 20,
+    energy_level: 'light',
+    people: null,
+    tags: ['agent-output'],
+    parent_task_id: null,
+    related_task_ids: null,
+    completed_at: null,
+    created_at: now,
+    updated_at: now,
+    source_agent_id: null,
+    external_ref: null,
+    ingestion_intent: null,
+    agent_metadata: null,
+  }
+  const tasks = [
+    {
+      ...baseTask,
+      id: 'unreviewed-agent-output',
+      title: 'Review unreviewed agent draft',
+      agent_output: draftOutput('unreviewed'),
+    },
+    {
+      ...baseTask,
+      id: 'needs-revision-agent-output',
+      title: 'Revise agent draft',
+      agent_output: draftOutput('needs_revision'),
+    },
+    {
+      ...baseTask,
+      id: 'verified-agent-output',
+      title: 'Verified agent draft',
+      agent_output: draftOutput('verified'),
+    },
+    {
+      ...baseTask,
+      id: 'plain-human-task',
+      title: 'Plain human task',
+      action_type: 'manual',
+      agent_output: null,
+    },
+  ]
+
+  await page.addInitScript((seedTasks: unknown[]) => {
+    window.localStorage.setItem('nexdo_demo_tasks', JSON.stringify(seedTasks))
+  }, tasks)
+
+  await page.goto('/all')
+  await expect(page.getByRole('heading', { name: 'All Tasks' })).toBeVisible()
+  await page.getByRole('button', { name: 'Filters' }).click()
+
+  const reviewFilter = page.getByRole('group', {
+    name: 'Agent output review filter',
+  })
+  await reviewFilter.getByRole('button', { name: 'Needs review' }).click()
+  await expect(
+    page.getByRole('heading', { name: 'Review unreviewed agent draft' })
+  ).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Revise agent draft' })
+  ).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Verified agent draft' })
+  ).toHaveCount(0)
+  await expect(
+    page.getByRole('heading', { name: 'Plain human task' })
+  ).toHaveCount(0)
+
+  await reviewFilter.getByRole('button', { name: 'Verified' }).click()
+  await expect(
+    page.getByRole('heading', { name: 'Verified agent draft' })
+  ).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Review unreviewed agent draft' })
+  ).toHaveCount(0)
+})
+
 test('demo settings does not allow free-plan API key generation', async ({ page }) => {
   await page.goto('/settings')
   await page.getByRole('button', { name: 'API' }).click()

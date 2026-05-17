@@ -9,11 +9,13 @@ import { TaskListSkeleton } from '@/components/ui/skeleton'
 import { useTaskStore } from '@/lib/store'
 import { taskMatchesSearch } from '@/lib/task-search'
 import { hasAgentTrace } from '@/lib/agent-trace'
+import { agentOutputReviewStatus } from '@/lib/agent-output'
 import { cn } from '@/lib/utils'
 import type { TaskPriority, TaskStatus } from '@/lib/database.types'
 
 type SortOption = 'created' | 'due_date' | 'priority' | 'title'
 type OriginFilter = 'all' | 'human' | 'agent'
+type ReviewFilter = 'all' | 'needs_review' | 'verified'
 
 const activeStatuses: TaskStatus[] = ['todo', 'in_progress', 'waiting']
 const statusFilters: Array<TaskStatus | 'all'> = [
@@ -29,6 +31,11 @@ const originFilters: Array<{ key: OriginFilter; label: string }> = [
   { key: 'human', label: 'Human' },
   { key: 'agent', label: 'Agent' },
 ]
+const reviewFilters: Array<{ key: ReviewFilter; label: string }> = [
+  { key: 'all', label: 'All' },
+  { key: 'needs_review', label: 'Needs review' },
+  { key: 'verified', label: 'Verified' },
+]
 
 const priorityOrder: Record<TaskPriority, number> = {
   urgent: 0,
@@ -43,6 +50,7 @@ export default function AllTasksPage() {
   const [statusFilter, setStatusFilter] = useState<TaskStatus | 'all'>('all')
   const [priorityFilter, setPriorityFilter] = useState<TaskPriority | 'all'>('all')
   const [originFilter, setOriginFilter] = useState<OriginFilter>('all')
+  const [reviewFilter, setReviewFilter] = useState<ReviewFilter>('all')
   const [sortBy, setSortBy] = useState<SortOption>('created')
   const [showFilters, setShowFilters] = useState(false)
 
@@ -70,6 +78,21 @@ export default function AllTasksPage() {
       })
     }
 
+    if (reviewFilter !== 'all') {
+      result = result.filter((task) => {
+        const reviewStatus = agentOutputReviewStatus(
+          task.agent_output,
+          task.action_type
+        )
+
+        if (reviewFilter === 'verified') return reviewStatus === 'verified'
+        return (
+          reviewStatus === 'unreviewed' ||
+          reviewStatus === 'needs_revision'
+        )
+      })
+    }
+
     // Sort
     result.sort((a, b) => {
       switch (sortBy) {
@@ -89,7 +112,15 @@ export default function AllTasksPage() {
     })
 
     return result
-  }, [tasks, search, statusFilter, priorityFilter, originFilter, sortBy])
+  }, [
+    tasks,
+    search,
+    statusFilter,
+    priorityFilter,
+    originFilter,
+    reviewFilter,
+    sortBy,
+  ])
 
   const activeTaskCount = tasks.filter((t) => activeStatuses.includes(t.status)).length
   const baseResultCount =
@@ -227,6 +258,33 @@ export default function AllTasksPage() {
               </div>
             </div>
 
+            {/* Review filter */}
+            <div>
+              <label className="text-sm text-zinc-400 block mb-2">
+                Agent output review
+              </label>
+              <div
+                className="flex flex-wrap gap-2"
+                role="group"
+                aria-label="Agent output review filter"
+              >
+                {reviewFilters.map((filter) => (
+                  <button
+                    key={filter.key}
+                    onClick={() => setReviewFilter(filter.key)}
+                    className={cn(
+                      'px-3 py-1.5 text-sm rounded-lg transition-colors',
+                      reviewFilter === filter.key
+                        ? 'bg-accent text-white'
+                        : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
+                    )}
+                  >
+                    {filter.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Sort options */}
             <div>
               <label className="text-sm text-zinc-400 block mb-2">Sort by</label>
@@ -269,7 +327,8 @@ export default function AllTasksPage() {
               {search ||
               statusFilter !== 'all' ||
               priorityFilter !== 'all' ||
-              originFilter !== 'all'
+              originFilter !== 'all' ||
+              reviewFilter !== 'all'
                 ? 'No matching tasks'
                 : 'No tasks yet'}
             </h3>
@@ -277,7 +336,8 @@ export default function AllTasksPage() {
               {search ||
               statusFilter !== 'all' ||
               priorityFilter !== 'all' ||
-              originFilter !== 'all'
+              originFilter !== 'all' ||
+              reviewFilter !== 'all'
                 ? 'Try adjusting your filters'
                 : 'Add your first task above'}
             </p>
@@ -298,7 +358,8 @@ export default function AllTasksPage() {
           {(search ||
             statusFilter !== 'all' ||
             priorityFilter !== 'all' ||
-            originFilter !== 'all') &&
+            originFilter !== 'all' ||
+            reviewFilter !== 'all') &&
             ` (filtered from ${baseResultCount})`}
         </p>
       )}

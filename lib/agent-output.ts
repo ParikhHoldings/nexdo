@@ -147,6 +147,19 @@ export function normalizeAgentOutput(
   }
 }
 
+export function agentOutputReviewStatus(
+  value: Json | AgentOutputEnvelope | AgentOutput | null,
+  actionType: ActionType
+): AgentReviewStatus | null {
+  if (!isRecord(value)) return null
+
+  if (isAgentOutputEnvelope(value)) {
+    return normalizeReview(value.review).status
+  }
+
+  return asExecutableActionType(actionType) ? 'unreviewed' : null
+}
+
 export function appendAgentExecution(
   existing: Json | AgentOutputEnvelope | AgentOutput | null,
   output: AgentOutput,

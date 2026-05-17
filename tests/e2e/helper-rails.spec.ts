@@ -10,6 +10,7 @@ import { apiKeyHint, hashApiKey } from '../../lib/api-keys'
 import { persistApiKeyRotation } from '../../lib/api-key-rotation'
 import { sanitizeAiTasks, sanitizeUserName } from '../../lib/ai-task-input'
 import {
+  agentOutputReviewStatus,
   appendAgentExecution,
   normalizeAgentOutput,
   updateAgentReview,
@@ -454,6 +455,20 @@ test('agent output helper preserves run history and verification notes', () => {
   )
   expect(legacy?.history).toHaveLength(1)
   expect(legacy?.review.status).toBe('unreviewed')
+  expect(agentOutputReviewStatus(reviewed, 'draft')).toBe('verified')
+  expect(
+    agentOutputReviewStatus(
+      {
+        draft: 'Legacy draft',
+        tone: 'Concise',
+        suggested_subject: 'Legacy',
+        word_count: 2,
+      },
+      'draft'
+    )
+  ).toBe('unreviewed')
+  expect(agentOutputReviewStatus(null, 'draft')).toBeNull()
+  expect(agentOutputReviewStatus({ draft: 'Not executable' }, 'manual')).toBeNull()
 })
 
 test('task validation normalizes safe create inputs and rejects protected fields', () => {

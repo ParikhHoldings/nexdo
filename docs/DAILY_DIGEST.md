@@ -104,6 +104,7 @@
 - Surfaced non-default task statuses on task cards so agent-updated waiting/in-progress/cancelled work is visible while scanning the workspace.
 - Added task-card quick status actions for starting work, marking work waiting, moving work back to to-do, and restoring done/cancelled work from scan views; card actions stay visible on mobile/touch.
 - Added an All Tasks origin filter so humans can isolate agent-originated work from human-created work during review.
+- Added an All Tasks agent-output review filter so unreviewed/needs-revision outputs can be queued separately from verified outputs.
 - Verified PR #3 head `e0a29a357aeb981eadf287d6ac13da55d3ccb066` passed GitHub Web rails and Vercel preview deployment; remote route smoke against `https://ph-nexdo-iw3lqhgvh-nathan-happywpcos-projects.vercel.app` remains blocked by Vercel Deployment Protection without `VERCEL_AUTOMATION_BYPASS_SECRET` or an unprotected URL.
 - Aligned the Today sidebar badge with the Today focus list so undated active tasks count the same way they appear in the daily workspace.
 - Aligned daily briefing, provider briefing inputs, local heuristic briefings, and due-task reminders on the same active-task definition so cancelled work does not inflate focus counts.
