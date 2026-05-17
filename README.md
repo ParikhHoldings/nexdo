@@ -44,8 +44,8 @@ Last checked on 2026-05-17:
 - `npm audit --audit-level=moderate` passed with 0 vulnerabilities
 - `npm run smoke:launch -- --skip-local --skip-providers --technical-only` passed as a partial technical launch smoke; provider smokes, copy approval, and production deploy approval remain separate gates
 - GitHub Actions Web rails run on pull requests and pushes to `main`/`staging`, with install, lint, typecheck, build, dependency audit, and Playwright smoke testing
-- PR #3 GitHub Actions Web rails passed on latest inspected product head `5f26355ff496388096cf65a0cfd710718995fb33`; inspect current checks after every newer push before treating the branch as current-green
-- Vercel preview deployment passed on latest inspected product head `5f26355ff496388096cf65a0cfd710718995fb33` at `https://ph-nexdo-git-codex-launch-rea-42bdec-nathan-happywpcos-projects.vercel.app`
+- PR #3 GitHub Actions Web rails passed on the inspected task-handoff feature head `12faf571f5f6fb453d28a6af99db99f2ec648092`; inspect current checks after every newer push before treating the branch as current-green
+- Vercel preview deployment passed on the inspected task-handoff feature head `12faf571f5f6fb453d28a6af99db99f2ec648092` at `https://ph-nexdo-git-codex-launch-rea-42bdec-nathan-happywpcos-projects.vercel.app`
 - direct remote route smoke against that protected preview URL is blocked by Vercel Deployment Protection until `VERCEL_AUTOMATION_BYPASS_SECRET` is provided locally or an unprotected preview URL is used
 
 `npm run verify:env` currently fails because `.env.local` is absent; only `.env.local.example` exists in this workspace. Still unverified: production env, Supabase migrations/auth/profile plus task, task-relationship, and task-note column grants against a real project, OpenAI provider calls, Stripe test-mode flows, scoped MCP/API-key execution, idempotency replay against real task data, agent audit writes, and production deployment rails.
