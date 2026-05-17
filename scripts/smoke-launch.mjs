@@ -169,9 +169,22 @@ async function main() {
   }
 
   if (technicalOnly) {
-    console.log(
-      '\nTechnical launch smoke passed. Public copy approval and production deploy approval remain separate manual gates.'
-    )
+    const skippedRails = [
+      skipLocal ? 'local rails' : null,
+      skipProviders ? 'provider smokes' : null,
+    ].filter(Boolean)
+
+    if (skippedRails.length > 0) {
+      console.log(
+        `\nPartial technical launch smoke passed; skipped ${skippedRails.join(
+          ' and '
+        )}. Public copy approval and production deploy approval remain separate manual gates.`
+      )
+    } else {
+      console.log(
+        '\nTechnical launch smoke passed. Public copy approval and production deploy approval remain separate manual gates.'
+      )
+    }
     return
   }
 

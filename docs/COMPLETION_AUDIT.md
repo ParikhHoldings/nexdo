@@ -101,7 +101,7 @@ Make Nexdo a credible, launchable early-access product by Monday, 2026-05-18, wi
 - `npm run test:e2e -- tests/e2e/mcp-tool-handlers.spec.ts` passed 11 tests including MCP `complete_task` task-row trace persistence
 - `npm run smoke:routes -- --url=http://127.0.0.1:3002 --screenshot-dir=/tmp/nexdo-route-smoke` passed against the local dev server for marketing, app, auth, import, settings, MCP setup, privacy, and terms routes at desktop and mobile widths
 - `npm audit --audit-level=moderate`
-- `npm run smoke:launch -- --skip-local --skip-providers --technical-only`
+- `npm run smoke:launch -- --skip-local --skip-providers --technical-only` passed as a partial technical launch smoke
 - `git diff --check`
 - PR #3 GitHub Actions Web rails passed on recent launch-readiness heads; later pushes still require current PR-check inspection
 - PR #3 Vercel preview deployment passed on a recent checked code head; later pushes can hit Vercel account build-rate limits and require current PR-check inspection

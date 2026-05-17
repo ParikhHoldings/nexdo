@@ -751,6 +751,7 @@ test('launch smoke orchestrates required technical and approval gates', () => {
   expect(source).toContain("const stripeArgs = ['run', 'smoke:stripe', '--', '--write', '--webhook']")
   expect(source).toContain("'--provision', '--write', '--audit'")
   expect(source).toContain('Full launch smoke cannot skip local rails or provider smokes')
+  expect(source).toContain('Partial technical launch smoke passed; skipped')
   expect(source).toContain("if (!copyApproved) missingManualGates.push('--copy-approved')")
   expect(source).toContain(
     "if (!productionDeployVerified) missingManualGates.push('--production-deploy-verified')"
