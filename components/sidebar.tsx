@@ -20,6 +20,7 @@ import { cn } from '@/lib/utils'
 import { useUIStore, useUserStore, useTaskStore } from '@/lib/store'
 import { createClient } from '@/lib/supabase/client'
 import { Badge } from '@/components/ui/badge'
+import { isTodayFocusTask } from '@/lib/task-filters'
 import { getLocalDateKey } from '@/lib/dates'
 
 const navigation = [
@@ -39,9 +40,7 @@ export function Sidebar() {
 
   // Count today's tasks
   const today = getLocalDateKey()
-  const todayCount = tasks.filter(
-    (t) => t.status !== 'done' && t.status !== 'cancelled' && t.due_date === today
-  ).length
+  const todayCount = tasks.filter((task) => isTodayFocusTask(task, today)).length
 
   useEffect(() => {
     const media = window.matchMedia('(max-width: 1023px)')

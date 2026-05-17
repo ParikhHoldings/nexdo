@@ -21,7 +21,9 @@ import { quotaExceededResponse, quotaFailureStatus } from '../../lib/quota'
 import { rateLimitResponseHeaders } from '../../lib/rate-limit'
 import { validateTaskInput, validateTaskPatch } from '../../lib/task-validation'
 import { getLocalDateKey } from '../../lib/dates'
+import { isTodayFocusTask } from '../../lib/task-filters'
 import { formatRelativeDate } from '../../lib/utils'
+import type { Task } from '../../lib/database.types'
 
 test('AI task input sanitizer trims, bounds, and defaults task fields', () => {
   const result = sanitizeAiTasks(
@@ -541,6 +543,51 @@ test('date-only task surfaces compare local date keys without UTC parsing', () =
 
   expect(allTasksSource).toContain('return a.due_date.localeCompare(b.due_date)')
   expect(allTasksSource).not.toContain('new Date(a.due_date)')
+})
+
+test('today focus helper includes undated active tasks and excludes closed work', () => {
+  const baseTask: Task = {
+    id: 'task-1',
+    user_id: 'user-1',
+    title: 'Review today focus',
+    raw_input: null,
+    description: null,
+    status: 'todo',
+    priority: 'medium',
+    due_date: null,
+    due_time: null,
+    context: null,
+    source: 'manual',
+    action_type: 'manual',
+    estimated_minutes: null,
+    energy_level: null,
+    people: null,
+    tags: null,
+    parent_task_id: null,
+    related_task_ids: null,
+    agent_output: null,
+    completed_at: null,
+    created_at: '2026-05-17T12:00:00.000Z',
+    updated_at: '2026-05-17T12:00:00.000Z',
+    source_agent_id: null,
+    external_ref: null,
+    ingestion_intent: null,
+    agent_metadata: null,
+  }
+
+  expect(isTodayFocusTask(baseTask, '2026-05-17')).toBe(true)
+  expect(
+    isTodayFocusTask({ ...baseTask, due_date: '2026-05-17' }, '2026-05-17')
+  ).toBe(true)
+  expect(
+    isTodayFocusTask({ ...baseTask, due_date: '2026-05-18' }, '2026-05-17')
+  ).toBe(false)
+  expect(
+    isTodayFocusTask({ ...baseTask, status: 'done' }, '2026-05-17')
+  ).toBe(false)
+  expect(
+    isTodayFocusTask({ ...baseTask, status: 'cancelled' }, '2026-05-17')
+  ).toBe(false)
 })
 
 test('launch smoke orchestrates required technical and approval gates', () => {

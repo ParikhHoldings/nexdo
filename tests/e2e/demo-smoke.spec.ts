@@ -135,6 +135,9 @@ test('demo task capture, briefing, prioritization, and agent output work', async
   await expect(
     page.getByRole('heading', { name: 'Quick capture smoke' })
   ).toBeVisible()
+  await expect(
+    page.getByRole('link', { name: /^Today\s+4$/ })
+  ).toBeVisible()
 
   await page.getByRole('heading', { name: 'Send weekly update to team' }).click()
   await expect(page.getByRole('heading', { name: 'AI Agent' })).toBeVisible()
