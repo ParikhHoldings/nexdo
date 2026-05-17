@@ -165,6 +165,15 @@ test('authenticated task mutations surface server failure messages', () => {
   expect(source).toContain('Could not delete task:')
 })
 
+test('authenticated done bulk-clear surfaces server delete messages', () => {
+  const source = readFileSync('app/(app)/done/page.tsx', 'utf8')
+
+  expect(source).toContain('payload?.message ||')
+  expect(source).toContain('payload?.error ||')
+  expect(source).toContain('Task delete failed')
+  expect(source).toContain('They were restored locally. Please try again.')
+})
+
 test('authenticated imports surface server failure messages before generic errors', () => {
   const source = readFileSync('app/(app)/import/page.tsx', 'utf8')
 

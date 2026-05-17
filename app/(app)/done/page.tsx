@@ -61,17 +61,26 @@ export default function DonePage() {
     setClearing(true)
     const toDelete = completedTasks.slice()
     const activeTasks = tasks.filter((t) => t.status !== 'done')
+    const restoreMessage = 'They were restored locally. Please try again.'
+    const deleteCompletedTask = async (id: string) => {
+      const response = await fetch(`/api/tasks/${id}`, { method: 'DELETE' })
+
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}))
+        throw new Error(
+          payload?.message ||
+            payload?.error ||
+            'Task delete failed'
+        )
+      }
+    }
 
     // Optimistic update for snappy UI.
     setTasks(activeTasks)
 
     if (isAuthenticated) {
       const results = await Promise.allSettled(
-        toDelete.map((t) =>
-          fetch(`/api/tasks/${t.id}`, { method: 'DELETE' }).then((r) => {
-            if (!r.ok) throw new Error(`Failed to delete ${t.id}`)
-          })
-        )
+        toDelete.map((t) => deleteCompletedTask(t.id))
       )
       const failedIds = new Set(
         results
@@ -82,12 +91,23 @@ export default function DonePage() {
       )
       const failures = failedIds.size
       if (failures > 0) {
+        const firstFailureMessage = results.find(
+          (result) =>
+            result.status === 'rejected' &&
+            result.reason instanceof Error &&
+            result.reason.message
+        )
+        const detail =
+          firstFailureMessage?.status === 'rejected'
+            ? `${firstFailureMessage.reason.message}\n${restoreMessage}`
+            : restoreMessage
+
         setTasks(
           tasks.filter((task) => task.status !== 'done' || failedIds.has(task.id))
         )
         toast.error(
           `${failures} task${failures === 1 ? '' : 's'} could not be deleted`,
-          'They were restored locally. Please try again.'
+          detail
         )
       } else {
         toast.success(`Cleared ${toDelete.length} completed task${toDelete.length === 1 ? '' : 's'}`)

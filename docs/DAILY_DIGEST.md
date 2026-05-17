@@ -23,6 +23,7 @@
 - Surfaced authenticated task-capture server messages for profile, quota, and save failures.
 - Surfaced authenticated task edit/delete server messages while preserving optimistic rollback.
 - Surfaced authenticated import server messages before generic import errors.
+- Surfaced authenticated Done-page bulk-delete server messages while preserving local rollback.
 
 ### In progress
 - Provider-backed Supabase, OpenAI, Stripe, and MCP smokes remain the main launch-readiness gap.
