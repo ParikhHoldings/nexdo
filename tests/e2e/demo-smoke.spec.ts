@@ -49,6 +49,7 @@ test('public metadata and prompts stay below autonomous claims', () => {
   const manifest = JSON.parse(readFileSync('public/manifest.json', 'utf8'))
   const privacySource = readFileSync('app/(marketing)/privacy/page.tsx', 'utf8')
   const termsSource = readFileSync('app/(marketing)/terms/page.tsx', 'utf8')
+  const readmeSource = readFileSync('README.md', 'utf8')
 
   expect(layoutSource).toContain('Nexdo - Early-Access Task Workspace')
   expect(layoutSource).toContain('review bounded AI assistance')
@@ -76,6 +77,9 @@ test('public metadata and prompts stay below autonomous claims', () => {
 
   expect(termsSource).toContain('If you start a paid plan')
   expect(termsSource).not.toContain('Paid plans renew automatically')
+
+  expect(readmeSource).toContain('file uploads from CSV, ICS, JSON/Trello/Things-style task exports')
+  expect(readmeSource).not.toContain('file-based task exports')
 })
 
 test('public robots sitemap points to an existing public sitemap', async ({ request }) => {
