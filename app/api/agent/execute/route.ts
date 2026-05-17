@@ -80,7 +80,10 @@ export async function POST(request: NextRequest) {
   // Gate 2: monthly plan quota. Pre-check first; consume only on success.
   const preQuota = await checkQuota(auth.userId, 'agent_execute')
   if (!preQuota.allowed) {
-    return NextResponse.json(quotaExceededResponse(preQuota), { status: 402 })
+    return NextResponse.json(
+      quotaExceededResponse(preQuota),
+      { status: quotaFailureStatus(preQuota) }
+    )
   }
 
   try {

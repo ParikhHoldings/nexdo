@@ -188,6 +188,15 @@ test('billing checkout rejects unsupported client-selected plans', async ({
   expect(body.error).toContain('Invalid plan')
 })
 
+test('agent execution maps quota service failures through shared status helper', () => {
+  const source = readFileSync('app/api/agent/execute/route.ts', 'utf8')
+
+  expect(source).toContain('status: quotaFailureStatus(preQuota)')
+  expect(source).not.toContain(
+    'quotaExceededResponse(preQuota), { status: 402 }'
+  )
+})
+
 test('Connect AI no-key guidance deep-links to API settings', () => {
   const source = readFileSync('app/(app)/settings/mcp/page.tsx', 'utf8')
 
