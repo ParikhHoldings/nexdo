@@ -31,6 +31,7 @@
 - Surfaced billing checkout and portal server messages before generic settings errors.
 - Kept Connect AI setup, activity, and tool indicators bound to active paid API access instead of stale key hints.
 - Normalized Connect AI test-connection and agent-activity error messages across plain, message, and JSON-RPC payloads.
+- Expanded Connect AI agent activity rows with mutation intent, safe argument-key summaries, and agent-metadata presence.
 - Expanded `npm run smoke:mcp` to cover OpenAPI availability, ChatGPT Actions `list_tasks` shape, and real `agent_action_events` audit rows when run with `--write --audit`.
 - Expanded MCP smoke execution across search, briefing, get-task, update, complete, and ChatGPT Actions search/list checks instead of only checking tool listing.
 - Expanded MCP smoke to verify the authenticated SSE endpoint advertises the JSON-RPC endpoint before tool execution.

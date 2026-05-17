@@ -23,7 +23,7 @@ export async function GET() {
   const { data: events, error } = await supabase
     .from('agent_action_events')
     .select(
-      'id, tool_name, source_agent_id, external_ref, ingestion_intent, success, error, duration_ms, created_at'
+      'id, tool_name, source_agent_id, external_ref, ingestion_intent, metadata, success, error, duration_ms, created_at'
     )
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })

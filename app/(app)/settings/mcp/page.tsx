@@ -40,6 +40,10 @@ type AgentEvent = {
   source_agent_id: string | null
   external_ref: string | null
   ingestion_intent: string | null
+  metadata: {
+    argument_keys?: unknown
+    has_agent_metadata?: unknown
+  } | null
   success: boolean
   error: string | null
   duration_ms: number | null
@@ -90,6 +94,28 @@ function apiErrorMessage(payload: unknown, fallback: string): string {
   }
 
   return fallback
+}
+
+function formatEventIntent(intent: string | null): string | null {
+  if (!intent) return null
+
+  const labels: Record<string, string> = {
+    create: 'Create intent',
+    update: 'Update intent',
+    complete: 'Complete intent',
+    auto: 'Auto intent',
+  }
+
+  return labels[intent] || `${intent} intent`
+}
+
+function eventArgumentKeys(event: AgentEvent): string[] {
+  const keys = event.metadata?.argument_keys
+  if (!Array.isArray(keys)) return []
+
+  return keys
+    .filter((key): key is string => typeof key === 'string' && Boolean(key.trim()))
+    .slice(0, 6)
 }
 
 export default function MCPSettingsPage() {
@@ -403,47 +429,66 @@ export default function MCPSettingsPage() {
           <p className="text-sm text-zinc-500">No agent activity recorded yet.</p>
         ) : (
           <div className="space-y-2">
-            {events.map((event) => (
-              <div
-                key={event.id}
-                className="flex flex-col gap-2 rounded-lg bg-zinc-800/50 p-3 sm:flex-row sm:items-center sm:justify-between"
-              >
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <code className="text-sm text-accent font-mono">
-                      {event.tool_name}
-                    </code>
-                    <span
-                      className={
-                        event.success
-                          ? 'text-xs text-emerald-400'
-                          : 'text-xs text-red-400'
-                      }
-                    >
-                      {event.success ? 'success' : 'failed'}
-                    </span>
-                    {event.source_agent_id && (
-                      <span className="text-xs text-zinc-500">
-                        {event.source_agent_id}
+            {events.map((event) => {
+              const intentLabel = formatEventIntent(event.ingestion_intent)
+              const argumentKeys = eventArgumentKeys(event)
+              const hasAgentMetadata = event.metadata?.has_agent_metadata === true
+
+              return (
+                <div
+                  key={event.id}
+                  className="flex flex-col gap-2 rounded-lg bg-zinc-800/50 p-3 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <code className="text-sm text-accent font-mono">
+                        {event.tool_name}
+                      </code>
+                      <span
+                        className={
+                          event.success
+                            ? 'text-xs text-emerald-400'
+                            : 'text-xs text-red-400'
+                        }
+                      >
+                        {event.success ? 'success' : 'failed'}
                       </span>
+                      {event.source_agent_id && (
+                        <span className="text-xs text-zinc-500">
+                          {event.source_agent_id}
+                        </span>
+                      )}
+                      {intentLabel && (
+                        <span className="rounded-full border border-zinc-700 px-2 py-0.5 text-xs text-zinc-400">
+                          {intentLabel}
+                        </span>
+                      )}
+                    </div>
+                    {event.error ? (
+                      <p className="mt-1 truncate text-xs text-red-300">
+                        {event.error}
+                      </p>
+                    ) : event.external_ref ? (
+                      <p className="mt-1 truncate text-xs text-zinc-500">
+                        {event.external_ref}
+                      </p>
+                    ) : null}
+                    {(argumentKeys.length > 0 || hasAgentMetadata) && (
+                      <p className="mt-1 truncate text-xs text-zinc-600">
+                        {argumentKeys.length > 0
+                          ? `Args: ${argumentKeys.join(', ')}`
+                          : 'Args recorded'}
+                        {hasAgentMetadata ? ' · agent metadata included' : ''}
+                      </p>
                     )}
                   </div>
-                  {event.error ? (
-                    <p className="mt-1 truncate text-xs text-red-300">
-                      {event.error}
-                    </p>
-                  ) : event.external_ref ? (
-                    <p className="mt-1 truncate text-xs text-zinc-500">
-                      {event.external_ref}
-                    </p>
-                  ) : null}
+                  <div className="shrink-0 text-xs text-zinc-500">
+                    {new Date(event.created_at).toLocaleString()}
+                    {event.duration_ms !== null ? ` · ${event.duration_ms}ms` : ''}
+                  </div>
                 </div>
-                <div className="shrink-0 text-xs text-zinc-500">
-                  {new Date(event.created_at).toLocaleString()}
-                  {event.duration_ms !== null ? ` · ${event.duration_ms}ms` : ''}
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </section>
