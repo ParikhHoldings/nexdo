@@ -72,6 +72,7 @@
 - Refreshed README, launch plan, and roadmap verification summaries so repo-facing docs match the latest 82-test local rail and recent preview-deploy evidence.
 - Added mobile sidebar open/close and post-navigation collapse coverage to the rendered demo smoke path.
 - Tightened the Microsoft To Do import token placeholder so the rendered import card does not clip the input text.
+- Tightened deterministic fallback task parsing so captured task titles stay concise while schedule, priority, and estimate phrases become structured metadata.
 
 ### In progress
 - Provider-backed Supabase, OpenAI, Stripe, and MCP smokes remain the main launch-readiness gap.

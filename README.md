@@ -6,7 +6,7 @@ Nexdo is an AI-native task manager focused on moving work from capture to forwar
 This repo currently contains a Next.js app with:
 - marketing, auth, task workspace, settings, import, and MCP setup routes
 - Supabase-backed profiles, tasks, notes, daily briefings, usage events, and rate-limit tables
-- natural-language task parsing with due-date/due-time extraction, daily briefing, prioritization, and limited agent execution through OpenAI
+- natural-language task parsing with due-date/due-time extraction, concise fallback titles, daily briefing, prioritization, and limited agent execution through OpenAI
 - bounded validation for OpenAI JSON output before parsed tasks, briefings, prioritization, or agent results are returned or saved
 - shared task-create and task-patch validation that rejects protected/server-managed fields before quota or database mutation
 - reviewable agent output history with verification status and notes for bounded research, draft, and prep runs

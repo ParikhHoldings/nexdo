@@ -200,11 +200,30 @@ function inferPeople(input: string): string[] {
 }
 
 function cleanTitle(input: string): string {
-  return input
+  const withoutCommand = input
     .replace(/^\/quick\s+/i, '')
+    .trim()
+
+  const cleaned = withoutCommand
+    .replace(/\b(?:on|by|due)\s+\d{4}-\d{2}-\d{2}\b/gi, ' ')
+    .replace(/\b\d{4}-\d{2}-\d{2}\b/g, ' ')
+    .replace(/\b(?:on|by|due)\s+\d{1,2}\/\d{1,2}(?:\/\d{2,4})?\b/gi, ' ')
+    .replace(/\b\d{1,2}\/\d{1,2}(?:\/\d{2,4})?\b/g, ' ')
+    .replace(new RegExp(`\\b(?:on|by|due)\\s+(?:${WEEKDAYS.join('|')})\\b`, 'gi'), ' ')
+    .replace(/\b(?:today|tomorrow|next week)\b/gi, ' ')
+    .replace(/\bin\s+\d+\s+days?\b/gi, ' ')
+    .replace(/\b(?:at\s*)?\d{1,2}:[0-5]\d\s*(?:am|pm)?\b/gi, ' ')
+    .replace(/\bat\s+\d{1,2}\s*(?:am|pm)\b/gi, ' ')
+    .replace(/\b\d{1,2}\s*(?:am|pm)\b/gi, ' ')
+    .replace(/\b\d+(?:\.\d+)?\s*(?:m|min|mins|minutes|h|hr|hrs|hours)\b/gi, ' ')
+    .replace(
+      /\b(?:high priority|medium priority|low priority|urgent|asap|critical|blocker|blocked|important|no rush|whenever|someday|eod)\b/gi,
+      ' '
+    )
     .replace(/\s+/g, ' ')
     .trim()
-    .slice(0, 80)
+
+  return (cleaned || withoutCommand || 'Untitled task').slice(0, 80)
 }
 
 export function parseTaskHeuristic(rawInput: string, now = new Date()): ParsedTask {

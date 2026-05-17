@@ -4,7 +4,7 @@
 - Active Next.js 16 app code exists.
 - Supabase schema/migrations and auth/data helpers exist.
 - AI parsing, prioritization, briefings, and bounded agent execution code exists.
-- Natural-language task parsing now carries due times through capture, authenticated task creation, and MCP-created tasks.
+- Natural-language task parsing now carries due times through capture, authenticated task creation, and MCP-created tasks, and local fallback parsing keeps common schedule, priority, and estimate phrases out of task titles.
 - Prioritization and briefing context now preserve due times, and deterministic ranking orders same-day timed tasks by due time.
 - Daily briefings refresh on structured planning metadata changes and surface past due times today as overdue.
 - Local deterministic fallbacks now support demo-mode parsing, prioritization, briefing, and bounded agent outputs when provider env is missing.

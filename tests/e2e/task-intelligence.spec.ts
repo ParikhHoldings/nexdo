@@ -58,6 +58,7 @@ test('task parsing heuristic extracts launch-relevant metadata', () => {
   )
 
   expect(parsed).toMatchObject({
+    title: 'Draft launch email to Sarah for customer rollout',
     due_date: '2026-05-17',
     due_time: '14:30',
     priority: 'high',

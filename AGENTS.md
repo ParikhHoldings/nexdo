@@ -17,7 +17,7 @@ Nexdo is not only a concept. The repo already contains a Next.js product shell w
 - API routes for tasks, AI parse/prioritize/briefing/agent execution, imports, profile/API keys, Stripe checkout/portal/webhook, MCP JSON-RPC, MCP actions, and OpenAPI for ChatGPT Actions under `app/api/`
 
 The product promise should be grounded in what the code actually supports:
-- natural-language task capture with AI parsing, including due-date and due-time extraction
+- natural-language task capture with AI parsing, including due-date and due-time extraction; local fallback parsing should keep titles concise by moving schedule, priority, and estimate phrases into structured metadata
 - priority, due date, context, people, tags, action type, estimate, and energy metadata
 - daily briefing and prioritization generated from task context
 - limited agent execution for owned `research`, `draft`, and `prep` task records, with server-side output persistence, run history, and user verification notes
