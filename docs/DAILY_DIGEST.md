@@ -5,6 +5,8 @@
 - Moved human task-create and task-patch validation into shared `lib/task-validation.ts`.
 - Made generic task create/update routes reject protected or server-managed fields before quota or database mutation.
 - Added focused coverage for task creation normalization and task patch allowlisting.
+- Tightened the landing page draft around the verified demo path and bounded AI assistance.
+- Added Playwright coverage for the landing page primary CTA routing to `/today`.
 
 ### In progress
 - Provider-backed Supabase, OpenAI, Stripe, and MCP smokes remain the main launch-readiness gap.

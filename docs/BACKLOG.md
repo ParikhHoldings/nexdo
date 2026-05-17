@@ -4,6 +4,8 @@
 - moved human task-create and task-patch validation into `lib/task-validation.ts`
 - made generic task create/update routes reject protected or server-managed fields such as `user_id`, `completed_at`, `source_agent_id`, and `agent_output` instead of silently accepting them
 - added focused helper coverage for task creation normalization and task patch allowlisting
+- tightened the landing page draft toward the verified demo path, bounded AI assistance, and less overbroad productivity/security/agent wording
+- added Playwright coverage so the landing page primary CTA routes to the working `/today` demo
 
 ## Completed 2026-05-16
 - read and updated the repo-level agent context and all existing Markdown/text operating files

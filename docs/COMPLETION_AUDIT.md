@@ -53,9 +53,9 @@ Make Nexdo a credible, launchable early-access product by Monday, 2026-05-18, wi
 | Cover DB-backed MCP tool handlers and API-key validation locally | `tests/e2e/mcp-tool-handlers.spec.ts` exercises owned list/search/get/briefing behavior, create-task idempotent replay, parse/quota/insert ordering, update/complete mutations, validation failures, `agent_action_events` audit logging, hashed API-key lookup, legacy raw-key migration, and paid-plan API access gating through an in-memory Supabase double | Done |
 | Keep ChatGPT Actions spec bound to the serving origin | `/api/mcp/openapi` now emits the request origin when `NEXT_PUBLIC_APP_URL` is not configured, so preview/local deployments do not advertise `nexdo.ai`; Playwright verifies the local server URL | Done |
 | Add CI verification | `.github/workflows/verify.yml` runs install, lint, typecheck, build, and Playwright smoke tests; PR #3 Web rails passed | Done |
-| Tighten public copy | `app/(marketing)/page.tsx`, auth pages, metadata, docs guardrails | Draft tightened; Quill/founder approval still required before public use |
+| Tighten public copy | `app/(marketing)/page.tsx`, auth pages, metadata, docs guardrails; landing page primary CTA now points to the verified `/today` demo path and avoids internal "front-door launch claim" language, with Playwright coverage | Draft tightened; Quill/founder approval still required before public use |
 | Remove dependency audit blocker | Next.js 16, ESLint 9 flat config, PostCSS override; `npm audit --audit-level=moderate` reports 0 vulnerabilities | Done |
-| Verify deploy target and production env | `npm run verify:env` was run on 2026-05-16 and failed because `.env.local` is absent; no production env or deploy target credentials/config were exercised in this pass | Missing |
+| Verify deploy target and production env | `npm run verify:env` was rerun on 2026-05-17 and failed because `.env.local` is absent; no production env or deploy target credentials/config were exercised in this pass | Missing |
 | Keep env verification aligned with runtime placeholder rules | `scripts/verify-env.mjs` and shared runtime helper `lib/env.ts` reject common placeholder fragments across URL and secret values; `.env.local.example` documents smoke-only MCP API-key variables separately from deployed app env | Done |
 | Document local and production setup steps | `docs/DEPLOYMENT.md` now separates no-provider local setup, env preflight, production setup sequence, provider smoke commands, rollback notes, and approval boundaries | Done |
 | Verify preview deploy rail | PR #3 Vercel preview deployment completed | Done |
@@ -85,7 +85,7 @@ Make Nexdo a credible, launchable early-access product by Monday, 2026-05-18, wi
 - `npm run lint`
 - `npm run typecheck`
 - `npm run build`
-- `npm run test:e2e` including logged-out task capture/edit/reload persistence/agent output, agent output history/review notes, demo briefing refresh, local-date due-today behavior, All Tasks search/filtering, Upcoming grouping, Done clear/reload lifecycle, file-import preview/confirm flow, persistent appearance and browser reminder settings, auth guardrails, MCP/OpenAPI/Stripe guardrails, DB-backed MCP handler and API-key validation coverage, demo CSV file import, login demo-mode entry, free-plan API-key UI gating, settings tab deep links, and focused task route validation contracts
+- `npm run test:e2e` including public landing/demo CTA smoke, logged-out task capture/edit/reload persistence/agent output, agent output history/review notes, demo briefing refresh, local-date due-today behavior, All Tasks search/filtering, Upcoming grouping, Done clear/reload lifecycle, file-import preview/confirm flow, persistent appearance and browser reminder settings, auth guardrails, MCP/OpenAPI/Stripe guardrails, DB-backed MCP handler and API-key validation coverage, demo CSV file import, login demo-mode entry, free-plan API-key UI gating, settings tab deep links, and focused task route validation contracts
 - `npm audit --audit-level=moderate`
 - `git diff --check`
 - PR #3 GitHub Actions Web rails

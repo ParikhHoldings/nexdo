@@ -1,5 +1,22 @@
 import { expect, test } from '@playwright/test'
 
+test('landing page routes the primary CTA to the working demo path', async ({
+  page,
+}) => {
+  await page.goto('/')
+
+  await expect(
+    page.getByRole('heading', { name: /Move tasks from capture to/i })
+  ).toBeVisible()
+  await expect(page.getByText('bounded AI assistance')).toBeVisible()
+  await expect(page.getByText('front-door launch claim')).toHaveCount(0)
+
+  const demoLink = page.getByRole('link', { name: 'Try the demo' }).first()
+  await expect(demoLink).toHaveAttribute('href', '/today')
+  await demoLink.click()
+  await expect(page.getByRole('heading', { name: 'Today', exact: true })).toBeVisible()
+})
+
 test('demo task capture, briefing, prioritization, and agent output work', async ({
   page,
 }) => {

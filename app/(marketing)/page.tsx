@@ -8,9 +8,7 @@ import {
   Users,
   Clock,
   CheckCircle2,
-  Star,
   ChevronDown,
-  Play,
 } from 'lucide-react'
 import { PricingTable } from '@/components/pricing-table'
 
@@ -44,10 +42,10 @@ export default function LandingPage() {
                 Sign in
               </Link>
               <Link
-                href="/auth/signup"
+                href="/today"
                 className="bg-accent hover:bg-accent/90 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
               >
-                Get Started Free
+                Try demo
               </Link>
             </div>
           </div>
@@ -60,49 +58,44 @@ export default function LandingPage() {
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 border border-accent/20 mb-8">
             <Sparkles className="h-4 w-4 text-accent" />
-            <span className="text-sm text-accent">AI-Native Task Management</span>
+            <span className="text-sm text-accent">Early-access task workspace</span>
           </div>
 
           {/* Headline */}
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-zinc-100 mb-6">
-            Your to-do list just{' '}
+            Move tasks from capture to{' '}
             <span className="bg-gradient-to-r from-accent to-blue-400 bg-clip-text text-transparent">
-              learned to think
+              forward motion
             </span>
           </h1>
 
           {/* Subhead */}
           <p className="text-xl text-zinc-400 max-w-2xl mx-auto mb-10">
-            Nexdo is the AI-native task manager that understands context,
-            prioritizes intelligently, and helps move bounded work forward.
+            Nexdo turns messy task capture into structured priorities, daily
+            briefings, and reviewable AI assistance for bounded work.
           </p>
 
           {/* CTAs */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
-              href="/auth/signup"
+              href="/today"
               className="w-full sm:w-auto bg-accent hover:bg-accent/90 text-white font-medium px-8 py-3 rounded-lg transition-colors flex items-center justify-center gap-2"
             >
-              Get Started Free
+              Try the demo
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
-              href="/auth/login"
+              href="/auth/signup"
               className="w-full sm:w-auto bg-zinc-800 hover:bg-zinc-700 text-zinc-100 font-medium px-8 py-3 rounded-lg transition-colors flex items-center justify-center gap-2"
             >
-              <Play className="h-4 w-4" />
-              Sign in to your workspace
+              Create account
             </Link>
           </div>
 
           {/* Product trust */}
           <div className="mt-12 inline-flex items-center gap-3 rounded-full border border-zinc-800 bg-zinc-900/60 px-4 py-2 text-sm text-zinc-400">
-            <div className="flex items-center gap-1 text-amber-400">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <Star key={i} className="h-4 w-4 fill-amber-400" />
-              ))}
-            </div>
-            <span>Built for founders, operators, and AI-native teams.</span>
+            <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+            <span>Demo path: capture, prioritize, brief, and review bounded AI output.</span>
           </div>
         </div>
 
@@ -122,7 +115,7 @@ export default function LandingPage() {
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl sm:text-4xl font-bold text-zinc-100 mb-4">
-              Traditional to-do apps are broken
+              Static to-do lists lose the context
             </h2>
             <p className="text-lg text-zinc-400 max-w-2xl mx-auto">
               They strip the &quot;why&quot; from your tasks, leaving you with a lifeless
@@ -145,7 +138,7 @@ export default function LandingPage() {
               {
                 title: 'Zero execution',
                 description:
-                  'The app shows tasks but does nothing to help complete them.',
+                  'The app stores tasks but gives little help preparing the next move.',
               },
             ].map((problem) => (
               <div
@@ -170,7 +163,7 @@ export default function LandingPage() {
               How Nexdo works
             </h2>
             <p className="text-lg text-zinc-400">
-              Three steps to AI-powered productivity
+              Three steps from capture to reviewable output
             </p>
           </div>
 
@@ -185,9 +178,9 @@ export default function LandingPage() {
               },
               {
                 step: '02',
-                title: 'AI organizes',
+                title: 'Nexdo structures',
                 description:
-                  'Our AI parses your input, extracts key information, sets smart priorities, and builds your daily plan.',
+                  'Nexdo extracts key information, ranks tasks by due dates, priority, and context, and builds your daily plan.',
                 icon: Target,
               },
               {
@@ -230,10 +223,10 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold text-zinc-100 mb-4">
-              Everything you need to get things done
+              The core workflow Nexdo is proving first
             </h2>
             <p className="text-lg text-zinc-400">
-              Features designed for modern productivity
+              Launch-focused capabilities in the current product
             </p>
           </div>
 
@@ -249,13 +242,13 @@ export default function LandingPage() {
                 icon: Target,
                 title: 'Smart Prioritization',
                 description:
-                  'AI analyzes urgency, dependencies, and context to rank your tasks.',
+                  'Nexdo uses due dates, priority, and task context to rank your day.',
               },
               {
                 icon: Clock,
                 title: 'Daily Briefings',
                 description:
-                  'Start each day with an AI-generated summary of what matters most.',
+                  'Start each day with a summary of priorities, quick wins, overdue work, and people waiting.',
               },
               {
                 icon: Zap,
@@ -271,9 +264,9 @@ export default function LandingPage() {
               },
               {
                 icon: CheckCircle2,
-                title: 'Agent Integrations',
+                title: 'Agent-Ready Access',
                 description:
-                  'API-key based task access for MCP-style and ChatGPT Actions workflows.',
+                  'Scoped API-key task access for MCP-style and ChatGPT Actions workflows.',
               },
             ].map((feature) => {
               const Icon = feature.icon
@@ -301,7 +294,7 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold text-zinc-100 mb-4">
-              Built for two kinds of people
+              Built for today&apos;s users and tomorrow&apos;s agents
             </h2>
           </div>
 
@@ -312,7 +305,7 @@ export default function LandingPage() {
                 <Users className="h-6 w-6 text-emerald-400" />
               </div>
               <h3 className="text-2xl font-bold text-zinc-100 mb-4">
-                Everyday Users
+                Human Operators
               </h3>
               <p className="text-zinc-400 mb-6">
                 Capture messy work in plain language and turn it into an
@@ -323,7 +316,7 @@ export default function LandingPage() {
                   'Natural language task input',
                   'AI-powered daily briefings',
                   'Smart prioritization',
-                  'Beautiful, minimal design',
+                  'Reviewable AI output',
                 ].map((item) => (
                   <li key={item} className="flex items-center gap-3 text-sm text-zinc-300">
                     <CheckCircle2 className="h-4 w-4 text-emerald-400 flex-shrink-0" />
@@ -339,7 +332,7 @@ export default function LandingPage() {
                 <Zap className="h-6 w-6 text-accent" />
               </div>
               <h3 className="text-2xl font-bold text-zinc-100 mb-4">
-                AI Power Users
+                Agent Workflows
               </h3>
               <p className="text-zinc-400 mb-6">
                 A task layer designed for external AI tools to inspect and
@@ -351,6 +344,7 @@ export default function LandingPage() {
                   'MCP-style tool definitions',
                   'ChatGPT Actions schema',
                   'Human-readable task state',
+                  'Scoped key permissions',
                 ].map((item) => (
                   <li key={item} className="flex items-center gap-3 text-sm text-zinc-300">
                     <CheckCircle2 className="h-4 w-4 text-accent flex-shrink-0" />
@@ -398,15 +392,15 @@ export default function LandingPage() {
               },
               {
                 q: 'Can I connect my own AI agents?',
-                a: 'Nexdo includes API-key based MCP-style tools and a ChatGPT Actions OpenAPI surface for task access. These flows still need environment-specific verification before they become a front-door launch claim.',
+                a: 'Nexdo includes API-key based MCP-style tools and a ChatGPT Actions OpenAPI surface for task access. External-agent use should start with scoped keys and reviewed task changes.',
               },
               {
                 q: 'Is my data secure?',
-                a: 'Nexdo uses Supabase auth, row-level security, and server-side API checks. Security claims should be verified against the production environment before external launch use.',
+                a: 'Nexdo uses Supabase auth, row-level security, and server-side API checks. Production security should still be verified before relying on it for sensitive workloads.',
               },
               {
                 q: 'Can I use Nexdo offline?',
-                a: "We're working on PWA support with offline sync. For now, Nexdo requires an internet connection to sync tasks and run AI features.",
+                a: 'Not yet. Nexdo currently requires an internet connection to sync tasks and run AI features.',
               },
             ].map((item) => (
               <div
@@ -435,14 +429,14 @@ export default function LandingPage() {
               bounded AI assistance.
             </p>
             <Link
-              href="/auth/signup"
+              href="/today"
               className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-white font-medium px-8 py-3 rounded-lg transition-colors"
             >
-              Get Started Free
+              Try the demo
               <ArrowRight className="h-4 w-4" />
             </Link>
             <p className="text-sm text-zinc-500 mt-4">
-              No credit card required • Free tier forever
+              Demo available without a credit card.
             </p>
           </div>
         </div>
