@@ -40,6 +40,7 @@
 - fixed date-only task labels so local calendar due dates render as Today/Tomorrow instead of shifting through UTC parsing
 - surfaced authenticated AI briefing and prioritization fallback notices when provider/rate-limit failures force local heuristics
 - surfaced billing checkout and portal server messages before generic settings errors
+- made authenticated task parsing reject blank-after-trim input and send trimmed prompt text through length checks and provider/fallback parsing
 - trimmed submitted login emails before Supabase sign-in so pasted whitespace does not break otherwise valid account access
 - tightened auth redirect helpers so callback recovery can still land on update-password while normal login redirects reject auth-page loops, control characters, backslash paths, and encoded authority-like prefixes
 - added shared auth redirect guardrails so protected-route login redirects preserve path and query, login/callback redirects stay on same-origin app paths, and callback errors show a visible login message

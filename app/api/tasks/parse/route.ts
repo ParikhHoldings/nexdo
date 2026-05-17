@@ -16,12 +16,14 @@ export async function POST(request: NextRequest) {
 
   const { input } = body
 
-  if (!input || typeof input !== 'string') {
+  if (typeof input !== 'string' || input.trim().length === 0) {
     return NextResponse.json({ error: 'Invalid input' }, { status: 400 })
   }
 
+  const normalizedInput = input.trim()
+
   // Bound the prompt size to control OpenAI spend.
-  if (input.length > 2000) {
+  if (normalizedInput.length > 2000) {
     return NextResponse.json(
       { error: 'Input too long (max 2000 characters)' },
       { status: 400 }
@@ -41,7 +43,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const parsedTask = await parseTaskInput(input)
+    const parsedTask = await parseTaskInput(normalizedInput)
 
     if (!parsedTask) {
       return NextResponse.json({ error: 'Failed to parse task' }, { status: 500 })

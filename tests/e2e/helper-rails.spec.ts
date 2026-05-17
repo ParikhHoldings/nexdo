@@ -559,6 +559,7 @@ test('task patch validation allowlists human-editable fields only', () => {
 
 test('OpenAI smoke can verify authenticated app routes with disposable data', () => {
   const source = readFileSync('scripts/smoke-openai.mjs', 'utf8')
+  const parseRouteSource = readFileSync('app/api/tasks/parse/route.ts', 'utf8')
 
   expect(source).toContain("const shouldSmokeAppRoutes = args.has('--app')")
   expect(source).toContain('function getLocalDateKey(date = new Date())')
@@ -574,6 +575,10 @@ test('OpenAI smoke can verify authenticated app routes with disposable data', ()
   expect(source).toContain("select('agent_output')")
   expect(source).toContain('VERCEL_AUTOMATION_BYPASS_SECRET')
   expect(source).toContain("'x-vercel-protection-bypass'")
+  expect(parseRouteSource).toContain('input.trim().length === 0')
+  expect(parseRouteSource).toContain('const normalizedInput = input.trim()')
+  expect(parseRouteSource).toContain('parseTaskInput(normalizedInput)')
+  expect(parseRouteSource).toContain('normalizedInput.length > 2000')
 })
 
 test('authenticated app smoke verifies task CRUD, task notes, and agent review', () => {
