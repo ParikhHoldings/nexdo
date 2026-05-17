@@ -88,10 +88,13 @@ export async function prioritizeTasks(tasks: Task[]): Promise<PrioritizedTask[] 
       title: t.title,
       priority: t.priority,
       due_date: t.due_date,
+      due_time: t.due_time,
       context: t.context,
       people: t.people,
+      action_type: t.action_type,
       estimated_minutes: t.estimated_minutes,
       energy_level: t.energy_level,
+      tags: t.tags,
     }))
 
     const completion = await openai.chat.completions.create({
@@ -131,9 +134,13 @@ export async function generateBriefing(
       title: t.title,
       priority: t.priority,
       due_date: t.due_date,
+      due_time: t.due_time,
       context: t.context,
       people: t.people,
+      action_type: t.action_type,
       estimated_minutes: t.estimated_minutes,
+      energy_level: t.energy_level,
+      tags: t.tags,
       status: t.status,
     }))
 

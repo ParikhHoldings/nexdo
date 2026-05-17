@@ -29,6 +29,7 @@
 - Surfaced authenticated agent-execution and agent-review server messages in task detail.
 - Added due-time and energy-level editing/display to task detail so the MVP task structure is editable from the core workspace.
 - Carried parsed due times from natural-language capture through demo tasks, authenticated task creation, MCP-created tasks, validators, and OpenAI smoke expectations.
+- Made prioritization and briefing context due-time-aware, with deterministic ranking for same-day timed tasks.
 - Fixed date-only task labels so local calendar due dates render as Today/Tomorrow instead of shifting through UTC parsing.
 - Surfaced authenticated AI briefing/prioritization fallback notices when provider or rate-limit failures force local heuristics.
 - Surfaced billing checkout and portal server messages before generic settings errors.

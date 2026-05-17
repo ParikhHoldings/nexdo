@@ -5,6 +5,7 @@
 - Supabase schema/migrations and auth/data helpers exist.
 - AI parsing, prioritization, briefings, and bounded agent execution code exists.
 - Natural-language task parsing now carries due times through capture, authenticated task creation, and MCP-created tasks.
+- Prioritization and briefing context now preserve due times, and deterministic ranking orders same-day timed tasks by due time.
 - Local deterministic fallbacks now support demo-mode parsing, prioritization, briefing, and bounded agent outputs when provider env is missing.
 - The app workspace now has a real persisted dark/light appearance preference.
 - The app workspace now has permission-gated local browser reminders for active tasks due today or overdue.

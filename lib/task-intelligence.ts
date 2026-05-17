@@ -228,15 +228,31 @@ function priorityScore(priority: TaskPriority): number {
   return { urgent: 0, high: 25, medium: 50, low: 75 }[priority]
 }
 
-function dueScore(dueDate: string | null): number {
+function minutesFromDueTime(dueTime: string | null): number | null {
+  if (!dueTime) return null
+  const match = /^(\d{2}):([0-5]\d)(?::[0-5]\d)?$/.exec(dueTime)
+  if (!match) return null
+
+  const hour = Number(match[1])
+  if (hour > 23) return null
+  return hour * 60 + Number(match[2])
+}
+
+function dueScore(dueDate: string | null, dueTime: string | null = null): number {
   if (!dueDate) return 30
   const today = new Date()
   const start = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime()
   const due = new Date(`${dueDate}T00:00:00`).getTime()
   const days = Math.round((due - start) / 86400000)
   if (days < 0) return -20
-  if (days === 0) return -10
-  if (days === 1) return 0
+  const dueMinutes = minutesFromDueTime(dueTime)
+  if (days === 0) {
+    if (dueMinutes === null) return -10
+    const nowMinutes = today.getHours() * 60 + today.getMinutes()
+    const base = dueMinutes < nowMinutes ? -20 : -14
+    return base + (dueMinutes / 1440) * 4
+  }
+  if (days === 1) return dueMinutes === null ? 0 : (dueMinutes / 1440) * 2
   if (days <= 3) return 10
   return 25
 }
@@ -249,7 +265,11 @@ function timeBlock(task: Task): PrioritizedTask['time_block'] {
 }
 
 function prioritizationReason(task: Task): string {
-  if (task.due_date && dueScore(task.due_date) <= -10) return 'Due now or overdue, so it needs attention first.'
+  const score = dueScore(task.due_date, task.due_time)
+  if (task.due_date === isoDate(new Date()) && task.due_time && score <= -10) {
+    return `Due today at ${task.due_time.slice(0, 5)}, so it needs attention first.`
+  }
+  if (task.due_date && score <= -10) return 'Due now or overdue, so it needs attention first.'
   if (task.priority === 'urgent') return 'Marked urgent or time-sensitive.'
   if (task.people && task.people.length > 0) return `${task.people[0]} is connected to this work.`
   if ((task.estimated_minutes ?? 0) <= 15) return 'Short enough to clear quickly.'
@@ -261,12 +281,12 @@ export function prioritizeTasksHeuristic(tasks: Task[]): PrioritizedTask[] {
     .sort((a, b) => {
       const aScore =
         priorityScore(a.priority) +
-        dueScore(a.due_date) -
+        dueScore(a.due_date, a.due_time) -
         ((a.people?.length ?? 0) > 0 ? 5 : 0) -
         ((a.estimated_minutes ?? 999) <= 15 ? 3 : 0)
       const bScore =
         priorityScore(b.priority) +
-        dueScore(b.due_date) -
+        dueScore(b.due_date, b.due_time) -
         ((b.people?.length ?? 0) > 0 ? 5 : 0) -
         ((b.estimated_minutes ?? 999) <= 15 ? 3 : 0)
       return aScore - bScore

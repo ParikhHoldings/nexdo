@@ -106,6 +106,30 @@ test('prioritization heuristic ranks urgent and dated tasks first', () => {
   })
 })
 
+test('prioritization heuristic orders timed same-day tasks by due time', () => {
+  const ranked = prioritizeTasksHeuristic([
+    task({
+      id: 'late-today',
+      title: 'Send end-of-day recap',
+      priority: 'high',
+      due_date: isoDate(0),
+      due_time: '17:00',
+      estimated_minutes: 30,
+    }),
+    task({
+      id: 'early-today',
+      title: 'Join launch standup',
+      priority: 'high',
+      due_date: isoDate(0),
+      due_time: '09:00',
+      estimated_minutes: 30,
+    }),
+  ])
+
+  expect(ranked.map((item) => item.task_id)).toEqual(['early-today', 'late-today'])
+  expect(ranked[0].reasoning).toContain('09:00')
+})
+
 test('briefing heuristic summarizes active tasks without completed work', () => {
   const briefing = generateBriefingHeuristic(
     [

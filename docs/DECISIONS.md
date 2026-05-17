@@ -72,6 +72,16 @@ Due time is now part of the editable MVP task structure. If capture discards tim
 ### Impact
 Future parser, import, or agent-create changes should keep due date and due time together through validation, persistence, response formatting, and smoke coverage.
 
+## 2026-05-17 - Planning should preserve due-time context
+### Decision
+Prioritization and briefing inputs should include `due_time`, and deterministic prioritization should order same-day timed tasks by due time before falling back to broader priority, date, people, and effort signals.
+
+### Why
+Capturing due time is only useful if the planning layer can use it. A timed morning task should not rank behind a later same-priority task just because both share the same due date.
+
+### Impact
+Future planning or briefing changes should keep due date and due time paired in provider summaries, local heuristics, and regression coverage.
+
 ## 2026-05-16 - Define the MVP as capture to bounded execution
 ### Decision
 Nexdo's first launchable MVP is the concrete path documented in `docs/MVP.md`: capture plain-language tasks, structure them into useful metadata, prioritize the day, brief the user, execute bounded research/draft/prep work, and expose scoped task-layer access for external agents.
