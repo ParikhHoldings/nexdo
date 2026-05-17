@@ -99,6 +99,7 @@
 - added a paid-key handoff from Settings > API to the Connect AI setup page so generated API keys lead directly into MCP/ChatGPT Actions setup
 - added `.env.production.local.example` so preview/production launch smokes have a concrete env template separate from no-provider local development
 - added demo smoke coverage for the Cmd/Ctrl+K task-capture shortcut and made the shortcut case-insensitive so Playwright `Control+K` focuses capture reliably
+- persisted MCP `complete_task` source-agent trace metadata onto the completed task row so agent-completed work remains visible in human task surfaces
 
 ## Completed 2026-05-16
 - read and updated the repo-level agent context and all existing Markdown/text operating files

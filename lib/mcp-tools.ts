@@ -756,13 +756,35 @@ const completeTask: ToolHandler = async (args, userId, deps) => {
   const metadataResult = metadataArg(args.agent_metadata)
   if (metadataResult.error) return toolError(metadataResult.error)
 
+  const completionUpdates: Record<string, unknown> = {
+    status: 'done',
+    completed_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  }
+
+  if (sourceAgentResult.value) {
+    completionUpdates.source = 'agent'
+    completionUpdates.source_agent_id = sourceAgentResult.value
+  }
+
+  if (externalRefResult.value) {
+    completionUpdates.external_ref = externalRefResult.value
+  }
+
+  const ingestionIntent = optionalIngestionIntent(args.ingestion_intent)
+  if (ingestionIntent) {
+    completionUpdates.ingestion_intent = ingestionIntent
+  } else if (sourceAgentResult.value) {
+    completionUpdates.ingestion_intent = 'complete'
+  }
+
+  if (args.agent_metadata !== undefined) {
+    completionUpdates.agent_metadata = metadataResult.value
+  }
+
   const { data: task, error } = await supabase
     .from('tasks')
-    .update({
-      status: 'done',
-      completed_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    })
+    .update(completionUpdates)
     .eq('id', taskId)
     .eq('user_id', userId)
     .select()

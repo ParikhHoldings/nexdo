@@ -38,7 +38,7 @@ The product promise should be grounded in what the code actually supports:
 - shared local date/time normalizers in `lib/dates.ts`; human task validation, AI task sanitization/output validation, deterministic fallback parsing, import parsing, and MCP task updates should reject impossible due dates and out-of-range due times before persistence or planning use
 - a recent agent activity surface under `/settings/mcp`
 - idempotent agent task creation when callers provide `source_agent_id` plus `external_ref`
-- agent trace metadata on create, update, complete, and task-note MCP writes so source agents and external references can be audited
+- agent trace metadata on create, update, complete, and task-note MCP writes so source agents and external references can be audited; create, update, and complete also persist trace metadata on the task row for human review
 - Stripe-backed plan surfaces, quotas, and rate-limit scaffolding, with checkout price IDs derived from server configuration and unknown webhook prices skipped instead of granting paid access
 
 Do not claim verified production readiness until build, lint, environment, database migrations, auth, Stripe, OpenAI, MCP, and deployment target have been checked in the current environment.

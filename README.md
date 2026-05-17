@@ -22,6 +22,7 @@ This repo currently contains a Next.js app with:
 - direct browser task writes are column-limited so agent output, agent source metadata, ingestion intent, and completion timestamps stay server-managed
 - a recent agent activity surface on the MCP settings page
 - idempotent agent task creation when callers provide `source_agent_id` plus `external_ref`
+- agent trace metadata on MCP create, update, and complete writes so externally advanced work remains visible in human task surfaces
 
 The current strategic priority is not more broad positioning. It is verifying build/deploy truth, tightening the MVP path, and making every public claim match what the product can actually do.
 

@@ -176,7 +176,7 @@ Acceptance gate:
 
 Current evidence:
 - MCP create/update/add-note/complete schemas expose agent metadata fields.
-- Task cards and task detail show agent-origin trace metadata for agent-created or agent-updated tasks.
+- Task cards and task detail show agent-origin trace metadata for agent-created, agent-updated, or agent-completed tasks.
 - The idempotency migration and handler logic exist.
 - `npm run smoke:supabase -- --write` can verify the unique database index rejects duplicate `source_agent_id` plus `external_ref` task rows.
 - `npm run smoke:app` can verify authenticated app-cookie task CRUD plus task-note validation, creation, and readback against a real Supabase-backed app session.

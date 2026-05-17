@@ -782,7 +782,14 @@ test('DB-backed MCP mutation handlers update owned tasks and log failures', asyn
     )
   )
   expect(completed).toMatchObject({ id: 'owned-task', status: 'done' })
-  expect(db.tasks.find((task) => task.id === 'owned-task')?.completed_at).toBeTruthy()
+  expect(db.tasks.find((task) => task.id === 'owned-task')).toMatchObject({
+    completed_at: expect.any(String),
+    source: 'agent',
+    source_agent_id: 'agent-beta',
+    external_ref: 'ticket-456-complete',
+    ingestion_intent: 'complete',
+    agent_metadata: { confidence: 'high' },
+  })
   expect(db.tasks.find((task) => task.id === 'other-task')?.status).toBe('todo')
   expect(db.agentActionEvents[1]).toMatchObject({
     tool_name: 'complete_task',

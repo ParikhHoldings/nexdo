@@ -102,6 +102,7 @@
 - Added a paid-key handoff from Settings > API to the Connect AI setup page so generated API keys lead directly into MCP/ChatGPT Actions setup.
 - Added `.env.production.local.example` so preview/production launch smokes have a concrete env template separate from no-provider local development.
 - Added demo smoke coverage for the Cmd/Ctrl+K task-capture shortcut and made the shortcut case-insensitive.
+- Persisted MCP `complete_task` source-agent trace metadata onto the completed task row so agent-completed work remains visible in human task surfaces.
 
 ### In progress
 - Provider-backed Supabase, OpenAI, Stripe, and MCP smokes remain the main launch-readiness gap.
