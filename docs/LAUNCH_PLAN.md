@@ -27,11 +27,12 @@ The goal is not a broad public launch. The credible Monday target is a verified 
 - Pricing UI now shows only monthly prices because annual Stripe prices are not configured.
 - Supabase provider verification now has a repeatable smoke script, `npm run smoke:supabase`; it still needs to be run with real credentials after migrations are applied.
 - Supabase migrations now include quota cleanup so usage read probes reset monthly counters without writing zero-quantity audit events.
+- Supabase migrations now column-limit direct browser task inserts/updates so agent output, source-agent metadata, ingestion intent, and completion timestamps stay server-managed; authenticated imports use service-role persistence after auth/quota checks to preserve imported completion timestamps and external refs.
 - Truthful public copy that describes bounded AI assistance instead of open-ended autonomous task completion. Draft tightened on 2026-05-16; still needs Quill/founder approval before external use.
 - Updated docs that tell future agents what exists, what is verified, and what is still blocked.
 
 ### Must verify before external users
-- Supabase migrations, auth, profile creation, RLS, and task CRUD against a real project.
+- Supabase migrations, auth, profile creation, RLS, profile/task column grants, task CRUD, audit privacy, and agent external-ref uniqueness against a real project.
 - OpenAI-backed parse, prioritize, briefing, and research/draft/prep execution with a real API key.
 - Stripe checkout, portal, webhook, plan limits, and quota behavior in test mode.
 - MCP JSON-RPC, action wrappers, OpenAPI output, and API-key authentication.
@@ -54,7 +55,7 @@ The goal is not a broad public launch. The credible Monday target is a verified 
 ## AI-agent product path
 1. Stabilize the API-key based task layer around list, create, update, complete, search, and brief.
 2. Make agent-created and agent-completed task mutations distinguishable with `source_agent_id`, `external_ref`, `ingestion_intent`, and `agent_metadata`.
-3. Verify idempotency and safer conflict handling for agent writes against a real Supabase project.
+3. Verify idempotency, direct browser column denial, and safer conflict handling for agent writes against a real Supabase project.
 4. Verify scoped API keys and least-privilege permissions against a real Supabase project.
 5. Verify audit trails for agent actions with real MCP/API-key execution.
 6. Expand from task access to controlled execution requests only after the bounded human flow is trusted.

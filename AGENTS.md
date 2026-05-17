@@ -6,7 +6,7 @@ This repository supports Nexdo, an AI-native task manager aimed at turning captu
 The operating mission is to make Nexdo credible as a real product: keep the promise concrete, keep the build/deploy rails verified, and convert founder input into shipped product, roadmap updates, and bounded follow-up tasks.
 
 ## Product Truth Snapshot
-Last repo-context pass: 2026-05-16.
+Last repo-context pass: 2026-05-17.
 Last local verification: 2026-05-17.
 
 Nexdo is not only a concept. The repo already contains a Next.js product shell with:
@@ -30,6 +30,8 @@ The product promise should be grounded in what the code actually supports:
 - Connect AI setup and settings UI should keep API access clearly gated to Power/team plans until pricing or entitlement truth changes
 - hashed API-key storage with one-time key reveal, short key hints in settings, and legacy raw-key migration/fallback
 - narrowed browser-visible profile columns and direct profile self-updates so clients can read/edit needed preferences without direct access to Stripe IDs, raw/hash API-key material, quota internals, or billing mutation fields
+- narrowed direct browser task insert/update columns so agent output, source-agent metadata, ingestion intent, and completion timestamps remain server-managed
+- authenticated import routes persist imported task rows through the service-role path after auth/quota checks so imported completion timestamps and external source references can be kept without reopening those columns to direct browser writes
 - bounded OpenAI response validation for task parsing, prioritization, briefing, and research/draft/prep output before provider content is returned or persisted
 - shared task-create and task-patch validation in `lib/task-validation.ts`, so human task routes reject protected/server-managed fields before quota consumption or database mutation
 - a recent agent activity surface under `/settings/mcp`
@@ -105,6 +107,11 @@ checks, and `-- --write` for disposable task creation/update/completion plus
 idempotency checks. Add `--audit` to the write smoke when
 `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are loaded and the
 run must prove `agent_action_events` audit rows were written.
+
+`npm run smoke:supabase -- --write` should verify real migrations, profile
+column grants, direct task column-grant denials for server-managed fields,
+agent external-ref uniqueness, private audit-event reads, browser audit-event
+insert denial, quota increments/no-ops, and rate-limit allow/block behavior.
 
 Use the smallest relevant verification. For docs-only changes, a diff review is usually enough. For code changes, prefer `npm run lint`, `npm run typecheck`, and `npm run build` when dependencies and environment allow it. For launch-facing app behavior, run `npm run test:e2e` as well. If a check cannot run, record why and add a follow-up task.
 

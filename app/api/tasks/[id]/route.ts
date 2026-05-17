@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { validateTaskPatch } from '@/lib/task-validation'
 
 export async function PATCH(
@@ -46,7 +46,15 @@ export async function PATCH(
     } else if (updates.status && updates.status !== 'done') {
       updates.completed_at = null
     }
-    const db = supabase as any
+    const service = await createServiceClient()
+    if (!service) {
+      return NextResponse.json(
+        { error: 'Database not configured' },
+        { status: 503 }
+      )
+    }
+
+    const db = service as any
     const { data: task, error } = await db
       .from('tasks')
       .update(updates)

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { executeResearch, executeDraft, executePrep } from '@/lib/openai'
 import type { Task } from '@/lib/database.types'
 import { requireUser } from '@/lib/api-auth'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { consumeRateLimit, RATE_LIMITS, rateLimitResponseHeaders } from '@/lib/rate-limit'
 import {
   checkQuota,
@@ -123,7 +123,15 @@ export async function POST(request: NextRequest) {
       typedTask.action_type
     )
 
-    const { data: updatedTask, error: updateError } = await (supabase as any)
+    const service = await createServiceClient()
+    if (!service) {
+      return NextResponse.json(
+        { error: 'Database not configured' },
+        { status: 503 }
+      )
+    }
+
+    const { data: updatedTask, error: updateError } = await (service as any)
       .from('tasks')
       .update({
         agent_output: agentOutput,

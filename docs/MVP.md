@@ -1,6 +1,6 @@
 # MVP Path
 
-Date: 2026-05-16
+Date: 2026-05-17
 
 ## MVP promise
 Nexdo's first trustworthy MVP is not "AI does everything." It is a task workspace that turns messy task capture into structured, prioritized, reviewable work that humans can act on today and AI agents can safely interact with tomorrow.
@@ -52,12 +52,14 @@ Acceptance gate:
 - Failed authenticated edits/deletes do not leave stale optimistic UI without warning.
 - AI/provider output is validated before becoming task data.
 - Generic user edits cannot spoof server-managed agent output.
+- Direct browser Supabase writes cannot spoof server-managed agent output, source-agent metadata, ingestion intent, or completion timestamps.
 
 Current evidence:
 - `TaskDetail` edit mode supports the MVP task fields.
 - The task store rolls back failed authenticated edit/delete mutations and surfaces visible app notifications.
 - `lib/ai-response-validation.ts` bounds OpenAI output.
 - `PATCH /api/tasks/[id]` uses `lib/task-validation.ts` to allowlist user-editable fields and reject protected/server-managed fields such as `user_id`, `completed_at`, `source_agent_id`, and `agent_output`.
+- Migration `007_task_column_grants.sql` limits direct authenticated task inserts/updates to user-editable columns, while task completion, agent output, trace metadata, and imported completion/external refs are written through server/service-role paths.
 
 ### 3. Prioritize
 The product should make the daily list more useful than a static checklist.
@@ -158,6 +160,7 @@ Acceptance gate:
 Current evidence:
 - MCP create/update/complete schemas expose agent metadata fields.
 - The idempotency migration and handler logic exist.
+- `npm run smoke:supabase -- --write` can verify the unique database index rejects duplicate `source_agent_id` plus `external_ref` task rows.
 - `npm run smoke:mcp -- --write --audit` can verify real `create_task`, `update_task`, and `complete_task` audit rows with `source_agent_id` plus `external_ref` when Supabase service-role env is loaded.
 - Real Supabase/MCP smoke is still required before claiming production readiness.
 
@@ -193,7 +196,7 @@ Monday is not credible if:
 - the product is described as autonomous beyond bounded research/draft/prep output
 
 ## Launch blockers
-- Real Supabase migrations, auth, RLS, task CRUD, quota, and audit smoke.
+- Real Supabase migrations, auth, RLS, task CRUD, profile/task column grants, quota, uniqueness, and audit smoke.
 - Real OpenAI parse, prioritize, briefing, and execution smoke.
 - Stripe test-mode checkout, portal, signed webhook, entitlement, quota, and idempotency smoke. `npm run smoke:stripe -- --write --webhook` now covers signed webhook delivery, unknown-price fail-closed behavior, paid/free tier transitions, and duplicate webhook replay; quota behavior still needs a plan-state smoke.
 - Real MCP/API-key execution, read-only denial, idempotency replay, and audit-write smoke.

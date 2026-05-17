@@ -246,13 +246,27 @@ async function writeSmoke() {
     if (!apiScopeUpdateError) fail('direct api_key_scopes update was unexpectedly allowed')
     console.log('ok API key scopes require server route')
 
+    const { error: protectedInsertError } = await userClient
+      .from('tasks')
+      .insert({
+        user_id: userId,
+        title: 'Nexdo protected agent metadata insert',
+        source_agent_id: 'browser-spoof',
+        external_ref: 'browser-spoof-ref',
+        ingestion_intent: 'create',
+        agent_metadata: { unsafe: true },
+      })
+    if (!protectedInsertError) {
+      fail('direct task insert could write server-managed agent metadata')
+    }
+    console.log('ok direct task insert cannot write agent metadata columns')
+
     const { data: insertedTask, error: insertError } = await userClient
       .from('tasks')
       .insert({
         user_id: userId,
         title: 'Nexdo Supabase smoke task',
         raw_input: 'Nexdo Supabase smoke task',
-        source: 'manual',
       })
       .select('id, status, user_id')
       .single()
@@ -269,6 +283,52 @@ async function writeSmoke() {
       fail('RLS task update failed', updateError)
     }
     console.log('ok RLS task update')
+
+    const { error: protectedTaskUpdateError } = await userClient
+      .from('tasks')
+      .update({
+        agent_output: { spoofed: true },
+        source_agent_id: 'browser-spoof',
+        external_ref: 'browser-spoof-ref',
+        ingestion_intent: 'update',
+        agent_metadata: { unsafe: true },
+        completed_at: new Date().toISOString(),
+      })
+      .eq('id', insertedTask.id)
+    if (!protectedTaskUpdateError) {
+      fail('direct task update could write server-managed columns')
+    }
+    console.log('ok direct task update cannot write server-managed columns')
+
+    const agentExternalRef = `supabase-unique-${Date.now()}`
+    const { error: firstAgentInsertError } = await service
+      .from('tasks')
+      .insert({
+        user_id: userId,
+        title: 'Nexdo Supabase idempotency task',
+        source: 'agent',
+        source_agent_id: 'nexdo-smoke',
+        external_ref: agentExternalRef,
+        ingestion_intent: 'create',
+      })
+    if (firstAgentInsertError) {
+      fail('agent idempotency seed insert failed', firstAgentInsertError)
+    }
+
+    const { error: duplicateAgentInsertError } = await service
+      .from('tasks')
+      .insert({
+        user_id: userId,
+        title: 'Nexdo Supabase duplicate idempotency task',
+        source: 'agent',
+        source_agent_id: 'nexdo-smoke',
+        external_ref: agentExternalRef,
+        ingestion_intent: 'create',
+      })
+    if (!duplicateAgentInsertError) {
+      fail('agent idempotency unique index did not reject duplicate external ref')
+    }
+    console.log('ok agent external-ref idempotency unique index')
 
     const publicClient = createClient(supabaseUrl, anonKey, {
       auth: { autoRefreshToken: false, persistSession: false },
@@ -305,6 +365,27 @@ async function writeSmoke() {
       fail('agent audit RLS read failed', auditReadError)
     }
     console.log('ok agent audit RLS read')
+
+    const { data: publicAuditEvents, error: publicAuditError } = await publicClient
+      .from('agent_action_events')
+      .select('id')
+      .eq('id', auditEvent.id)
+    if (!publicAuditError && (publicAuditEvents || []).length > 0) {
+      fail('public client could read a private agent audit event')
+    }
+    console.log('ok public cannot read agent audit events')
+
+    const { error: directAuditInsertError } = await userClient
+      .from('agent_action_events')
+      .insert({
+        user_id: userId,
+        tool_name: 'browser_spoof',
+        success: true,
+      })
+    if (!directAuditInsertError) {
+      fail('browser client could insert agent audit events directly')
+    }
+    console.log('ok browser clients cannot insert agent audit events')
 
     await verifyUsageAndRateLimits(userId)
   } finally {

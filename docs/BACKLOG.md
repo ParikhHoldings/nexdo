@@ -34,6 +34,9 @@
 - added optional trace metadata to MCP `complete_task` so completion calls can be audited with source agent and external reference context
 - expanded `npm run smoke:stripe -- --write --webhook` to post signed subscription events, verify unknown-price fail-closed behavior, verify paid/free tier transitions, and verify duplicate webhook idempotency against disposable Supabase/Stripe test data
 - expanded `npm run smoke:openai` to reject placeholder keys and verify research, draft, and prep execution output shapes instead of only prep
+- added migration `007_task_column_grants.sql` to keep agent output, source-agent metadata, ingestion intent, and completion timestamps server-managed for direct browser Supabase writes
+- moved authenticated import persistence to service-role writes after auth/quota checks so imported completion timestamps and external source refs survive the new browser task column grants
+- expanded `npm run smoke:supabase -- --write` to verify browser clients cannot write task server-managed columns, cannot insert agent audit events, public clients cannot read audit events, and duplicate agent external refs are rejected
 
 ## Completed 2026-05-16
 - read and updated the repo-level agent context and all existing Markdown/text operating files
@@ -125,7 +128,7 @@
 
 ## High priority
 - configure and verify the real production deploy target
-- run `npm run smoke:supabase -- --write` against a real Supabase project after applying migrations, including hashed API-key columns and profile column read/update grants
+- run `npm run smoke:supabase -- --write` against a real Supabase project after applying migrations, including hashed API-key columns, profile column read/update grants, direct task column-grant denials, audit-event privacy, and agent external-ref uniqueness
 - run `npm run smoke:openai` with a real OpenAI key, then verify the authenticated in-app AI routes
 - run `npm run smoke:stripe -- --write` with Stripe test-mode keys, then verify webhook events and quota updates
 - smoke test auth, profile creation, task CRUD, demo-mode fallback, and app navigation

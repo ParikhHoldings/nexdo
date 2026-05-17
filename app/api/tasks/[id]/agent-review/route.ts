@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import {
   AGENT_REVIEW_STATUSES,
   normalizeAgentOutput,
@@ -102,7 +102,15 @@ export async function PATCH(
     validation.note
   )
 
-  const { data: updatedTask, error: updateError } = await db
+  const service = await createServiceClient()
+  if (!service) {
+    return NextResponse.json(
+      { error: 'Database not configured' },
+      { status: 503 }
+    )
+  }
+
+  const { data: updatedTask, error: updateError } = await (service as any)
     .from('tasks')
     .update({
       agent_output: reviewedOutput,

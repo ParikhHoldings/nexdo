@@ -60,7 +60,7 @@ example file directly.
 9. Only after the provider smokes and approvals pass, promote to production.
 
 ## Provider smoke tests still required
-- Supabase: apply migrations to a real project, create a user, verify profile creation, RLS, task CRUD, import quota enforcement, hashed API-key storage, API key scope persistence and rotation rate limits, profile column read/update grants, `agent_action_events` audit writes, quota no-op behavior, and service-role RPCs.
+- Supabase: apply migrations to a real project, create a user, verify profile creation, RLS, task CRUD, import quota enforcement, hashed API-key storage, API key scope persistence and rotation rate limits, profile column read/update grants, direct task column-grant denial for server-managed fields, agent external-ref uniqueness, `agent_action_events` audit writes/privacy, quota no-op behavior, and service-role RPCs.
 - OpenAI: verify parse, prioritization, briefing, and owned-task research/draft/prep execution with real credentials, server-side output persistence, quota use, and rate-limit behavior.
 - Stripe: verify checkout, portal, signed webhook handling, duplicate webhook idempotency, subscription tier updates/deletes, quota enforcement, and unknown-price behavior in test mode.
 - MCP/ChatGPT Actions: generate real scoped API keys and run authenticated list/create/update/complete/search/briefing/get-task calls against real task data, including `create_task` replay with a repeated `source_agent_id` plus `external_ref` and `agent_action_events` audit rows.
@@ -101,7 +101,7 @@ Read-only Supabase schema smoke:
 npm run smoke:supabase
 ```
 
-Write Supabase smoke that creates and deletes a disposable auth user, task, and audit event:
+Write Supabase smoke that creates and deletes disposable auth/task/audit data and verifies profile grants, task column grants, audit privacy, uniqueness, quota, and rate limits:
 
 ```bash
 npm run smoke:supabase -- --write

@@ -18,6 +18,7 @@ This repo currently contains a Next.js app with:
 - Stripe plan, checkout, portal, webhook, quota, and rate-limit scaffolding
 - MCP and ChatGPT Actions surfaces for external agents to list, create, complete, update, search, and brief tasks
 - Power/team-gated API access, scoped API-key permissions, hashed one-time-reveal API keys, restricted browser-visible profile columns, API-key rotation rate limits, prerequisite- and scope-aware MCP setup UI, and an agent action audit table for MCP/API-key calls
+- direct browser task writes are column-limited so agent output, agent source metadata, ingestion intent, and completion timestamps stay server-managed
 - a recent agent activity surface on the MCP settings page
 - idempotent agent task creation when callers provide `source_agent_id` plus `external_ref`
 
@@ -33,7 +34,9 @@ Last checked on 2026-05-17:
 - PR #3 Web rails passed in GitHub Actions
 - PR #3 Vercel preview deployment completed
 
-`npm run verify:env` currently fails because `.env.local` is absent; only `.env.local.example` exists in this workspace. Still unverified: production env, Supabase migrations/auth/profile column grants against a real project, OpenAI provider calls, Stripe test-mode flows, scoped MCP/API-key execution, idempotency replay against real task data, agent audit writes, and deployment rails. `npm audit --audit-level=moderate` passes with 0 vulnerabilities after the Next.js 16 / ESLint 9 upgrade.
+`npm run verify:env` currently fails because `.env.local` is absent; only `.env.local.example` exists in this workspace. Still unverified: production env, Supabase migrations/auth/profile and task column grants against a real project, OpenAI provider calls, Stripe test-mode flows, scoped MCP/API-key execution, idempotency replay against real task data, agent audit writes, and deployment rails. `npm audit --audit-level=moderate` passes with 0 vulnerabilities after the Next.js 16 / ESLint 9 upgrade.
+
+The Supabase provider smoke now includes task column-grant denial, audit-event privacy, audit insert denial, and agent external-ref uniqueness checks, but it still needs to be run against a real migrated project.
 
 ## Stack
 - Next.js 16 app router

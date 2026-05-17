@@ -1,5 +1,15 @@
 # Decisions
 
+## 2026-05-17 - Browser task writes are column-limited
+### Decision
+Direct authenticated browser Supabase inserts and updates on `tasks` are limited to user-editable task columns. Server-managed fields such as `agent_output`, `source_agent_id`, `external_ref`, `ingestion_intent`, `agent_metadata`, and `completed_at` are written by API routes, MCP handlers, import routes, or service-role jobs after auth and quota checks.
+
+### Why
+RLS ownership alone does not stop a signed-in user from spoofing agent output, trace metadata, completion timestamps, or imported external identifiers through the browser Supabase client. Nexdo's agent-readiness story depends on those fields carrying server-verified meaning.
+
+### Impact
+Authenticated task imports now save through the service-role path after auth/quota checks so imported completion timestamps and external source references still persist. Real Supabase smoke must verify direct browser denial, agent external-ref uniqueness, audit-event privacy, and normal task CRUD before launch readiness is claimed.
+
 ## 2026-05-17 - OpenAI smoke must cover every bounded execution type
 ### Decision
 `npm run smoke:openai` should reject obvious placeholder keys and verify JSON-mode output for parsing, prioritization, briefing, and each supported bounded execution type: research, draft, and prep.

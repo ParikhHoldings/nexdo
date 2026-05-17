@@ -35,6 +35,9 @@
 - Added optional trace metadata to `complete_task` so agent completion calls can carry `source_agent_id`, `external_ref`, `ingestion_intent`, and bounded metadata into audit rows.
 - Expanded `npm run smoke:stripe -- --write --webhook` so Stripe test-mode verification can post signed webhook events, check unknown-price fail-closed behavior, verify paid/free tier transitions, and prove duplicate-event idempotency with disposable test data.
 - Expanded `npm run smoke:openai` to fail on placeholder keys and cover research, draft, and prep execution output shapes.
+- Added task column grants so direct browser Supabase writes cannot spoof server-managed agent output, source-agent metadata, ingestion intent, or completion timestamps.
+- Moved authenticated import persistence to service-role writes after auth/quota checks so imported completion timestamps and external source refs stay compatible with browser column limits.
+- Expanded Supabase write smoke for task server-managed column denial, agent external-ref uniqueness, private audit-event reads, and audit-event insert denial.
 
 ### In progress
 - Provider-backed Supabase, OpenAI, Stripe, and MCP smokes remain the main launch-readiness gap.
