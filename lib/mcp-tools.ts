@@ -2,7 +2,7 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { parseTaskInput, generateBriefing } from '@/lib/openai'
 import { canUseApiAccess, hasRequiredScope, requiredScopeForTool } from '@/lib/agent-scopes'
 import { apiKeyHint, hashApiKey } from '@/lib/api-keys'
-import { consumeQuota } from '@/lib/quota'
+import { checkQuota, consumeQuota } from '@/lib/quota'
 import { getLocalDateKey } from '@/lib/dates'
 import type {
   Task,
@@ -224,6 +224,7 @@ export interface MCPToolDependencies {
   createServiceClient: typeof createServiceClient
   parseTaskInput: typeof parseTaskInput
   generateBriefing: typeof generateBriefing
+  checkQuota: typeof checkQuota
   consumeQuota: typeof consumeQuota
 }
 
@@ -231,6 +232,7 @@ const DEFAULT_MCP_TOOL_DEPENDENCIES: MCPToolDependencies = {
   createServiceClient,
   parseTaskInput,
   generateBriefing,
+  checkQuota,
   consumeQuota,
 }
 
@@ -506,17 +508,17 @@ const createTask: ToolHandler = async (args, userId, deps) => {
     }
   }
 
+  const preQuota = await deps.checkQuota(userId, 'task_create')
+  if (!preQuota.allowed) {
+    return toolError(
+      `Error: ${preQuota.reason || 'Task quota exceeded for this account'}`
+    )
+  }
+
   // Parse the natural language input
   const parsed = await deps.parseTaskInput(input)
   if (!parsed) {
     return toolError('Error: Failed to parse task input')
-  }
-
-  const quota = await deps.consumeQuota(userId, 'task_create')
-  if (!quota.allowed) {
-    return toolError(
-      `Error: ${quota.reason || 'Task quota exceeded for this account'}`
-    )
   }
 
   // Insert the task
@@ -561,6 +563,27 @@ const createTask: ToolHandler = async (args, userId, deps) => {
       content: [{ type: 'text', text: `Error: ${error.message}` }],
       isError: true,
     }
+  }
+
+  if (!task) {
+    return toolError('Error: Failed to create task')
+  }
+
+  const quota = await deps.consumeQuota(userId, 'task_create')
+  if (!quota.allowed) {
+    const { error: cleanupError } = await supabase
+      .from('tasks')
+      .delete()
+      .eq('id', task.id)
+      .eq('user_id', userId)
+
+    if (cleanupError) {
+      console.error('Error rolling back MCP task after quota failure:', cleanupError)
+    }
+
+    return toolError(
+      `Error: ${quota.reason || 'Task quota exceeded for this account'}`
+    )
   }
 
   return taskResponse(task)

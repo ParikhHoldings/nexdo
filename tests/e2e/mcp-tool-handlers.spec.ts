@@ -95,7 +95,7 @@ class FakeSupabase {
 }
 
 class FakeQuery {
-  private operation: 'select' | 'insert' | 'update' = 'select'
+  private operation: 'select' | 'insert' | 'update' | 'delete' = 'select'
   private filters: Filter[] = []
   private inFilters: InFilter[] = []
   private limitCount: number | null = null
@@ -152,6 +152,11 @@ class FakeQuery {
     return this
   }
 
+  delete() {
+    this.operation = 'delete'
+    return this
+  }
+
   async maybeSingle(): Promise<QueryResult> {
     const result = await this.execute()
     if (result.error) return result
@@ -185,6 +190,10 @@ class FakeQuery {
       return this.executeUpdate()
     }
 
+    if (this.operation === 'delete') {
+      return this.executeDelete()
+    }
+
     return { data: this.applyQuery(this.db.tableRows(this.table)), error: null }
   }
 
@@ -207,6 +216,16 @@ class FakeQuery {
     const matched = this.applyFilters(rows)
     matched.forEach((row) => Object.assign(row, this.updateFields))
     return { data: matched, error: null }
+  }
+
+  private executeDelete(): QueryResult {
+    const rows = this.db.tableRows(this.table)
+    const matched = new Set(this.applyFilters(rows))
+    const deleted = rows.filter((row) => matched.has(row))
+    for (let index = rows.length - 1; index >= 0; index -= 1) {
+      if (matched.has(rows[index])) rows.splice(index, 1)
+    }
+    return { data: deleted, error: null }
   }
 
   private applyQuery(rows: Row[]) {
@@ -276,6 +295,13 @@ function dependenciesFor(
       quick_wins: [],
       someone_waiting: [],
       summary: `${tasks.length} active tasks`,
+    }),
+    checkQuota: async (userId, kind) => ({
+      allowed: true,
+      limit: 100,
+      used: 1,
+      tier: 'power',
+      reason: `${userId}:${kind}`,
     }),
     consumeQuota: async (userId, kind) => ({
       allowed: true,
@@ -375,10 +401,20 @@ test('DB-backed MCP read handlers filter, search, brief, and audit owned tasks',
   expect(db.agentActionEvents.every((event) => event.success)).toBe(true)
 })
 
-test('DB-backed MCP create_task inserts parsed agent tasks after quota and logs metadata', async () => {
+test('DB-backed MCP create_task pre-checks quota, inserts parsed agent tasks, records quota, and logs metadata', async () => {
   const db = new FakeSupabase()
   const callOrder: string[] = []
   const deps = dependenciesFor(db, {
+    checkQuota: async (userId, kind) => {
+      callOrder.push(`quota-check:${userId}:${kind}`)
+      expect(db.tasks).toHaveLength(0)
+      return {
+        allowed: true,
+        limit: 100,
+        used: 2,
+        tier: 'power',
+      }
+    },
     parseTaskInput: async (input) => {
       callOrder.push(`parse:${input}`)
       return {
@@ -394,7 +430,8 @@ test('DB-backed MCP create_task inserts parsed agent tasks after quota and logs 
       }
     },
     consumeQuota: async (userId, kind) => {
-      callOrder.push(`quota:${userId}:${kind}`)
+      callOrder.push(`quota-consume:${userId}:${kind}`)
+      expect(db.tasks).toHaveLength(1)
       return {
         allowed: true,
         limit: 100,
@@ -426,8 +463,9 @@ test('DB-backed MCP create_task inserts parsed agent tasks after quota and logs 
   )
 
   expect(callOrder).toEqual([
+    'quota-check:user-1:task_create',
     'parse:Draft an investor update',
-    'quota:user-1:task_create',
+    'quota-consume:user-1:task_create',
   ])
   expect(result).toMatchObject({
     title: 'Draft investor update',
@@ -461,6 +499,68 @@ test('DB-backed MCP create_task inserts parsed agent tasks after quota and logs 
   ])
 })
 
+test('DB-backed MCP create_task stops before parsing when quota pre-check fails', async () => {
+  const db = new FakeSupabase()
+  const deps = dependenciesFor(db, {
+    checkQuota: async () => ({
+      allowed: false,
+      limit: 25,
+      used: 25,
+      tier: 'free',
+      reason: 'Monthly task limit reached',
+    }),
+    parseTaskInput: async () => {
+      throw new Error('parse should not run when quota pre-check fails')
+    },
+    consumeQuota: async () => {
+      throw new Error('quota should not be consumed when pre-check fails')
+    },
+  })
+
+  const result = await executeToolWithDependencies(
+    'create_task',
+    { input: 'Draft a launch recap' },
+    'user-1',
+    deps
+  )
+
+  expect(result.isError).toBe(true)
+  expect(result.content[0].text).toContain('Monthly task limit reached')
+  expect(db.tasks).toHaveLength(0)
+  expect(db.agentActionEvents[0]).toMatchObject({
+    tool_name: 'create_task',
+    success: false,
+  })
+})
+
+test('DB-backed MCP create_task removes inserted tasks when quota accounting fails', async () => {
+  const db = new FakeSupabase()
+  const deps = dependenciesFor(db, {
+    consumeQuota: async () => ({
+      allowed: false,
+      limit: 100,
+      used: 3,
+      tier: 'power',
+      reason: 'Failed to record usage',
+    }),
+  })
+
+  const result = await executeToolWithDependencies(
+    'create_task',
+    { input: 'Draft a launch recap' },
+    'user-1',
+    deps
+  )
+
+  expect(result.isError).toBe(true)
+  expect(result.content[0].text).toContain('Failed to record usage')
+  expect(db.tasks).toHaveLength(0)
+  expect(db.agentActionEvents[0]).toMatchObject({
+    tool_name: 'create_task',
+    success: false,
+  })
+})
+
 test('DB-backed MCP create_task replays idempotent agent refs without parsing or quota', async () => {
   const db = new FakeSupabase({
     tasks: [
@@ -476,6 +576,9 @@ test('DB-backed MCP create_task replays idempotent agent refs without parsing or
     ],
   })
   const deps = dependenciesFor(db, {
+    checkQuota: async () => {
+      throw new Error('quota pre-check should not run for idempotent replay')
+    },
     parseTaskInput: async () => {
       throw new Error('parse should not run for idempotent replay')
     },

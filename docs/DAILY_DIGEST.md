@@ -11,6 +11,7 @@
 - Deep-linked Connect AI no-key guidance to `/settings?tab=api` and covered it with a regression check.
 - Restored failed authenticated Done-page bulk deletes back into local state and updated the failure toast.
 - Moved authenticated human task creation to quota pre-check, post-insert usage accounting, and task cleanup when accounting fails.
+- Moved MCP `create_task` to idempotency replay, quota pre-check, post-insert usage accounting, and cleanup when accounting fails.
 
 ### In progress
 - Provider-backed Supabase, OpenAI, Stripe, and MCP smokes remain the main launch-readiness gap.

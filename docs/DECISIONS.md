@@ -72,10 +72,11 @@ Future task fields should be added to the explicit validation/normalization path
 
 ## 2026-05-16 - MCP task creation respects task quota
 ### Decision
-The `create_task` MCP/ChatGPT Actions tool validates bounded string/metadata inputs and consumes `task_create` quota before inserting a new task. Idempotency replays by `source_agent_id` plus `external_ref` return the existing task before consuming quota.
+The `create_task` MCP/ChatGPT Actions tool validates bounded string/metadata inputs, replays idempotent `source_agent_id` plus `external_ref` requests before quota work, pre-checks `task_create` quota before parsing, inserts the new task, then records quota usage. If usage accounting fails after insert, the inserted task is deleted before returning an error.
 
 ### Why
 External agents should use the same task-creation budget and validation rails as human-created tasks and imports. Agent interop cannot be a quota bypass.
+Failed inserts should not spend quota, and failed accounting should not leave unmetered tasks behind.
 
 ### Impact
 Real MCP write smoke should be run against a profile with available task quota. Future agent write tools should keep validation, ownership, scope, audit, idempotency, and quota behavior aligned.
