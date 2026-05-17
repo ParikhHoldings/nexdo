@@ -52,7 +52,8 @@ Current local verification from 2026-05-17:
 
 Current PR verification:
 - PR #3 Web rails passed in GitHub Actions on 2026-05-17 after the workflow action-runtime update
-- the latest PR #3 Vercel deployment completed on 2026-05-17 after an earlier preview deployment completed on 2026-05-16
+- a PR #3 Vercel deployment completed on 2026-05-17 after an earlier preview deployment completed on 2026-05-16
+- the latest pushed PR head is blocked by Vercel's build-rate limit and reports: "Deployment rate limited - retry in 24 hours"
 
 Production environment, Supabase migrations, OpenAI provider calls, Stripe test-mode flows, scoped MCP/API-key execution, idempotency replay against real task data, agent audit writes, and production deployment rails remain unverified in this pass.
 

@@ -59,7 +59,7 @@ Make Nexdo a credible, launchable early-access product by Monday, 2026-05-18, wi
 | Verify deploy target and production env | `npm run verify:env` was rerun on 2026-05-17 and failed because `.env.local` is absent; no production env or deploy target credentials/config were exercised in this pass | Missing |
 | Keep env verification aligned with runtime placeholder rules | `scripts/verify-env.mjs` and shared runtime helper `lib/env.ts` reject common placeholder fragments across URL and secret values; `.env.local.example` documents smoke-only MCP API-key variables separately from deployed app env | Done |
 | Document local and production setup steps | `docs/DEPLOYMENT.md` now separates no-provider local setup, env preflight, production setup sequence, provider smoke commands, rollback notes, and approval boundaries | Done |
-| Verify preview deploy rail | An earlier PR #3 Vercel preview deployment completed on 2026-05-16; the latest PR #3 Vercel deployment completed on 2026-05-17 after the transient build-rate limit cleared | Done |
+| Verify preview deploy rail | An earlier PR #3 Vercel preview deployment completed on 2026-05-16, and another PR #3 Vercel deployment completed on 2026-05-17; the latest pushed PR head is blocked by Vercel account build-rate limits rather than an app build failure | Blocked |
 | Verify Supabase migrations/auth/RLS/task CRUD against real project | Migrations and code exist, but real project smoke test was not run | Missing |
 | Provide a repeatable Supabase smoke command | `npm run smoke:supabase` checks schema columns; `npm run smoke:supabase -- --write` creates/deletes a smoke auth user, verifies profile trigger, allowed profile reads/edits, denied sensitive profile reads/edits, task CRUD through RLS, direct browser denial for task server-managed columns, agent external-ref uniqueness, public audit-event privacy, browser audit-event insert denial, quota increments, quota no-op behavior, and rate-limit allow/block behavior | Done |
 | Verify OpenAI provider-backed parse/prioritize/briefing/execution | Fallbacks and UI path work; real provider calls not exercised | Missing |
@@ -90,10 +90,11 @@ Make Nexdo a credible, launchable early-access product by Monday, 2026-05-18, wi
 - `npm audit --audit-level=moderate`
 - `git diff --check`
 - PR #3 GitHub Actions Web rails
-- PR #3 Vercel deployment
+- a PR #3 Vercel deployment
 
 ## Commands attempted but blocked
 - `npm run verify:env` failed because `.env.local` is not present in this workspace. `.env.local.example` is present, but it is only the contract and cannot support provider smoke checks.
+- The latest pushed PR head's Vercel deployment check failed because the Vercel account hit its build-rate limit and reports "Deployment rate limited - retry in 24 hours."
 
 ## Current completion judgment
 The Monday early-access demo, local build/test rails, demo task persistence, local-date due-today behavior, file-import preview/confirm flow, agent output history/review notes, persistent appearance and browser reminder settings, task mutation guards, Done-page failure rollback, shared task route validation, AI input/output guards, authenticated agent execution guards, DB-backed MCP handler and API-key validation behavior, import quota guards, and billing route guards are in materially better shape and are locally verified. The broader objective is not complete as a production launch because provider-backed flows, real database/auth, Stripe billing, authenticated MCP tool execution, production deployment rails, and approvals remain unverified.
