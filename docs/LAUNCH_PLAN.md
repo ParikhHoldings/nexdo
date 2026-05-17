@@ -6,7 +6,7 @@ The goal is not a broad public launch. The credible Monday target is a verified 
 `docs/MVP.md` is the working product contract for this target: capture -> structure -> prioritize -> brief -> bounded execution, plus scoped task-layer access for AI agents.
 
 ### Must ship
-- A local app that passes clean install, lint, typecheck, build, dependency audit, and Playwright smoke tests. Latest full local rail passed 109 tests on 2026-05-17.
+- A local app that passes clean install, lint, typecheck, build, dependency audit, and Playwright smoke tests. Latest full local rail passed 110 tests on 2026-05-17.
 - A usable logged-out demo flow: load `/today`, inspect demo tasks, add a natural-language task, see prioritization, open an executable task, and generate a bounded agent output. Verified locally through the 2026-05-17 Playwright suite.
 - Core task mutation routes now validate allowlisted fields and protect owned-task updates/deletes.
 - Task detail now supports notes for launch context and handoffs, with logged-out demo persistence, authenticated owned-task note routes, and external-agent note or agent-result appends through MCP/ChatGPT Actions.
@@ -24,9 +24,9 @@ The goal is not a broad public launch. The credible Monday target is a verified 
 - Authenticated app smoke can now verify deployed app-cookie auth, task list/create/update/delete, and task-note validation/create/readback against a real Supabase-backed app session.
 - The MCP settings page now exposes recent agent activity from the audit table when a user is authenticated.
 - Agent task creation now has local idempotency handling through `source_agent_id` plus `external_ref`; real Supabase/API-key replay verification is still required.
-- PR #3 Web rails passed on head `e0a29a357aeb981eadf287d6ac13da55d3ccb066`; inspect current checks after each push before treating the newest head as current-green.
+- PR #3 Web rails passed on head `6e196ed49a5445f404494599f2f4e7af5801d185`; inspect current checks after each push before treating the newest head as current-green.
 - GitHub Actions Web rails run on pull requests and pushes to `main`/`staging`, with install, lint, typecheck, build, dependency audit, and Playwright smoke testing so CI matches the documented launch/deploy checklist.
-- Vercel preview deployment passed on head `e0a29a357aeb981eadf287d6ac13da55d3ccb066` at `https://ph-nexdo-iw3lqhgvh-nathan-happywpcos-projects.vercel.app`.
+- Vercel preview deployment passed on head `6e196ed49a5445f404494599f2f4e7af5801d185` at `https://ph-nexdo-39vxlvbl6-nathan-happywpcos-projects.vercel.app`.
 - Remote route smoke against that protected preview still needs `VERCEL_AUTOMATION_BYPASS_SECRET` or an unprotected preview URL because it is behind Vercel Deployment Protection.
 - Strict build rails: TypeScript and lint failures block `npm run build`. Verified locally on 2026-05-17.
 - OpenAI provider verification now has a repeatable smoke script, `npm run smoke:openai`; it rejects placeholder keys and verifies parse, prioritization, briefing, research, draft, and prep output shapes. With `--app`, it also creates a disposable Supabase user and verifies authenticated app parse, prioritize, briefing, and research/draft/prep execution routes, using Vercel protection bypass headers when configured. It still needs to be run with real OpenAI, Supabase, and target app env.
