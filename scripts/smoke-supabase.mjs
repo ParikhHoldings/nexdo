@@ -221,6 +221,20 @@ async function writeSmoke() {
     }
     console.log('ok profile self-read allowed columns')
 
+    const { error: profileInsertError } = await userClient
+      .from('profiles')
+      .insert({
+        id: userId,
+        full_name: 'Nexdo Browser Insert Spoof',
+        subscription_tier: 'power',
+        api_key_hash: '0'.repeat(64),
+        api_key_scopes: ['tasks:read', 'tasks:write', 'briefing:read'],
+      })
+    if (!profileInsertError) {
+      fail('direct profile insert was unexpectedly allowed')
+    }
+    console.log('ok profile rows require server-owned creation')
+
     const { error: sensitiveReadError } = await userClient
       .from('profiles')
       .select('api_key_hash, stripe_customer_id')

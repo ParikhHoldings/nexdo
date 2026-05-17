@@ -457,6 +457,10 @@ test('server-managed task fields stay on service-role write paths', () => {
 
 test('browser profile preference writes stay bounded', () => {
   const grants = readFileSync('supabase/migrations/006_profile_column_grants.sql', 'utf8')
+  const insertGrants = readFileSync(
+    'supabase/migrations/012_profile_insert_grants.sql',
+    'utf8'
+  )
   const constraints = readFileSync(
     'supabase/migrations/011_profile_content_constraints.sql',
     'utf8'
@@ -469,6 +473,8 @@ test('browser profile preference writes stay bounded', () => {
   expect(grants).not.toContain('subscription_tier)')
   expect(grants).not.toContain('stripe_customer_id')
   expect(grants).not.toContain('api_key_hash')
+  expect(insertGrants).toContain('revoke insert on table profiles from authenticated')
+  expect(insertGrants).not.toContain('grant insert')
 
   expect(constraints).toContain('profiles_full_name_length')
   expect(constraints).toContain('char_length(btrim(full_name)) between 1 and 120')
@@ -478,7 +484,9 @@ test('browser profile preference writes stay bounded', () => {
   expect(constraints).toContain("'UTC'")
 
   expect(supabaseSmoke).toContain('profile self-update enforces content bounds')
+  expect(supabaseSmoke).toContain('profile rows require server-owned creation')
   expect(supabaseSmoke).toContain('direct profile update accepted')
+  expect(supabaseSmoke).toContain('direct profile insert was unexpectedly allowed')
   expect(profileRoute).toContain('const normalizedName = body.full_name.trim()')
   expect(profileRoute).toContain('updates.full_name = normalizedName || null')
   expect(signupPage).toContain('const normalizedFullName = fullName.trim()')

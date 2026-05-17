@@ -72,13 +72,13 @@ Future task field limits should be updated in both `lib/task-validation.ts` and 
 
 ## 2026-05-17 - Browser profile preferences are database-bounded
 ### Decision
-Direct authenticated browser Supabase updates on `profiles` remain limited to `full_name`, `timezone`, and `work_type`, and those preference columns must satisfy database constraints for non-empty bounded names and supported timezone values.
+Direct authenticated browser Supabase inserts on `profiles` are revoked. Profile rows are created by the auth trigger or service-owned jobs. Direct browser updates remain limited to `full_name`, `timezone`, and `work_type`, and those preference columns must satisfy database constraints for non-empty bounded names and supported timezone values.
 
 ### Why
-Profile names and timezones flow into settings, briefings, and account state. Route validation protects `/api/profile`, but direct browser Supabase updates still need the same content boundary so clients cannot persist invalid personalization state.
+Profile rows carry billing tier, API-key, Stripe, and quota state. A missing profile row should not let a browser client self-create paid/API state. Profile names and timezones also flow into settings, briefings, and account state, so direct browser preference updates need the same content boundary as `/api/profile`.
 
 ### Impact
-Future profile preference fields should be added to both the route validator and the database constraint layer. Real Supabase smoke must verify direct denial for invalid profile names/timezones as well as sensitive profile column updates.
+Future profile preference fields should be added to both the route validator and the database constraint layer. Real Supabase smoke must verify direct denial for profile inserts, invalid profile names/timezones, and sensitive profile column updates.
 
 ## 2026-05-17 - Browser task-note metadata is column-limited
 ### Decision
