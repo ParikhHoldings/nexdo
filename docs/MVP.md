@@ -212,7 +212,7 @@ Monday is not credible if:
 
 ## Next product hardening after MVP
 - Run the full technical launch smoke against a real preview URL and real provider env.
-- Verify import preview quota warnings against a real Supabase profile near the monthly task limit.
+- Verify import preview quota warnings against a real Supabase profile near the monthly task limit; local helper coverage already verifies the warning copy and cap math.
 - Verify agent output history and review-note persistence against a real authenticated Supabase task.
 - Verify scoped MCP idempotency replay, read-only denial, and audit rows against real task data.
 - Decide the first revenue wedge before broadening integrations or agent action types.

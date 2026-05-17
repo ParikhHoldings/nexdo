@@ -16,6 +16,7 @@ import {
 } from '../../lib/agent-output'
 import { validateParsedTask } from '../../lib/ai-response-validation'
 import { createClientProfileFallback } from '../../lib/profile'
+import { importPreviewWarning } from '../../lib/import-preview'
 import { quotaExceededResponse, quotaFailureStatus } from '../../lib/quota'
 import { rateLimitResponseHeaders } from '../../lib/rate-limit'
 import { validateTaskInput, validateTaskPatch } from '../../lib/task-validation'
@@ -310,6 +311,53 @@ test('quota and rate-limit response helpers expose stable client contracts', () 
     'X-RateLimit-Limit': '30',
     'X-RateLimit-Remaining': '12',
   })
+})
+
+test('import preview warnings reflect demo and Free-plan task caps', () => {
+  expect(
+    importPreviewWarning({
+      isAuthenticated: false,
+      importCount: 1,
+    })
+  ).toBe('Demo file imports are capped at 100 tasks per file.')
+
+  expect(
+    importPreviewWarning({
+      isAuthenticated: true,
+      importCount: 2,
+      subscriptionTier: 'free',
+      taskCountThisMonth: 23,
+    })
+  ).toBe('2 Free-plan task slots left before import.')
+
+  expect(
+    importPreviewWarning({
+      isAuthenticated: true,
+      importCount: 3,
+      subscriptionTier: 'free',
+      taskCountThisMonth: 23,
+    })
+  ).toBe(
+    'Your Free plan has 2 task slots left this month. This import may fail unless you upgrade or reduce the file.'
+  )
+
+  expect(
+    importPreviewWarning({
+      isAuthenticated: true,
+      importCount: 1,
+      subscriptionTier: 'free',
+      taskCountThisMonth: 24,
+    })
+  ).toBe('1 Free-plan task slot left before import.')
+
+  expect(
+    importPreviewWarning({
+      isAuthenticated: true,
+      importCount: 20,
+      subscriptionTier: 'pro',
+      taskCountThisMonth: 40,
+    })
+  ).toBeNull()
 })
 
 test('agent output helper preserves run history and verification notes', () => {

@@ -15,6 +15,10 @@ import {
 import { ImportSourceCard } from '@/components/import-source-card'
 import { useTaskStore, useUserStore } from '@/lib/store'
 import {
+  DEMO_IMPORT_TASK_LIMIT,
+  importPreviewWarning,
+} from '@/lib/import-preview'
+import {
   autoMapCSVColumns,
   normalizeTask,
   parseCSVContent,
@@ -25,8 +29,6 @@ import type { Task, TaskInsert } from '@/lib/database.types'
 
 const DEMO_USER_ID = 'demo-user'
 const MAX_DEMO_IMPORT_BYTES = 2 * 1024 * 1024
-const MAX_DEMO_IMPORT_TASKS = 100
-const FREE_PLAN_TASK_LIMIT = 25
 
 interface ImportState {
   isLoading: boolean
@@ -107,7 +109,7 @@ function demoTaskFromInsert(task: TaskInsert): Task {
 async function parseFileImport(
   source: ImportSource,
   file: File,
-  maxTasks = MAX_DEMO_IMPORT_TASKS
+  maxTasks = DEMO_IMPORT_TASK_LIMIT
 ): Promise<TaskInsert[]> {
   if (file.size > MAX_DEMO_IMPORT_BYTES) {
     throw new Error('Demo imports support files up to 2 MB.')
@@ -247,25 +249,19 @@ export default function ImportPage() {
     const importedTasks = await parseFileImport(
       source,
       file,
-      isAuthenticated ? Number.MAX_SAFE_INTEGER : MAX_DEMO_IMPORT_TASKS
+      isAuthenticated ? Number.MAX_SAFE_INTEGER : DEMO_IMPORT_TASK_LIMIT
     )
     const sampleTitles = importedTasks
       .map((task) => task.title?.trim())
       .filter((title): title is string => Boolean(title))
       .slice(0, 3)
 
-    let warning: string | null = null
-    if (!isAuthenticated) {
-      warning = `Demo file imports are capped at ${MAX_DEMO_IMPORT_TASKS} tasks per file.`
-    } else if (profile?.subscription_tier === 'free') {
-      const used = profile.task_count_this_month || 0
-      const remaining = Math.max(FREE_PLAN_TASK_LIMIT - used, 0)
-      if (importedTasks.length > remaining) {
-        warning = `Your Free plan has ${remaining} task slot${remaining !== 1 ? 's' : ''} left this month. This import may fail unless you upgrade or reduce the file.`
-      } else {
-        warning = `${remaining} Free-plan task slot${remaining !== 1 ? 's' : ''} left before import.`
-      }
-    }
+    const warning = importPreviewWarning({
+      isAuthenticated,
+      importCount: importedTasks.length,
+      subscriptionTier: profile?.subscription_tier,
+      taskCountThisMonth: profile?.task_count_this_month,
+    })
 
     return {
       count: importedTasks.length,

@@ -19,7 +19,7 @@
 - GitHub Actions verification exists for install, lint, typecheck, build, and Playwright smoke testing.
 - PR #3 Web rails passed, and Vercel preview deployment passed on a recent code head after the route-smoke rail.
 - Dependency audit is clean after the Next.js 16, ESLint 9, and PostCSS remediation.
-- `npm ci`, `npm run lint`, `npm run typecheck`, `npm run build`, `npm run test:e2e` with 83 tests, dependency audit, and the technical launch smoke partial passed locally on 2026-05-17.
+- `npm ci`, `npm run lint`, `npm run typecheck`, `npm run build`, `npm run test:e2e` with 84 tests, dependency audit, and the technical launch smoke partial passed locally on 2026-05-17.
 - `docs/MVP.md` now defines the smallest trustworthy MVP path around capture, structure, prioritize, brief, bounded execution, and scoped agent task-layer access.
 - Import, billing/quota, MCP, and ChatGPT Actions surfaces exist.
 - File imports now preview task count, sample titles, and plan/cap warnings before tasks are added.

@@ -67,7 +67,7 @@
 - added focused Playwright regression coverage that checks task column grants exclude server-managed fields and task/import server routes use service-role write paths after auth/quota checks
 - moved authenticated agent execution service-role output persistence preflight ahead of rate-limit, quota, and provider work so runs do not spend work when output cannot be saved
 - updated the GitHub Actions verify workflow to `actions/checkout@v5` and `actions/setup-node@v5` so the CI rail no longer depends on deprecated Node 20 action runtimes
-- refreshed README, launch plan, and roadmap verification summaries so repo-facing docs match the latest 83-test local rail and current PR check state
+- refreshed README, launch plan, and roadmap verification summaries so repo-facing docs match the latest 84-test local rail and current PR check state
 - added mobile sidebar open/close and post-navigation collapse coverage to the rendered demo smoke path
 - tightened the Microsoft To Do import token placeholder so the rendered import card does not clip the input text
 - tightened deterministic fallback task parsing so captured task titles stay concise while schedule, priority, and estimate phrases become structured metadata
@@ -75,6 +75,7 @@
 - aligned MCP tool schemas and ChatGPT Actions OpenAPI with handler support for the `cancelled` task status
 - verified PR #3 Web rails and a Vercel preview deployment after the route-smoke rail; later docs-only heads can still be Vercel rate-limited
 - added `npm run smoke:routes` and wired it into the launch smoke so preview/production route rendering is checked at desktop and mobile widths
+- moved import preview cap warnings into a shared helper with local coverage for demo caps and Free-plan near-limit warning copy
 
 ## Completed 2026-05-16
 - read and updated the repo-level agent context and all existing Markdown/text operating files
