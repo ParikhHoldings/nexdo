@@ -24,7 +24,7 @@ The goal is not a broad public launch. The credible Monday target is a verified 
 - Authenticated app smoke can now verify deployed app-cookie auth, task list/create/update/delete, and task-note validation/create/readback against a real Supabase-backed app session.
 - The MCP settings page now exposes recent agent activity from the audit table when a user is authenticated.
 - Agent task creation now has local idempotency handling through `source_agent_id` plus `external_ref`; real Supabase/API-key replay verification is still required.
-- PR #3 Web rails passed on 2026-05-17 after the Stripe app billing smoke hardening commit (`8bad78f`).
+- PR #3 Web rails passed on 2026-05-17 after the Stripe failed-payment entitlement hardening commit (`ce3bdcf`).
 - GitHub Actions Web rails include install, lint, typecheck, build, dependency audit, and Playwright smoke testing so CI matches the documented launch/deploy checklist.
 - Vercel preview deployment and Vercel Preview Comments passed on the same checked head, but later pushes can hit Vercel account build-rate limits.
 - Remote route smoke against protected previews needs `VERCEL_AUTOMATION_BYPASS_SECRET` or an unprotected preview URL because those previews are behind Vercel Deployment Protection.
