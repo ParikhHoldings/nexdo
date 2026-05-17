@@ -37,6 +37,7 @@
 - added migration `007_task_column_grants.sql` to keep agent output, source-agent metadata, ingestion intent, and completion timestamps server-managed for direct browser Supabase writes
 - moved authenticated import persistence to service-role writes after auth/quota checks so imported completion timestamps and external source refs survive the new browser task column grants
 - expanded `npm run smoke:supabase -- --write` to verify browser clients cannot write task server-managed columns, cannot insert agent audit events, public clients cannot read audit events, and duplicate agent external refs are rejected
+- added focused Playwright regression coverage that checks task column grants exclude server-managed fields and task/import server routes use service-role write paths after auth/quota checks
 
 ## Completed 2026-05-16
 - read and updated the repo-level agent context and all existing Markdown/text operating files

@@ -206,6 +206,70 @@ test('agent execution maps quota service failures through shared status helper',
   )
 })
 
+test('server-managed task fields stay on service-role write paths', () => {
+  const migration = readFileSync(
+    'supabase/migrations/007_task_column_grants.sql',
+    'utf8'
+  )
+  const insertGrant = migration.match(
+    /grant insert \(([\s\S]*?)\) on table tasks to authenticated;/i
+  )?.[1]
+  const updateGrant = migration.match(
+    /grant update \(([\s\S]*?)\) on table tasks to authenticated;/i
+  )?.[1]
+  expect(insertGrant).toBeTruthy()
+  expect(updateGrant).toBeTruthy()
+
+  for (const grant of [insertGrant, updateGrant]) {
+    expect(grant).not.toContain('agent_output')
+    expect(grant).not.toContain('source_agent_id')
+    expect(grant).not.toContain('external_ref')
+    expect(grant).not.toContain('ingestion_intent')
+    expect(grant).not.toContain('agent_metadata')
+    expect(grant).not.toContain('completed_at')
+    expect(grant).not.toContain('updated_at')
+  }
+
+  const taskRoute = readFileSync('app/api/tasks/[id]/route.ts', 'utf8')
+  expect(taskRoute).toContain('createClient, createServiceClient')
+  expect(taskRoute).toContain('validateTaskPatch(body)')
+  expect(taskRoute).toContain('const service = await createServiceClient()')
+  expect(taskRoute).toContain('.update(updates)')
+  expect(taskRoute).toContain(".eq('user_id', user.id)")
+
+  const executeRoute = readFileSync('app/api/agent/execute/route.ts', 'utf8')
+  expect(executeRoute).toContain('createClient, createServiceClient')
+  expect(executeRoute).toContain('const service = await createServiceClient()')
+  expect(executeRoute).toContain('agent_output: agentOutput')
+  expect(executeRoute).toContain(".eq('user_id', auth.userId)")
+
+  const reviewRoute = readFileSync(
+    'app/api/tasks/[id]/agent-review/route.ts',
+    'utf8'
+  )
+  expect(reviewRoute).toContain('createClient, createServiceClient')
+  expect(reviewRoute).toContain('const service = await createServiceClient()')
+  expect(reviewRoute).toContain('agent_output: reviewedOutput')
+  expect(reviewRoute).toContain(".eq('user_id', user.id)")
+
+  for (const route of [
+    'csv',
+    'google',
+    'ics',
+    'json',
+    'microsoft',
+    'todoist',
+  ]) {
+    const source = readFileSync(`app/api/import/${route}/route.ts`, 'utf8')
+    expect(source).toContain('createClient, createServiceClient')
+    expect(source).toContain('const service = await createServiceClient()')
+    expect(source).toContain('const dbClient = service as any')
+    expect(source).not.toContain('const dbClient = supabase as any')
+    expect(source).toContain('checkImportQuota(userId')
+    expect(source).toContain('recordImportQuota(')
+  }
+})
+
 test('Connect AI no-key guidance deep-links to API settings', () => {
   const source = readFileSync('app/(app)/settings/mcp/page.tsx', 'utf8')
 

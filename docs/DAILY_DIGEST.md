@@ -38,6 +38,7 @@
 - Added task column grants so direct browser Supabase writes cannot spoof server-managed agent output, source-agent metadata, ingestion intent, or completion timestamps.
 - Moved authenticated import persistence to service-role writes after auth/quota checks so imported completion timestamps and external source refs stay compatible with browser column limits.
 - Expanded Supabase write smoke for task server-managed column denial, agent external-ref uniqueness, private audit-event reads, and audit-event insert denial.
+- Added regression coverage for the task column-grant/service-role write boundary across task mutation, agent execution/review, and import routes.
 
 ### In progress
 - Provider-backed Supabase, OpenAI, Stripe, and MCP smokes remain the main launch-readiness gap.
