@@ -32,6 +32,7 @@
 - expanded `npm run smoke:mcp` to verify OpenAPI availability, ChatGPT Actions `list_tasks` response shape, and required real `agent_action_events` audit writes with `--write --audit`
 - expanded `npm run smoke:mcp` across search, briefing, get-task, update, complete, and ChatGPT Actions search/list checks
 - added optional trace metadata to MCP `complete_task` so completion calls can be audited with source agent and external reference context
+- expanded `npm run smoke:stripe -- --write --webhook` to post signed subscription events, verify unknown-price fail-closed behavior, verify paid/free tier transitions, and verify duplicate webhook idempotency against disposable Supabase/Stripe test data
 
 ## Completed 2026-05-16
 - read and updated the repo-level agent context and all existing Markdown/text operating files

@@ -65,7 +65,7 @@ Make Nexdo a credible, launchable early-access product by Monday, 2026-05-18, wi
 | Verify OpenAI provider-backed parse/prioritize/briefing/execution | Fallbacks and UI path work; real provider calls not exercised | Missing |
 | Provide a repeatable OpenAI smoke command | `npm run smoke:openai` verifies OpenAI JSON-mode calls for parse, prioritization, briefing, and prep-style execution shapes; app helpers use the same optional `OPENAI_MODEL` default | Done |
 | Verify Stripe checkout/portal/webhook/quota updates | Code exists; Stripe test-mode flow not exercised | Missing |
-| Provide a repeatable Stripe smoke command | `npm run smoke:stripe` verifies account and recurring price configuration; `npm run smoke:stripe -- --write` creates disposable test-mode customer, checkout session, and billing portal session | Done |
+| Provide a repeatable Stripe smoke command | `npm run smoke:stripe` verifies account and recurring price configuration; `npm run smoke:stripe -- --write` creates disposable test-mode customer, checkout session, and billing portal session; `npm run smoke:stripe -- --write --webhook` creates disposable Stripe/Supabase test data, posts signed subscription webhook events to the app, verifies unknown-price fail-closed behavior, verifies paid/free profile tier transitions, verifies duplicate-event idempotency, and cleans up | Done |
 | Harden Stripe plan selection and entitlement mapping | `/api/stripe/checkout` now accepts only `pro` or `power` plan keys, derives price IDs from server env, and fails if the Stripe customer ID cannot be persisted; settings billing actions surface API-provided checkout/portal failure messages before generic errors; webhooks skip unknown Stripe prices instead of defaulting to paid access and fail for retry if entitlement profile writes error or match no profile row; `tests/e2e/stripe-entitlements.spec.ts` verifies missing, placeholder, unknown, and configured price IDs plus checked profile-tier writes; e2e covers unsupported checkout plans | Done |
 | Keep pricing UI aligned with billing reality | `components/pricing-table.tsx` now shows monthly pricing only because annual Stripe prices are not configured | Done |
 | Verify authenticated MCP/API-key flow against real task data | OpenAPI/auth/scope guardrails pass; real API-key tool execution not exercised | Missing |
@@ -101,6 +101,6 @@ The Monday early-access demo, local build/test rails, demo task persistence, loc
 ## Next required work
 1. Configure a real Supabase project and run `npm run smoke:supabase -- --write` to verify migrations, auth, profile creation, RLS, task CRUD, and audit events.
 2. Run `npm run smoke:openai`, then exercise OpenAI-backed parse, prioritization, briefing, and bounded agent execution through the app with real credentials.
-3. Run `npm run smoke:stripe -- --write`, then exercise Stripe webhook delivery, plan updates, quota enforcement, and idempotency in test mode.
+3. Run `npm run smoke:stripe -- --write --webhook`, then exercise quota enforcement around the resulting plan state in test mode.
 4. Generate scoped API keys and run authenticated MCP/ChatGPT Actions tool execution, idempotency replay, and audit-write checks against real task data with `npm run smoke:mcp -- --write --audit`.
 5. Route public copy through Quill/founder approval before external launch use.

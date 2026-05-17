@@ -33,6 +33,7 @@
 - Expanded `npm run smoke:mcp` to cover OpenAPI availability, ChatGPT Actions `list_tasks` shape, and real `agent_action_events` audit rows when run with `--write --audit`.
 - Expanded MCP smoke execution across search, briefing, get-task, update, complete, and ChatGPT Actions search/list checks instead of only checking tool listing.
 - Added optional trace metadata to `complete_task` so agent completion calls can carry `source_agent_id`, `external_ref`, `ingestion_intent`, and bounded metadata into audit rows.
+- Expanded `npm run smoke:stripe -- --write --webhook` so Stripe test-mode verification can post signed webhook events, check unknown-price fail-closed behavior, verify paid/free tier transitions, and prove duplicate-event idempotency with disposable test data.
 
 ### In progress
 - Provider-backed Supabase, OpenAI, Stripe, and MCP smokes remain the main launch-readiness gap.

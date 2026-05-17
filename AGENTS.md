@@ -90,6 +90,11 @@ Production environment, Supabase migrations, OpenAI provider calls, Stripe test-
 - Supabase provider smoke: `npm run smoke:supabase`
 - MCP provider smoke: `npm run smoke:mcp`
 
+`npm run smoke:stripe -- --write --webhook` posts signed test-mode
+subscription events to the configured app URL, verifies unknown-price
+fail-closed behavior, paid/free profile tier transitions, duplicate webhook
+idempotency, and cleans up disposable Stripe/Supabase data.
+
 `npm run smoke:mcp` accepts `NEXDO_API_KEY` for normal JSON-RPC and ChatGPT
 Actions checks, optional `NEXDO_READONLY_API_KEY` for scoped read-only denial
 checks, and `-- --write` for disposable task creation/update/completion plus

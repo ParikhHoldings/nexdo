@@ -195,7 +195,7 @@ Monday is not credible if:
 ## Launch blockers
 - Real Supabase migrations, auth, RLS, task CRUD, quota, and audit smoke.
 - Real OpenAI parse, prioritize, briefing, and execution smoke.
-- Stripe test-mode checkout, portal, webhook, entitlement, quota, and idempotency smoke.
+- Stripe test-mode checkout, portal, signed webhook, entitlement, quota, and idempotency smoke. `npm run smoke:stripe -- --write --webhook` now covers signed webhook delivery, unknown-price fail-closed behavior, paid/free tier transitions, and duplicate webhook replay; quota behavior still needs a plan-state smoke.
 - Real MCP/API-key execution, read-only denial, idempotency replay, and audit-write smoke.
 - Quill/founder approval for public copy.
 - Approval for any production deploy or public launch commitment.

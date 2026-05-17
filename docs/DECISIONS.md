@@ -1,5 +1,15 @@
 # Decisions
 
+## 2026-05-17 - Stripe launch smoke must include signed webhook replay
+### Decision
+`npm run smoke:stripe -- --write --webhook` should create disposable Stripe and Supabase test data, post signed subscription webhook events to the configured app URL, verify unknown prices do not grant paid access, verify active subscriptions grant the expected paid tier, verify deletes return the profile to Free, and verify duplicate event replay is idempotent.
+
+### Why
+Checkout and portal session creation do not prove the billing entitlement loop works. Early-access billing needs evidence that the deployed webhook can authenticate events, update Nexdo profile tiers, fail closed on unknown prices, and tolerate Stripe retries.
+
+### Impact
+Before production billing is treated as launch-ready, run the webhook smoke against the real preview/production target with Stripe test-mode env and the matching Supabase service-role env.
+
 ## 2026-05-17 - Agent write smokes must exercise the full task tool path
 ### Decision
 `npm run smoke:mcp` should call the actual MCP and ChatGPT Actions read surfaces, and its write mode should create, replay, read, update, complete, and optionally audit a disposable task. MCP `complete_task` accepts optional source-agent metadata so completion events can be traced like create and update events.
