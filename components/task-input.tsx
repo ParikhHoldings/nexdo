@@ -145,8 +145,14 @@ export function TaskInput({ onTaskCreated }: TaskInputProps) {
               toast.error('Session expired', 'Please sign in again before creating tasks.')
               return
             } else {
+              const payload = await saveResponse.json().catch(() => ({}))
               setInput(rawInput)
-              toast.error('Could not save task', 'Your task was not saved. Please try again.')
+              toast.error(
+                'Could not save task',
+                payload?.message ||
+                  payload?.error ||
+                  'Your task was not saved. Please try again.'
+              )
               return
             }
           } else if (isAuthenticated) {

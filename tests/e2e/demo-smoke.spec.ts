@@ -148,6 +148,14 @@ test('authenticated app boot keeps user and task auth state aligned on profile m
   expect(source).toContain('Could not load your tasks')
 })
 
+test('authenticated task capture surfaces server save messages', () => {
+  const source = readFileSync('components/task-input.tsx', 'utf8')
+
+  expect(source).toContain('payload?.message ||')
+  expect(source).toContain('payload?.error ||')
+  expect(source).toContain('Your task was not saved. Please try again.')
+})
+
 test('demo file import adds tasks without configured auth', async ({ page }) => {
   await page.goto('/import')
 
