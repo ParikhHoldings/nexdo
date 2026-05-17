@@ -30,6 +30,7 @@
 - Surfaced billing checkout and portal server messages before generic settings errors.
 - Kept Connect AI setup, activity, and tool indicators bound to active paid API access instead of stale key hints.
 - Normalized Connect AI test-connection and agent-activity error messages across plain, message, and JSON-RPC payloads.
+- Expanded `npm run smoke:mcp` to cover OpenAPI availability, ChatGPT Actions `list_tasks` shape, and real `agent_action_events` audit rows when run with `--write --audit`.
 
 ### In progress
 - Provider-backed Supabase, OpenAI, Stripe, and MCP smokes remain the main launch-readiness gap.

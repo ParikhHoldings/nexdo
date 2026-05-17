@@ -15,7 +15,7 @@ The goal is not a broad public launch. The credible Monday target is a verified 
 - Public AI-agent surfaces expose a valid OpenAPI action contract and enforce bearer auth before tool execution. Smoke-tested locally on 2026-05-16.
 - API key rotation now uses the shared rate-limit rail and verifies hashed-key persistence before revealing a new scoped MCP/API key.
 - MCP/API keys now have local scope modeling, scope-aware setup UI, scope-filtered tool listings, scope enforcement, and an agent action audit table. Real Supabase/API-key verification is still required before treating this as production-ready.
-- MCP smoke can now verify read-only scoped keys hide and reject write tools when `NEXDO_READONLY_API_KEY` is provided.
+- MCP smoke can now verify OpenAPI availability, ChatGPT Actions `list_tasks` response shape, read-only scoped key denial when `NEXDO_READONLY_API_KEY` is provided, write idempotency, and required audit rows when run with `--write --audit`.
 - The MCP settings page now exposes recent agent activity from the audit table when a user is authenticated.
 - Agent task creation now has local idempotency handling through `source_agent_id` plus `external_ref`; real Supabase/API-key replay verification is still required.
 - PR #3 Web rails passed in GitHub Actions and the Vercel preview deployment completed on 2026-05-16.

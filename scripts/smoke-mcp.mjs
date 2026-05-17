@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 
+import { createHash } from 'node:crypto'
+import { createClient } from '@supabase/supabase-js'
+
 const args = new Set(process.argv.slice(2))
 const baseUrlArg = process.argv.find((arg) => arg.startsWith('--url='))
 const baseUrl = (
@@ -11,6 +14,9 @@ const apiKey = process.env.NEXDO_API_KEY || process.env.NEXDO_MCP_API_KEY
 const readOnlyApiKey =
   process.env.NEXDO_READONLY_API_KEY || process.env.NEXDO_MCP_READONLY_API_KEY
 const allowWrite = args.has('--write')
+const requireAudit = args.has('--audit') || process.env.NEXDO_MCP_REQUIRE_AUDIT === '1'
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
 const requiredReadTools = [
   'list_tasks',
@@ -22,6 +28,19 @@ const requiredWriteTools = ['create_task', 'complete_task', 'update_task']
 if (!apiKey) {
   console.error('Missing NEXDO_API_KEY or NEXDO_MCP_API_KEY.')
   process.exit(1)
+}
+
+if (requireAudit && !allowWrite) {
+  console.error('Audit smoke requires --write so there is a disposable agent write to verify.')
+  process.exit(1)
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+function hashApiKey(value) {
+  return createHash('sha256').update(value, 'utf8').digest('hex')
 }
 
 async function requestJson(path, body, key = apiKey) {
@@ -43,6 +62,23 @@ async function requestJson(path, body, key = apiKey) {
   }
 
   return { response, data }
+}
+
+async function getJson(path) {
+  const response = await fetch(`${baseUrl}${path}`)
+  const text = await response.text()
+  let data = null
+  try {
+    data = text ? JSON.parse(text) : null
+  } catch {
+    data = { raw: text }
+  }
+
+  if (!response.ok) {
+    throw new Error(`${path} failed with ${response.status}: ${JSON.stringify(data)}`)
+  }
+
+  return data
 }
 
 async function postJson(path, body, key = apiKey) {
@@ -74,6 +110,80 @@ function parseToolContent(result) {
   const text = result?.content?.[0]?.text
   if (!text) return null
   return JSON.parse(text)
+}
+
+function createAuditClient() {
+  if (!requireAudit) return null
+
+  if (!supabaseUrl || !supabaseServiceRoleKey) {
+    throw new Error(
+      'Audit smoke requires NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.'
+    )
+  }
+
+  return createClient(supabaseUrl, supabaseServiceRoleKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  })
+}
+
+async function resolveAuditUserId(supabase) {
+  const apiKeyHash = hashApiKey(apiKey)
+  let { data: profile, error } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('api_key_hash', apiKeyHash)
+    .maybeSingle()
+
+  const missingHashColumn =
+    error?.message?.includes('api_key_hash') &&
+    (error.message.includes('does not exist') || error.message.includes('schema cache'))
+
+  if (missingHashColumn || !profile) {
+    const legacyResult = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('api_key', apiKey)
+      .maybeSingle()
+
+    profile = legacyResult.data
+    error = legacyResult.error
+  }
+
+  if (error) {
+    throw new Error(`Failed to resolve MCP API-key profile for audit smoke: ${error.message}`)
+  }
+  if (!profile?.id) {
+    throw new Error('Could not find a profile for NEXDO_API_KEY while checking audit events.')
+  }
+
+  return profile.id
+}
+
+async function assertAuditEvent(supabase, userId, label, predicate) {
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const { data: events, error } = await supabase
+      .from('agent_action_events')
+      .select('tool_name, source_agent_id, external_ref, success, error, created_at')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(50)
+
+    if (error) {
+      throw new Error(`Failed to load agent_action_events for audit smoke: ${error.message}`)
+    }
+
+    if ((events || []).some(predicate)) {
+      console.log(`ok audit event (${label})`)
+      return
+    }
+
+    await sleep(500)
+  }
+
+  throw new Error(`Missing agent_action_events audit row for ${label}.`)
 }
 
 async function assertReadOnlyKeyScope() {
@@ -138,6 +248,15 @@ async function assertReadOnlyKeyScope() {
 async function main() {
   console.log(`Smoking MCP at ${baseUrl}`)
 
+  const openApi = await getJson('/api/mcp/openapi')
+  if (!openApi.paths?.['/api/mcp/actions/list_tasks']) {
+    throw new Error('OpenAPI spec missing list_tasks action path.')
+  }
+  console.log('ok openapi')
+
+  const auditClient = createAuditClient()
+  const auditUserId = auditClient ? await resolveAuditUserId(auditClient) : null
+
   const initialize = await rpc('initialize')
   if (initialize.serverInfo?.name !== 'nexdo') {
     throw new Error('Unexpected MCP server name.')
@@ -164,7 +283,16 @@ async function main() {
   if (!Array.isArray(tasks)) throw new Error('list_tasks did not return an array.')
   console.log(`ok list_tasks (${tasks.length} returned)`)
 
+  const actionList = await postJson('/api/mcp/actions/list_tasks', { limit: 5 })
+  if (!Array.isArray(actionList.tasks)) {
+    throw new Error('ChatGPT Actions list_tasks did not return a { tasks } array.')
+  }
+  console.log(`ok actions/list_tasks (${actionList.tasks.length} returned)`)
+
+  await assertReadOnlyKeyScope()
+
   if (allowWrite) {
+    const writeStartedAt = Date.now()
     const title = `MCP smoke test ${new Date().toISOString()}`
     const sourceAgentId = 'nexdo-smoke'
     const externalRef = `mcp-smoke-${Date.now()}`
@@ -203,11 +331,36 @@ async function main() {
       throw new Error('complete_task did not mark the smoke task done.')
     }
     console.log('ok complete_task')
+
+    if (auditClient && auditUserId) {
+      await assertAuditEvent(
+        auditClient,
+        auditUserId,
+        'create_task write',
+        (event) =>
+          event.tool_name === 'create_task' &&
+          event.source_agent_id === sourceAgentId &&
+          event.external_ref === externalRef &&
+          event.success === true
+      )
+      await assertAuditEvent(
+        auditClient,
+        auditUserId,
+        'complete_task write',
+        (event) =>
+          event.tool_name === 'complete_task' &&
+          event.success === true &&
+          new Date(event.created_at).getTime() >= writeStartedAt - 5000
+      )
+    } else if (requireAudit) {
+      throw new Error('Audit smoke was requested but no Supabase audit client is available.')
+    } else {
+      console.log('skip audit checks; pass --write --audit with Supabase service env')
+    }
   } else {
     console.log('skip write tools; pass --write to create and complete a smoke task')
+    console.log('skip audit checks; pass --write --audit to verify agent_action_events')
   }
-
-  await assertReadOnlyKeyScope()
 
   console.log('MCP smoke passed.')
 }

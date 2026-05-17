@@ -63,7 +63,7 @@ example file directly.
 - Supabase: apply migrations to a real project, create a user, verify profile creation, RLS, task CRUD, import quota enforcement, hashed API-key storage, API key scope persistence and rotation rate limits, profile column read/update grants, `agent_action_events` audit writes, quota no-op behavior, and service-role RPCs.
 - OpenAI: verify parse, prioritization, briefing, and owned-task research/draft/prep execution with real credentials, server-side output persistence, quota use, and rate-limit behavior.
 - Stripe: verify checkout, portal, webhook signature handling, idempotency, subscription tier updates, quota enforcement, and unknown-price behavior in test mode.
-- MCP/ChatGPT Actions: generate real scoped API keys and run authenticated list/create/update/complete/search/briefing/get-task calls against real task data, including `create_task` replay with a repeated `source_agent_id` plus `external_ref`.
+- MCP/ChatGPT Actions: generate real scoped API keys and run authenticated list/create/update/complete/search/briefing/get-task calls against real task data, including `create_task` replay with a repeated `source_agent_id` plus `external_ref` and `agent_action_events` audit rows.
 
 Read-only MCP smoke:
 
@@ -86,6 +86,13 @@ Write smoke that creates and completes a disposable task:
 
 ```bash
 NEXDO_API_KEY=nxd_... npm run smoke:mcp -- --url=https://your-deploy.example --write
+```
+
+Write smoke with required audit verification. Run this from a shell that also
+has the target Supabase project service-role env loaded:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=https://...supabase.co SUPABASE_SERVICE_ROLE_KEY=... NEXDO_API_KEY=nxd_... npm run smoke:mcp -- --url=https://your-deploy.example --write --audit
 ```
 
 Read-only Supabase schema smoke:
