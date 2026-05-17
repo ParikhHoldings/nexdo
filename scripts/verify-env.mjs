@@ -34,7 +34,7 @@ function parseEnvFile(filePath) {
 }
 
 const fileEnv = parseEnvFile(envPath)
-const env = { ...fileEnv, ...process.env }
+const env = { ...process.env, ...fileEnv }
 
 const checks = [
   {

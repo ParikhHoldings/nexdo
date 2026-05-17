@@ -45,6 +45,8 @@ Required groups:
 - App: public origin without a trailing slash
 
 The verifier only checks presence, shape, and placeholder risk. It does not prove provider connectivity.
+When an env file is supplied, values in that file override matching shell
+exports so the copied launch-smoke env is the thing being checked.
 
 The verifier intentionally rejects common placeholder fragments such as
 `placeholder`, `your-`, `xxx`, `replace`, `example`, `todo`, and `changeme`.

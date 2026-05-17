@@ -703,6 +703,7 @@ test('task note helpers and route keep notes owned and bounded', () => {
 test('launch smoke orchestrates required technical and approval gates', () => {
   const packageJson = JSON.parse(readFileSync('package.json', 'utf8'))
   const source = readFileSync('scripts/smoke-launch.mjs', 'utf8')
+  const envSource = readFileSync('scripts/verify-env.mjs', 'utf8')
   const routeSmokeSource = readFileSync('scripts/smoke-routes.mjs', 'utf8')
   const workflowSource = readFileSync('.github/workflows/verify.yml', 'utf8')
   const localEnvExample = readFileSync('.env.local.example', 'utf8')
@@ -733,6 +734,7 @@ test('launch smoke orchestrates required technical and approval gates', () => {
   expect(source).toContain("const envArg = rawArgs.find((arg) => arg.startsWith('--env='))")
   expect(source).toContain("const allowLocalUrl = args.has('--allow-local-url')")
   expect(source).toContain('...fileEnv')
+  expect(envSource).toContain('const env = { ...process.env, ...fileEnv }')
   expect(source).toContain('function validateProviderAppUrl(value)')
   expect(source).toContain('Provider launch smokes require --url=https://your-preview.example')
   expect(source).toContain('Provider launch smokes require a remote preview/production URL')
