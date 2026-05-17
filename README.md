@@ -30,12 +30,12 @@ Last checked on 2026-05-17:
 - `npm run lint` passed
 - `npm run typecheck` passed
 - `npm run build` passed
-- `npm run test:e2e` passed for public landing/signup demo CTA smoke, logged-out demo workflows, task workspace lifecycle, local-date due-today behavior, file-import preview/confirm flow, agent output history/review notes, persistent appearance and browser reminder settings, MCP/OpenAPI/action auth smoke tests, DB-backed MCP handler and API-key validation coverage, billing guardrails, deterministic task-intelligence coverage, import parser coverage, Stripe entitlement mapping, task route validation, and local validation helper contracts
+- `npm run test:e2e` passed 82 tests covering public landing/signup demo CTA smoke, logged-out demo workflows, task workspace lifecycle, local-date due-today behavior, file-import preview/confirm flow, agent output history/review notes, persistent appearance and browser reminder settings, MCP/OpenAPI/action auth smoke tests, DB-backed MCP handler and API-key validation coverage, billing guardrails, deterministic task-intelligence coverage, import parser coverage, Stripe entitlement mapping, task route validation, and local validation helper contracts
 - `npm audit --audit-level=moderate` passed with 0 vulnerabilities
 - `npm run smoke:launch -- --skip-local --skip-providers --technical-only` passed; provider smokes, copy approval, and production deploy approval remain separate gates
 - PR #3 Web rails passed in GitHub Actions after the workflow action-runtime update
-- PR #3 Vercel deployments completed on 2026-05-16 and 2026-05-17
-- repeated PR pushes have intermittently hit Vercel account build-rate limits, so inspect current PR checks before treating preview deploy as current-green
+- PR #3 Vercel preview deployments completed on recent code heads, including after the local-date task surface rail
+- repeated PR pushes, especially documentation-only pushes, have intermittently hit Vercel account build-rate limits, so inspect current PR checks before treating the newest head as preview-deploy verified
 
 `npm run verify:env` currently fails because `.env.local` is absent; only `.env.local.example` exists in this workspace. Still unverified: production env, Supabase migrations/auth/profile and task column grants against a real project, OpenAI provider calls, Stripe test-mode flows, scoped MCP/API-key execution, idempotency replay against real task data, agent audit writes, and production deployment rails.
 

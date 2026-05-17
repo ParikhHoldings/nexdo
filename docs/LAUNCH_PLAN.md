@@ -6,21 +6,21 @@ The goal is not a broad public launch. The credible Monday target is a verified 
 `docs/MVP.md` is the working product contract for this target: capture -> structure -> prioritize -> brief -> bounded execution, plus scoped task-layer access for AI agents.
 
 ### Must ship
-- A local app that passes clean install, lint, typecheck, build, and Playwright smoke tests. Verified locally on 2026-05-16.
-- A usable logged-out demo flow: load `/today`, inspect demo tasks, add a natural-language task, see prioritization, open an executable task, and generate a bounded agent output. Verified locally on 2026-05-16.
+- A local app that passes clean install, lint, typecheck, build, dependency audit, and Playwright smoke tests. Latest full local rail passed 82 tests on 2026-05-17.
+- A usable logged-out demo flow: load `/today`, inspect demo tasks, add a natural-language task, see prioritization, open an executable task, and generate a bounded agent output. Verified locally through the 2026-05-17 Playwright suite.
 - Core task mutation routes now validate allowlisted fields and protect owned-task updates/deletes.
 - Authenticated agent execution now loads owned task records by `taskId`, rejects unsupported action types, saves output server-side, and checks quota-consumption failures.
 - Bounded agent outputs now include execution history and user verification notes in task detail; authenticated review-note persistence still needs real Supabase verification.
 - Authenticated task imports now pre-check monthly task quota, save imported tasks, then record quota for successfully inserted rows with cleanup if accounting fails.
 - Google Tasks and Microsoft To Do are exposed as manual access-token imports for early verification; full OAuth connection remains a post-launch workflow.
-- Public AI-agent surfaces expose a valid OpenAPI action contract and enforce bearer auth before tool execution. Smoke-tested locally on 2026-05-16.
+- Public AI-agent surfaces expose a valid OpenAPI action contract and enforce bearer auth before tool execution. Smoke-tested locally through the 2026-05-17 Playwright suite.
 - API key rotation now uses the shared rate-limit rail and verifies hashed-key persistence before revealing a new scoped MCP/API key.
 - MCP/API keys now have local scope modeling, scope-aware setup UI, scope-filtered tool listings, scope enforcement, and an agent action audit table. Real Supabase/API-key verification is still required before treating this as production-ready.
 - MCP smoke can now verify OpenAPI availability, initialized-notification handshake, authenticated SSE endpoint discovery, JSON-RPC list/search/briefing/get/update/complete execution, ChatGPT Actions list/search response shape, read-only scoped key denial, provisioned disposable scoped keys, write idempotency, and required audit rows when run with `--provision --write --audit`.
 - The MCP settings page now exposes recent agent activity from the audit table when a user is authenticated.
 - Agent task creation now has local idempotency handling through `source_agent_id` plus `external_ref`; real Supabase/API-key replay verification is still required.
-- PR #3 Web rails passed in GitHub Actions and the Vercel preview deployment completed on 2026-05-16.
-- Strict build rails: TypeScript and lint failures block `npm run build`. Verified locally on 2026-05-16.
+- PR #3 Web rails and Vercel preview deployments passed on recent code heads, including after the local-date task surface rail; some documentation-only pushes can still hit Vercel account build-rate limits.
+- Strict build rails: TypeScript and lint failures block `npm run build`. Verified locally on 2026-05-17.
 - OpenAI provider verification now has a repeatable smoke script, `npm run smoke:openai`; it rejects placeholder keys and verifies parse, prioritization, briefing, research, draft, and prep output shapes. With `--app`, it also creates a disposable Supabase user and verifies authenticated app parse, prioritize, briefing, and research/draft/prep execution routes. It still needs to be run with real OpenAI, Supabase, and target app env.
 - App OpenAI helpers now use the same optional `OPENAI_MODEL` default as the smoke script and fall back locally for placeholder keys.
 - Stripe provider verification now has a repeatable smoke script, `npm run smoke:stripe`; with `--write --webhook` it can post signed subscription webhooks, verify unknown-price fail-closed behavior, verify free/pro/power tier transitions, verify quota plan-state boundaries, exercise authenticated `POST /api/tasks` quota behavior under those tiers, and verify duplicate-event idempotency against disposable test data. It still needs to be run with test-mode keys against the target app and Supabase env.

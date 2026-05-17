@@ -16,9 +16,9 @@
 - Playwright smoke tests cover OpenAPI action schema availability, MCP/action auth failures, and action CORS headers.
 - Playwright tests cover DB-backed MCP tool handler and API-key validation behavior through an in-memory Supabase double, including owned reads, search, briefing, create idempotency, quota ordering, mutations, audit logging, hashed-key lookup, legacy-key migration, and paid-plan gating.
 - GitHub Actions verification exists for install, lint, typecheck, build, and Playwright smoke testing.
-- PR #3 Web rails passed in GitHub Actions, and the Vercel preview deployment completed.
+- PR #3 Web rails passed in GitHub Actions, and Vercel preview deployments completed on recent code heads, including after the local-date task surface rail.
 - Dependency audit is clean after the Next.js 16, ESLint 9, and PostCSS remediation.
-- `npm ci`, `npm run lint`, `npm run typecheck`, `npm run build`, `npm run test:e2e`, dependency audit, and the technical launch smoke partial passed locally on 2026-05-17.
+- `npm ci`, `npm run lint`, `npm run typecheck`, `npm run build`, `npm run test:e2e` with 82 tests, dependency audit, and the technical launch smoke partial passed locally on 2026-05-17.
 - `docs/MVP.md` now defines the smallest trustworthy MVP path around capture, structure, prioritize, brief, bounded execution, and scoped agent task-layer access.
 - Import, billing/quota, MCP, and ChatGPT Actions surfaces exist.
 - File imports now preview task count, sample titles, and plan/cap warnings before tasks are added.

@@ -67,6 +67,7 @@
 - added focused Playwright regression coverage that checks task column grants exclude server-managed fields and task/import server routes use service-role write paths after auth/quota checks
 - moved authenticated agent execution service-role output persistence preflight ahead of rate-limit, quota, and provider work so runs do not spend work when output cannot be saved
 - updated the GitHub Actions verify workflow to `actions/checkout@v5` and `actions/setup-node@v5` so the CI rail no longer depends on deprecated Node 20 action runtimes
+- refreshed README, launch plan, and roadmap verification summaries so repo-facing docs match the latest 82-test local rail and recent preview-deploy evidence
 
 ## Completed 2026-05-16
 - read and updated the repo-level agent context and all existing Markdown/text operating files

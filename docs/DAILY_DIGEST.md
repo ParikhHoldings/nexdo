@@ -69,6 +69,7 @@
 - Moved agent execution service-role output persistence preflight ahead of rate-limit, quota, and provider work.
 - Updated the GitHub Actions verify workflow to Node-24-runtime action releases while keeping the app test runtime on Node 22.
 - Verified PR #3 Web rails and Vercel preview deployment after the local-date task surface rail; documented that some documentation-only pushes can still hit the Vercel account build-rate limit.
+- Refreshed README, launch plan, and roadmap verification summaries so repo-facing docs match the latest 82-test local rail and recent preview-deploy evidence.
 
 ### In progress
 - Provider-backed Supabase, OpenAI, Stripe, and MCP smokes remain the main launch-readiness gap.
