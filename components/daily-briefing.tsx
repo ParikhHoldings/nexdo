@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Sun,
@@ -40,6 +40,7 @@ export function DailyBriefing({ userName = 'there' }: DailyBriefingProps) {
   const { briefing, isLoading, isDismissed, setBriefing, setLoading, dismiss } =
     useBriefingStore()
   const { tasks, selectTask, isAuthenticated } = useTaskStore()
+  const [fallbackNotice, setFallbackNotice] = useState<string | null>(null)
   const briefingSignature = useMemo(
     () => getBriefingSignature(tasks, userName),
     [tasks, userName]
@@ -80,14 +81,24 @@ export function DailyBriefing({ userName = 'there' }: DailyBriefingProps) {
           body: JSON.stringify({ tasks, userName }),
         })
 
+        const payload = await response.json().catch(() => ({}))
+
         if (response.ok) {
-          const data = await response.json()
-          setBriefing(data)
+          setFallbackNotice(null)
+          setBriefing(payload)
         } else {
+          setFallbackNotice(
+            `Using local briefing: ${
+              payload?.message ||
+              payload?.error ||
+              'AI briefing is unavailable.'
+            }`
+          )
           setBriefing(generateBriefingHeuristic(tasks, userName))
         }
       } catch (error) {
         console.error('Failed to fetch briefing:', error)
+        setFallbackNotice('Using local briefing: AI briefing is unavailable.')
         setBriefing(generateBriefingHeuristic(tasks, userName))
       } finally {
         setLoading(false)
@@ -118,6 +129,9 @@ export function DailyBriefing({ userName = 'there' }: DailyBriefingProps) {
     return <BriefingSkeleton />
   }
 
+  const visibleFallbackNotice =
+    isAuthenticated && tasks.length > 0 ? fallbackNotice : null
+
   if (!briefing) {
     // Show a simple greeting when no briefing is available
     return (
@@ -135,6 +149,12 @@ export function DailyBriefing({ userName = 'there' }: DailyBriefingProps) {
                 ? "Add your first task to get started."
                 : `You have ${tasks.filter((t) => t.status !== 'done').length} tasks to focus on.`}
             </p>
+            {visibleFallbackNotice && (
+              <p className="mt-2 flex items-start gap-2 text-xs text-amber-300">
+                <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
+                <span>{visibleFallbackNotice}</span>
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -159,6 +179,12 @@ export function DailyBriefing({ userName = 'there' }: DailyBriefingProps) {
                 {briefing.greeting}
               </h2>
               <p className="text-sm text-zinc-400">{briefing.summary}</p>
+              {visibleFallbackNotice && (
+                <p className="mt-2 flex items-start gap-2 text-xs text-amber-300">
+                  <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
+                  <span>{visibleFallbackNotice}</span>
+                </p>
+              )}
             </div>
           </div>
           <button

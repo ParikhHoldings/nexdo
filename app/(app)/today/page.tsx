@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { AnimatePresence } from 'framer-motion'
-import { Inbox } from 'lucide-react'
+import { AlertTriangle, Inbox } from 'lucide-react'
 import { TaskInput } from '@/components/task-input'
 import { TaskCard } from '@/components/task-card'
 import { DailyBriefing } from '@/components/daily-briefing'
@@ -17,6 +17,7 @@ export default function TodayPage() {
   const { profile } = useUserStore()
   const [prioritization, setPrioritization] = useState<PrioritizedTask[]>([])
   const [isPrioritizing, setIsPrioritizing] = useState(false)
+  const [prioritizationNotice, setPrioritizationNotice] = useState<string | null>(null)
 
   // Filter for today's tasks and incomplete tasks
   const today = getLocalDateKey()
@@ -36,10 +37,12 @@ export default function TodayPage() {
     const fetchPrioritization = async () => {
       if (todayTasks.length === 0) {
         setPrioritization([])
+        setPrioritizationNotice(null)
         return
       }
 
       if (!isAuthenticated) {
+        setPrioritizationNotice(null)
         setPrioritization(prioritizeTasksHeuristic(todayTasks))
         return
       }
@@ -52,14 +55,24 @@ export default function TodayPage() {
           body: JSON.stringify({ tasks: todayTasks }),
         })
 
+        const payload = await response.json().catch(() => ({}))
+
         if (response.ok) {
-          const data = await response.json()
-          setPrioritization(data.tasks || data)
+          setPrioritizationNotice(null)
+          setPrioritization(payload.tasks || payload)
         } else {
+          setPrioritizationNotice(
+            `Using local priority order: ${
+              payload?.message ||
+              payload?.error ||
+              'AI prioritization is unavailable.'
+            }`
+          )
           setPrioritization(prioritizeTasksHeuristic(todayTasks))
         }
       } catch (error) {
         console.error('Failed to prioritize tasks:', error)
+        setPrioritizationNotice('Using local priority order: AI prioritization is unavailable.')
         setPrioritization(prioritizeTasksHeuristic(todayTasks))
       } finally {
         setIsPrioritizing(false)
@@ -107,6 +120,12 @@ export default function TodayPage() {
 
       {/* Task List */}
       <div className="space-y-3">
+        {prioritizationNotice && !isPrioritizing && (
+          <div className="flex items-start gap-2 rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-xs text-amber-300">
+            <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
+            <span>{prioritizationNotice}</span>
+          </div>
+        )}
         {isLoading || isPrioritizing ? (
           <TaskListSkeleton count={5} />
         ) : sortedTasks.length === 0 ? (

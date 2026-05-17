@@ -174,6 +174,18 @@ test('authenticated agent execution surfaces server failure messages', () => {
   expect(source).toContain('Failed to execute task. Please try again.')
 })
 
+test('authenticated AI fallback notices surface provider failure messages', () => {
+  const briefingSource = readFileSync('components/daily-briefing.tsx', 'utf8')
+  const todaySource = readFileSync('app/(app)/today/page.tsx', 'utf8')
+
+  expect(briefingSource).toContain('Using local briefing:')
+  expect(briefingSource).toContain('payload?.message ||')
+  expect(briefingSource).toContain('payload?.error ||')
+  expect(todaySource).toContain('Using local priority order:')
+  expect(todaySource).toContain('payload?.message ||')
+  expect(todaySource).toContain('payload?.error ||')
+})
+
 test('authenticated done bulk-clear surfaces server delete messages', () => {
   const source = readFileSync('app/(app)/done/page.tsx', 'utf8')
 
