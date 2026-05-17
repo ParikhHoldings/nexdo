@@ -12,6 +12,9 @@ import {
   MoreHorizontal,
   Trash2,
   Edit3,
+  CircleDot,
+  Hourglass,
+  RotateCcw,
 } from 'lucide-react'
 import { cn, formatDueTime, formatRelativeDate, getPriorityColor } from '@/lib/utils'
 import { agentTraceLabel, hasAgentTrace } from '@/lib/agent-trace'
@@ -72,9 +75,16 @@ export const TaskCard = forwardRef<HTMLDivElement, TaskCardProps>(function TaskC
     setShowMenu(false)
   }
 
+  const handleStatusUpdate = (status: TaskStatus) => (e: React.MouseEvent) => {
+    e.stopPropagation()
+    updateTask(task.id, { status })
+    setShowMenu(false)
+  }
+
   const isExecutable = isExecutableActionType(task.action_type)
   const isDone = task.status === 'done'
   const isCancelled = task.status === 'cancelled'
+  const isActive = !isDone && !isCancelled
   const statusBadge = STATUS_BADGE[task.status]
   const showAgentTrace = hasAgentTrace(task)
   const agentLabel = agentTraceLabel(task, 20)
@@ -217,7 +227,7 @@ export const TaskCard = forwardRef<HTMLDivElement, TaskCardProps>(function TaskC
           </div>
 
           {/* Actions */}
-          <div className="no-detail-trigger flex items-start gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="no-detail-trigger flex items-start gap-1 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100">
             {isExecutable && !isDone && !isCancelled && (
               <button
                 className="p-1.5 hover:bg-zinc-700 rounded-md transition-colors"
@@ -250,7 +260,43 @@ export const TaskCard = forwardRef<HTMLDivElement, TaskCardProps>(function TaskC
                     className="fixed inset-0 z-10"
                     onClick={() => setShowMenu(false)}
                   />
-                  <div className="absolute right-0 top-full mt-1 z-20 w-36 bg-zinc-800 border border-zinc-700 rounded-lg shadow-xl py-1">
+                  <div className="absolute right-0 top-full mt-1 z-20 w-44 bg-zinc-800 border border-zinc-700 rounded-lg shadow-xl py-1">
+                    {isActive && task.status !== 'in_progress' && (
+                      <button
+                        className="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-300 transition-colors hover:bg-zinc-700"
+                        onClick={handleStatusUpdate('in_progress')}
+                      >
+                        <Play className="h-4 w-4" />
+                        Start
+                      </button>
+                    )}
+                    {isActive && task.status !== 'waiting' && (
+                      <button
+                        className="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-300 transition-colors hover:bg-zinc-700"
+                        onClick={handleStatusUpdate('waiting')}
+                      >
+                        <Hourglass className="h-4 w-4" />
+                        Mark waiting
+                      </button>
+                    )}
+                    {isActive && task.status !== 'todo' && (
+                      <button
+                        className="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-300 transition-colors hover:bg-zinc-700"
+                        onClick={handleStatusUpdate('todo')}
+                      >
+                        <CircleDot className="h-4 w-4" />
+                        Move to to-do
+                      </button>
+                    )}
+                    {(isDone || isCancelled) && (
+                      <button
+                        className="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-300 transition-colors hover:bg-zinc-700"
+                        onClick={handleStatusUpdate('todo')}
+                      >
+                        <RotateCcw className="h-4 w-4" />
+                        Restore
+                      </button>
+                    )}
                     <button
                       className="flex items-center gap-2 w-full px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-700 transition-colors"
                       onClick={(e) => {

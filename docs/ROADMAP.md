@@ -31,6 +31,7 @@
 - Due-today task filters, Today/sidebar/briefing focus counts, browser reminders, MCP filtering, date-only imports, and relative labels now use local calendar dates instead of UTC day strings.
 - Task detail now exposes human task notes backed by demo localStorage and authenticated owned-task note routes; external agents can append bounded task notes and agent-result notes through MCP/ChatGPT Actions.
 - Task detail now supports parent and related task links through an owned relationship route while direct browser relationship column grants remain closed.
+- Task cards now expose quick status actions for starting work, marking waiting, moving back to to-do, and restoring done/cancelled work from scan views, with mobile-visible controls.
 - Bounded agent outputs now keep execution history plus verification status and notes in the task detail panel.
 - The bounded executable action contract is centralized in `lib/task-actions.ts` so UI surfaces, authenticated execution, and agent-output history agree that only research, draft, and prep tasks can run AI execution.
 - Agent `update_task` can now maintain the core planning fields humans can edit, including due time, action type, estimate, energy level, people, tags, and owned parent/related task links; `add_task_note` lets agents append reviewable handoff context or bounded result notes without changing task status.

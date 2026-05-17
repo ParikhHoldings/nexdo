@@ -916,6 +916,19 @@ test('non-default task statuses remain visible and reviewable from all tasks', a
     page.getByRole('heading', { name: 'Wait for partner brief' })
   ).toBeVisible()
   await expect(page.getByText('waiting', { exact: true })).toBeVisible()
+
+  await page
+    .getByRole('button', { name: 'Open task menu for "Wait for partner brief"' })
+    .click()
+  await page.getByRole('button', { name: 'Start' }).click()
+  await expect(page.getByText('in progress', { exact: true })).toBeVisible()
+  await expect(page.getByText('waiting', { exact: true })).toHaveCount(0)
+
+  await page
+    .getByRole('button', { name: 'Open task menu for "Wait for partner brief"' })
+    .click()
+  await page.getByRole('button', { name: 'Mark waiting' }).click()
+  await expect(page.getByText('waiting', { exact: true })).toBeVisible()
   await expect(
     page.getByRole('heading', { name: 'Review cancelled agent handoff' })
   ).toHaveCount(0)

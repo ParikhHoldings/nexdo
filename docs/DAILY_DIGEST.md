@@ -102,6 +102,7 @@
 - Aligned MCP tool schemas and ChatGPT Actions OpenAPI with handler support for the `cancelled` task status.
 - Made cancelled tasks human-reviewable from All Tasks and restorable from task detail so agent-side cancellation remains visible.
 - Surfaced non-default task statuses on task cards so agent-updated waiting/in-progress/cancelled work is visible while scanning the workspace.
+- Added task-card quick status actions for starting work, marking work waiting, moving work back to to-do, and restoring done/cancelled work from scan views; card actions stay visible on mobile/touch.
 - Aligned the Today sidebar badge with the Today focus list so undated active tasks count the same way they appear in the daily workspace.
 - Aligned daily briefing, provider briefing inputs, local heuristic briefings, and due-task reminders on the same active-task definition so cancelled work does not inflate focus counts.
 - Added Vercel Deployment Protection handling to the route smoke: protected previews now use `VERCEL_AUTOMATION_BYPASS_SECRET` when provided and otherwise fail with a clear blocker.
