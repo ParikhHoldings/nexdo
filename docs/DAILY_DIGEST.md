@@ -75,7 +75,7 @@
 - Tightened deterministic fallback task parsing so captured task titles stay concise while schedule, priority, and estimate phrases become structured metadata.
 - Hardened `/quick` capture so empty quick-mode submissions are rejected and extra spacing is trimmed before task creation.
 - Aligned MCP tool schemas and ChatGPT Actions OpenAPI with handler support for the `cancelled` task status.
-- Verified PR #3 Web rails and Vercel preview deployment after the route-smoke rail.
+- Verified PR #3 Web rails and a Vercel preview deployment after the route-smoke rail; later docs-only heads can still be Vercel rate-limited.
 - Added `npm run smoke:routes` and wired it into the launch smoke so preview/production route rendering is checked at desktop and mobile widths.
 
 ### In progress

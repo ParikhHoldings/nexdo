@@ -17,7 +17,7 @@
 - `npm run smoke:routes` now verifies launch-facing routes at desktop and mobile widths against a supplied app URL.
 - Playwright tests cover DB-backed MCP tool handler and API-key validation behavior through an in-memory Supabase double, including owned reads, search, briefing, create idempotency, quota ordering, mutations, audit logging, hashed-key lookup, legacy-key migration, and paid-plan gating.
 - GitHub Actions verification exists for install, lint, typecheck, build, and Playwright smoke testing.
-- PR #3 Web rails and Vercel preview deployment passed on the latest checked code head after the route-smoke rail.
+- PR #3 Web rails passed, and Vercel preview deployment passed on a recent code head after the route-smoke rail.
 - Dependency audit is clean after the Next.js 16, ESLint 9, and PostCSS remediation.
 - `npm ci`, `npm run lint`, `npm run typecheck`, `npm run build`, `npm run test:e2e` with 83 tests, dependency audit, and the technical launch smoke partial passed locally on 2026-05-17.
 - `docs/MVP.md` now defines the smallest trustworthy MVP path around capture, structure, prioritize, brief, bounded execution, and scoped agent task-layer access.

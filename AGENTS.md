@@ -54,7 +54,7 @@ Current local verification from 2026-05-17:
 
 Current PR verification:
 - PR #3 Web rails passed.
-- Vercel preview deployment passed on the latest checked code head after the route-smoke rail; earlier pushes sometimes hit the Vercel account build-rate limit.
+- Vercel preview deployment passed on a recent code head after the route-smoke rail; later docs-only pushes can still hit the Vercel account build-rate limit.
 - Some documentation-only pushes have hit Vercel account build-rate limits.
 - Always inspect current PR checks before treating preview deploy as current-green. A Vercel build-rate-limit failure is not evidence of an app build failure, but it does mean that head does not have fresh preview-deploy evidence.
 

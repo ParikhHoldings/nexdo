@@ -20,7 +20,7 @@ The goal is not a broad public launch. The credible Monday target is a verified 
 - Route smoke can now verify launch-facing marketing, app, auth, import, settings, MCP setup, privacy, and terms routes at desktop and mobile widths against a preview/production URL.
 - The MCP settings page now exposes recent agent activity from the audit table when a user is authenticated.
 - Agent task creation now has local idempotency handling through `source_agent_id` plus `external_ref`; real Supabase/API-key replay verification is still required.
-- PR #3 Web rails and Vercel preview deployment passed on the latest checked code head after the route-smoke rail.
+- PR #3 Web rails passed, and Vercel preview deployment passed on a recent code head after the route-smoke rail.
 - Strict build rails: TypeScript and lint failures block `npm run build`. Verified locally on 2026-05-17.
 - OpenAI provider verification now has a repeatable smoke script, `npm run smoke:openai`; it rejects placeholder keys and verifies parse, prioritization, briefing, research, draft, and prep output shapes. With `--app`, it also creates a disposable Supabase user and verifies authenticated app parse, prioritize, briefing, and research/draft/prep execution routes. It still needs to be run with real OpenAI, Supabase, and target app env.
 - App OpenAI helpers now use the same optional `OPENAI_MODEL` default as the smoke script and fall back locally for placeholder keys.
