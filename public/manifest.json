@@ -1,7 +1,7 @@
 {
   "name": "Nexdo",
   "short_name": "Nexdo",
-  "description": "AI-native task management for humans and AI agents",
+  "description": "Early-access task workspace for humans and AI agents",
   "start_url": "/today",
   "display": "standalone",
   "background_color": "#09090b",

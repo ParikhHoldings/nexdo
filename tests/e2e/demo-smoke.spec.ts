@@ -46,11 +46,18 @@ test('landing page routes the primary CTA to the working demo path', async ({
 test('public metadata and prompts stay below autonomous claims', () => {
   const layoutSource = readFileSync('app/layout.tsx', 'utf8')
   const promptSource = readFileSync('lib/prompts.ts', 'utf8')
+  const manifest = JSON.parse(readFileSync('public/manifest.json', 'utf8'))
+  const privacySource = readFileSync('app/(marketing)/privacy/page.tsx', 'utf8')
+  const termsSource = readFileSync('app/(marketing)/terms/page.tsx', 'utf8')
 
   expect(layoutSource).toContain('Nexdo - Early-Access Task Workspace')
   expect(layoutSource).toContain('review bounded AI assistance')
   expect(layoutSource).not.toContain('The AI-Native Task Manager')
   expect(layoutSource).not.toContain("'automation'")
+  expect(manifest.description).toBe(
+    'Early-access task workspace for humans and AI agents'
+  )
+  expect(manifest.description).not.toContain('AI-native')
 
   expect(promptSource).toContain(
     'Generate bounded, reviewable outputs for research, drafting, and preparation tasks'
@@ -60,6 +67,32 @@ test('public metadata and prompts stay below autonomous claims', () => {
   )
   expect(promptSource).not.toContain('tasks that can be automated')
   expect(promptSource).not.toContain("complete a task automatically")
+
+  expect(privacySource).toContain('provide requested bounded AI assistance')
+  expect(privacySource).toContain('provider-backed safeguards')
+  expect(privacySource).not.toContain('run requested AI actions')
+  expect(privacySource).not.toContain('trusted vendors')
+  expect(privacySource).not.toContain('industry-standard safeguards')
+
+  expect(termsSource).toContain('If you start a paid plan')
+  expect(termsSource).not.toContain('Paid plans renew automatically')
+})
+
+test('public robots sitemap points to an existing public sitemap', async ({ request }) => {
+  const robots = await request.get('/robots.txt')
+  expect(robots.ok()).toBeTruthy()
+  const robotsText = await robots.text()
+  expect(robotsText).toContain('Sitemap: https://nexdo.ai/sitemap.xml')
+
+  const sitemap = await request.get('/sitemap.xml')
+  expect(sitemap.ok()).toBeTruthy()
+  expect(sitemap.headers()['content-type']).toContain('application/xml')
+  const sitemapText = await sitemap.text()
+  expect(sitemapText).toContain('<loc>https://nexdo.ai/</loc>')
+  expect(sitemapText).toContain('<loc>https://nexdo.ai/privacy</loc>')
+  expect(sitemapText).toContain('<loc>https://nexdo.ai/terms</loc>')
+  expect(sitemapText).not.toContain('/settings')
+  expect(sitemapText).not.toContain('/api/')
 })
 
 test('demo task capture, briefing, prioritization, and agent output work', async ({

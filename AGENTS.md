@@ -181,6 +181,7 @@ The agent may do these without asking:
 - Before launch, audit `app/(marketing)/page.tsx` for claims that may outrun verified truth, especially claims around "actually does your tasks", "thousands of users", security, integrations, and production readiness.
 - Prefer specific behavior claims over broad productivity language.
 - Keep site metadata and agent prompts aligned with early-access, bounded, reviewable AI assistance. Do not reintroduce broad autonomous automation language without verified product behavior.
+- Keep public crawl/legal surfaces consistent with real files and verified behavior. If `robots.txt` advertises a route, verify that route exists.
 - Do not describe MCP, imports, agent execution, billing, or security as fully production-ready until they are verified end to end.
 
 ## Definition Of Done
