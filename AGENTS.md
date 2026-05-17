@@ -34,6 +34,7 @@ The product promise should be grounded in what the code actually supports:
 - authenticated import routes persist imported task rows through the service-role path after auth/quota checks so imported completion timestamps and external source references can be kept without reopening those columns to direct browser writes
 - bounded OpenAI response validation for task parsing, prioritization, briefing, and research/draft/prep output before provider content is returned or persisted
 - shared task-create and task-patch validation in `lib/task-validation.ts`, so human task routes reject protected/server-managed fields before quota consumption or database mutation
+- shared local date/time normalizers in `lib/dates.ts`; human task validation, AI task sanitization/output validation, and MCP task updates should reject impossible due dates and out-of-range due times before persistence or planning use
 - a recent agent activity surface under `/settings/mcp`
 - idempotent agent task creation when callers provide `source_agent_id` plus `external_ref`
 - agent trace metadata on create, update, and complete MCP writes so source agents and external references can be audited
@@ -46,14 +47,14 @@ Current local verification from 2026-05-17:
 - `npm run lint` passed
 - `npm run typecheck` passed
 - `npm run build` passed with strict TypeScript and ESLint checks enabled
-- `npm run test:e2e` passed for public landing/signup demo CTA smoke, logged-out demo workflows, task workspace lifecycle, local-date due-today behavior, file-import preview/confirm flow, agent output history/review notes, persistent appearance and browser reminder settings, task/agent auth guards, MCP/OpenAPI/action auth smoke tests, DB-backed MCP handler and API-key validation coverage, billing guardrails, deterministic task-intelligence coverage, import parser coverage, Stripe entitlement mapping, task route validation, and local validation helper contracts
+- `npm run test:e2e` passed for 78 tests covering public landing/signup demo CTA smoke, logged-out demo workflows, task workspace lifecycle, local-date due-today behavior, file-import preview/confirm flow, agent output history/review notes, persistent appearance and browser reminder settings, task/agent auth guards, MCP/OpenAPI/action auth smoke tests, DB-backed MCP handler and API-key validation coverage, billing guardrails, deterministic task-intelligence coverage, import parser coverage, Stripe entitlement mapping, task route validation, local validation helper contracts, and invalid date/time rails
 - `npm audit --audit-level=moderate` passed with 0 vulnerabilities after the Next.js 16 / ESLint 9 upgrade
 - `npm run smoke:launch -- --skip-local --skip-providers --technical-only` passed; provider smokes, public-copy approval, and production deploy approval remain separate manual gates
 - `npm run verify:env` failed because `.env.local` is absent; only `.env.local.example` exists in this workspace
 
 Current PR verification:
-- PR #3 Web rails passed in GitHub Actions on 2026-05-17 after the workflow action-runtime update
-- PR #3 Vercel deployments completed on 2026-05-16 and 2026-05-17
+- PR #3 Web rails passed in GitHub Actions on 2026-05-17 for commit `9e5878b`
+- PR #3 Vercel deployment completed on 2026-05-17 for commit `9e5878b`
 - repeated PR pushes have intermittently hit Vercel account build-rate limits, so always inspect current PR checks before treating preview deploy as current-green
 
 Production environment, Supabase migrations, OpenAI provider calls, Stripe test-mode flows, scoped MCP/API-key execution, idempotency replay against real task data, agent audit writes, and production deployment rails remain unverified in this pass.
@@ -75,6 +76,7 @@ Production environment, Supabase migrations, OpenAI provider calls, Stripe test-
 - Framework: Next.js 16 app router, React 18, TypeScript, Tailwind, Framer Motion, lucide-react.
 - Data/auth: Supabase SSR/client helpers and RLS-backed tables.
 - AI: OpenAI chat completions via helpers in `lib/openai.ts`; prompts live in `lib/prompts.ts`; provider response validation lives in `lib/ai-response-validation.ts`.
+- Task schedule metadata: local date-key and due-time helpers live in `lib/dates.ts`; reuse them for any new task ingestion, AI, import, or MCP path instead of regex-only validation.
 - Billing: Stripe helpers and plan limits in `lib/stripe.ts`; checkout, portal, and webhook routes under `app/api/stripe/`. Checkout accepts only server-known `pro`/`power` plan keys, and webhook tier updates require explicit Stripe price ID mappings.
 - Agent interop: MCP definitions and handlers in `lib/mcp-tools.ts`; JSON-RPC MCP endpoint at `app/api/mcp/route.ts`; ChatGPT Actions OpenAPI at `app/api/mcp/openapi/route.ts`; action wrappers under `app/api/mcp/actions/[tool]/route.ts`.
 - Agent governance: API key scopes are modeled in `lib/agent-scopes.ts`; key generation/hashing helpers live in `lib/api-keys.ts`; hashed keys and key hints are persisted on profiles; agent calls are intended to log to `agent_action_events`.
