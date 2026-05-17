@@ -8,10 +8,12 @@ import { TaskCard } from '@/components/task-card'
 import { TaskListSkeleton } from '@/components/ui/skeleton'
 import { useTaskStore } from '@/lib/store'
 import { taskMatchesSearch } from '@/lib/task-search'
+import { hasAgentTrace } from '@/lib/agent-trace'
 import { cn } from '@/lib/utils'
 import type { TaskPriority, TaskStatus } from '@/lib/database.types'
 
 type SortOption = 'created' | 'due_date' | 'priority' | 'title'
+type OriginFilter = 'all' | 'human' | 'agent'
 
 const activeStatuses: TaskStatus[] = ['todo', 'in_progress', 'waiting']
 const statusFilters: Array<TaskStatus | 'all'> = [
@@ -21,6 +23,11 @@ const statusFilters: Array<TaskStatus | 'all'> = [
   'waiting',
   'done',
   'cancelled',
+]
+const originFilters: Array<{ key: OriginFilter; label: string }> = [
+  { key: 'all', label: 'All' },
+  { key: 'human', label: 'Human' },
+  { key: 'agent', label: 'Agent' },
 ]
 
 const priorityOrder: Record<TaskPriority, number> = {
@@ -35,6 +42,7 @@ export default function AllTasksPage() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<TaskStatus | 'all'>('all')
   const [priorityFilter, setPriorityFilter] = useState<TaskPriority | 'all'>('all')
+  const [originFilter, setOriginFilter] = useState<OriginFilter>('all')
   const [sortBy, setSortBy] = useState<SortOption>('created')
   const [showFilters, setShowFilters] = useState(false)
 
@@ -53,6 +61,13 @@ export default function AllTasksPage() {
     // Priority filter
     if (priorityFilter !== 'all') {
       result = result.filter((t) => t.priority === priorityFilter)
+    }
+
+    if (originFilter !== 'all') {
+      result = result.filter((task) => {
+        const isAgentOrigin = hasAgentTrace(task)
+        return originFilter === 'agent' ? isAgentOrigin : !isAgentOrigin
+      })
     }
 
     // Sort
@@ -74,7 +89,7 @@ export default function AllTasksPage() {
     })
 
     return result
-  }, [tasks, search, statusFilter, priorityFilter, sortBy])
+  }, [tasks, search, statusFilter, priorityFilter, originFilter, sortBy])
 
   const activeTaskCount = tasks.filter((t) => activeStatuses.includes(t.status)).length
   const baseResultCount =
@@ -187,6 +202,31 @@ export default function AllTasksPage() {
               </div>
             </div>
 
+            {/* Origin filter */}
+            <div>
+              <label className="text-sm text-zinc-400 block mb-2">Origin</label>
+              <div
+                className="flex flex-wrap gap-2"
+                role="group"
+                aria-label="Origin filter"
+              >
+                {originFilters.map((origin) => (
+                  <button
+                    key={origin.key}
+                    onClick={() => setOriginFilter(origin.key)}
+                    className={cn(
+                      'px-3 py-1.5 text-sm rounded-lg transition-colors',
+                      originFilter === origin.key
+                        ? 'bg-accent text-white'
+                        : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
+                    )}
+                  >
+                    {origin.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Sort options */}
             <div>
               <label className="text-sm text-zinc-400 block mb-2">Sort by</label>
@@ -226,12 +266,18 @@ export default function AllTasksPage() {
               <Inbox className="h-8 w-8 text-zinc-600" />
             </div>
             <h3 className="text-lg font-medium text-zinc-300 mb-2">
-              {search || statusFilter !== 'all' || priorityFilter !== 'all'
+              {search ||
+              statusFilter !== 'all' ||
+              priorityFilter !== 'all' ||
+              originFilter !== 'all'
                 ? 'No matching tasks'
                 : 'No tasks yet'}
             </h3>
             <p className="text-zinc-500 max-w-sm mx-auto">
-              {search || statusFilter !== 'all' || priorityFilter !== 'all'
+              {search ||
+              statusFilter !== 'all' ||
+              priorityFilter !== 'all' ||
+              originFilter !== 'all'
                 ? 'Try adjusting your filters'
                 : 'Add your first task above'}
             </p>
@@ -249,7 +295,10 @@ export default function AllTasksPage() {
       {filteredTasks.length > 0 && (
         <p className="text-center text-sm text-zinc-500 mt-6">
           Showing {filteredTasks.length} task{filteredTasks.length !== 1 && 's'}
-          {(search || statusFilter !== 'all' || priorityFilter !== 'all') &&
+          {(search ||
+            statusFilter !== 'all' ||
+            priorityFilter !== 'all' ||
+            originFilter !== 'all') &&
             ` (filtered from ${baseResultCount})`}
         </p>
       )}

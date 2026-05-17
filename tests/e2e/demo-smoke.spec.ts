@@ -904,16 +904,47 @@ test('non-default task statuses remain visible and reviewable from all tasks', a
     ingestion_intent: 'update',
     agent_metadata: { reason: 'duplicate' },
   }
+  const humanTask = {
+    id: 'human-origin-task',
+    user_id: 'demo-user',
+    title: 'Human-owned launch follow-up',
+    raw_input: 'Human-owned launch follow-up',
+    description: null,
+    status: 'todo',
+    priority: 'medium',
+    due_date: null,
+    due_time: null,
+    context: 'Created directly by the user.',
+    source: 'manual',
+    action_type: 'manual',
+    estimated_minutes: 20,
+    energy_level: 'light',
+    people: null,
+    tags: ['launch'],
+    parent_task_id: null,
+    related_task_ids: null,
+    agent_output: null,
+    completed_at: null,
+    created_at: now,
+    updated_at: now,
+    source_agent_id: null,
+    external_ref: null,
+    ingestion_intent: null,
+    agent_metadata: null,
+  }
 
   await page.addInitScript((tasks: unknown[]) => {
     window.localStorage.setItem('nexdo_demo_tasks', JSON.stringify(tasks))
-  }, [waitingTask, cancelledTask])
+  }, [waitingTask, cancelledTask, humanTask])
 
   await page.goto('/all')
 
   await expect(page.getByRole('heading', { name: 'All Tasks' })).toBeVisible()
   await expect(
     page.getByRole('heading', { name: 'Wait for partner brief' })
+  ).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Human-owned launch follow-up' })
   ).toBeVisible()
   await expect(page.getByText('waiting', { exact: true })).toBeVisible()
 
@@ -934,6 +965,24 @@ test('non-default task statuses remain visible and reviewable from all tasks', a
   ).toHaveCount(0)
 
   await page.getByRole('button', { name: 'Filters' }).click()
+  const originFilter = page.getByRole('group', { name: 'Origin filter' })
+  await originFilter.getByRole('button', { name: 'Agent' }).click()
+  await expect(
+    page.getByRole('heading', { name: 'Wait for partner brief' })
+  ).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Human-owned launch follow-up' })
+  ).toHaveCount(0)
+
+  await originFilter.getByRole('button', { name: 'Human' }).click()
+  await expect(
+    page.getByRole('heading', { name: 'Human-owned launch follow-up' })
+  ).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Wait for partner brief' })
+  ).toHaveCount(0)
+
+  await originFilter.getByRole('button', { name: 'All' }).click()
   const statusFilter = page.getByRole('group', { name: 'Status filter' })
   await statusFilter.getByRole('button', { name: 'cancelled' }).click()
   await expect(

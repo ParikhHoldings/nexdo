@@ -13,6 +13,7 @@ This repo currently contains a Next.js app with:
 - task-detail parent/related task links with demo persistence and an authenticated owned-relationship route that verifies linked tasks belong to the current user before service-role persistence
 - reviewable agent output history with verification status and notes for bounded research, draft, and prep runs, with a shared executable-action contract that keeps manual/reminder tasks out of AI-run controls
 - task cards surface non-default statuses and quick scan-view actions for starting work, marking work waiting, moving work back to to-do, and restoring done/cancelled work without opening the detail panel
+- All Tasks origin filtering so human users can isolate agent-originated work for review or switch back to human-created work
 - localStorage-backed demo-mode task and profile data when Supabase is unavailable or the visitor is logged out
 - persistent dark/light appearance preferences for the app workspace
 - local-date-aware browser due-task reminders for active tasks due today or overdue

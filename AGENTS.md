@@ -22,6 +22,7 @@ The product promise should be grounded in what the code actually supports:
 - task-detail notes for human context, decisions, links, and future agent handoff context, with demo localStorage persistence, authenticated owned-task note routes, and MCP/ChatGPT Actions support for external agents to append reviewable task notes or bounded agent-result notes
 - task-detail parent and related task links, with demo localStorage persistence and an authenticated relationship route that verifies the current task and every linked task belong to the current user before service-role persistence
 - scan-view task-card status actions for starting active work, marking work waiting, moving work back to to-do, and restoring done/cancelled work without opening task detail; card actions remain visible on mobile/touch viewports
+- All Tasks origin filtering for isolating agent-originated work from human-created tasks during review
 - daily briefing and prioritization generated from task context, with cached briefing rows kept service-owned if the cache table is used
 - limited agent execution for owned `research`, `draft`, and `prep` task records, with server-side output persistence, run history, and user verification notes; `manual` and `remind` tasks are not executable AI-agent tasks
 - localStorage-backed demo-mode task and profile data when Supabase is unavailable or the visitor is logged out, so logged-out changes survive reloads
