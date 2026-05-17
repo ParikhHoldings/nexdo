@@ -1,7 +1,7 @@
 # Deployment
 
 ## Current status
-PR #3 passed the GitHub Actions Web rails workflow and completed a Vercel preview deployment on 2026-05-16. Local `npm run verify:env` currently fails because `.env.local` is absent; only `.env.local.example` exists in this workspace. No production deploy target or production provider credentials were verified in this operating pass. Treat Nexdo as preview-verified, not production-ready, until the checks below pass against the real deployment environment.
+PR #3 passed the GitHub Actions Web rails workflow for commit `36bbf1b`, and an earlier Vercel preview deployment completed on 2026-05-16. The latest Vercel deployment check for commit `36bbf1b` is blocked by Vercel's build-rate limit and reports "Deployment rate limited - retry in 24 hours." Local `npm run verify:env` currently fails because `.env.local` is absent; only `.env.local.example` exists in this workspace. No production deploy target or production provider credentials were verified in this operating pass. Treat Nexdo as locally and CI-verified but not current-preview-verified or production-ready until the checks below pass against the real deployment environment.
 
 ## Branch and release rails
 - Use `main` as the production branch unless a deploy platform is configured differently.

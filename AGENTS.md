@@ -50,9 +50,10 @@ Current local verification from 2026-05-17:
 - `npm audit --audit-level=moderate` passed with 0 vulnerabilities after the Next.js 16 / ESLint 9 upgrade
 - `npm run verify:env` failed because `.env.local` is absent; only `.env.local.example` exists in this workspace
 
-Current PR verification from 2026-05-16:
-- PR #3 Web rails passed in GitHub Actions
-- PR #3 Vercel preview deployment completed
+Current PR verification:
+- PR #3 Web rails passed in GitHub Actions for commit `36bbf1b` on 2026-05-17
+- an earlier PR #3 Vercel preview deployment completed on 2026-05-16
+- the latest Vercel status for commit `36bbf1b` is blocked by Vercel's build-rate limit and reports: "Deployment rate limited - retry in 24 hours"
 
 Production environment, Supabase migrations, OpenAI provider calls, Stripe test-mode flows, scoped MCP/API-key execution, idempotency replay against real task data, agent audit writes, and deployment rails remain unverified in this pass.
 

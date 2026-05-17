@@ -47,6 +47,7 @@
 
 ### Blocked
 - `npm run verify:env` still cannot pass until `.env.local` is created with real provider values.
+- Latest Vercel deploy check for PR #3 is blocked by Vercel's build-rate limit; GitHub Actions Web rails passed on the same head.
 
 ### Approvals needed
 - Public launch copy, pricing changes, production deploys, and customer-facing commitments still require approval.
