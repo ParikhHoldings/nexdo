@@ -323,6 +323,16 @@ API keys are the external-agent trust boundary. They should not be copied into b
 ### Impact
 Users must copy new keys when generated. Existing keys continue to validate through their hash, and the MCP settings page uses key hints plus an explicit paste field for connection tests.
 
+## 2026-05-17 - External agents get a bounded setup brief
+### Decision
+Connect AI setup includes a copyable Agent operating brief alongside MCP and ChatGPT Actions configuration. The brief tells external clients to read before writing, prefer notes for findings and uncertainty, include `source_agent_id` plus `external_ref` for auditable writes, use task statuses deliberately, and avoid side effects or irreversible commitments without explicit human instruction.
+
+### Why
+External agents need product-specific operating rails, not only endpoint URLs and schemas. Putting the brief beside setup reduces the chance that a connected client treats Nexdo as an open-ended automation surface.
+
+### Impact
+Agent setup now has one more copyable artifact that should stay aligned with the MCP tool contract, trace metadata requirements, and public promise of bounded, reviewable assistance.
+
 ## 2026-05-16 - Profile browser access is column-limited
 ### Decision
 Direct authenticated profile reads expose only the fields the app needs for account preferences, plan display, key hints, and usage display. Direct authenticated profile updates are limited to `full_name`, `timezone`, and `work_type`. Credential, billing, quota, Stripe, and entitlement fields must be changed by server routes, provider webhooks, or service-role jobs.

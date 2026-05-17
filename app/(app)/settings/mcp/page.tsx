@@ -35,6 +35,15 @@ const MCP_TOOL_DETAILS = [
   { name: 'get_task', desc: 'Get full task details' },
 ]
 
+const AGENT_OPERATING_BRIEF = [
+  'You are working inside Nexdo, a bounded task workspace for human-reviewed execution.',
+  'Use list_tasks, search_tasks, get_task, and get_briefing before changing task state.',
+  'Prefer add_task_note with note_type=agent_result for findings, drafts, handoffs, and uncertainty.',
+  'When creating, updating, or completing tasks, include source_agent_id and external_ref so the human can audit the change.',
+  'Use task statuses deliberately: in_progress for active work, waiting for blocked work, done only when the requested work is complete, and cancelled only for duplicates or work the human no longer wants.',
+  'Do not perform external side effects, spend money, send messages, or make irreversible commitments unless the human explicitly asks.',
+].join('\n')
+
 type AgentEvent = {
   id: string
   tool_name: string
@@ -168,6 +177,7 @@ export default function MCPSettingsPage() {
   const [copiedUrl, setCopiedUrl] = useState(false)
   const [copiedConfig, setCopiedConfig] = useState(false)
   const [copiedOpenApi, setCopiedOpenApi] = useState(false)
+  const [copiedBrief, setCopiedBrief] = useState(false)
   const [testApiKey, setTestApiKey] = useState('')
   const [testStatus, setTestStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [testMessage, setTestMessage] = useState('')
@@ -454,6 +464,35 @@ export default function MCPSettingsPage() {
             API access and a generated key are required before this tester is enabled.
           </p>
         )}
+      </section>
+
+      {/* Agent operating brief */}
+      <section className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 mb-6">
+        <div className="mb-4 flex items-start justify-between gap-4">
+          <div>
+            <h2 className="text-lg font-semibold text-zinc-100">
+              Agent operating brief
+            </h2>
+            <p className="mt-1 text-sm text-zinc-500">
+              Paste this into the system or project instructions for any agent using Nexdo tools.
+            </p>
+          </div>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => handleCopy(AGENT_OPERATING_BRIEF, setCopiedBrief)}
+            aria-label="Copy agent operating brief"
+          >
+            {copiedBrief ? (
+              <Check className="h-3 w-3" />
+            ) : (
+              <Copy className="h-3 w-3" />
+            )}
+          </Button>
+        </div>
+        <pre className="whitespace-pre-wrap rounded-lg bg-zinc-800 p-4 text-sm text-zinc-300">
+          {AGENT_OPERATING_BRIEF}
+        </pre>
       </section>
 
       {/* Agent Activity */}

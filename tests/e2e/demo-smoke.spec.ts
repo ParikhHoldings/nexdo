@@ -1370,6 +1370,20 @@ test('connect ai page reflects the paid API access gate', async ({ page }) => {
     'href',
     '/settings?tab=billing'
   )
+  await expect(
+    page.getByRole('heading', { name: 'Agent operating brief' })
+  ).toBeVisible()
+  await expect(
+    page.getByText(
+      'Use list_tasks, search_tasks, get_task, and get_briefing before changing task state.'
+    )
+  ).toBeVisible()
+  await expect(
+    page.getByText(/include source_agent_id and external_ref/)
+  ).toBeVisible()
+  await expect(
+    page.getByRole('button', { name: 'Copy agent operating brief' })
+  ).toBeVisible()
   await expect(page.getByText('Upgrade to Power or Team before connecting external AI tools.')).toBeVisible()
   await expect(page.getByLabel('Full API key')).toBeDisabled()
   await expect(page.getByRole('button', { name: 'Test Connection' })).toBeDisabled()

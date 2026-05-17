@@ -23,6 +23,7 @@ The goal is not a broad public launch. The credible Monday target is a verified 
 - Route smoke can now verify launch-facing marketing, app, login/signup/password-reset auth, import, settings, MCP setup, privacy, and terms routes at desktop and mobile widths against a preview/production URL.
 - Authenticated app smoke can now verify deployed app-cookie auth, task list/create/update/delete, and task-note validation/create/readback against a real Supabase-backed app session.
 - The MCP settings page now exposes recent agent activity from the audit table when a user is authenticated.
+- The Connect AI setup page now includes a copyable Agent operating brief that tells external clients to read before writing, prefer notes for findings, include `source_agent_id` plus `external_ref`, and avoid side effects without explicit human instruction.
 - Agent task creation now has local idempotency handling through `source_agent_id` plus `external_ref`; real Supabase/API-key replay verification is still required.
 - PR #3 Web rails passed on latest inspected feature head `13c553d911b8648cc543645edc2a9a411dcc25c3`; inspect current checks after each push before treating the newest head as current-green.
 - GitHub Actions Web rails run on pull requests and pushes to `main`/`staging`, with install, lint, typecheck, build, dependency audit, and Playwright smoke testing so CI matches the documented launch/deploy checklist.
