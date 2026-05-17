@@ -12,6 +12,13 @@ function stripeCustomerId(
   return customer?.id ?? null
 }
 
+function stripeSubscriptionId(
+  subscription: string | Stripe.Subscription | null | undefined
+) {
+  if (typeof subscription === 'string') return subscription
+  return subscription?.id ?? null
+}
+
 export async function POST(request: NextRequest) {
   if (!stripe) {
     return NextResponse.json({ error: 'Stripe not configured' }, { status: 500 })
@@ -63,7 +70,7 @@ export async function POST(request: NextRequest) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session
         const customerId = stripeCustomerId(session.customer)
-        const subscriptionId = session.subscription as string | null
+        const subscriptionId = stripeSubscriptionId(session.subscription)
         if (!customerId || !subscriptionId) break
 
         const subscription = await stripe.subscriptions.retrieve(subscriptionId)
@@ -136,9 +143,13 @@ export async function POST(request: NextRequest) {
 
     // Record the event AFTER successful processing. If we crashed above,
     // Stripe will retry and we'll try again.
-    await supabase
+    const { error: eventInsertError } = await supabase
       .from('stripe_events')
       .insert({ id: event.id, type: event.type })
+
+    if (eventInsertError) {
+      throw new Error(`Failed to record Stripe event ${event.id}: ${eventInsertError.message}`)
+    }
 
     return NextResponse.json({ received: true })
   } catch (error) {

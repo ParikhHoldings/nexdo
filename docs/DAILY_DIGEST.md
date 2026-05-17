@@ -115,6 +115,7 @@
 - Expanded OpenAI app-route and MCP provider smokes so protected-preview launch checks use Vercel bypass headers when configured.
 - Hardened Stripe failed-payment handling so `invoice.payment_failed` downgrades entitlements to Free and the webhook smoke verifies it.
 - Normalized Stripe webhook customer IDs across string and expanded-object event shapes before entitlement updates.
+- Hardened Stripe webhook idempotency so failed event-record inserts return an error for Stripe retry, and checkout completion handles expanded subscription objects.
 
 ### In progress
 - Provider-backed Supabase, OpenAI, Stripe, and MCP smokes remain the main launch-readiness gap.
