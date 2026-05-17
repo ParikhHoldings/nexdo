@@ -53,9 +53,9 @@ Current local verification from 2026-05-17:
 - `npm run verify:env` failed because `.env.local` is absent; only `.env.local.example` exists in this workspace
 
 Current PR verification:
-- PR #3 Web rails passed in GitHub Actions on 2026-05-17 for commit `9e5878b`
-- PR #3 Vercel deployment completed on 2026-05-17 for commit `9e5878b`
-- repeated PR pushes have intermittently hit Vercel account build-rate limits, so always inspect current PR checks before treating preview deploy as current-green
+- PR #3 Web rails have passed repeatedly on this branch, including after the invalid-date/time rail and agent-context refresh.
+- The last observed successful PR #3 Vercel deployment was on 2026-05-17 after the invalid-date/time code change; later documentation-only pushes hit Vercel account build-rate limits.
+- Always inspect current PR checks before treating preview deploy as current-green. A Vercel build-rate-limit failure is not evidence of an app build failure, but it does mean the newest head does not have fresh preview-deploy evidence.
 
 Production environment, Supabase migrations, OpenAI provider calls, Stripe test-mode flows, scoped MCP/API-key execution, idempotency replay against real task data, agent audit writes, and production deployment rails remain unverified in this pass.
 
