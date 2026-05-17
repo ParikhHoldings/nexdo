@@ -1,4 +1,5 @@
 import type { Task, TaskPriority, TaskStatus } from '@/lib/database.types'
+import { normalizeLocalDateKey, normalizeLocalTime } from '@/lib/dates'
 
 const STATUSES = ['todo', 'in_progress', 'waiting', 'done', 'cancelled'] as const
 const PRIORITIES = ['urgent', 'high', 'medium', 'low'] as const
@@ -42,11 +43,7 @@ function finiteMinutes(value: unknown): number | null {
 }
 
 function validDate(value: unknown): string | null {
-  if (value === undefined || value === null) return null
-  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    return null
-  }
-  return value
+  return normalizeLocalDateKey(value)
 }
 
 export function sanitizeUserName(value: unknown) {
@@ -100,7 +97,7 @@ export function sanitizeAiTasks(value: unknown, maxTasks: number): SanitizedTask
       status,
       priority,
       due_date: validDate(task.due_date),
-      due_time: text(task.due_time, 8),
+      due_time: normalizeLocalTime(task.due_time),
       context: text(task.context, MAX_CONTEXT),
       source: 'manual',
       action_type: actionType,

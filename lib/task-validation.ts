@@ -6,6 +6,7 @@ import type {
   TaskStatus,
   TaskUpdate,
 } from '@/lib/database.types'
+import { normalizeLocalDateKey, normalizeLocalTime } from '@/lib/dates'
 
 const PRIORITIES = ['urgent', 'high', 'medium', 'low'] as const
 const STATUSES = ['todo', 'in_progress', 'waiting', 'done', 'cancelled'] as const
@@ -162,7 +163,7 @@ function validateStringArray(
 function validateDueDate(value: unknown, errors: ValidationError[], nullableMessage: string) {
   if (value === undefined || value === null) return
 
-  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+  if (normalizeLocalDateKey(value) === null) {
     errors.push({ field: 'due_date', message: nullableMessage })
   }
 }
@@ -173,7 +174,7 @@ function validateDueTime(value: unknown, errors: ValidationError[], nullableMess
   if (
     typeof value !== 'string' ||
     value.length > MAX_DUE_TIME ||
-    !/^\d{2}:\d{2}(:\d{2})?$/.test(value)
+    normalizeLocalTime(value) === null
   ) {
     errors.push({ field: 'due_time', message: nullableMessage })
   }
@@ -251,8 +252,8 @@ export function validateTaskInput(value: unknown): TaskInputValidation {
       raw_input: normalizeNullableText(value.raw_input),
       description: normalizeNullableText(value.description),
       priority: (value.priority as TaskPriority | undefined) ?? 'medium',
-      due_date: (value.due_date as string | null | undefined) ?? null,
-      due_time: (value.due_time as string | null | undefined) ?? null,
+      due_date: normalizeLocalDateKey(value.due_date) ?? null,
+      due_time: normalizeLocalTime(value.due_time) ?? null,
       context: normalizeNullableText(value.context),
       source: (value.source as Exclude<TaskSource, 'agent'> | undefined) ?? 'manual',
       action_type: (value.action_type as ActionType | undefined) ?? 'manual',
@@ -326,7 +327,7 @@ export function validateTaskPatch(value: unknown): TaskPatchValidation {
     const errorCount = errors.length
     validateDueDate(value.due_date, errors, 'Must be YYYY-MM-DD or null.')
     if (errors.length === errorCount) {
-      updates.due_date = (value.due_date as string | null) ?? null
+      updates.due_date = normalizeLocalDateKey(value.due_date)
     }
   }
 
@@ -334,7 +335,7 @@ export function validateTaskPatch(value: unknown): TaskPatchValidation {
     const errorCount = errors.length
     validateDueTime(value.due_time, errors, 'Must be HH:MM, HH:MM:SS, or null.')
     if (errors.length === errorCount) {
-      updates.due_time = (value.due_time as string | null) ?? null
+      updates.due_time = normalizeLocalTime(value.due_time)
     }
   }
 

@@ -56,7 +56,7 @@ test('AI task input sanitizer trims, bounds, and defaults task fields', () => {
     status: 'todo',
     priority: 'medium',
     due_date: null,
-    due_time: '14:30:00',
+    due_time: null,
     action_type: 'draft',
     estimated_minutes: 13,
     energy_level: 'quick',
@@ -96,7 +96,18 @@ test('AI parsed task validator normalizes due times', () => {
   expect(
     validateParsedTask({
       title: 'Call launch partner',
+      due_date: '2026-02-30',
       due_time: '25:00',
+    })
+  ).toMatchObject({
+    due_date: null,
+    due_time: null,
+  })
+
+  expect(
+    validateParsedTask({
+      title: 'Call launch partner',
+      due_time: '14:30:00 extra',
     })
   ).toMatchObject({
     due_time: null,
@@ -383,6 +394,8 @@ test('task validation normalizes safe create inputs and rejects protected fields
   const invalid = validateTaskInput({
     title: 'Agent-created spoof',
     source: 'agent',
+    due_date: '2026-02-30',
+    due_time: '29:00',
     user_id: 'other-user',
     source_agent_id: 'agent-1',
     agent_output: { draft: 'spoofed' },
@@ -390,7 +403,14 @@ test('task validation normalizes safe create inputs and rejects protected fields
 
   expect(invalid.task).toBeNull()
   expect(invalid.errors.map((error) => error.field)).toEqual(
-    expect.arrayContaining(['source', 'user_id', 'source_agent_id', 'agent_output'])
+    expect.arrayContaining([
+      'source',
+      'due_date',
+      'due_time',
+      'user_id',
+      'source_agent_id',
+      'agent_output',
+    ])
   )
 })
 
@@ -422,6 +442,8 @@ test('task patch validation allowlists human-editable fields only', () => {
 
   const invalid = validateTaskPatch({
     title: '',
+    due_date: '2026-13-01',
+    due_time: '24:00',
     user_id: 'other-user',
     completed_at: '2026-05-18T12:00:00.000Z',
     source_agent_id: 'agent-1',
@@ -433,6 +455,8 @@ test('task patch validation allowlists human-editable fields only', () => {
   expect(invalid.errors.map((error) => error.field)).toEqual(
     expect.arrayContaining([
       'title',
+      'due_date',
+      'due_time',
       'user_id',
       'completed_at',
       'source_agent_id',

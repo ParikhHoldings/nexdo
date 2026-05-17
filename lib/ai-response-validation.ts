@@ -10,6 +10,7 @@ import type {
   Task,
   TaskPriority,
 } from './database.types'
+import { normalizeLocalDateKey, normalizeLocalTime } from './dates'
 
 const PRIORITIES: TaskPriority[] = ['urgent', 'high', 'medium', 'low']
 const ACTION_TYPES: ActionType[] = ['manual', 'research', 'draft', 'prep', 'remind']
@@ -61,29 +62,6 @@ function integer(value: unknown, min: number, max: number): number | null {
   return rounded
 }
 
-function isoDate(value: unknown): string | null {
-  const date = text(value, 10)
-  if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return null
-
-  const parsed = new Date(`${date}T00:00:00Z`)
-  if (Number.isNaN(parsed.getTime())) return null
-  return parsed.toISOString().slice(0, 10) === date ? date : null
-}
-
-function localTime(value: unknown): string | null {
-  const raw = text(value, 8)
-  if (!raw) return null
-
-  const match = /^(\d{1,2}):([0-5]\d)(?::([0-5]\d))?$/.exec(raw)
-  if (!match) return null
-
-  const hour = Number(match[1])
-  if (hour < 0 || hour > 23) return null
-
-  const normalized = `${String(hour).padStart(2, '0')}:${match[2]}`
-  return match[3] ? `${normalized}:${match[3]}` : normalized
-}
-
 function enumValue<T extends string>(
   value: unknown,
   allowed: readonly T[],
@@ -116,8 +94,8 @@ export function validateParsedTask(value: unknown): ParsedTask | null {
 
   return {
     title,
-    due_date: isoDate(object.due_date),
-    due_time: localTime(object.due_time),
+    due_date: normalizeLocalDateKey(object.due_date),
+    due_time: normalizeLocalTime(object.due_time),
     priority: enumValue(object.priority, PRIORITIES, 'medium'),
     context: optionalText(object.context, 1200),
     people: stringArray(object.people, 10, 80),

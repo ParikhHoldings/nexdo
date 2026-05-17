@@ -655,6 +655,7 @@ test('DB-backed MCP mutation handlers update owned tasks and log failures', asyn
     title: string
     status: TaskStatus
     context: string
+    due_date: string
     due_time: string
     action_type: string
     estimated_minutes: number
@@ -671,6 +672,7 @@ test('DB-backed MCP mutation handlers update owned tasks and log failures', asyn
         title: 'Updated by agent',
         status: 'waiting',
         context: '  Needs customer input  ',
+        due_date: '2026-05-19',
         due_time: '14:30',
         action_type: 'prep',
         estimated_minutes: 45.4,
@@ -691,6 +693,7 @@ test('DB-backed MCP mutation handlers update owned tasks and log failures', asyn
     title: 'Updated by agent',
     status: 'waiting',
     context: 'Needs customer input',
+    due_date: '2026-05-19',
     due_time: '14:30',
     action_type: 'prep',
     estimated_minutes: 45,
@@ -702,6 +705,7 @@ test('DB-backed MCP mutation handlers update owned tasks and log failures', asyn
   })
   expect(db.tasks.find((task) => task.id === 'owned-task')).toMatchObject({
     source: 'agent',
+    due_date: '2026-05-19',
     due_time: '14:30',
     action_type: 'prep',
     estimated_minutes: 45,
@@ -761,6 +765,30 @@ test('DB-backed MCP mutation handlers update owned tasks and log failures', asyn
   expect(invalidStructuredField.isError).toBe(true)
   expect(invalidStructuredField.content[0].text).toContain('energy_level')
 
+  const invalidDueDate = await executeToolWithDependencies(
+    'update_task',
+    {
+      task_id: 'owned-task',
+      due_date: '2026-02-30',
+    },
+    'user-1',
+    deps
+  )
+  expect(invalidDueDate.isError).toBe(true)
+  expect(invalidDueDate.content[0].text).toContain('due_date')
+
+  const invalidDueTime = await executeToolWithDependencies(
+    'update_task',
+    {
+      task_id: 'owned-task',
+      due_time: '29:00',
+    },
+    'user-1',
+    deps
+  )
+  expect(invalidDueTime.isError).toBe(true)
+  expect(invalidDueTime.content[0].text).toContain('due_time')
+
   const invalidComplete = await executeToolWithDependencies(
     'complete_task',
     {
@@ -796,6 +824,8 @@ test('DB-backed MCP mutation handlers update owned tasks and log failures', asyn
   expect(db.agentActionEvents.map((event) => event.success)).toEqual([
     true,
     true,
+    false,
+    false,
     false,
     false,
     false,

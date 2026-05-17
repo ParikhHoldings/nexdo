@@ -52,6 +52,16 @@ Nexdo's agent promise depends on tasks being a useful structured work layer, not
 ### Impact
 Future task fields should be exposed through MCP/OpenAPI deliberately and added to local handler coverage plus `npm run smoke:mcp -- --write` before they become part of the agent contract.
 
+## 2026-05-17 - Task due dates and times use shared normalizers
+### Decision
+Human task create/patch validation, AI task sanitization/output validation, and MCP task updates should use shared local date and time normalizers for due-date and due-time fields.
+
+### Why
+Due-date and due-time fields are part of the core task contract. Regex-only checks can accept impossible dates like 2026-02-30 or out-of-range times like 29:00, which weakens planning, briefing, reminders, and external-agent writes.
+
+### Impact
+Future task ingestion paths should reuse the shared date/time helpers before persisting or acting on task schedule metadata. Provider smokes should continue to cover due-date and due-time shape, while local tests should cover calendar validity and time range behavior.
+
 ## 2026-05-17 - Human task routes share validation
 ### Decision
 Human task creation and patch routes use `lib/task-validation.ts` for normalization, allowlisting, and protected-field rejection.

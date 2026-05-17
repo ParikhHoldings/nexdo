@@ -3,7 +3,7 @@ import { parseTaskInput, generateBriefing } from '@/lib/openai'
 import { canUseApiAccess, hasRequiredScope, requiredScopeForTool } from '@/lib/agent-scopes'
 import { apiKeyHint, hashApiKey } from '@/lib/api-keys'
 import { checkQuota, consumeQuota } from '@/lib/quota'
-import { getLocalDateKey } from '@/lib/dates'
+import { getLocalDateKey, normalizeLocalDateKey, normalizeLocalTime } from '@/lib/dates'
 import type {
   ActionType,
   EnergyLevel,
@@ -778,25 +778,24 @@ const updateTask: ToolHandler = async (args, userId, deps) => {
   }
 
   if (args.due_date !== undefined) {
-    if (
-      args.due_date !== null &&
-      (typeof args.due_date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(args.due_date))
-    ) {
+    const dueDate = normalizeLocalDateKey(args.due_date)
+    if (args.due_date !== null && dueDate === null) {
       return toolError('Error: due_date must be YYYY-MM-DD or null')
     }
-    updates.due_date = args.due_date
+    updates.due_date = dueDate
   }
 
   if (args.due_time !== undefined) {
+    const dueTime = normalizeLocalTime(args.due_time)
     if (
       args.due_time !== null &&
       (typeof args.due_time !== 'string' ||
         args.due_time.length > MAX_DUE_TIME ||
-        !/^\d{2}:\d{2}(:\d{2})?$/.test(args.due_time))
+        dueTime === null)
     ) {
       return toolError('Error: due_time must be HH:MM, HH:MM:SS, or null')
     }
-    updates.due_time = args.due_time
+    updates.due_time = dueTime
   }
 
   if (args.status !== undefined) {
