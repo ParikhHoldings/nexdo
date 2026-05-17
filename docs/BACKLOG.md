@@ -32,6 +32,7 @@
 - expanded `npm run smoke:mcp` to verify OpenAPI availability, ChatGPT Actions `list_tasks` response shape, and required real `agent_action_events` audit writes with `--write --audit`
 - expanded `npm run smoke:mcp` across search, briefing, get-task, update, complete, and ChatGPT Actions search/list checks
 - added MCP smoke `--provision` mode to create disposable full/read-only Power-plan API keys for scoped real endpoint verification
+- added `npm run smoke:launch` to load a real env file, run local rails, run Supabase/OpenAI/Stripe/MCP provider smokes in order, and keep manual launch approval gates explicit
 - added optional trace metadata to MCP `complete_task` so completion calls can be audited with source agent and external reference context
 - expanded `npm run smoke:stripe -- --write --webhook` to post signed subscription events, verify unknown-price fail-closed behavior, verify paid/free tier transitions, and verify duplicate webhook idempotency against disposable Supabase/Stripe test data
 - expanded `npm run smoke:stripe -- --write --webhook` to verify free/pro/power quota plan-state boundaries after signed webhook tier changes
@@ -138,6 +139,7 @@
 - run `npm run smoke:supabase -- --write` against a real Supabase project after applying migrations, including hashed API-key columns, profile column read/update grants, direct task column-grant denials, audit-event privacy, and agent external-ref uniqueness
 - run `npm run smoke:openai -- --app` with real OpenAI, Supabase, and target app env
 - run `npm run smoke:stripe -- --write --webhook` with Stripe test-mode keys and target Supabase/app env to verify checkout, portal, webhook events, quota plan-state boundaries, authenticated task-create quota behavior, and idempotency
+- run `npm run smoke:launch -- --env=.env.production.local --url=<preview-url> --technical-only` once real provider env is available
 - smoke test auth, profile creation, task CRUD, demo-mode fallback, and app navigation
 - smoke test OpenAI task parse, prioritization, daily briefing, and agent execution with real env
 - smoke test authenticated agent execution against an owned Supabase task after provider env is configured

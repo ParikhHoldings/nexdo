@@ -11,6 +11,7 @@
     "test:e2e": "playwright test",
     "verify:env": "node scripts/verify-env.mjs",
     "smoke:openai": "node scripts/smoke-openai.mjs",
+    "smoke:launch": "node scripts/smoke-launch.mjs",
     "smoke:mcp": "node scripts/smoke-mcp.mjs",
     "smoke:stripe": "node scripts/smoke-stripe.mjs",
     "smoke:supabase": "node scripts/smoke-supabase.mjs"

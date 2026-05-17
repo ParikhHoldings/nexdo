@@ -92,6 +92,7 @@ Production environment, Supabase migrations, OpenAI provider calls, Stripe test-
 - Stripe provider smoke: `npm run smoke:stripe`
 - Supabase provider smoke: `npm run smoke:supabase`
 - MCP provider smoke: `npm run smoke:mcp`
+- Full launch smoke bundle: `npm run smoke:launch`
 
 `npm run smoke:openai` rejects missing/placeholder keys and verifies provider
 JSON-mode output for parse, prioritization, briefing, and all bounded execution
@@ -120,6 +121,13 @@ run must prove `agent_action_events` audit rows were written.
 column grants, direct task column-grant denials for server-managed fields,
 agent external-ref uniqueness, private audit-event reads, browser audit-event
 insert denial, quota increments/no-ops, and rate-limit allow/block behavior.
+
+`npm run smoke:launch -- --env=.env.production.local --url=https://preview.example --technical-only`
+loads the env file into child processes, runs local rails, runs the Supabase,
+OpenAI, Stripe, and MCP provider smokes in order, and stops short of claiming
+launch approval. Omit `--technical-only` only when public copy approval and
+production deploy verification can be represented with explicit
+`--copy-approved` and `--production-deploy-verified` flags.
 
 Use the smallest relevant verification. For docs-only changes, a diff review is usually enough. For code changes, prefer `npm run lint`, `npm run typecheck`, and `npm run build` when dependencies and environment allow it. For launch-facing app behavior, run `npm run test:e2e` as well. If a check cannot run, record why and add a follow-up task.
 

@@ -421,3 +421,28 @@ test('OpenAI smoke can verify authenticated app routes with disposable data', ()
   expect(source).toContain("subscription_tier: 'power'")
   expect(source).toContain("select('agent_output')")
 })
+
+test('launch smoke orchestrates required technical and approval gates', () => {
+  const packageJson = JSON.parse(readFileSync('package.json', 'utf8'))
+  const source = readFileSync('scripts/smoke-launch.mjs', 'utf8')
+
+  expect(packageJson.scripts['smoke:launch']).toBe('node scripts/smoke-launch.mjs')
+  expect(source).toContain("const envArg = rawArgs.find((arg) => arg.startsWith('--env='))")
+  expect(source).toContain('...fileEnv')
+  expect(source).toContain("await run('Lint', ['run', 'lint'])")
+  expect(source).toContain("await run('Typecheck', ['run', 'typecheck'])")
+  expect(source).toContain("await run('Build', ['run', 'build'])")
+  expect(source).toContain("await run('Playwright e2e', ['run', 'test:e2e'])")
+  expect(source).toContain("await run('Dependency audit', ['audit', '--audit-level=moderate'])")
+  expect(source).toContain("await run('Environment preflight', ['run', 'verify:env', '--', envFile])")
+  expect(source).toContain("await run('Supabase write smoke', ['run', 'smoke:supabase', '--', '--write'])")
+  expect(source).toContain("await run('OpenAI app-route smoke', ['run', 'smoke:openai', '--', '--app'])")
+  expect(source).toContain("const stripeArgs = ['run', 'smoke:stripe', '--', '--write', '--webhook']")
+  expect(source).toContain("'--provision', '--write', '--audit'")
+  expect(source).toContain('Full launch smoke cannot skip local rails or provider smokes')
+  expect(source).toContain("if (!copyApproved) missingManualGates.push('--copy-approved')")
+  expect(source).toContain(
+    "if (!productionDeployVerified) missingManualGates.push('--production-deploy-verified')"
+  )
+  expect(source).toContain('--technical-only')
+})

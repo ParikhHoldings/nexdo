@@ -48,6 +48,26 @@ The verifier intentionally rejects common placeholder fragments such as
 Use a copy of `.env.local.example` with real values instead of editing the
 example file directly.
 
+## Launch smoke bundle
+Once real provider env is available, the fastest technical verification path is
+the launch smoke bundle:
+
+```bash
+npm run smoke:launch -- --env=.env.production.local --url=https://your-preview.example --technical-only
+```
+
+The bundle loads the env file into child processes, runs lint, typecheck,
+build, Playwright, dependency audit, env preflight, and the Supabase, OpenAI,
+Stripe, and MCP smoke sequence below. `--technical-only` intentionally keeps
+manual gates visible: public copy approval and production deploy approval are
+not implied by passing technical smokes.
+
+For a final launch gate after approvals and production deploy verification:
+
+```bash
+npm run smoke:launch -- --env=.env.production.local --url=https://your-production.example --copy-approved --production-deploy-verified
+```
+
 ## Production setup sequence
 1. Create or select the production Supabase project.
 2. Apply every migration in `supabase/migrations/` to that project.

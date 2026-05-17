@@ -60,6 +60,7 @@ npm run smoke:openai
 npm run smoke:stripe
 npm run smoke:supabase
 npm run smoke:mcp
+npm run smoke:launch
 ```
 
 ## Environment
@@ -70,6 +71,16 @@ Use `.env.local.example` as the source of truth for required local variables:
 - `NEXT_PUBLIC_APP_URL`
 
 Do not treat auth, AI, billing, MCP, imports, or deployment as verified until the relevant env and flow have been tested in the target environment.
+
+For a full technical launch pass, export or provide real provider env and run:
+
+```bash
+npm run smoke:launch -- --env=.env.production.local --url=https://your-preview.example --technical-only
+```
+
+That command runs local rails plus Supabase, OpenAI, Stripe, and MCP provider
+smokes in sequence. It does not replace Quill/founder public-copy approval or
+production deploy approval.
 
 ## Operating Docs
 - `AGENTS.md` is the repo-level operating contract for Codex and other LLM agents.
