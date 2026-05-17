@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { parseJSONExport, saveImportedTasks } from '@/lib/importers'
-import { enforceImportQuota } from '@/lib/import-quota'
+import { checkImportQuota, recordImportQuota } from '@/lib/import-quota'
 
 type JsonSource = 'things3' | 'omnifocus' | 'trello' | 'asana' | 'generic'
 
@@ -73,11 +73,18 @@ export async function POST(request: Request) {
       )
     }
 
-    const quotaResponse = await enforceImportQuota(userId, tasks.length)
+    const quotaResponse = await checkImportQuota(userId, tasks.length)
     if (quotaResponse) return quotaResponse
 
     // Save tasks
     const result = await saveImportedTasks(tasks, dbClient)
+    const quotaRecordResponse = await recordImportQuota(
+      userId,
+      result.imported,
+      result.tasks,
+      dbClient
+    )
+    if (quotaRecordResponse) return quotaRecordResponse
 
     return NextResponse.json({
       imported: result.imported,

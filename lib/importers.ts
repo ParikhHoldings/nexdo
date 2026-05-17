@@ -866,8 +866,10 @@ export async function saveImportedTasks(
           console.error('Error inserting tasks:', error)
           result.failed += chunk.length
         } else {
-          result.imported += (data?.length || 0)
-          result.tasks.push(...chunk)
+          const insertedTasks = Array.isArray(data) ? (data as TaskInsert[]) : []
+          result.imported += insertedTasks.length
+          result.failed += chunk.length - insertedTasks.length
+          result.tasks.push(...insertedTasks)
         }
       } catch (err) {
         console.error('Error inserting tasks:', err)

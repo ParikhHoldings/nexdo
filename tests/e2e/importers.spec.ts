@@ -6,6 +6,7 @@ import {
   parseICSContent,
   parseJSONExport,
   parseTodoistTask,
+  saveImportedTasks,
 } from '../../lib/importers'
 
 const USER_ID = 'import-test-user'
@@ -157,4 +158,36 @@ test('Things-style JSON parser handles completed tasks and tags', () => {
 
 test('JSON parser fails closed on invalid exports', () => {
   expect(parseJSONExport('{not json', 'generic', USER_ID)).toEqual([])
+})
+
+test('saveImportedTasks returns inserted rows with ids for quota rollback', async () => {
+  const tasks = [
+    normalizeTask({ title: 'Import first task' }, 'csv', USER_ID, 'manual'),
+    normalizeTask({ title: 'Import second task' }, 'csv', USER_ID, 'manual'),
+  ]
+  const supabase = {
+    from: (table: string) => {
+      expect(table).toBe('tasks')
+      return {
+        insert: (chunk: typeof tasks) => ({
+          select: async () => ({
+            data: chunk.map((task, index) => ({
+              ...task,
+              id: `inserted-${index + 1}`,
+            })),
+            error: null,
+          }),
+        }),
+      }
+    },
+  }
+
+  const result = await saveImportedTasks(tasks, supabase)
+
+  expect(result.imported).toBe(2)
+  expect(result.failed).toBe(0)
+  expect(result.tasks.map((task) => task.id)).toEqual([
+    'inserted-1',
+    'inserted-2',
+  ])
 })

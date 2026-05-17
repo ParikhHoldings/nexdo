@@ -183,10 +183,11 @@ Real Supabase smoke verification should include `consume_rate_limit` behavior fo
 
 ## 2026-05-16 - Imports must respect task quotas
 ### Decision
-Authenticated imports consume task-create quota for the number of tasks being imported before saving them.
+Authenticated imports pre-check task-create quota for the requested import size, save the tasks, then consume quota for the number of rows actually inserted. If quota accounting fails after save, inserted rows are deleted by returned task ID before returning an error.
 
 ### Why
 Imports are task creation. Free-tier limits and future plan limits should not be bypassable through CSV, calendar, JSON, or external task imports.
+Failed import saves should not spend quota, and quota-accounting failures should not leave unmetered imported tasks behind.
 
 ### Impact
 Future import UX should show remaining task capacity before upload and real Supabase smoke tests should verify behavior near monthly limits.
