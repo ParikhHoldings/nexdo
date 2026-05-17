@@ -321,7 +321,7 @@ export default function ImportPage() {
             description="Import Microsoft To Do lists with a Graph access token"
             icon={<Layers className="h-6 w-6" />}
             type="token"
-            tokenPlaceholder="Microsoft Graph access token"
+            tokenPlaceholder="Graph access token"
             instructions="Use a Microsoft Graph access token with Tasks.Read permissions. Full OAuth connection is planned after launch."
             {...importStates.microsoft}
             onImport={async ({ token }) => {

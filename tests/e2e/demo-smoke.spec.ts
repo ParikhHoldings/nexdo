@@ -398,7 +398,7 @@ test('connected app imports expose an honest manual token path', async ({ page }
   await expect(
     page.getByText('Full OAuth connection is a post-launch workflow.')
   ).toBeVisible()
-  await expect(page.getByPlaceholder('Microsoft Graph access token')).toBeVisible()
+  await expect(page.getByPlaceholder('Graph access token')).toBeVisible()
   await expect(page.getByPlaceholder('Google Tasks access token')).toBeVisible()
   await expect(page.getByText('Use a Microsoft Graph access token')).toBeVisible()
   await expect(page.getByText('Use a Google OAuth access token')).toBeVisible()

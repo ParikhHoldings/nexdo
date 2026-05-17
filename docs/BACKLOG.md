@@ -69,6 +69,7 @@
 - updated the GitHub Actions verify workflow to `actions/checkout@v5` and `actions/setup-node@v5` so the CI rail no longer depends on deprecated Node 20 action runtimes
 - refreshed README, launch plan, and roadmap verification summaries so repo-facing docs match the latest 82-test local rail and recent preview-deploy evidence
 - added mobile sidebar open/close and post-navigation collapse coverage to the rendered demo smoke path
+- tightened the Microsoft To Do import token placeholder so the rendered import card does not clip the input text
 
 ## Completed 2026-05-16
 - read and updated the repo-level agent context and all existing Markdown/text operating files
