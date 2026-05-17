@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { readFileSync } from 'node:fs'
 import { tierForStripePriceId } from '../../lib/stripe-entitlements'
 import { updateCustomerSubscriptionTier } from '../../lib/stripe-webhook'
 
@@ -106,4 +107,17 @@ test('Stripe webhook profile tier updates fail unless a profile row is written',
       'power'
     )
   ).rejects.toThrow('Failed to update subscription tier')
+})
+
+test('Stripe webhook smoke verifies quota plan state after tier changes', () => {
+  const source = readFileSync('scripts/smoke-stripe.mjs', 'utf8')
+
+  expect(source).toContain('const PLAN_LIMITS = {')
+  expect(source).toContain('verifyQuotaPlanState(supabase, userId,')
+  expect(source).toContain("await verifyQuotaPlanState(supabase, userId, 'free')")
+  expect(source).toContain("await verifyQuotaPlanState(supabase, userId, 'pro')")
+  expect(source).toContain("await verifyQuotaPlanState(supabase, userId, 'power')")
+  expect(source).toContain("priceId: proPriceId")
+  expect(source).toContain("priceId: powerPriceId")
+  expect(source).toContain('quotaWouldAllow(profile,')
 })

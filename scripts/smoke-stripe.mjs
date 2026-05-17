@@ -17,6 +17,13 @@ const appUrl = (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000').repl
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
+const PLAN_LIMITS = {
+  free: { tasksPerMonth: 25, agentExecutionsPerMonth: 0 },
+  pro: { tasksPerMonth: -1, agentExecutionsPerMonth: 50 },
+  power: { tasksPerMonth: -1, agentExecutionsPerMonth: -1 },
+  team: { tasksPerMonth: -1, agentExecutionsPerMonth: -1 },
+}
+
 if (!secretKey || !proPriceId || !powerPriceId) {
   console.error('Missing STRIPE_SECRET_KEY, STRIPE_PRO_PRICE_ID, or STRIPE_POWER_PRICE_ID.')
   process.exit(1)
@@ -255,6 +262,88 @@ async function waitForProfileTier(supabase, userId, expectedTier) {
   fail(`profile tier did not become ${expectedTier}`)
 }
 
+function quotaWouldAllow(profile, kind, quantity = 1) {
+  const plan = PLAN_LIMITS[profile.subscription_tier]
+  if (!plan) fail(`unknown plan in quota smoke: ${profile.subscription_tier}`)
+
+  const limit =
+    kind === 'task_create'
+      ? plan.tasksPerMonth
+      : plan.agentExecutionsPerMonth
+  const used =
+    kind === 'task_create'
+      ? profile.task_count_this_month
+      : profile.agent_executions_this_month
+
+  return limit === -1 || used + quantity <= limit
+}
+
+async function setUsageState(supabase, userId, fields) {
+  const { data, error } = await supabase
+    .from('profiles')
+    .update(fields)
+    .eq('id', userId)
+    .select('subscription_tier, task_count_this_month, agent_executions_this_month')
+    .maybeSingle()
+
+  if (error || !data) fail('failed to set smoke quota state', error?.message)
+  return data
+}
+
+async function verifyQuotaPlanState(supabase, userId, expectedTier) {
+  const plan = PLAN_LIMITS[expectedTier]
+  if (!plan) fail(`unknown expected tier in quota smoke: ${expectedTier}`)
+
+  let profile = await setUsageState(supabase, userId, {
+    task_count_this_month:
+      plan.tasksPerMonth === -1 ? 100000 : Math.max(plan.tasksPerMonth - 1, 0),
+    agent_executions_this_month:
+      plan.agentExecutionsPerMonth === -1
+        ? 100000
+        : Math.max(plan.agentExecutionsPerMonth - 1, 0),
+  })
+
+  if (profile.subscription_tier !== expectedTier) {
+    fail(`quota smoke expected ${expectedTier}, got ${profile.subscription_tier}`)
+  }
+
+  if (!quotaWouldAllow(profile, 'task_create')) {
+    fail(`${expectedTier} task quota denied at expected allowed boundary`)
+  }
+
+  if (plan.tasksPerMonth !== -1) {
+    profile = await setUsageState(supabase, userId, {
+      task_count_this_month: plan.tasksPerMonth,
+    })
+    if (quotaWouldAllow(profile, 'task_create')) {
+      fail(`${expectedTier} task quota allowed over monthly task limit`)
+    }
+  }
+
+  profile = await setUsageState(supabase, userId, {
+    agent_executions_this_month:
+      plan.agentExecutionsPerMonth === -1
+        ? 100000
+        : Math.max(plan.agentExecutionsPerMonth - 1, 0),
+  })
+
+  const shouldAllowAgent = plan.agentExecutionsPerMonth !== 0
+  if (quotaWouldAllow(profile, 'agent_execute') !== shouldAllowAgent) {
+    fail(`${expectedTier} agent quota boundary did not match plan`)
+  }
+
+  if (plan.agentExecutionsPerMonth > 0) {
+    profile = await setUsageState(supabase, userId, {
+      agent_executions_this_month: plan.agentExecutionsPerMonth,
+    })
+    if (quotaWouldAllow(profile, 'agent_execute')) {
+      fail(`${expectedTier} agent quota allowed over monthly execution limit`)
+    }
+  }
+
+  console.log(`ok quota plan state ${expectedTier}`)
+}
+
 async function cleanupWebhookSmoke({ supabase, customerId, userId, eventIds }) {
   if (eventIds.length > 0) {
     const { error } = await supabase.from('stripe_events').delete().in('id', eventIds)
@@ -304,20 +393,35 @@ async function webhookSmoke() {
     await postSignedWebhook(unknownPriceEvent)
     await waitForProfileTier(supabase, userId, 'free')
     console.log('ok webhook unknown price leaves tier unchanged')
+    await verifyQuotaPlanState(supabase, userId, 'free')
 
-    const activeEvent = subscriptionEvent({
-      id: `evt_nexdo_active_${randomUUID()}`,
+    const proEvent = subscriptionEvent({
+      id: `evt_nexdo_pro_${randomUUID()}`,
+      type: 'customer.subscription.updated',
+      customerId: customer.id,
+      priceId: proPriceId,
+      status: 'active',
+    })
+    eventIds.push(proEvent.id)
+    await postSignedWebhook(proEvent)
+    await waitForProfileTier(supabase, userId, 'pro')
+    console.log('ok webhook subscription.updated -> pro')
+    await verifyQuotaPlanState(supabase, userId, 'pro')
+
+    const powerEvent = subscriptionEvent({
+      id: `evt_nexdo_power_${randomUUID()}`,
       type: 'customer.subscription.updated',
       customerId: customer.id,
       priceId: powerPriceId,
       status: 'active',
     })
-    eventIds.push(activeEvent.id)
-    await postSignedWebhook(activeEvent)
+    eventIds.push(powerEvent.id)
+    await postSignedWebhook(powerEvent)
     await waitForProfileTier(supabase, userId, 'power')
     console.log('ok webhook subscription.updated -> power')
+    await verifyQuotaPlanState(supabase, userId, 'power')
 
-    const duplicate = await postSignedWebhook(activeEvent)
+    const duplicate = await postSignedWebhook(powerEvent)
     if (!duplicate?.duplicate) fail('duplicate webhook did not report duplicate replay')
     await waitForProfileTier(supabase, userId, 'power')
     console.log('ok webhook duplicate idempotency')
@@ -333,6 +437,7 @@ async function webhookSmoke() {
     await postSignedWebhook(deletedEvent)
     await waitForProfileTier(supabase, userId, 'free')
     console.log('ok webhook subscription.deleted -> free')
+    await verifyQuotaPlanState(supabase, userId, 'free')
   } finally {
     await cleanupWebhookSmoke({
       supabase,

@@ -127,7 +127,8 @@ npm run smoke:stripe -- --write
 
 Stripe webhook smoke that creates disposable Stripe and Supabase test objects,
 posts signed subscription events to the app webhook, checks tier changes,
-checks duplicate replay, and cleans up:
+checks free/pro/power quota plan-state boundaries, checks duplicate replay,
+and cleans up:
 
 ```bash
 npm run smoke:stripe -- --write --webhook
