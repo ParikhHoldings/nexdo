@@ -138,6 +138,16 @@ test('profile update route returns not found when no profile row is updated', ()
   expect(source).toContain("{ error: 'Profile not found' }")
 })
 
+test('authenticated app boot keeps user and task auth state aligned on profile misses', () => {
+  const source = readFileSync('app/(app)/layout.tsx', 'utf8')
+
+  expect(source).toContain('createClientProfileFallback(user, timezone)')
+  expect(source).toContain('setUserAuthenticated(true)')
+  expect(source).toContain('setTasksAuthenticated(true)')
+  expect(source).toContain('.maybeSingle()')
+  expect(source).toContain('Could not load your tasks')
+})
+
 test('demo file import adds tasks without configured auth', async ({ page }) => {
   await page.goto('/import')
 

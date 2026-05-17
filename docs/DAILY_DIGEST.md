@@ -19,6 +19,7 @@
 - Made agent execution quota pre-check failures return service-failure status when quota/profile state cannot be verified.
 - Made profile update misses return 404 instead of generic Supabase no-row failures.
 - Made MCP task read/update/complete calls return stable not-found errors for missing or unowned task IDs.
+- Kept authenticated app boot coherent when profile rows are missing or delayed by using a safe fallback profile and visible load errors.
 
 ### In progress
 - Provider-backed Supabase, OpenAI, Stripe, and MCP smokes remain the main launch-readiness gap.

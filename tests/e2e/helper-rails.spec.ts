@@ -13,6 +13,7 @@ import {
   normalizeAgentOutput,
   updateAgentReview,
 } from '../../lib/agent-output'
+import { createClientProfileFallback } from '../../lib/profile'
 import { quotaExceededResponse, quotaFailureStatus } from '../../lib/quota'
 import { rateLimitResponseHeaders } from '../../lib/rate-limit'
 import { validateTaskInput, validateTaskPatch } from '../../lib/task-validation'
@@ -110,6 +111,42 @@ test('API key scope helpers map plans and tools to least-privilege permissions',
   expect(requiredScopeForTool('get_briefing')).toBe('briefing:read')
   expect(hasRequiredScope(['tasks:read'], 'list_tasks')).toBe(true)
   expect(hasRequiredScope(['tasks:read'], 'create_task')).toBe(false)
+})
+
+test('authenticated profile fallback keeps app state signed in without sensitive fields', () => {
+  const profile = createClientProfileFallback(
+    {
+      id: 'user-1',
+      email: 'founder@example.com',
+      user_metadata: { full_name: '  Founder User  ' },
+    },
+    'America/Chicago'
+  )
+
+  expect(profile).toMatchObject({
+    id: 'user-1',
+    full_name: 'Founder User',
+    timezone: 'America/Chicago',
+    subscription_tier: 'free',
+    stripe_customer_id: null,
+    api_key: null,
+    api_key_hash: null,
+    api_key_hint: null,
+    task_count_this_month: 0,
+    agent_executions_this_month: 0,
+  })
+  expect(profile.api_key_scopes).toEqual([
+    'tasks:read',
+    'tasks:write',
+    'briefing:read',
+  ])
+
+  expect(
+    createClientProfileFallback(
+      { id: 'user-2', email: 'operator@example.com', user_metadata: {} },
+      'UTC'
+    ).full_name
+  ).toBe('operator')
 })
 
 function apiKeyRotationClient({

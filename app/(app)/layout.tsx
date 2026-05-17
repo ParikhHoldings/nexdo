@@ -12,7 +12,11 @@ import { useTaskStore, useUserStore } from '@/lib/store'
 import { getDemoTasks } from '@/lib/tasks'
 import { getDemoProfile } from '@/lib/demo-profile'
 import { createClient } from '@/lib/supabase/client'
-import { CLIENT_PROFILE_SELECT, toClientProfile } from '@/lib/profile'
+import {
+  CLIENT_PROFILE_SELECT,
+  createClientProfileFallback,
+  toClientProfile,
+} from '@/lib/profile'
 
 /**
  * Detects the user's local IANA timezone so demo tasks and briefings
@@ -44,8 +48,17 @@ export default function AppLayout({
 }: {
   children: React.ReactNode
 }) {
-  const { setTasks, setAuthenticated } = useTaskStore()
-  const { setProfile, setLoading, isLoading } = useUserStore()
+  const {
+    setTasks,
+    setAuthenticated: setTasksAuthenticated,
+    setError,
+  } = useTaskStore()
+  const {
+    setProfile,
+    setLoading,
+    isLoading,
+    setAuthenticated: setUserAuthenticated,
+  } = useUserStore()
 
   useEffect(() => {
     const loadData = async () => {
@@ -57,19 +70,30 @@ export default function AppLayout({
           const { data: { user } } = await supabase.auth.getUser()
 
           if (user) {
-            setAuthenticated(true)
+            setTasksAuthenticated(true)
+            setUserAuthenticated(true)
 
-            const { data: profile } = await supabase
+            const { data: profile, error: profileError } = await supabase
               .from('profiles')
               .select(CLIENT_PROFILE_SELECT)
               .eq('id', user.id)
-              .single()
+              .maybeSingle()
 
             if (profile) {
               setProfile(toClientProfile(profile))
+            } else {
+              if (profileError) {
+                console.error('Error loading profile:', profileError)
+              }
+              setProfile(createClientProfileFallback(user, timezone))
+              setError(
+                profileError
+                  ? 'Could not load your profile settings. Some account features may be temporarily unavailable.'
+                  : 'Your profile is still being set up. Some account features may be temporarily unavailable.'
+              )
             }
 
-            const { data: tasks } = await supabase
+            const { data: tasks, error: tasksError } = await supabase
               .from('tasks')
               .select('*')
               .eq('user_id', user.id)
@@ -77,21 +101,28 @@ export default function AppLayout({
 
             if (tasks) {
               setTasks(tasks)
+            } else if (tasksError) {
+              console.error('Error loading tasks:', tasksError)
+              setTasks([])
+              setError('Could not load your tasks. Refresh or try again shortly.')
             }
           } else {
             // Logged-out visitors see demo data so they can explore the app.
-            setAuthenticated(false)
+            setTasksAuthenticated(false)
+            setUserAuthenticated(false)
             setTasks(getDemoTasks())
             setProfile(getDemoProfile(timezone))
           }
         } catch (error) {
           console.error('Error loading data:', error)
-          setAuthenticated(false)
+          setTasksAuthenticated(false)
+          setUserAuthenticated(false)
           setTasks(getDemoTasks())
           setProfile(getDemoProfile(timezone))
         }
       } else {
-        setAuthenticated(false)
+        setTasksAuthenticated(false)
+        setUserAuthenticated(false)
         setTasks(getDemoTasks())
         setProfile(getDemoProfile(timezone))
       }
@@ -100,7 +131,14 @@ export default function AppLayout({
     }
 
     loadData()
-  }, [setTasks, setProfile, setLoading, setAuthenticated])
+  }, [
+    setTasks,
+    setProfile,
+    setLoading,
+    setTasksAuthenticated,
+    setUserAuthenticated,
+    setError,
+  ])
 
   return (
     <ToastProvider>
