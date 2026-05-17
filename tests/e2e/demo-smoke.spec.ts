@@ -509,6 +509,15 @@ test('connect ai page treats paid API access as the usable-key gate', () => {
   expect(source).toContain('const isEnabled = hasUsableApiKey && apiKeyScopes.includes(requiredScope)')
 })
 
+test('connect ai page normalizes MCP setup error messages', () => {
+  const source = readFileSync('app/(app)/settings/mcp/page.tsx', 'utf8')
+
+  expect(source).toContain('function apiErrorMessage')
+  expect(source).toContain("setEventsError(apiErrorMessage(data, 'Unable to load agent activity'))")
+  expect(source).toContain("setTestMessage(apiErrorMessage(data, 'Connection failed'))")
+  expect(source).toContain("'message' in data.error")
+})
+
 test('demo tasks persist across reloads', async ({ page }) => {
   await page.goto('/today')
   await page

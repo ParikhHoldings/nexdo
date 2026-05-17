@@ -29,6 +29,7 @@
 - Surfaced authenticated AI briefing/prioritization fallback notices when provider or rate-limit failures force local heuristics.
 - Surfaced billing checkout and portal server messages before generic settings errors.
 - Kept Connect AI setup, activity, and tool indicators bound to active paid API access instead of stale key hints.
+- Normalized Connect AI test-connection and agent-activity error messages across plain, message, and JSON-RPC payloads.
 
 ### In progress
 - Provider-backed Supabase, OpenAI, Stripe, and MCP smokes remain the main launch-readiness gap.

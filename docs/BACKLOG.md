@@ -28,6 +28,7 @@
 - surfaced authenticated AI briefing and prioritization fallback notices when provider/rate-limit failures force local heuristics
 - surfaced billing checkout and portal server messages before generic settings errors
 - kept Connect AI setup, activity, and available-tool indicators bound to active paid API access instead of treating old key hints as usable
+- normalized Connect AI test-connection and agent-activity errors across plain, message, and JSON-RPC error payloads
 
 ## Completed 2026-05-16
 - read and updated the repo-level agent context and all existing Markdown/text operating files

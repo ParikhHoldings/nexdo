@@ -62,6 +62,36 @@ function subscribeToOrigin(_onStoreChange: () => void) {
   return () => {}
 }
 
+function apiErrorMessage(payload: unknown, fallback: string): string {
+  if (!payload || typeof payload !== 'object') return fallback
+
+  const data = payload as {
+    message?: unknown
+    error?: unknown
+  }
+
+  if (typeof data.message === 'string' && data.message.trim()) {
+    return data.message
+  }
+
+  if (typeof data.error === 'string' && data.error.trim()) {
+    return data.error
+  }
+
+  if (
+    data.error &&
+    typeof data.error === 'object' &&
+    'message' in data.error
+  ) {
+    const nestedMessage = (data.error as { message?: unknown }).message
+    if (typeof nestedMessage === 'string' && nestedMessage.trim()) {
+      return nestedMessage
+    }
+  }
+
+  return fallback
+}
+
 export default function MCPSettingsPage() {
   const { profile } = useUserStore()
   const apiKeyHint = profile?.api_key_hint || ''
@@ -134,7 +164,7 @@ export default function MCPSettingsPage() {
         if (response.ok) {
           setEvents(data.events || [])
         } else {
-          setEventsError(data.error || 'Unable to load agent activity')
+          setEventsError(apiErrorMessage(data, 'Unable to load agent activity'))
         }
       } catch {
         if (!cancelled) {
@@ -193,7 +223,7 @@ export default function MCPSettingsPage() {
         setTestMessage(`Connected to Nexdo MCP v${data.result.serverInfo?.version || '1.0.0'}`)
       } else {
         setTestStatus('error')
-        setTestMessage(data.error?.message || 'Connection failed')
+        setTestMessage(apiErrorMessage(data, 'Connection failed'))
       }
     } catch (error) {
       setTestStatus('error')
