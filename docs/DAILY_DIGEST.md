@@ -41,6 +41,7 @@
 - Surfaced authenticated AI briefing/prioritization fallback notices when provider or rate-limit failures force local heuristics.
 - Surfaced billing checkout and portal server messages before generic settings errors.
 - Trimmed submitted login emails before Supabase sign-in so pasted whitespace does not break otherwise valid account access.
+- Verified the login-email normalization head through local rails and GitHub Web rails; Vercel still needs fresh preview-deploy evidence because the inspected head hit the known account build-rate limit.
 - Added shared auth redirect guardrails so protected-route login redirects preserve path and query, login/callback redirects stay on same-origin app paths, and callback errors show a visible login message.
 - Kept Settings tab clicks and `?tab=` deep links synchronized with the URL so upgrade and API setup links continue to land on the intended tab after users click around.
 - Kept Connect AI setup, activity, and tool indicators bound to active paid API access instead of stale key hints.
