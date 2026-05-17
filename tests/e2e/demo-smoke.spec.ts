@@ -365,6 +365,12 @@ test('provider list imports fail closed on nested task fetch failures', () => {
 })
 
 test('connected app imports expose an honest manual token path', async ({ page }) => {
+  const importCardSource = readFileSync('components/import-source-card.tsx', 'utf8')
+
+  expect(importCardSource).not.toContain("type: 'oauth'")
+  expect(importCardSource).not.toContain('comingSoon')
+  expect(importCardSource).not.toContain('Connect Account')
+
   await page.goto('/import')
 
   await expect(

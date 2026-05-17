@@ -42,6 +42,7 @@
 - tightened site metadata and agent system prompt language around early-access, bounded, reviewable AI assistance instead of broad automation claims
 - added the public sitemap route advertised by `robots.txt` and tightened manifest/privacy/terms wording around bounded assistance and provider-backed safeguards
 - surfaced agent-origin trace metadata on task cards and task detail so humans can identify tasks created or updated by external agents
+- removed the dead import-card OAuth/coming-soon branch so new import cards must use a wired token or file path
 - added optional trace metadata to MCP `complete_task` so completion calls can be audited with source agent and external reference context
 - expanded `npm run smoke:stripe -- --write --webhook` to post signed subscription events, verify unknown-price fail-closed behavior, verify paid/free tier transitions, and verify duplicate webhook idempotency against disposable Supabase/Stripe test data
 - expanded `npm run smoke:stripe -- --write --webhook` to verify free/pro/power quota plan-state boundaries after signed webhook tier changes

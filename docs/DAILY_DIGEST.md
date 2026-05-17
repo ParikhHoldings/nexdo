@@ -43,6 +43,7 @@
 - Tightened metadata and agent system prompt language toward early-access, bounded, reviewable AI assistance instead of broad automation claims.
 - Added the public sitemap route advertised by `robots.txt` and tightened manifest/privacy/terms wording around bounded assistance and provider-backed safeguards.
 - Surfaced agent-origin trace metadata on task cards and task detail so humans can identify tasks created or updated by external agents.
+- Removed the dead import-card OAuth/coming-soon branch so new import cards must use a wired token or file path.
 - Added optional trace metadata to `complete_task` so agent completion calls can carry `source_agent_id`, `external_ref`, `ingestion_intent`, and bounded metadata into audit rows.
 - Expanded `npm run smoke:stripe -- --write --webhook` so Stripe test-mode verification can post signed webhook events, check unknown-price fail-closed behavior, verify paid/free tier transitions, and prove duplicate-event idempotency with disposable test data.
 - Expanded Stripe webhook smoke to verify free/pro/power quota plan-state boundaries after signed tier-change events.

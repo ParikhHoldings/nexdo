@@ -16,7 +16,7 @@ export interface ImportSourceCardProps {
   name: string
   description: string
   icon: ReactNode
-  type: 'oauth' | 'file' | 'token'
+  type: 'file' | 'token'
   onImport: (data: { token?: string; file?: File }) => Promise<void>
   onPreview?: (data: { file: File }) => Promise<ImportPreview>
   isLoading?: boolean
@@ -24,7 +24,6 @@ export interface ImportSourceCardProps {
   importedCount?: number
   error?: string | null
   fileAccept?: string
-  comingSoon?: boolean
   tokenPlaceholder?: string
   instructions?: string
 }
@@ -41,7 +40,6 @@ export function ImportSourceCard({
   importedCount,
   error,
   fileAccept = '.csv,.ics,.json',
-  comingSoon = false,
   tokenPlaceholder = 'Enter API token',
   instructions,
 }: ImportSourceCardProps) {
@@ -131,11 +129,6 @@ export function ImportSourceCard({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <h3 className="font-semibold text-zinc-100">{name}</h3>
-            {comingSoon && (
-              <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-zinc-800 text-zinc-400">
-                Coming soon
-              </span>
-            )}
             {isComplete && (
               <CheckCircle2 className="h-5 w-5 text-green-500" />
             )}
@@ -145,14 +138,14 @@ export function ImportSourceCard({
       </div>
 
       {/* Instructions */}
-      {instructions && !comingSoon && (
+      {instructions && (
         <p className="mt-3 text-xs text-zinc-500 bg-zinc-800/50 rounded-lg p-3">
           {instructions}
         </p>
       )}
 
       {/* Input Area */}
-      {!comingSoon && !isComplete && (
+      {!isComplete && (
         <div className="mt-4">
           {type === 'token' && (
             <div className="flex gap-2">
@@ -254,12 +247,6 @@ export function ImportSourceCard({
                 <p className="mt-3 text-sm text-red-400">{previewError}</p>
               )}
             </>
-          )}
-
-          {type === 'oauth' && (
-            <Button variant="secondary" disabled className="w-full">
-              Connect Account
-            </Button>
           )}
         </div>
       )}
