@@ -70,31 +70,34 @@ test('task parsing heuristic extracts launch-relevant metadata', () => {
 })
 
 test('prioritization heuristic ranks urgent and dated tasks first', () => {
-  const ranked = prioritizeTasksHeuristic([
-    task({
-      id: 'low-quick',
-      title: 'Quick cleanup',
-      priority: 'low',
-      estimated_minutes: 10,
-      energy_level: 'quick',
-    }),
-    task({
-      id: 'urgent-today',
-      title: 'Fix launch blocker',
-      priority: 'urgent',
-      due_date: isoDate(0),
-      estimated_minutes: 60,
-      energy_level: 'deep',
-    }),
-    task({
-      id: 'medium-later',
-      title: 'Later follow-up',
-      priority: 'medium',
-      due_date: isoDate(3),
-      estimated_minutes: 30,
-      energy_level: 'light',
-    }),
-  ])
+  const ranked = prioritizeTasksHeuristic(
+    [
+      task({
+        id: 'low-quick',
+        title: 'Quick cleanup',
+        priority: 'low',
+        estimated_minutes: 10,
+        energy_level: 'quick',
+      }),
+      task({
+        id: 'urgent-today',
+        title: 'Fix launch blocker',
+        priority: 'urgent',
+        due_date: isoDate(0),
+        estimated_minutes: 60,
+        energy_level: 'deep',
+      }),
+      task({
+        id: 'medium-later',
+        title: 'Later follow-up',
+        priority: 'medium',
+        due_date: isoDate(3),
+        estimated_minutes: 30,
+        energy_level: 'light',
+      }),
+    ],
+    new Date(`${isoDate(0)}T08:00:00`)
+  )
 
   expect(ranked[0]).toMatchObject({
     task_id: 'urgent-today',
@@ -107,24 +110,27 @@ test('prioritization heuristic ranks urgent and dated tasks first', () => {
 })
 
 test('prioritization heuristic orders timed same-day tasks by due time', () => {
-  const ranked = prioritizeTasksHeuristic([
-    task({
-      id: 'late-today',
-      title: 'Send end-of-day recap',
-      priority: 'high',
-      due_date: isoDate(0),
-      due_time: '17:00',
-      estimated_minutes: 30,
-    }),
-    task({
-      id: 'early-today',
-      title: 'Join launch standup',
-      priority: 'high',
-      due_date: isoDate(0),
-      due_time: '09:00',
-      estimated_minutes: 30,
-    }),
-  ])
+  const ranked = prioritizeTasksHeuristic(
+    [
+      task({
+        id: 'late-today',
+        title: 'Send end-of-day recap',
+        priority: 'high',
+        due_date: isoDate(0),
+        due_time: '17:00',
+        estimated_minutes: 30,
+      }),
+      task({
+        id: 'early-today',
+        title: 'Join launch standup',
+        priority: 'high',
+        due_date: isoDate(0),
+        due_time: '09:00',
+        estimated_minutes: 30,
+      }),
+    ],
+    new Date(`${isoDate(0)}T08:00:00`)
+  )
 
   expect(ranked.map((item) => item.task_id)).toEqual(['early-today', 'late-today'])
   expect(ranked[0].reasoning).toContain('09:00')
@@ -172,6 +178,37 @@ test('briefing heuristic summarizes active tasks without completed work', () => 
     expect.objectContaining({ task_id: 'overdue', person: 'Jordan' }),
   ])
   expect(briefing.summary).toContain('2 active tasks')
+})
+
+test('briefing heuristic treats past due times today as overdue', () => {
+  const briefing = generateBriefingHeuristic(
+    [
+      task({
+        id: 'past-time',
+        title: 'Join launch partner call',
+        priority: 'high',
+        due_date: '2026-05-17',
+        due_time: '09:30',
+      }),
+      task({
+        id: 'future-time',
+        title: 'Send evening recap',
+        priority: 'high',
+        due_date: '2026-05-17',
+        due_time: '17:30',
+      }),
+    ],
+    'Casey',
+    new Date('2026-05-17T12:00:00')
+  )
+
+  expect(briefing.overdue).toEqual([
+    expect.objectContaining({
+      task_id: 'past-time',
+      days_overdue: 0,
+    }),
+  ])
+  expect(briefing.summary).toContain('1 overdue item')
 })
 
 test('execution heuristics return bounded outputs by action type', () => {

@@ -85,11 +85,12 @@ Acceptance gate:
 - The briefing is visible in the main daily workspace.
 - It refreshes from current task state after capture/import/edit changes.
 - Authenticated briefing requests validate inputs before rate-limit/provider work.
+- Past due times today are treated as overdue in the local briefing, not only dates before today.
 
 Current evidence:
 - `DailyBriefing` renders on `/today`.
 - Playwright verifies the active-task count updates after adding a task.
-- Authenticated briefing requests refetch when the task-state signature or user name changes.
+- Authenticated briefing requests refetch when the planning-relevant task-state signature or user name changes.
 - `/api/briefing` uses sanitized task input.
 
 ### 5. Execute bounded work

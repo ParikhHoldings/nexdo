@@ -82,6 +82,16 @@ Capturing due time is only useful if the planning layer can use it. A timed morn
 ### Impact
 Future planning or briefing changes should keep due date and due time paired in provider summaries, local heuristics, and regression coverage.
 
+## 2026-05-17 - Briefing freshness follows planning metadata
+### Decision
+Daily briefing refresh signatures should include planning-relevant task fields beyond title/status/date, including due time, context, action type, estimate, energy, people, and tags. Local briefings should also treat due-today tasks with past due times as overdue.
+
+### Why
+If a user or agent changes task structure, the daily briefing should reflect it without requiring a reload or unrelated edit. Due-time capture is only useful if the briefing can warn about work that is already past due today.
+
+### Impact
+Future task metadata that affects planning should be added to the briefing signature and local/provider briefing summaries together.
+
 ## 2026-05-16 - Define the MVP as capture to bounded execution
 ### Decision
 Nexdo's first launchable MVP is the concrete path documented in `docs/MVP.md`: capture plain-language tasks, structure them into useful metadata, prioritize the day, brief the user, execute bounded research/draft/prep work, and expose scoped task-layer access for external agents.

@@ -238,9 +238,13 @@ function minutesFromDueTime(dueTime: string | null): number | null {
   return hour * 60 + Number(match[2])
 }
 
-function dueScore(dueDate: string | null, dueTime: string | null = null): number {
+function dueScore(
+  dueDate: string | null,
+  dueTime: string | null = null,
+  now = new Date()
+): number {
   if (!dueDate) return 30
-  const today = new Date()
+  const today = now
   const start = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime()
   const due = new Date(`${dueDate}T00:00:00`).getTime()
   const days = Math.round((due - start) / 86400000)
@@ -264,9 +268,9 @@ function timeBlock(task: Task): PrioritizedTask['time_block'] {
   return 'afternoon_light'
 }
 
-function prioritizationReason(task: Task): string {
-  const score = dueScore(task.due_date, task.due_time)
-  if (task.due_date === isoDate(new Date()) && task.due_time && score <= -10) {
+function prioritizationReason(task: Task, now = new Date()): string {
+  const score = dueScore(task.due_date, task.due_time, now)
+  if (task.due_date === isoDate(now) && task.due_time && score <= -10) {
     return `Due today at ${task.due_time.slice(0, 5)}, so it needs attention first.`
   }
   if (task.due_date && score <= -10) return 'Due now or overdue, so it needs attention first.'
@@ -276,17 +280,20 @@ function prioritizationReason(task: Task): string {
   return 'Ranked by priority, due date, and task context.'
 }
 
-export function prioritizeTasksHeuristic(tasks: Task[]): PrioritizedTask[] {
+export function prioritizeTasksHeuristic(
+  tasks: Task[],
+  now = new Date()
+): PrioritizedTask[] {
   return [...tasks]
     .sort((a, b) => {
       const aScore =
         priorityScore(a.priority) +
-        dueScore(a.due_date, a.due_time) -
+        dueScore(a.due_date, a.due_time, now) -
         ((a.people?.length ?? 0) > 0 ? 5 : 0) -
         ((a.estimated_minutes ?? 999) <= 15 ? 3 : 0)
       const bScore =
         priorityScore(b.priority) +
-        dueScore(b.due_date, b.due_time) -
+        dueScore(b.due_date, b.due_time, now) -
         ((b.people?.length ?? 0) > 0 ? 5 : 0) -
         ((b.estimated_minutes ?? 999) <= 15 ? 3 : 0)
       return aScore - bScore
@@ -294,33 +301,52 @@ export function prioritizeTasksHeuristic(tasks: Task[]): PrioritizedTask[] {
     .map((task, index) => ({
       task_id: task.id,
       rank: index + 1,
-      reasoning: prioritizationReason(task),
+      reasoning: prioritizationReason(task, now),
       time_block: timeBlock(task),
     }))
 }
 
 export function generateBriefingHeuristic(
   tasks: Task[],
-  userName = 'there'
+  userName = 'there',
+  now = new Date()
 ): BriefingContent {
   const activeTasks = tasks.filter((task) => task.status !== 'done' && task.status !== 'cancelled')
-  const ranked = prioritizeTasksHeuristic(activeTasks)
-  const today = new Date()
+  const ranked = prioritizeTasksHeuristic(activeTasks, now)
+  const today = now
+  const todayKey = isoDate(today)
   const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime()
+  const nowMinutes = today.getHours() * 60 + today.getMinutes()
   const greeting =
     today.getHours() < 12 ? 'Good morning' : today.getHours() < 17 ? 'Good afternoon' : 'Good evening'
 
   const byId = new Map(activeTasks.map((task) => [task.id, task]))
   const overdue = activeTasks
-    .filter((task) => task.due_date && new Date(`${task.due_date}T00:00:00`).getTime() < todayStart)
+    .filter((task) => {
+      if (!task.due_date) return false
+      const dueDate = new Date(`${task.due_date}T00:00:00`).getTime()
+      if (dueDate < todayStart) return true
+      if (task.due_date !== todayKey) return false
+
+      const dueMinutes = minutesFromDueTime(task.due_time)
+      return dueMinutes !== null && dueMinutes < nowMinutes
+    })
+    .sort((a, b) => {
+      const dateCompare = (a.due_date || '').localeCompare(b.due_date || '')
+      if (dateCompare !== 0) return dateCompare
+      return (minutesFromDueTime(a.due_time) ?? 1440) - (minutesFromDueTime(b.due_time) ?? 1440)
+    })
     .slice(0, 5)
     .map((task) => ({
       task_id: task.id,
       title: task.title,
-      days_overdue: Math.max(
-        1,
-        Math.round((todayStart - new Date(`${task.due_date}T00:00:00`).getTime()) / 86400000)
-      ),
+      days_overdue:
+        task.due_date === todayKey
+          ? 0
+          : Math.max(
+              1,
+              Math.round((todayStart - new Date(`${task.due_date}T00:00:00`).getTime()) / 86400000)
+            ),
     }))
 
   return {

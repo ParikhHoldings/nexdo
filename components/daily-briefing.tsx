@@ -29,8 +29,13 @@ function getBriefingSignature(tasks: Task[], userName: string): string {
       status: task.status,
       priority: task.priority,
       due_date: task.due_date,
+      due_time: task.due_time,
+      context: task.context,
+      action_type: task.action_type,
       estimated_minutes: task.estimated_minutes,
+      energy_level: task.energy_level,
       people: task.people,
+      tags: task.tags,
       updated_at: task.updated_at,
     })),
   })
@@ -262,7 +267,9 @@ export function DailyBriefing({ userName = 'there' }: DailyBriefingProps) {
                 >
                   <p className="text-sm text-zinc-200">{item.title}</p>
                   <p className="text-xs text-red-400 mt-1">
-                    {item.days_overdue} day{item.days_overdue > 1 ? 's' : ''} overdue
+                    {item.days_overdue === 0
+                      ? 'Past due today'
+                      : `${item.days_overdue} day${item.days_overdue > 1 ? 's' : ''} overdue`}
                   </p>
                 </button>
               ))}
