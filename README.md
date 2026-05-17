@@ -62,6 +62,7 @@ npm run smoke:openai
 npm run smoke:stripe
 npm run smoke:supabase
 npm run smoke:mcp
+npm run smoke:routes
 npm run smoke:launch
 ```
 
@@ -80,9 +81,9 @@ For a full technical launch pass, export or provide real provider env and run:
 npm run smoke:launch -- --env=.env.production.local --url=https://your-preview.example --technical-only
 ```
 
-That command runs local rails plus Supabase, OpenAI, Stripe, and MCP provider
-smokes in sequence. It does not replace Quill/founder public-copy approval or
-production deploy approval.
+That command runs local rails plus rendered route, Supabase, OpenAI, Stripe,
+and MCP provider smokes in sequence. It does not replace Quill/founder
+public-copy approval or production deploy approval.
 
 Provider smokes require a remote HTTPS `--url` or `NEXT_PUBLIC_APP_URL`. Use
 `--allow-local-url` only for intentional local provider debugging, not launch

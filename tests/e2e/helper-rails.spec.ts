@@ -498,8 +498,10 @@ test('date-only task surfaces compare local date keys without UTC parsing', () =
 test('launch smoke orchestrates required technical and approval gates', () => {
   const packageJson = JSON.parse(readFileSync('package.json', 'utf8'))
   const source = readFileSync('scripts/smoke-launch.mjs', 'utf8')
+  const routeSmokeSource = readFileSync('scripts/smoke-routes.mjs', 'utf8')
 
   expect(packageJson.scripts['smoke:launch']).toBe('node scripts/smoke-launch.mjs')
+  expect(packageJson.scripts['smoke:routes']).toBe('node scripts/smoke-routes.mjs')
   expect(source).toContain("const envArg = rawArgs.find((arg) => arg.startsWith('--env='))")
   expect(source).toContain("const allowLocalUrl = args.has('--allow-local-url')")
   expect(source).toContain('...fileEnv')
@@ -514,6 +516,7 @@ test('launch smoke orchestrates required technical and approval gates', () => {
   expect(source).toContain("await run('Playwright e2e', ['run', 'test:e2e'])")
   expect(source).toContain("await run('Dependency audit', ['audit', '--audit-level=moderate'])")
   expect(source).toContain("await run('Environment preflight', ['run', 'verify:env', '--', envFile])")
+  expect(source).toContain("await run('Rendered route smoke'")
   expect(source).toContain("await run('Supabase write smoke', ['run', 'smoke:supabase', '--', '--write'])")
   expect(source).toContain("await run('OpenAI app-route smoke', ['run', 'smoke:openai', '--', '--app'])")
   expect(source).toContain("const stripeArgs = ['run', 'smoke:stripe', '--', '--write', '--webhook']")
@@ -524,4 +527,7 @@ test('launch smoke orchestrates required technical and approval gates', () => {
     "if (!productionDeployVerified) missingManualGates.push('--production-deploy-verified')"
   )
   expect(source).toContain('--technical-only')
+  expect(routeSmokeSource).toContain("'/settings/mcp'")
+  expect(routeSmokeSource).toContain("{ name: 'mobile', width: 390, height: 844 }")
+  expect(routeSmokeSource).toContain('Route smoke passed.')
 })

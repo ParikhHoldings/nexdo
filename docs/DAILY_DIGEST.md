@@ -76,6 +76,7 @@
 - Hardened `/quick` capture so empty quick-mode submissions are rejected and extra spacing is trimmed before task creation.
 - Aligned MCP tool schemas and ChatGPT Actions OpenAPI with handler support for the `cancelled` task status.
 - Verified PR #3 Web rails; Vercel is blocked by the account build-rate limit on the latest checked PR head.
+- Added `npm run smoke:routes` and wired it into the launch smoke so preview/production route rendering is checked at desktop and mobile widths.
 
 ### In progress
 - Provider-backed Supabase, OpenAI, Stripe, and MCP smokes remain the main launch-readiness gap.

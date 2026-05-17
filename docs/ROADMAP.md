@@ -14,6 +14,7 @@
 - A Playwright smoke test covers the core logged-out demo path.
 - Playwright now covers demo workspace navigation across mobile sidebar open/close, All Tasks search/filtering, Upcoming grouping, and Done task lifecycle.
 - Playwright smoke tests cover OpenAPI action schema availability, MCP/action auth failures, and action CORS headers.
+- `npm run smoke:routes` now verifies launch-facing routes at desktop and mobile widths against a supplied app URL.
 - Playwright tests cover DB-backed MCP tool handler and API-key validation behavior through an in-memory Supabase double, including owned reads, search, briefing, create idempotency, quota ordering, mutations, audit logging, hashed-key lookup, legacy-key migration, and paid-plan gating.
 - GitHub Actions verification exists for install, lint, typecheck, build, and Playwright smoke testing.
 - PR #3 Web rails passed; Vercel preview deployments completed on recent code heads, including after the local-date task surface rail, but the latest checked PR head is blocked by the Vercel account build-rate limit.

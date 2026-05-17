@@ -57,10 +57,10 @@ npm run smoke:launch -- --env=.env.production.local --url=https://your-preview.e
 ```
 
 The bundle loads the env file into child processes, runs lint, typecheck,
-build, Playwright, dependency audit, env preflight, and the Supabase, OpenAI,
-Stripe, and MCP smoke sequence below. `--technical-only` intentionally keeps
-manual gates visible: public copy approval and production deploy approval are
-not implied by passing technical smokes.
+build, Playwright, dependency audit, env preflight, rendered route smoke, and
+the Supabase, OpenAI, Stripe, and MCP smoke sequence below. `--technical-only`
+intentionally keeps manual gates visible: public copy approval and production
+deploy approval are not implied by passing technical smokes.
 
 Provider smokes in the launch bundle require a remote HTTPS `--url` or
 `NEXT_PUBLIC_APP_URL`. Use `--allow-local-url` only when intentionally
@@ -85,6 +85,7 @@ npm run smoke:launch -- --env=.env.production.local --url=https://your-productio
 9. Only after the provider smokes and approvals pass, promote to production.
 
 ## Provider smoke tests still required
+- Routes: run `npm run smoke:routes -- --url=<preview-or-production-origin>` to verify launch-facing marketing, app, auth, import, settings, MCP setup, privacy, and terms routes render at desktop and mobile widths without response failures, blank bodies, framework overlays, or console errors.
 - Supabase: apply migrations to a real project, create a user, verify profile creation, RLS, task CRUD, import quota enforcement, hashed API-key storage, API key scope persistence and rotation rate limits, profile column read/update grants, direct task column-grant denial for server-managed fields, agent external-ref uniqueness, `agent_action_events` audit writes/privacy, quota no-op behavior, and service-role RPCs.
 - OpenAI: verify parse, prioritization, briefing, and owned-task research/draft/prep execution with real credentials, server-side output persistence, quota use, and rate-limit behavior.
 - Stripe: verify checkout, portal, signed webhook handling, duplicate webhook idempotency, subscription tier updates/deletes, quota enforcement, authenticated task-create quota behavior after entitlement changes, and unknown-price behavior in test mode.

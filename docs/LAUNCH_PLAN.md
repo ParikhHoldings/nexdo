@@ -17,6 +17,7 @@ The goal is not a broad public launch. The credible Monday target is a verified 
 - API key rotation now uses the shared rate-limit rail and verifies hashed-key persistence before revealing a new scoped MCP/API key.
 - MCP/API keys now have local scope modeling, scope-aware setup UI, scope-filtered tool listings, scope enforcement, and an agent action audit table. Real Supabase/API-key verification is still required before treating this as production-ready.
 - MCP smoke can now verify OpenAPI availability, initialized-notification handshake, authenticated SSE endpoint discovery, JSON-RPC list/search/briefing/get/update/complete execution, ChatGPT Actions list/search response shape, read-only scoped key denial, provisioned disposable scoped keys, write idempotency, and required audit rows when run with `--provision --write --audit`.
+- Route smoke can now verify launch-facing marketing, app, auth, import, settings, MCP setup, privacy, and terms routes at desktop and mobile widths against a preview/production URL.
 - The MCP settings page now exposes recent agent activity from the audit table when a user is authenticated.
 - Agent task creation now has local idempotency handling through `source_agent_id` plus `external_ref`; real Supabase/API-key replay verification is still required.
 - PR #3 Web rails passed; Vercel preview deployments passed on recent code heads, including after the local-date task surface rail, but the latest checked PR head is blocked by the Vercel account build-rate limit.
@@ -34,6 +35,7 @@ The goal is not a broad public launch. The credible Monday target is a verified 
 
 ### Must verify before external users
 - Supabase migrations, auth, profile creation, RLS, profile/task column grants, task CRUD, audit privacy, and agent external-ref uniqueness against a real project.
+- Rendered front-end routes against the real preview/production origin with `npm run smoke:routes -- --url=<origin>`.
 - OpenAI-backed parse, prioritize, briefing, and research/draft/prep execution with a real API key.
 - Stripe checkout, portal, webhook, plan limits, and quota behavior in test mode.
 - MCP JSON-RPC, action wrappers, OpenAPI output, and API-key authentication.

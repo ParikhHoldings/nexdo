@@ -120,6 +120,12 @@ async function runLocalRails() {
 
 async function runProviderSmokes() {
   await run('Environment preflight', ['run', 'verify:env', '--', envFile])
+  await run('Rendered route smoke', [
+    'run',
+    'smoke:routes',
+    '--',
+    `--url=${childEnv.NEXT_PUBLIC_APP_URL}`,
+  ])
   await run('Supabase write smoke', ['run', 'smoke:supabase', '--', '--write'])
   await run('OpenAI app-route smoke', ['run', 'smoke:openai', '--', '--app'])
 

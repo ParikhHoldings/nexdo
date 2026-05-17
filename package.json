@@ -13,6 +13,7 @@
     "smoke:openai": "node scripts/smoke-openai.mjs",
     "smoke:launch": "node scripts/smoke-launch.mjs",
     "smoke:mcp": "node scripts/smoke-mcp.mjs",
+    "smoke:routes": "node scripts/smoke-routes.mjs",
     "smoke:stripe": "node scripts/smoke-stripe.mjs",
     "smoke:supabase": "node scripts/smoke-supabase.mjs"
   },
