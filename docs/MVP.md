@@ -85,7 +85,7 @@ Current evidence:
 - Task cards show status badges for `in_progress`, `waiting`, `done`, and `cancelled`.
 - Task-card menus expose quick `Start`, `Mark waiting`, `Move to to-do`, and `Restore` actions, with the controls visible on mobile/touch viewports as well as desktop hover/focus.
 - Settings > Data exports the tasks currently loaded in the workspace as JSON or CSV through `lib/task-export.ts`.
-- `lib/task-handoff.ts` has focused parser coverage, and Playwright verifies demo paste-import restores task context and notes.
+- `lib/task-handoff.ts` has focused parser coverage for round-trip metadata, duplicate fields, enum normalization, due-date/time ambiguity, and note bounds; Playwright verifies demo paste-import restores task context and notes.
 - The task store rolls back failed authenticated edit/delete mutations and surfaces visible app notifications.
 - `lib/ai-response-validation.ts` bounds OpenAI output.
 - `PATCH /api/tasks/[id]` uses `lib/task-validation.ts` to allowlist user-editable fields and reject protected/server-managed fields such as `user_id`, `completed_at`, `source_agent_id`, and `agent_output`.

@@ -855,6 +855,37 @@ test('task handoff brief preserves agent-readable task context and recent notes'
   expect(parseTaskHandoffBrief(`${brief.replace('Status: in_progress', 'Status: shipped')}`)).toMatchObject({
     error: 'Invalid handoff status.',
   })
+  expect(
+    parseTaskHandoffBrief(brief.replace('Priority: high', 'Priority: HIGH'))
+  ).toMatchObject({
+    handoff: {
+      priority: 'high',
+    },
+  })
+  expect(
+    parseTaskHandoffBrief(
+      brief.replace('Status: in_progress', 'Title: Duplicate launch handoff\nStatus: in_progress')
+    )
+  ).toMatchObject({
+    error: 'Duplicate handoff field: Title.',
+  })
+  expect(
+    parseTaskHandoffBrief(
+      brief.replace('Due: 2026-05-18 09:00', 'Due: 2026-05-18 09:00 tomorrow')
+    )
+  ).toMatchObject({
+    error: 'Invalid handoff due.',
+  })
+  expect(
+    parseTaskHandoffBrief(
+      brief.replace(
+        '- note: Provider smokes still need real env.',
+        `- note: ${'x'.repeat(2001)}`
+      )
+    )
+  ).toMatchObject({
+    error: 'Handoff note content must be 2000 characters or fewer.',
+  })
 })
 
 test('task relationship validation requires bounded owned-link inputs', () => {

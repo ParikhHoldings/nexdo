@@ -9,9 +9,15 @@ import type {
   TaskPriority,
   TaskStatus,
 } from './database.types'
+import { MAX_TASK_NOTE_LENGTH } from './task-notes'
 
 const MAX_HANDOFF_NOTES = 5
 const HANDOFF_HEADER = '# Nexdo Task Handoff'
+const MAX_HANDOFF_TITLE = 500
+const MAX_HANDOFF_TEXT = 4000
+const MAX_HANDOFF_ARRAY_ITEMS = 50
+const MAX_HANDOFF_ARRAY_ITEM = 120
+const MAX_HANDOFF_AGENT_REF = 160
 
 const TASK_STATUSES: TaskStatus[] = [
   'todo',
@@ -80,13 +86,42 @@ function nullableValue(value: string | undefined): string | null {
   return text ? text : null
 }
 
-function parseList(value: string | undefined): string[] | null {
+function parseBoundedText(
+  label: string,
+  value: string | undefined,
+  maxLength: number
+): { value: string | null } | { error: string } {
+  const text = nullableValue(value)
+  if (!text) return { value: null }
+  if (text.length > maxLength) {
+    return { error: `Handoff ${label} must be ${maxLength} characters or fewer.` }
+  }
+  return { value: text }
+}
+
+function parseList(label: string, value: string | undefined):
+  | { value: string[] | null }
+  | { error: string } {
   const items = value
     ?.split(',')
     .map((item) => item.trim())
     .filter(Boolean)
 
-  return items && items.length > 0 ? Array.from(new Set(items)) : null
+  if (!items || items.length === 0) return { value: null }
+
+  if (items.length > MAX_HANDOFF_ARRAY_ITEMS) {
+    return {
+      error: `Handoff ${label} must include ${MAX_HANDOFF_ARRAY_ITEMS} items or fewer.`,
+    }
+  }
+
+  if (items.some((item) => item.length > MAX_HANDOFF_ARRAY_ITEM)) {
+    return {
+      error: `Handoff ${label} items must be ${MAX_HANDOFF_ARRAY_ITEM} characters or fewer.`,
+    }
+  }
+
+  return { value: Array.from(new Set(items)) }
 }
 
 function parseEnum<T extends string>(
@@ -96,7 +131,8 @@ function parseEnum<T extends string>(
 ): { value: T | null } | { error: string } {
   const text = nullableValue(value)
   if (!text) return { value: null }
-  if (allowed.includes(text as T)) return { value: text as T }
+  const normalized = text.toLowerCase().replace(/\s+/g, '_')
+  if (allowed.includes(normalized as T)) return { value: normalized as T }
   return { error: `Invalid handoff ${label}.` }
 }
 
@@ -106,7 +142,10 @@ function parseDue(value: string | undefined):
   const text = nullableValue(value)
   if (!text) return { due_date: null, due_time: null }
 
-  const [datePart, timePart] = text.split(/\s+/, 2)
+  const parts = text.split(/\s+/)
+  if (parts.length > 2) return { error: 'Invalid handoff due.' }
+
+  const [datePart, timePart] = parts
   const dueDate = normalizeLocalDateKey(datePart)
   if (!dueDate) return { error: 'Invalid handoff due date.' }
 
@@ -171,9 +210,15 @@ export function parseTaskHandoffBrief(input: string): TaskHandoffParseResult {
     if (mode === 'notes') {
       const noteMatch = /^-\s*([^:]+):\s*(.+)$/.exec(currentLine)
       if (noteMatch) {
+        const content = noteMatch[2].trim()
+        if (content.length > MAX_TASK_NOTE_LENGTH) {
+          return {
+            error: `Handoff note content must be ${MAX_TASK_NOTE_LENGTH} characters or fewer.`,
+          }
+        }
         notes.push({
           note_type: parseNoteType(noteMatch[1]),
-          content: noteMatch[2].trim(),
+          content,
         })
       }
       continue
@@ -181,12 +226,17 @@ export function parseTaskHandoffBrief(input: string): TaskHandoffParseResult {
 
     const fieldMatch = /^([^:]+):\s*(.*)$/.exec(currentLine)
     if (fieldMatch) {
-      fields.set(normalizeLabel(fieldMatch[1]), fieldMatch[2].trim())
+      const label = normalizeLabel(fieldMatch[1])
+      if (fields.has(label)) {
+        return { error: `Duplicate handoff field: ${fieldMatch[1].trim()}.` }
+      }
+      fields.set(label, fieldMatch[2].trim())
     }
   }
 
-  const title = nullableValue(fields.get('title'))
-  if (!title) return { error: 'Handoff brief is missing a title.' }
+  const title = parseBoundedText('title', fields.get('title'), MAX_HANDOFF_TITLE)
+  if ('error' in title) return title
+  if (!title.value) return { error: 'Handoff brief is missing a title.' }
 
   const status = parseEnum('status', fields.get('status'), TASK_STATUSES)
   if ('error' in status) return status
@@ -207,10 +257,32 @@ export function parseTaskHandoffBrief(input: string): TaskHandoffParseResult {
   if ('error' in due) return due
   const estimate = parseEstimate(fields.get('estimate'))
   if ('error' in estimate) return estimate
+  const people = parseList('people', fields.get('people'))
+  if ('error' in people) return people
+  const tags = parseList('tags', fields.get('tags'))
+  if ('error' in tags) return tags
+  const context = parseBoundedText('context', fields.get('context'), MAX_HANDOFF_TEXT)
+  if ('error' in context) return context
+  const description = parseBoundedText('description', fields.get('description'), MAX_HANDOFF_TEXT)
+  if ('error' in description) return description
+  const rawInput = parseBoundedText('original input', fields.get('original input'), MAX_HANDOFF_TEXT)
+  if ('error' in rawInput) return rawInput
+  const sourceAgentId = parseBoundedText(
+    'source agent',
+    fields.get('source agent'),
+    MAX_HANDOFF_AGENT_REF
+  )
+  if ('error' in sourceAgentId) return sourceAgentId
+  const externalRef = parseBoundedText(
+    'external ref',
+    fields.get('external ref'),
+    MAX_HANDOFF_AGENT_REF
+  )
+  if ('error' in externalRef) return externalRef
 
   return {
     handoff: {
-      title,
+      title: title.value,
       status: status.value ?? 'todo',
       priority: priority.value ?? 'medium',
       action_type: actionType.value ?? 'manual',
@@ -218,13 +290,13 @@ export function parseTaskHandoffBrief(input: string): TaskHandoffParseResult {
       due_time: due.due_time,
       estimated_minutes: estimate.estimated_minutes,
       energy_level: energy.value,
-      people: parseList(fields.get('people')),
-      tags: parseList(fields.get('tags')),
-      context: nullableValue(fields.get('context')),
-      description: nullableValue(fields.get('description')),
-      raw_input: nullableValue(fields.get('original input')),
-      source_agent_id: nullableValue(fields.get('source agent')),
-      external_ref: nullableValue(fields.get('external ref')),
+      people: people.value,
+      tags: tags.value,
+      context: context.value,
+      description: description.value,
+      raw_input: rawInput.value,
+      source_agent_id: sourceAgentId.value,
+      external_ref: externalRef.value,
       ingestion_intent: ingestionIntent.value,
       notes: notes.slice(0, MAX_HANDOFF_NOTES),
     },
