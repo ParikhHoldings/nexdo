@@ -463,6 +463,15 @@ test('MCP tool schemas advertise all accepted task statuses', () => {
   expect(updateTask?.inputSchema.properties.status).toMatchObject({
     enum: ['todo', 'in_progress', 'waiting', 'done', 'cancelled'],
   })
+  expect(updateTask?.inputSchema.properties.due_date).toMatchObject({
+    type: ['string', 'null'],
+  })
+  expect(updateTask?.inputSchema.properties.context).toMatchObject({
+    type: ['string', 'null'],
+  })
+  expect(updateTask?.inputSchema.properties.external_ref).toMatchObject({
+    description: expect.stringContaining('source_agent_id'),
+  })
   expect(addTaskNote?.inputSchema.properties.content).toMatchObject({
     maxLength: 2000,
   })
@@ -847,6 +856,20 @@ test('DB-backed MCP mutation handlers update owned tasks and log failures', asyn
   expect(invalidDueTime.isError).toBe(true)
   expect(invalidDueTime.content[0].text).toContain('due_time')
 
+  const invalidUpdateTrace = await executeToolWithDependencies(
+    'update_task',
+    {
+      task_id: 'owned-task',
+      external_ref: 'missing-source',
+    },
+    'user-1',
+    deps
+  )
+  expect(invalidUpdateTrace.isError).toBe(true)
+  expect(invalidUpdateTrace.content[0].text).toContain(
+    'source_agent_id is required'
+  )
+
   const invalidComplete = await executeToolWithDependencies(
     'complete_task',
     {
@@ -882,6 +905,7 @@ test('DB-backed MCP mutation handlers update owned tasks and log failures', asyn
   expect(db.agentActionEvents.map((event) => event.success)).toEqual([
     true,
     true,
+    false,
     false,
     false,
     false,

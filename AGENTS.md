@@ -38,7 +38,7 @@ The product promise should be grounded in what the code actually supports:
 - shared local date/time normalizers in `lib/dates.ts`; human task validation, AI task sanitization/output validation, deterministic fallback parsing, import parsing, and MCP task updates should reject impossible due dates and out-of-range due times before persistence or planning use
 - a recent agent activity surface under `/settings/mcp`
 - idempotent agent task creation when callers provide `source_agent_id` plus `external_ref`
-- agent trace metadata on create, update, complete, and task-note MCP writes so source agents and external references can be audited; create, update, and complete also persist trace metadata on the task row for human review
+- agent trace metadata on create, update, complete, and task-note MCP writes so source agents and external references can be audited; `external_ref` requires `source_agent_id` on these writes, and create, update, and complete also persist trace metadata on the task row for human review
 - Stripe-backed plan surfaces, quotas, and rate-limit scaffolding, with checkout price IDs derived from server configuration and unknown webhook prices skipped instead of granting paid access
 
 Do not claim verified production readiness until build, lint, environment, database migrations, auth, Stripe, OpenAI, MCP, and deployment target have been checked in the current environment.
@@ -82,7 +82,7 @@ Production environment, Supabase migrations, OpenAI provider calls, Stripe test-
 - Executable task actions: the shared bounded execution contract lives in `lib/task-actions.ts`; task cards, task detail, authenticated execution, and agent-output history should use it so only `research`, `draft`, and `prep` expose AI execution.
 - Task schedule metadata: local date-key and due-time helpers live in `lib/dates.ts`; reuse them for any new task ingestion, AI, import, or MCP path instead of regex-only validation.
 - Billing: Stripe helpers and plan limits in `lib/stripe.ts`; checkout, portal, and webhook routes under `app/api/stripe/`. Checkout accepts only server-known `pro`/`power` plan keys, and webhook tier updates require explicit Stripe price ID mappings.
-- Agent interop: MCP definitions and handlers in `lib/mcp-tools.ts`; JSON-RPC MCP endpoint at `app/api/mcp/route.ts`; ChatGPT Actions OpenAPI at `app/api/mcp/openapi/route.ts`; action wrappers under `app/api/mcp/actions/[tool]/route.ts`. Keep MCP tool schemas, OpenAPI enums, and handler validation aligned when task statuses or fields change.
+- Agent interop: MCP definitions and handlers in `lib/mcp-tools.ts`; JSON-RPC MCP endpoint at `app/api/mcp/route.ts`; ChatGPT Actions OpenAPI at `app/api/mcp/openapi/route.ts`; action wrappers under `app/api/mcp/actions/[tool]/route.ts`. Keep MCP tool schemas, OpenAPI enums/nullability, trace requirements, and handler validation aligned when task statuses or fields change.
 - Agent governance: API key scopes are modeled in `lib/agent-scopes.ts`; key generation/hashing helpers live in `lib/api-keys.ts`; hashed keys and key hints are persisted on profiles; agent calls are intended to log to `agent_action_events`.
 - Task notes: shared note validation and demo persistence live in `lib/task-notes.ts`; authenticated owned-task note routes live at `app/api/tasks/[id]/notes/route.ts`; `add_task_note` in `lib/mcp-tools.ts` is the external-agent note append path; task detail is the human-facing notes surface.
 - Imports: source-specific and generic normalization in `lib/importers.ts`; import routes under `app/api/import/`.

@@ -164,7 +164,7 @@ export const MCP_TOOLS: MCPTool[] = [
         },
         due_date: {
           type: ['string', 'null'],
-          description: 'New due date in YYYY-MM-DD format',
+          description: 'New due date in YYYY-MM-DD format, or null to clear it',
         },
         due_time: {
           type: ['string', 'null'],
@@ -178,7 +178,7 @@ export const MCP_TOOLS: MCPTool[] = [
         context: {
           type: ['string', 'null'],
           maxLength: MAX_CONTEXT,
-          description: 'Additional context or notes about the task',
+          description: 'Additional context or notes about the task, or null to clear it',
         },
         action_type: {
           type: 'string',
@@ -212,7 +212,8 @@ export const MCP_TOOLS: MCPTool[] = [
         external_ref: {
           type: 'string',
           maxLength: MAX_AGENT_REF,
-          description: 'Optional idempotency/reference id from the calling agent system',
+          description:
+            'Optional reference id from the calling agent system for audit traceability. Requires source_agent_id.',
         },
         ingestion_intent: {
           type: 'string',
@@ -946,6 +947,9 @@ const updateTask: ToolHandler = async (args, userId, deps) => {
       maxLength: MAX_AGENT_REF,
     })
     if (externalRefResult.error) return toolError(externalRefResult.error)
+    if (externalRefResult.value && !updates.source_agent_id) {
+      return toolError('Error: source_agent_id is required when external_ref is provided')
+    }
     updates.external_ref = externalRefResult.value
   }
   if (args.ingestion_intent !== undefined) {

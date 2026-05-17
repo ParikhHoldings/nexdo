@@ -1,17 +1,9 @@
 import { expect, test } from '@playwright/test'
 import { readFileSync } from 'node:fs'
 import { formatActionToolResult } from '../../lib/mcp-action-results'
+import { MCP_TOOLS } from '../../lib/mcp-tools'
 
-const actionTools = [
-  'list_tasks',
-  'create_task',
-  'complete_task',
-  'update_task',
-  'add_task_note',
-  'get_briefing',
-  'search_tasks',
-  'get_task',
-]
+const actionTools = MCP_TOOLS.map((tool) => tool.name)
 
 test('OpenAPI exposes the agent action contract', async ({ request }) => {
   const response = await request.get('/api/mcp/openapi')
@@ -90,7 +82,9 @@ test('OpenAPI exposes the agent action contract', async ({ request }) => {
     ].schema
   expect(updateTaskSchema.properties.title.maxLength).toBe(500)
   expect(updateTaskSchema.properties.context.maxLength).toBe(4000)
+  expect(updateTaskSchema.properties.due_date.nullable).toBe(true)
   expect(updateTaskSchema.properties.due_time.nullable).toBe(true)
+  expect(updateTaskSchema.properties.context.nullable).toBe(true)
   expect(updateTaskSchema.properties.status.enum).toEqual([
     'todo',
     'in_progress',
@@ -113,6 +107,9 @@ test('OpenAPI exposes the agent action contract', async ({ request }) => {
   ])
   expect(updateTaskSchema.properties.people.maxItems).toBe(50)
   expect(updateTaskSchema.properties.tags.items.maxLength).toBe(120)
+  expect(updateTaskSchema.properties.external_ref.description).toContain(
+    'source_agent_id'
+  )
   const addTaskNoteSchema =
     spec.paths['/api/mcp/actions/add_task_note'].post.requestBody.content[
       'application/json'

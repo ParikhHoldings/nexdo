@@ -248,7 +248,8 @@ const openApiSpec = {
                   due_date: {
                     type: 'string',
                     format: 'date',
-                    description: 'New due date in YYYY-MM-DD format',
+                    nullable: true,
+                    description: 'New due date in YYYY-MM-DD format, or null to clear it',
                   },
                   due_time: {
                     type: 'string',
@@ -263,7 +264,8 @@ const openApiSpec = {
                   context: {
                     type: 'string',
                     maxLength: 4000,
-                    description: 'Additional context or notes about the task',
+                    nullable: true,
+                    description: 'Additional context or notes about the task, or null to clear it',
                   },
                   action_type: {
                     type: 'string',
@@ -305,7 +307,8 @@ const openApiSpec = {
                   external_ref: {
                     type: 'string',
                     maxLength: 160,
-                    description: 'Optional idempotency/reference id from the calling agent system',
+                    description:
+                      'Optional reference id from the calling agent system for audit traceability. Requires source_agent_id.',
                   },
                   ingestion_intent: {
                     type: 'string',

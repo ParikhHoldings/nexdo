@@ -145,6 +145,7 @@ Required tool surface:
 Acceptance gate:
 - OpenAPI and MCP surfaces advertise the same core task contract.
 - OpenAPI and MCP status enums must stay aligned with handler validation, including `cancelled`.
+- OpenAPI and MCP nullability must stay aligned with handler behavior, including nullable due-date/context clears on `update_task`.
 - ChatGPT Actions responses match advertised task, briefing, and error shapes.
 - Bearer auth is required before action execution.
 - Scope-limited keys hide and deny unauthorized tools.
@@ -157,6 +158,7 @@ Current evidence:
 - `/api/mcp/actions/[tool]` uses a shared formatter for action responses.
 - `search_tasks` and All Tasks search use the shared metadata search helper across title, context, description, people, and tags.
 - `update_task` accepts the same core planning fields humans can edit: status, due time, action type, estimate, energy level, people, and tags.
+- `update_task` requires `source_agent_id` when `external_ref` is supplied, matching create, complete, and note traceability rules.
 - `add_task_note` lets external agents append bounded, human-reviewable notes to owned tasks without changing task status, and `get_task` returns recent task notes.
 - `npm run test:e2e` covers OpenAPI, action auth, CORS, and unsupported billing guardrails.
 - `npm run smoke:mcp` exists for real API-key initialized-notification handshake, SSE endpoint discovery, list/search/briefing/get/structured-update/add-note/complete/idempotency checks, ChatGPT Actions list/search/add-note response-shape checks, optional read-only scope denial, provisioned disposable scoped keys, completed-task trace persistence, and required `agent_action_events` audit verification with `--provision --write --audit` once a real environment is configured.
@@ -172,6 +174,7 @@ Required fields:
 
 Acceptance gate:
 - Agent writes can include source metadata.
+- Agent writes that include `external_ref` must include `source_agent_id`.
 - Idempotency replay works through `source_agent_id` plus `external_ref`.
 - Agent calls write audit events in real Supabase verification.
 

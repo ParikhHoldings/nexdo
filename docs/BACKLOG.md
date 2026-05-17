@@ -112,6 +112,7 @@
 - hardened Stripe `invoice.payment_failed` handling so failed payments downgrade entitlements to Free and the webhook smoke verifies the downgrade
 - normalized Stripe webhook customer IDs across string and expanded-object event shapes before entitlement updates
 - hardened Stripe webhook idempotency so failed event-record inserts return an error for Stripe retry, and checkout completion handles expanded subscription objects
+- aligned MCP `update_task`, ChatGPT Actions OpenAPI, and local handler coverage so nullable due-date/context clears are advertised and `external_ref` requires `source_agent_id` for traceable updates
 
 ## Completed 2026-05-16
 - read and updated the repo-level agent context and all existing Markdown/text operating files

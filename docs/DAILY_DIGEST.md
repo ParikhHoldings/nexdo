@@ -116,6 +116,7 @@
 - Hardened Stripe failed-payment handling so `invoice.payment_failed` downgrades entitlements to Free and the webhook smoke verifies it.
 - Normalized Stripe webhook customer IDs across string and expanded-object event shapes before entitlement updates.
 - Hardened Stripe webhook idempotency so failed event-record inserts return an error for Stripe retry, and checkout completion handles expanded subscription objects.
+- Aligned MCP `update_task`, ChatGPT Actions OpenAPI, and local handler coverage so nullable due-date/context clears are advertised and `external_ref` requires `source_agent_id` for traceable updates.
 
 ### In progress
 - Provider-backed Supabase, OpenAI, Stripe, and MCP smokes remain the main launch-readiness gap.

@@ -94,13 +94,13 @@ Future MCP tools should be added to the smoke script and audit expectations when
 
 ## 2026-05-17 - Agent task updates cover planning metadata
 ### Decision
-MCP and ChatGPT Actions `update_task` should let external agents update the same core planning metadata humans can edit: due time, action type, estimated minutes, energy level, people, and tags, while still preserving bounded validation and server-managed trace fields.
+MCP and ChatGPT Actions `update_task` should let external agents update the same core planning metadata humans can edit: due date, due time, context, action type, estimated minutes, energy level, people, and tags, while still preserving bounded validation and server-managed trace fields. When an update includes `external_ref`, it must include `source_agent_id` so trace references remain attributable.
 
 ### Why
 Nexdo's agent promise depends on tasks being a useful structured work layer, not only a title/status checklist. Agents need to maintain planning metadata without bypassing ownership, scopes, audit logging, or field limits.
 
 ### Impact
-Future task fields should be exposed through MCP/OpenAPI deliberately and added to local handler coverage plus `npm run smoke:mcp -- --write` before they become part of the agent contract.
+Future task fields should be exposed through MCP/OpenAPI deliberately, including nullable clear semantics where supported, and added to local handler coverage plus `npm run smoke:mcp -- --write` before they become part of the agent contract.
 
 ## 2026-05-17 - Task due dates and times use shared normalizers
 ### Decision
