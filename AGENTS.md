@@ -63,9 +63,10 @@ Current local verification from 2026-05-17:
 
 Current PR verification from this pass:
 - GitHub Actions Web rails run on pull requests and pushes to `main`/`staging`, with install, lint, typecheck, build, dependency audit, and Playwright smoke testing.
-- PR #3 GitHub Actions Web rails passed on head `6e196ed49a5445f404494599f2f4e7af5801d185`. Recheck PR status after every newer push before treating the branch as current-green.
-- Vercel preview deployment passed on head `6e196ed49a5445f404494599f2f4e7af5801d185` with preview URL `https://ph-nexdo-39vxlvbl6-nathan-happywpcos-projects.vercel.app`.
-- Direct remote route smoke against that protected preview URL failed on 2026-05-17 at desktop `/` because Vercel Deployment Protection is still active; provide `VERCEL_AUTOMATION_BYPASS_SECRET` locally or use an unprotected preview/production URL before treating route smoke as verified.
+- PR #3 GitHub Actions Web rails passed on the latest inspected feature head `13c553d911b8648cc543645edc2a9a411dcc25c3`. Recheck PR status after every newer push before treating the branch as current-green.
+- Feature head `13c553d911b8648cc543645edc2a9a411dcc25c3` does not have fresh Vercel preview evidence because Vercel failed with the account build-rate-limit status.
+- The latest successful Vercel preview deployment remains head `6e196ed49a5445f404494599f2f4e7af5801d185` with preview URL `https://ph-nexdo-39vxlvbl6-nathan-happywpcos-projects.vercel.app`.
+- Direct remote route smoke against that protected successful preview URL failed on 2026-05-17 at desktop `/` because Vercel Deployment Protection is still active; provide `VERCEL_AUTOMATION_BYPASS_SECRET` locally or use an unprotected preview/production URL before treating route smoke as verified.
 - Always inspect current PR checks after later pushes before treating preview deploy as current-green. A Vercel build-rate-limit failure is not evidence of an app build failure, but it does mean that head does not have fresh preview-deploy evidence.
 
 Production environment, Supabase migrations, OpenAI provider calls, Stripe test-mode flows, scoped MCP/API-key execution, idempotency replay against real task data, agent audit writes, and production deployment rails remain unverified in this pass.

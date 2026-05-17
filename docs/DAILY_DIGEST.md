@@ -107,7 +107,7 @@
 - Added an All Tasks agent-output review filter so unreviewed/needs-revision outputs can be queued separately from verified outputs.
 - Surfaced agent-output review badges on task cards so review state is visible from scan views before opening detail.
 - Added sidebar Agent Review navigation that deep-links to `/all?review=needs_review` with a live review-queue count.
-- Verified PR #3 head `6e196ed49a5445f404494599f2f4e7af5801d185` passed GitHub Web rails and Vercel preview deployment; remote route smoke against `https://ph-nexdo-39vxlvbl6-nathan-happywpcos-projects.vercel.app` remains blocked by Vercel Deployment Protection without `VERCEL_AUTOMATION_BYPASS_SECRET` or an unprotected URL.
+- Verified PR #3 latest inspected feature head `13c553d911b8648cc543645edc2a9a411dcc25c3` passed GitHub Web rails; Vercel preview on that feature head failed with the account build-rate-limit status, while older head `6e196ed49a5445f404494599f2f4e7af5801d185` remains the latest successful preview at `https://ph-nexdo-39vxlvbl6-nathan-happywpcos-projects.vercel.app`; remote route smoke remains blocked by Vercel Deployment Protection without `VERCEL_AUTOMATION_BYPASS_SECRET` or an unprotected URL.
 - Aligned the Today sidebar badge with the Today focus list so undated active tasks count the same way they appear in the daily workspace.
 - Aligned daily briefing, provider briefing inputs, local heuristic briefings, and due-task reminders on the same active-task definition so cancelled work does not inflate focus counts.
 - Added Vercel Deployment Protection handling to the route smoke: protected previews now use `VERCEL_AUTOMATION_BYPASS_SECRET` when provided and otherwise fail with a clear blocker.
