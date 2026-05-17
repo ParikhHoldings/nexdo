@@ -21,7 +21,10 @@ import {
   safeLoginRedirect,
 } from '../../lib/auth-redirect'
 import { validateParsedTask } from '../../lib/ai-response-validation'
-import { getDueTasksForBrowserNotification } from '../../lib/browser-notifications'
+import {
+  browserNotificationBody,
+  getDueTasksForBrowserNotification,
+} from '../../lib/browser-notifications'
 import { createClientProfileFallback } from '../../lib/profile'
 import { importPreviewWarning } from '../../lib/import-preview'
 import { quotaExceededResponse, quotaFailureStatus } from '../../lib/quota'
@@ -694,7 +697,26 @@ test('active task helpers include active work and exclude closed work', () => {
   expect(
     getDueTasksForBrowserNotification(
       [
-        { ...baseTask, id: 'active-due', due_date: '2026-05-17' },
+        {
+          ...baseTask,
+          id: 'late-due',
+          due_date: '2026-05-17',
+          due_time: '15:00',
+          priority: 'urgent',
+        },
+        {
+          ...baseTask,
+          id: 'early-due',
+          due_date: '2026-05-17',
+          due_time: '09:00',
+          priority: 'low',
+        },
+        {
+          ...baseTask,
+          id: 'untimed-due',
+          due_date: '2026-05-17',
+          priority: 'urgent',
+        },
         { ...baseTask, id: 'done-due', due_date: '2026-05-17', status: 'done' },
         {
           ...baseTask,
@@ -706,7 +728,19 @@ test('active task helpers include active work and exclude closed work', () => {
       ],
       '2026-05-17'
     ).map((task) => task.id)
-  ).toEqual(['active-due'])
+  ).toEqual(['early-due', 'late-due', 'untimed-due'])
+
+  expect(
+    browserNotificationBody(
+      {
+        ...baseTask,
+        due_date: '2026-05-17',
+        due_time: '09:00',
+        priority: 'high',
+      },
+      '2026-05-17'
+    )
+  ).toContain('Due today at 09:00 - high priority')
 })
 
 test('due-date task comparator orders same-day tasks by due time', () => {

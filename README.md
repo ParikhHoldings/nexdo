@@ -20,7 +20,7 @@ This repo currently contains a Next.js app with:
 - sidebar Agent Review navigation deep-links to `/all?review=needs_review` with a live count that includes reviewable agent outputs plus traceable agent task mutations
 - localStorage-backed demo-mode task and profile data when Supabase is unavailable or the visitor is logged out
 - persistent dark/light appearance preferences for the app workspace
-- local-date-aware browser due-task reminders for active tasks due today or overdue
+- local-date-aware browser due-task reminders for active tasks due today or overdue, ordered by due time and priority with due time shown in today's reminder body
 - imports from Todoist, manual Google/Microsoft access-token imports, Nexdo handoff briefs, and file uploads from CSV, ICS, JSON/Trello/Things-style task exports, including client-side demo file imports for logged-out visitors
 - Settings data export for the tasks currently loaded in the workspace as JSON or CSV for backup, review, or agent handoff
 - file-import previews with sample task titles and plan/cap warnings before tasks are added

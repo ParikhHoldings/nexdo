@@ -1,6 +1,7 @@
 import type { Task } from './database.types'
 import { getLocalDateKey } from './dates'
-import { isActiveTask } from './task-filters'
+import { compareTasksByDueDateTime, isActiveTask } from './task-filters'
+import { formatDueTime } from './utils'
 
 export { getLocalDateKey }
 
@@ -79,13 +80,17 @@ export function getDueTasksForBrowserNotification(
       return Boolean(task.due_date && task.due_date <= today)
     })
     .sort((a, b) => {
-      if (a.due_date !== b.due_date) return String(a.due_date).localeCompare(String(b.due_date))
+      const dueCompare = compareTasksByDueDateTime(a, b)
+      if (dueCompare !== 0) return dueCompare
       return PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority]
     })
 }
 
 export function browserNotificationBody(task: Task, today = getLocalDateKey()) {
-  const timing = task.due_date && task.due_date < today ? 'Overdue' : 'Due today'
+  const timing =
+    task.due_date && task.due_date < today
+      ? 'Overdue'
+      : `Due today${task.due_time ? ` at ${formatDueTime(task.due_time)}` : ''}`
   const context = task.context ? ` - ${task.context}` : ''
   return `${timing} - ${task.priority} priority${context}`
 }

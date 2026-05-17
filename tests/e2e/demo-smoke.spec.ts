@@ -1471,6 +1471,67 @@ test('appearance settings apply and persist theme locally', async ({ page }) => 
 test('notification settings request permission and deliver due-task reminders', async ({
   page,
 }) => {
+  const now = new Date().toISOString()
+  const today = getLocalDateKey()
+  const reminderTasks = [
+    {
+      id: 'late-reminder-task',
+      user_id: 'demo-user',
+      title: 'Timed afternoon reminder',
+      raw_input: 'Timed afternoon reminder',
+      description: null,
+      status: 'todo',
+      priority: 'urgent',
+      due_date: today,
+      due_time: '15:00',
+      context: null,
+      source: 'manual',
+      action_type: 'manual',
+      estimated_minutes: null,
+      energy_level: null,
+      people: null,
+      tags: null,
+      parent_task_id: null,
+      related_task_ids: null,
+      agent_output: null,
+      completed_at: null,
+      created_at: now,
+      updated_at: now,
+      source_agent_id: null,
+      external_ref: null,
+      ingestion_intent: null,
+      agent_metadata: null,
+    },
+    {
+      id: 'early-reminder-task',
+      user_id: 'demo-user',
+      title: 'Timed morning reminder',
+      raw_input: 'Timed morning reminder',
+      description: null,
+      status: 'todo',
+      priority: 'low',
+      due_date: today,
+      due_time: '09:00',
+      context: null,
+      source: 'manual',
+      action_type: 'manual',
+      estimated_minutes: null,
+      energy_level: null,
+      people: null,
+      tags: null,
+      parent_task_id: null,
+      related_task_ids: null,
+      agent_output: null,
+      completed_at: null,
+      created_at: now,
+      updated_at: now,
+      source_agent_id: null,
+      external_ref: null,
+      ingestion_intent: null,
+      agent_metadata: null,
+    },
+  ]
+
   await page.addInitScript(() => {
     const deliveredNotifications: Array<{
       title: string
@@ -1503,6 +1564,9 @@ test('notification settings request permission and deliver due-task reminders', 
       __nexdoNotifications: typeof deliveredNotifications
     }).__nexdoNotifications = deliveredNotifications
   })
+  await page.addInitScript((tasks: unknown[]) => {
+    window.localStorage.setItem('nexdo_demo_tasks', JSON.stringify(tasks))
+  }, reminderTasks)
 
   await page.goto('/settings?tab=notifications')
 
@@ -1541,8 +1605,8 @@ test('notification settings request permission and deliver due-task reminders', 
         }>
       }).__nexdoNotifications
   )
-  expect(delivered[0].title).toContain('Nexdo:')
-  expect(delivered[0].options?.body).toContain('Due today')
+  expect(delivered[0].title).toBe('Nexdo: Timed morning reminder')
+  expect(delivered[0].options?.body).toContain('Due today at 09:00')
 
   await page.reload()
   await expect(page.getByText('Permission: granted')).toBeVisible()

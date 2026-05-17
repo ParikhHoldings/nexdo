@@ -247,6 +247,7 @@
 - fixed mobile app startup so the navigation drawer no longer covers the main task screen by default
 - added real persisted dark/light appearance support before reintroducing theme controls
 - added real local browser due-task reminders before reintroducing notification controls
+- made local browser due-task reminders order due-today work by due time before priority and show due time in today's reminder body
 - tightened launch-facing copy away from open-ended autonomy, unverified traction, and unverified enterprise-security claims
 - verified `npm ci`, `npm run lint`, `npm run typecheck`, `npm run build`, and `npm run test:e2e` locally
 

@@ -103,7 +103,7 @@ Acceptance gate:
 
 Current evidence:
 - `/today` uses AI/provider prioritization for authenticated users and deterministic fallback for demo users.
-- `/today`, the sidebar, daily briefing, provider briefing inputs, and browser reminders share the same active-task definition, including undated active tasks and excluding done/cancelled work.
+- `/today`, the sidebar, daily briefing, provider briefing inputs, and browser reminders share the same active-task definition, including undated active tasks and excluding done/cancelled work; browser reminders order due-today work by due time and show the time in the reminder body.
 - Prioritization summaries and deterministic fallback now include due times so timed same-day work can rank ahead of later timed work.
 - Deterministic fallback behavior has focused regression coverage for parsing, prioritization, briefing, and bounded execution output shapes.
 - AI task input validation and rate-limit response helper contracts have focused regression coverage.

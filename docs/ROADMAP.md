@@ -10,7 +10,7 @@
 - Daily briefings refresh on structured planning metadata changes and surface past due times today as overdue.
 - Local deterministic fallbacks now support demo-mode parsing, prioritization, briefing, and bounded agent outputs when provider env is missing.
 - The app workspace now has a real persisted dark/light appearance preference.
-- The app workspace now has permission-gated local browser reminders for active tasks due today or overdue.
+- The app workspace now has permission-gated local browser reminders for active tasks due today or overdue, ordered by due time and priority.
 - Strict build rails are restored so lint and TypeScript errors block production builds.
 - A Playwright smoke test covers the core logged-out demo path.
 - Playwright now covers demo workspace navigation across mobile sidebar open/close, All Tasks search/filtering, Upcoming grouping, and Done task lifecycle.
