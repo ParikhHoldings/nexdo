@@ -62,6 +62,7 @@ Acceptance gate:
 - Users can filter All Tasks by unreviewed/needs-revision versus verified agent outputs.
 - Users can link a task to an owned parent task or related tasks from task detail.
 - Users can download a portable copy of currently loaded tasks for backup, review, or agent handoff.
+- Users can restore a copied Nexdo task handoff into a new task with structured metadata and reviewable notes.
 - Failed authenticated edits/deletes do not leave stale optimistic UI without warning.
 - AI/provider output is validated before becoming task data.
 - Generic user edits cannot spoof server-managed agent output.
@@ -74,6 +75,7 @@ Acceptance gate:
 Current evidence:
 - `TaskDetail` edit mode supports the MVP task fields, including optional due time and energy level.
 - `TaskDetail` supports task notes and a copyable task handoff brief, with demo localStorage persistence and authenticated owned-task API routes.
+- `/import` can parse a copied `# Nexdo Task Handoff` brief and restore the task metadata plus recent notes; source-agent trace fields are preserved as a reviewable note instead of browser-spoofing server-managed task fields.
 - `TaskDetail` supports parent/related task links, with demo persistence and authenticated writes through `app/api/tasks/[id]/relationships/route.ts`.
 - All Tasks defaults to active work but can filter into `done` and `cancelled`; task detail includes `cancelled` in the human status selector.
 - All Tasks includes an Origin filter for isolating agent-traced tasks from human-created tasks.
@@ -83,6 +85,7 @@ Current evidence:
 - Task cards show status badges for `in_progress`, `waiting`, `done`, and `cancelled`.
 - Task-card menus expose quick `Start`, `Mark waiting`, `Move to to-do`, and `Restore` actions, with the controls visible on mobile/touch viewports as well as desktop hover/focus.
 - Settings > Data exports the tasks currently loaded in the workspace as JSON or CSV through `lib/task-export.ts`.
+- `lib/task-handoff.ts` has focused parser coverage, and Playwright verifies demo paste-import restores task context and notes.
 - The task store rolls back failed authenticated edit/delete mutations and surfaces visible app notifications.
 - `lib/ai-response-validation.ts` bounds OpenAI output.
 - `PATCH /api/tasks/[id]` uses `lib/task-validation.ts` to allowlist user-editable fields and reject protected/server-managed fields such as `user_id`, `completed_at`, `source_agent_id`, and `agent_output`.

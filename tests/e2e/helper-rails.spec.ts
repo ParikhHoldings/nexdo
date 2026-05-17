@@ -41,7 +41,7 @@ import {
   tasksToExportPayload,
   tasksToJsonString,
 } from '../../lib/task-export'
-import { taskHandoffBrief } from '../../lib/task-handoff'
+import { parseTaskHandoffBrief, taskHandoffBrief } from '../../lib/task-handoff'
 import { formatRelativeDate } from '../../lib/utils'
 import type { Task, TaskNote } from '../../lib/database.types'
 
@@ -818,6 +818,43 @@ test('task handoff brief preserves agent-readable task context and recent notes'
   expect(brief).toContain('- agent result: Draft launch summary is ready for review.')
   expect(brief).toContain('Prefer add_task_note with note_type=agent_result')
   expect(brief).toContain('Do not send messages, spend money, or make irreversible external commitments')
+
+  const parsed = parseTaskHandoffBrief(brief)
+  expect('handoff' in parsed ? parsed.handoff : null).toMatchObject({
+    title: 'Prepare launch handoff',
+    status: 'in_progress',
+    priority: 'high',
+    action_type: 'prep',
+    due_date: '2026-05-18',
+    due_time: '09:00',
+    estimated_minutes: 30,
+    energy_level: 'deep',
+    people: ['Casey', 'Ops'],
+    tags: ['launch', 'handoff'],
+    context: 'Use the latest verification status.',
+    description: 'Summarize what changed and what remains blocked.',
+    raw_input: 'Prepare launch handoff by Monday 9am',
+    source_agent_id: 'codex',
+    external_ref: 'launch-brief-1',
+    ingestion_intent: 'update',
+    notes: [
+      {
+        content: 'Provider smokes still need real env.',
+        note_type: 'note',
+      },
+      {
+        content: 'Draft launch summary is ready for review.',
+        note_type: 'agent_result',
+      },
+    ],
+  })
+
+  expect(parseTaskHandoffBrief('not a handoff')).toMatchObject({
+    error: 'Paste a Nexdo task handoff brief.',
+  })
+  expect(parseTaskHandoffBrief(`${brief.replace('Status: in_progress', 'Status: shipped')}`)).toMatchObject({
+    error: 'Invalid handoff status.',
+  })
 })
 
 test('task relationship validation requires bounded owned-link inputs', () => {

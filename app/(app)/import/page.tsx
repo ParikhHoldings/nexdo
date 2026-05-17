@@ -11,8 +11,10 @@ import {
   LayoutGrid,
   FileSpreadsheet,
   FileText,
+  ClipboardPaste,
 } from 'lucide-react'
 import { ImportSourceCard } from '@/components/import-source-card'
+import { Button } from '@/components/ui/button'
 import { useTaskStore, useUserStore } from '@/lib/store'
 import {
   DEMO_IMPORT_TASK_LIMIT,
@@ -25,6 +27,11 @@ import {
   parseICSContent,
   parseJSONExport,
 } from '@/lib/importers'
+import { createDemoTaskNote } from '@/lib/task-notes'
+import {
+  parseTaskHandoffBrief,
+  type ParsedTaskHandoff,
+} from '@/lib/task-handoff'
 import type { Task, TaskInsert } from '@/lib/database.types'
 
 const DEMO_USER_ID = 'demo-user'
@@ -34,6 +41,14 @@ interface ImportState {
   isLoading: boolean
   isComplete: boolean
   importedCount?: number
+  error?: string | null
+}
+
+interface HandoffImportState {
+  isLoading: boolean
+  isComplete: boolean
+  importedTitle?: string
+  noteCount?: number
   error?: string | null
 }
 
@@ -106,6 +121,75 @@ function demoTaskFromInsert(task: TaskInsert): Task {
   }
 }
 
+function demoTaskFromHandoff(handoff: ParsedTaskHandoff): Task {
+  const now = new Date().toISOString()
+
+  return {
+    id: crypto.randomUUID(),
+    user_id: DEMO_USER_ID,
+    title: handoff.title,
+    raw_input: handoff.raw_input ?? `Imported from Nexdo handoff: ${handoff.title}`,
+    description: handoff.description,
+    status: handoff.status,
+    priority: handoff.priority,
+    due_date: handoff.due_date,
+    due_time: handoff.due_time,
+    context: handoff.context,
+    source: 'manual',
+    action_type: handoff.action_type,
+    estimated_minutes: handoff.estimated_minutes,
+    energy_level: handoff.energy_level,
+    people: handoff.people,
+    tags: handoff.tags,
+    parent_task_id: null,
+    related_task_ids: null,
+    agent_output: null,
+    completed_at: handoff.status === 'done' ? now : null,
+    created_at: now,
+    updated_at: now,
+    source_agent_id: null,
+    external_ref: null,
+    ingestion_intent: null,
+    agent_metadata: null,
+  }
+}
+
+function handoffCreatePayload(handoff: ParsedTaskHandoff) {
+  return {
+    title: handoff.title,
+    raw_input: handoff.raw_input ?? `Imported from Nexdo handoff: ${handoff.title}`,
+    description: handoff.description,
+    priority: handoff.priority,
+    due_date: handoff.due_date,
+    due_time: handoff.due_time,
+    context: handoff.context,
+    source: 'manual',
+    action_type: handoff.action_type,
+    estimated_minutes: handoff.estimated_minutes,
+    energy_level: handoff.energy_level,
+    people: handoff.people,
+    tags: handoff.tags,
+  }
+}
+
+function handoffTraceNote(handoff: ParsedTaskHandoff): string | null {
+  const trace = [
+    handoff.source_agent_id ? `source_agent_id=${handoff.source_agent_id}` : null,
+    handoff.external_ref ? `external_ref=${handoff.external_ref}` : null,
+    handoff.ingestion_intent ? `ingestion_intent=${handoff.ingestion_intent}` : null,
+  ].filter(Boolean)
+
+  return trace.length > 0 ? `Imported handoff trace: ${trace.join(', ')}` : null
+}
+
+function handoffNoteContent(
+  note: ParsedTaskHandoff['notes'][number]
+): string {
+  return note.note_type === 'agent_result'
+    ? `agent result: ${note.content}`
+    : note.content
+}
+
 async function parseFileImport(
   source: ImportSource,
   file: File,
@@ -159,6 +243,12 @@ export default function ImportPage() {
     asana: { isLoading: false, isComplete: false },
     trello: { isLoading: false, isComplete: false },
     csv: { isLoading: false, isComplete: false },
+  })
+  const [handoffInput, setHandoffInput] = useState('')
+  const [handoffState, setHandoffState] = useState<HandoffImportState>({
+    isLoading: false,
+    isComplete: false,
+    error: null,
   })
 
   const updateState = (source: ImportSource, state: Partial<ImportState>) => {
@@ -270,6 +360,115 @@ export default function ImportPage() {
     }
   }
 
+  const handleHandoffImport = async () => {
+    setHandoffState({ isLoading: true, isComplete: false, error: null })
+
+    const parsed = parseTaskHandoffBrief(handoffInput)
+    if ('error' in parsed) {
+      setHandoffState({
+        isLoading: false,
+        isComplete: false,
+        error: parsed.error,
+      })
+      return
+    }
+
+    const { handoff } = parsed
+    const traceNote = handoffTraceNote(handoff)
+    const noteContents = [
+      traceNote,
+      ...handoff.notes.map(handoffNoteContent),
+    ].filter((item): item is string => Boolean(item))
+
+    try {
+      if (!isAuthenticated) {
+        const task = demoTaskFromHandoff(handoff)
+        addTask(task)
+        for (const note of noteContents) {
+          createDemoTaskNote(task.id, note)
+        }
+        setHandoffInput('')
+        setHandoffState({
+          isLoading: false,
+          isComplete: true,
+          importedTitle: task.title,
+          noteCount: noteContents.length,
+          error: null,
+        })
+        return
+      }
+
+      const createResponse = await fetch('/api/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(handoffCreatePayload(handoff)),
+      })
+      const createPayload = await createResponse.json().catch(() => ({}))
+      if (!createResponse.ok) {
+        throw new Error(
+          createPayload?.message ||
+            createPayload?.errors?.[0]?.message ||
+            createPayload?.error ||
+            'Could not import handoff task'
+        )
+      }
+
+      let savedTask = createPayload as Task
+      if (handoff.status !== 'todo') {
+        const statusResponse = await fetch(`/api/tasks/${savedTask.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: handoff.status }),
+        })
+        const statusPayload = await statusResponse.json().catch(() => ({}))
+        if (!statusResponse.ok) {
+          throw new Error(
+            statusPayload?.message ||
+              statusPayload?.errors?.[0]?.message ||
+              statusPayload?.error ||
+              'Could not apply imported task status'
+          )
+        }
+        savedTask = statusPayload as Task
+      }
+
+      for (const note of noteContents) {
+        const noteResponse = await fetch(`/api/tasks/${savedTask.id}/notes`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ content: note }),
+        })
+        const notePayload = await noteResponse.json().catch(() => ({}))
+        if (!noteResponse.ok) {
+          throw new Error(
+            notePayload?.message ||
+              notePayload?.error ||
+              'Imported task was created, but a handoff note could not be saved'
+          )
+        }
+      }
+
+      addTask(savedTask)
+      setHandoffInput('')
+      setHandoffState({
+        isLoading: false,
+        isComplete: true,
+        importedTitle: savedTask.title,
+        noteCount: noteContents.length,
+        error: null,
+      })
+    } catch (error) {
+      setHandoffState({
+        isLoading: false,
+        isComplete: false,
+        error:
+          error instanceof Error && error.message
+            ? error.message
+            : 'Could not import handoff task',
+      })
+    }
+  }
+
   return (
     <div className="min-h-full max-w-7xl mx-auto px-4 sm:px-6 py-8 pb-24 lg:pb-8">
       {/* Header */}
@@ -283,6 +482,65 @@ export default function ImportPage() {
           Bring your tasks from any app into Nexdo
         </p>
       </motion.div>
+
+      {/* Nexdo Handoff Section */}
+      <motion.section
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.05 }}
+        className="mb-10"
+      >
+        <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-zinc-200">
+          <div className="h-5 w-1 rounded-full bg-accent" />
+          Paste a Nexdo Handoff
+        </h2>
+        <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-4">
+          <div className="flex items-start gap-3">
+            <ClipboardPaste className="mt-1 h-5 w-5 flex-shrink-0 text-zinc-500" />
+            <div className="min-w-0 flex-1 space-y-3">
+              <textarea
+                aria-label="Nexdo task handoff brief"
+                value={handoffInput}
+                onChange={(event) => {
+                  setHandoffInput(event.target.value)
+                  setHandoffState((current) => ({
+                    ...current,
+                    isComplete: false,
+                    error: null,
+                  }))
+                }}
+                rows={7}
+                placeholder="# Nexdo Task Handoff"
+                className="w-full resize-none rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/50"
+              />
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-h-5 text-sm">
+                  {handoffState.error && (
+                    <p className="text-red-400">{handoffState.error}</p>
+                  )}
+                  {handoffState.isComplete && (
+                    <p className="text-emerald-400">
+                      Added {handoffState.importedTitle}
+                      {handoffState.noteCount
+                        ? ` with ${handoffState.noteCount} note${handoffState.noteCount === 1 ? '' : 's'}.`
+                        : '.'}
+                    </p>
+                  )}
+                </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={handleHandoffImport}
+                  isLoading={handoffState.isLoading}
+                  disabled={!handoffInput.trim()}
+                >
+                  Import handoff
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </motion.section>
 
       {/* Connect & Import Section */}
       <motion.section

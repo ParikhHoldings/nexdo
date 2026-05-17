@@ -784,6 +784,62 @@ test('demo file import adds tasks without configured auth', async ({ page }) => 
   ).toBeVisible()
 })
 
+test('demo handoff import restores task context and notes', async ({ page }) => {
+  const handoffBrief = [
+    '# Nexdo Task Handoff',
+    'Title: Imported agent handoff',
+    'Status: waiting',
+    'Priority: high',
+    'Action type: prep',
+    'Due: 2026-05-18 09:00',
+    'Estimate: 20 minutes',
+    'Energy: deep',
+    'People: Ops, Casey',
+    'Tags: launch, handoff',
+    'Context: Use this handoff to resume launch verification.',
+    'Description: Confirm which checks remain blocked.',
+    'Original input: Import this Nexdo handoff',
+    'Source agent: codex',
+    'External ref: handoff-123',
+    'Ingestion intent: update',
+    '',
+    'Recent notes:',
+    '- note: Keep route smoke blocked until the Vercel bypass secret exists.',
+    '- agent result: Drafted the verification summary.',
+    '',
+    'Agent instructions:',
+    '- Read the task details and notes before changing task state.',
+  ].join('\n')
+
+  await page.goto('/import')
+  await page.getByLabel('Nexdo task handoff brief').fill(handoffBrief)
+  await page.getByRole('button', { name: 'Import handoff' }).click()
+  await expect(
+    page.getByText('Added Imported agent handoff with 3 notes.')
+  ).toBeVisible()
+
+  await page.goto('/today')
+  await expect(
+    page.getByRole('button', { name: /Imported agent handoff/ }).first()
+  ).toBeVisible()
+  await page.getByRole('button', { name: /Imported agent handoff/ }).first().click()
+
+  await expect(page.locator('h2', { hasText: 'Imported agent handoff' })).toBeVisible()
+  await expect(page.getByText('Use this handoff to resume launch verification.')).toBeVisible()
+  await expect(page.getByText('Ops', { exact: true })).toBeVisible()
+  await expect(page.getByText('launch', { exact: true })).toBeVisible()
+  await expect(
+    page.getByRole('button', { name: 'waiting', exact: true })
+  ).toBeVisible()
+
+  const notes = page.getByLabel('Task notes')
+  await expect(notes.getByText('Imported handoff trace: source_agent_id=codex')).toBeVisible()
+  await expect(
+    notes.getByText('Keep route smoke blocked until the Vercel bypass secret exists.')
+  ).toBeVisible()
+  await expect(notes.getByText('agent result: Drafted the verification summary.')).toBeVisible()
+})
+
 test('demo workspace supports all, upcoming, and done lifecycle', async ({
   page,
 }) => {

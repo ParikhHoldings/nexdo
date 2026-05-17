@@ -104,6 +104,7 @@
 - Surfaced non-default task statuses on task cards so agent-updated waiting/in-progress/cancelled work is visible while scanning the workspace.
 - Added task-card quick status actions for starting work, marking work waiting, moving work back to to-do, and restoring done/cancelled work from scan views; card actions stay visible on mobile/touch.
 - Added a task-detail Agent handoff brief that copies task metadata, context, recent notes, and bounded agent instructions for external-agent work.
+- Added `/import` paste restore for copied Nexdo task handoff briefs, including structured task metadata, trace notes, and recent notes.
 - Verified PR #3 task-handoff feature head `12faf571f5f6fb453d28a6af99db99f2ec648092` passed GitHub Web rails and Vercel preview deployment; remote route smoke remains blocked by Vercel Deployment Protection without `VERCEL_AUTOMATION_BYPASS_SECRET` or an unprotected URL.
 - Added an All Tasks origin filter so humans can isolate agent-originated work from human-created work during review.
 - Added an All Tasks agent-output review filter so unreviewed/needs-revision outputs can be queued separately from verified outputs.

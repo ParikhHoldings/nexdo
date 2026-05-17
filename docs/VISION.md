@@ -16,7 +16,7 @@ Nexdo helps users organize, prioritize, and execute meaningful work by turning p
 - Supabase schema exists for profiles, tasks, notes, briefings, usage events, rate limits, and Stripe event idempotency.
 - OpenAI-backed task parsing, prioritization, daily briefing, and agent execution helpers exist.
 - Deterministic fallback intelligence exists for demo/provider-missing task parsing, prioritization, briefing, and bounded execution outputs.
-- Task detail supports persistent notes for human context and future agent handoff, and external agents can append bounded notes through MCP/ChatGPT Actions.
+- Task detail supports persistent notes for human context and future agent handoff, copied task handoffs can be restored through `/import`, and external agents can append bounded notes through MCP/ChatGPT Actions.
 - Task detail supports owned parent/related task links so humans can map task dependencies without reopening direct browser relationship writes.
 - Agent execution is currently bounded to research, draft, and prep task types through a shared executable-action contract; manual and reminder tasks are not executable AI-agent tasks.
 - Bounded agent outputs now support execution history plus user verification status and notes.

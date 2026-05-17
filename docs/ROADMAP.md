@@ -22,14 +22,14 @@
 - Vercel preview deployment passed on the inspected task-handoff feature head `12faf571f5f6fb453d28a6af99db99f2ec648092` at `https://ph-nexdo-git-codex-launch-rea-42bdec-nathan-happywpcos-projects.vercel.app`.
 - Direct remote route smoke against that protected preview is blocked by Vercel Deployment Protection until an automation bypass secret or unprotected preview URL is available.
 - Dependency audit is clean after the Next.js 16, ESLint 9, and PostCSS remediation.
-- `npm ci`, `npm run lint`, `npm run typecheck`, `npm run build`, `npm run test:e2e` with 111 tests, dependency audit, and the technical launch smoke partial passed locally on 2026-05-17.
+- `npm ci`, `npm run lint`, `npm run typecheck`, `npm run build`, `npm run test:e2e` with 112 tests, dependency audit, and the technical launch smoke partial passed locally on 2026-05-17.
 - `docs/MVP.md` now defines the smallest trustworthy MVP path around capture, structure, prioritize, brief, bounded execution, and scoped agent task-layer access.
 - Import, billing/quota, MCP, and ChatGPT Actions surfaces exist.
 - File imports now preview task count, sample titles, and plan/cap warnings before tasks are added.
 - Settings now exposes JSON and CSV export for the tasks currently loaded in the workspace, giving users a portable backup/review handoff path.
 - Google Tasks and Microsoft To Do are usable through manual access-token imports; full OAuth is still a post-launch integration path.
 - Due-today task filters, Today/sidebar/briefing focus counts, browser reminders, MCP filtering, date-only imports, and relative labels now use local calendar dates instead of UTC day strings.
-- Task detail now exposes human task notes backed by demo localStorage, a copyable task handoff brief, and authenticated owned-task note routes; external agents can append bounded task notes and agent-result notes through MCP/ChatGPT Actions.
+- Task detail now exposes human task notes backed by demo localStorage, a copyable task handoff brief, `/import` paste restore for copied Nexdo handoffs, and authenticated owned-task note routes; external agents can append bounded task notes and agent-result notes through MCP/ChatGPT Actions.
 - Task detail now supports parent and related task links through an owned relationship route while direct browser relationship column grants remain closed.
 - Task cards now expose quick status actions for starting work, marking waiting, moving back to to-do, and restoring done/cancelled work from scan views, with mobile-visible controls.
 - All Tasks now includes an Origin filter so agent-traced tasks can be isolated from human-created tasks for review.

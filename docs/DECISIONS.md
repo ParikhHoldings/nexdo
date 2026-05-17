@@ -1,5 +1,15 @@
 # Decisions
 
+## 2026-05-17 - Copied task handoffs can be restored through import
+### Decision
+`/import` should accept copied `# Nexdo Task Handoff` briefs from task detail and restore them into a new task with structured planning metadata plus reviewable notes.
+
+### Why
+A one-way handoff helps humans move work out to an external agent, but a credible agent-ready task layer also needs a low-friction way to bring that work back into Nexdo without manually reconstructing title, status, priority, due date/time, context, tags, people, and recent findings.
+
+### Impact
+The parser and formatter live together in `lib/task-handoff.ts` and need to stay aligned. Browser paste imports must not spoof server-managed source-agent task fields; source trace from the handoff should remain human-reviewable as a task note unless an audited API-key/MCP path is doing the mutation.
+
 ## 2026-05-17 - Task relationship metadata stays service-owned
 ### Decision
 Direct browser task inserts and updates cannot write `parent_task_id` or `related_task_ids`. Task relationship edits now go through task detail, `app/api/tasks/[id]/relationships/route.ts`, and MCP `update_task`, which check that the current task and every linked task belong to the authenticated user before service-role persistence.
