@@ -89,6 +89,7 @@
 - Verified PR #3 Web rails and a Vercel preview deployment after the route-smoke rail; later PR heads can still be Vercel rate-limited.
 - Added `npm run smoke:routes` and wired it into the launch smoke so preview/production route rendering is checked at desktop and mobile widths.
 - Expanded route smoke coverage to include password-reset auth routes on desktop and mobile.
+- Kept password-reset recovery links bound to the serving origin before falling back to configured app URL, and trimmed submitted reset emails before provider calls.
 - Moved import preview cap warnings into a shared helper with local coverage for demo caps and Free-plan near-limit warning copy.
 - Centralized executable AI action types in `lib/task-actions.ts` so task cards, task detail, authenticated execution, and agent-output history share the same research/draft/prep contract.
 - Added regression coverage that `manual` and `remind` tasks stay non-executable and that reminder tasks do not expose AI-agent controls in the rendered workspace.

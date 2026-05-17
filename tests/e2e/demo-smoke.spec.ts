@@ -95,6 +95,29 @@ test('public robots sitemap points to an existing public sitemap', async ({ requ
   expect(sitemapText).not.toContain('/api/')
 })
 
+test('password reset keeps recovery links on the serving origin', async ({ page }) => {
+  const source = readFileSync('app/auth/reset/page.tsx', 'utf8')
+  const windowOriginIndex = source.indexOf('window.location.origin')
+  const envOriginIndex = source.indexOf('process.env.NEXT_PUBLIC_APP_URL')
+
+  expect(source).toContain('const normalizedEmail = email.trim()')
+  expect(source).toContain('resetPasswordForEmail(')
+  expect(source).toContain('normalizedEmail,')
+  expect(windowOriginIndex).toBeGreaterThan(-1)
+  expect(envOriginIndex).toBeGreaterThan(-1)
+  expect(windowOriginIndex).toBeLessThan(envOriginIndex)
+
+  await page.goto('/auth/reset')
+  const emailInput = page.getByLabel('Email')
+  await emailInput.fill('  reset-smoke@example.com  ')
+  await page.getByRole('button', { name: /Send reset link/ }).click()
+
+  await expect(emailInput).toHaveValue('reset-smoke@example.com')
+  await expect(
+    page.getByText('Authentication is not configured for this deployment.')
+  ).toBeVisible()
+})
+
 test('demo task capture, briefing, prioritization, and agent output work', async ({
   page,
 }) => {
