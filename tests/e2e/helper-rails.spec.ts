@@ -126,6 +126,8 @@ test('AI parsed task validator normalizes due times', () => {
 })
 
 test('auth redirect helpers keep callback and login redirects same-origin', () => {
+  const middlewareSource = readFileSync('lib/supabase/middleware.ts', 'utf8')
+
   expect(safeAuthRedirect('/today')).toBe('/today')
   expect(safeAuthRedirect('/settings?tab=billing')).toBe('/settings?tab=billing')
   expect(safeAuthRedirect(' /all ')).toBe('/all')
@@ -137,6 +139,11 @@ test('auth redirect helpers keep callback and login redirects same-origin', () =
     'Could not finish sign-in. Request a fresh link or sign in again.'
   )
   expect(authErrorMessage('other')).toBeNull()
+
+  expect(middlewareSource).toContain('`${request.nextUrl.pathname}${request.nextUrl.search}`')
+  expect(middlewareSource).not.toContain(
+    "url.searchParams.set('redirect', request.nextUrl.pathname)"
+  )
 })
 
 test('AI task input sanitizer fails closed for invalid arrays and required fields', () => {

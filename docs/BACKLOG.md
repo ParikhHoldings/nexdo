@@ -39,7 +39,7 @@
 - fixed date-only task labels so local calendar due dates render as Today/Tomorrow instead of shifting through UTC parsing
 - surfaced authenticated AI briefing and prioritization fallback notices when provider/rate-limit failures force local heuristics
 - surfaced billing checkout and portal server messages before generic settings errors
-- added shared auth redirect guardrails so login redirects and callback `next` paths stay on same-origin app paths, and callback errors show a visible login message
+- added shared auth redirect guardrails so protected-route login redirects preserve path and query, login/callback redirects stay on same-origin app paths, and callback errors show a visible login message
 - kept Settings tab clicks and `?tab=` deep links synchronized with the URL so billing/API/appearance links continue to land on the intended tab after users click around
 - kept Connect AI setup, activity, and available-tool indicators bound to active paid API access instead of treating old key hints as usable
 - normalized Connect AI test-connection and agent-activity errors across plain, message, and JSON-RPC error payloads
