@@ -109,6 +109,7 @@
 - expanded `npm run smoke:app` so real app-session verification covers seeded agent-review validation and save behavior
 - expanded `npm run smoke:stripe -- --write --webhook` so protected-preview runs use Vercel bypass headers and verify authenticated checkout/portal app routes
 - expanded OpenAI app-route and MCP provider smokes so protected-preview launch checks use Vercel bypass headers when configured
+- hardened Stripe `invoice.payment_failed` handling so failed payments downgrade entitlements to Free and the webhook smoke verifies the downgrade
 
 ## Completed 2026-05-16
 - read and updated the repo-level agent context and all existing Markdown/text operating files

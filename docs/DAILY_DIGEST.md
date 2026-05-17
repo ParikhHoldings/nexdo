@@ -113,6 +113,7 @@
 - Expanded `npm run smoke:stripe -- --write --webhook` so protected-preview runs use Vercel bypass headers and verify authenticated checkout/portal app routes.
 - Verified PR #3 Web rails and Vercel preview deployment on the Stripe app billing smoke hardening head (`8bad78f`).
 - Expanded OpenAI app-route and MCP provider smokes so protected-preview launch checks use Vercel bypass headers when configured.
+- Hardened Stripe failed-payment handling so `invoice.payment_failed` downgrades entitlements to Free and the webhook smoke verifies it.
 
 ### In progress
 - Provider-backed Supabase, OpenAI, Stripe, and MCP smokes remain the main launch-readiness gap.

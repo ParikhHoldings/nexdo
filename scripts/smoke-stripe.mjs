@@ -210,6 +210,29 @@ function subscriptionEvent({ id, type, customerId, priceId, status }) {
   }
 }
 
+function invoicePaymentFailedEvent({ id, customerId }) {
+  return {
+    id,
+    object: 'event',
+    api_version: '2025-02-24.acacia',
+    created: Math.floor(Date.now() / 1000),
+    data: {
+      object: {
+        id: `in_${randomUUID().replace(/-/g, '')}`,
+        object: 'invoice',
+        customer: customerId,
+      },
+    },
+    livemode: allowLive,
+    pending_webhooks: 1,
+    request: {
+      id: null,
+      idempotency_key: null,
+    },
+    type: 'invoice.payment_failed',
+  }
+}
+
 async function createSmokeProfile(supabase, customerId) {
   const email = `nexdo-stripe-webhook-smoke-${Date.now()}@example.com`
   const password = `Nexdo-stripe-smoke-${randomUUID()}!aA1`
@@ -619,6 +642,23 @@ async function webhookSmoke() {
       cookieHeader,
       expectedTier: 'pro',
       expectAllowed: true,
+    })
+
+    const failedPaymentEvent = invoicePaymentFailedEvent({
+      id: `evt_nexdo_payment_failed_${randomUUID()}`,
+      customerId: customer.id,
+    })
+    eventIds.push(failedPaymentEvent.id)
+    await postSignedWebhook(failedPaymentEvent)
+    await waitForProfileTier(supabase, userId, 'free')
+    console.log('ok webhook invoice.payment_failed -> free')
+    await verifyQuotaPlanState(supabase, userId, 'free')
+    await verifyAuthenticatedTaskQuotaAction({
+      supabase,
+      userId,
+      cookieHeader,
+      expectedTier: 'free',
+      expectAllowed: false,
     })
 
     const powerEvent = subscriptionEvent({

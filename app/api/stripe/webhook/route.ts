@@ -113,9 +113,17 @@ export async function POST(request: NextRequest) {
 
       case 'invoice.payment_failed': {
         const invoice = event.data.object as Stripe.Invoice
-        const customerId = invoice.customer as string
-        console.log('Payment failed for customer:', customerId)
-        // TODO(post-launch): send dunning email; Stripe will retry the invoice.
+        const customerId =
+          typeof invoice.customer === 'string'
+            ? invoice.customer
+            : invoice.customer?.id
+
+        if (!customerId) {
+          console.warn('Stripe webhook: invoice.payment_failed missing customer id')
+          break
+        }
+
+        await updateCustomerSubscriptionTier(supabase, customerId, 'free')
         break
       }
     }

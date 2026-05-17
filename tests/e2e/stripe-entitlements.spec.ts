@@ -111,6 +111,7 @@ test('Stripe webhook profile tier updates fail unless a profile row is written',
 
 test('Stripe webhook smoke verifies quota plan state after tier changes', () => {
   const source = readFileSync('scripts/smoke-stripe.mjs', 'utf8')
+  const routeSource = readFileSync('app/api/stripe/webhook/route.ts', 'utf8')
 
   expect(source).toContain("import { createBrowserClient } from '@supabase/ssr'")
   expect(source).toContain('const PLAN_LIMITS = {')
@@ -133,5 +134,11 @@ test('Stripe webhook smoke verifies quota plan state after tier changes', () => 
   expect(source).toContain('expectAllowed: true')
   expect(source).toContain("priceId: proPriceId")
   expect(source).toContain("priceId: powerPriceId")
+  expect(source).toContain('function invoicePaymentFailedEvent')
+  expect(source).toContain("type: 'invoice.payment_failed'")
+  expect(source).toContain('await postSignedWebhook(failedPaymentEvent)')
+  expect(source).toContain("console.log('ok webhook invoice.payment_failed -> free')")
   expect(source).toContain('quotaWouldAllow(profile,')
+  expect(routeSource).toContain("case 'invoice.payment_failed'")
+  expect(routeSource).toContain("updateCustomerSubscriptionTier(supabase, customerId, 'free')")
 })
