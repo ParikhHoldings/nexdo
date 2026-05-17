@@ -266,6 +266,19 @@ async function writeSmoke() {
     }
     console.log('ok direct task insert cannot write agent metadata columns')
 
+    const { error: sourceSpoofInsertError } = await userClient
+      .from('tasks')
+      .insert({
+        user_id: userId,
+        title: 'Nexdo browser source spoof insert',
+        raw_input: 'Nexdo browser source spoof insert',
+        source: 'agent',
+      })
+    if (!sourceSpoofInsertError) {
+      fail('direct task insert could spoof agent source')
+    }
+    console.log('ok direct task insert cannot spoof task source')
+
     const { data: insertedTask, error: insertError } = await userClient
       .from('tasks')
       .insert({
@@ -273,9 +286,12 @@ async function writeSmoke() {
         title: 'Nexdo Supabase smoke task',
         raw_input: 'Nexdo Supabase smoke task',
       })
-      .select('id, status, user_id')
+      .select('id, status, source, user_id')
       .single()
     if (insertError || !insertedTask?.id) fail('RLS task insert failed', insertError)
+    if (insertedTask.source !== 'manual') {
+      fail(`RLS task insert defaulted to unexpected source ${insertedTask.source}`)
+    }
     console.log('ok RLS task insert')
 
     const { error: protectedNoteInsertError } = await userClient
@@ -330,6 +346,15 @@ async function writeSmoke() {
       fail('RLS task update failed', updateError)
     }
     console.log('ok RLS task update')
+
+    const { error: sourceSpoofUpdateError } = await userClient
+      .from('tasks')
+      .update({ source: 'agent' })
+      .eq('id', insertedTask.id)
+    if (!sourceSpoofUpdateError) {
+      fail('direct task update could spoof agent source')
+    }
+    console.log('ok direct task update cannot spoof task source')
 
     const { error: protectedTaskUpdateError } = await userClient
       .from('tasks')

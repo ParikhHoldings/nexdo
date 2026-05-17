@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import {
   checkQuota,
   consumeQuota,
@@ -68,7 +68,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Validation failed' }, { status: 400 })
     }
 
-    const db = supabase as any
+    const service = await createServiceClient()
+    if (!service) {
+      return NextResponse.json(
+        { error: 'Database not configured' },
+        { status: 503 }
+      )
+    }
+
+    const db = service as any
     const { data: task, error } = await db
       .from('tasks')
       .insert({
