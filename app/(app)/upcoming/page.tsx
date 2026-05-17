@@ -7,6 +7,7 @@ import { TaskInput } from '@/components/task-input'
 import { TaskCard } from '@/components/task-card'
 import { TaskListSkeleton } from '@/components/ui/skeleton'
 import { useTaskStore } from '@/lib/store'
+import { compareTasksByDueDateTime } from '@/lib/task-filters'
 import { format, addDays, isSameDay, parseISO, isAfter } from 'date-fns'
 
 export default function UpcomingPage() {
@@ -61,6 +62,10 @@ export default function UpcomingPage() {
       } else {
         groups['later'].push(task)
       }
+    })
+
+    Object.values(groups).forEach((dateTasks) => {
+      dateTasks.sort(compareTasksByDueDateTime)
     })
 
     return groups

@@ -19,6 +19,7 @@ Nexdo is not only a concept. The repo already contains a Next.js product shell w
 The product promise should be grounded in what the code actually supports:
 - natural-language task capture with AI parsing, including due-date and due-time extraction; local fallback parsing should keep titles concise by moving schedule, priority, and estimate phrases into structured metadata
 - priority, due date, context, people, tags, action type, estimate, and energy metadata
+- due-time-aware All Tasks and Upcoming scan ordering so same-day timed work is reviewed before untimed work
 - task-detail notes for human context, decisions, links, and future agent handoff context, with demo localStorage persistence, authenticated owned-task note routes, a copyable task handoff brief, `/import` paste restore for copied Nexdo handoff briefs, and MCP/ChatGPT Actions support for external agents to append reviewable task notes or bounded agent-result notes
 - task-detail parent and related task links, with demo localStorage persistence and an authenticated relationship route that verifies the current task and every linked task belong to the current user before service-role persistence
 - scan-view task-card status actions for starting active work, marking work waiting, moving work back to to-do, and restoring done/cancelled work without opening task detail; card actions remain visible on mobile/touch viewports

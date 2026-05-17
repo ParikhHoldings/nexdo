@@ -9,6 +9,7 @@ This repo currently contains a Next.js app with:
 - natural-language task parsing with due-date/due-time extraction, concise fallback titles, daily briefing, prioritization, and limited agent execution through OpenAI
 - bounded validation for OpenAI JSON output before parsed tasks, briefings, prioritization, or agent results are returned or saved
 - shared task-create and task-patch validation that rejects protected/server-managed fields before quota or database mutation
+- due-time-aware scan views so All Tasks due-date sorting and Upcoming date groups order same-day timed work before untimed work
 - task-detail notes for human context and future agent handoffs, with demo localStorage persistence, authenticated owned-task note routes, a copyable task handoff brief, `/import` paste restore for Nexdo handoff briefs, column-limited browser note metadata, database-bounded note content, and MCP/ChatGPT Actions support for external agents to append reviewable notes or bounded agent-result notes
 - task-detail parent/related task links with demo persistence and an authenticated owned-relationship route that verifies linked tasks belong to the current user before service-role persistence
 - reviewable agent output history with verification status and notes for bounded research, draft, and prep runs, with a shared executable-action contract that keeps manual/reminder tasks out of AI-run controls

@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { readFileSync } from 'node:fs'
+import { addLocalDays, getLocalDateKey } from '../../lib/dates'
 
 test('landing page routes the primary CTA to the working demo path', async ({
   page,
@@ -912,6 +913,116 @@ test('demo workspace supports all, upcoming, and done lifecycle', async ({
 
   await page.reload()
   await expect(page.getByText('Nothing completed yet')).toBeVisible()
+})
+
+test('scan views order same-day tasks by due time', async ({ page }) => {
+  const now = new Date().toISOString()
+  const tomorrow = getLocalDateKey(addLocalDays(new Date(), 1))
+  const tasks = [
+    {
+      id: 'untimed-scan-task',
+      user_id: 'demo-user',
+      title: 'Untimed same-day scan',
+      raw_input: 'Untimed same-day scan',
+      description: null,
+      status: 'todo',
+      priority: 'medium',
+      due_date: tomorrow,
+      due_time: null,
+      context: null,
+      source: 'manual',
+      action_type: 'manual',
+      estimated_minutes: null,
+      energy_level: null,
+      people: null,
+      tags: null,
+      parent_task_id: null,
+      related_task_ids: null,
+      agent_output: null,
+      completed_at: null,
+      created_at: now,
+      updated_at: now,
+      source_agent_id: null,
+      external_ref: null,
+      ingestion_intent: null,
+      agent_metadata: null,
+    },
+    {
+      id: 'afternoon-scan-task',
+      user_id: 'demo-user',
+      title: 'Afternoon timed scan',
+      raw_input: 'Afternoon timed scan',
+      description: null,
+      status: 'todo',
+      priority: 'medium',
+      due_date: tomorrow,
+      due_time: '15:00',
+      context: null,
+      source: 'manual',
+      action_type: 'manual',
+      estimated_minutes: null,
+      energy_level: null,
+      people: null,
+      tags: null,
+      parent_task_id: null,
+      related_task_ids: null,
+      agent_output: null,
+      completed_at: null,
+      created_at: now,
+      updated_at: now,
+      source_agent_id: null,
+      external_ref: null,
+      ingestion_intent: null,
+      agent_metadata: null,
+    },
+    {
+      id: 'morning-scan-task',
+      user_id: 'demo-user',
+      title: 'Morning timed scan',
+      raw_input: 'Morning timed scan',
+      description: null,
+      status: 'todo',
+      priority: 'medium',
+      due_date: tomorrow,
+      due_time: '09:00',
+      context: null,
+      source: 'manual',
+      action_type: 'manual',
+      estimated_minutes: null,
+      energy_level: null,
+      people: null,
+      tags: null,
+      parent_task_id: null,
+      related_task_ids: null,
+      agent_output: null,
+      completed_at: null,
+      created_at: now,
+      updated_at: now,
+      source_agent_id: null,
+      external_ref: null,
+      ingestion_intent: null,
+      agent_metadata: null,
+    },
+  ]
+
+  await page.addInitScript((demoTasks: unknown[]) => {
+    window.localStorage.setItem('nexdo_demo_tasks', JSON.stringify(demoTasks))
+  }, tasks)
+
+  await page.goto('/all?sort=due_date')
+  await expect(page.getByRole('heading', { name: 'All Tasks' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Morning timed scan' })).toBeVisible()
+
+  await expect
+    .poll(async () => page.locator('h3').allTextContents())
+    .toEqual(['Morning timed scan', 'Afternoon timed scan', 'Untimed same-day scan'])
+
+  await page.goto('/upcoming')
+  await expect(page.getByRole('heading', { name: 'Upcoming' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Tomorrow' })).toBeVisible()
+  await expect
+    .poll(async () => page.locator('h3').allTextContents())
+    .toEqual(['Morning timed scan', 'Afternoon timed scan', 'Untimed same-day scan'])
 })
 
 test('non-default task statuses remain visible and reviewable from all tasks', async ({ page }) => {

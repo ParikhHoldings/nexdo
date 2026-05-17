@@ -78,6 +78,7 @@ Current evidence:
 - `/import` can parse a copied `# Nexdo Task Handoff` brief and restore the task metadata plus recent notes; source-agent trace fields are preserved as a reviewable note instead of browser-spoofing server-managed task fields.
 - `TaskDetail` supports parent/related task links, with demo persistence and authenticated writes through `app/api/tasks/[id]/relationships/route.ts`.
 - All Tasks defaults to active work but can filter into `done` and `cancelled`; task detail includes `cancelled` in the human status selector.
+- All Tasks due-date sorting and Upcoming date groups order same-day tasks by due time before untimed work.
 - All Tasks includes an Origin filter for isolating agent-traced tasks from human-created tasks.
 - All Tasks includes an agent review filter for isolating unreviewed/needs-revision outputs and traceable agent-created or agent-updated tasks from verified outputs.
 - Task cards show agent-output review badges for unreviewed, needs-revision, and verified outputs.

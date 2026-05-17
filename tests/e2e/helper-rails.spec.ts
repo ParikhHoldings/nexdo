@@ -28,7 +28,11 @@ import { quotaExceededResponse, quotaFailureStatus } from '../../lib/quota'
 import { rateLimitResponseHeaders } from '../../lib/rate-limit'
 import { validateTaskInput, validateTaskPatch } from '../../lib/task-validation'
 import { getLocalDateKey } from '../../lib/dates'
-import { isActiveTask, isTodayFocusTask } from '../../lib/task-filters'
+import {
+  compareTasksByDueDateTime,
+  isActiveTask,
+  isTodayFocusTask,
+} from '../../lib/task-filters'
 import {
   asExecutableActionType,
   EXECUTABLE_ACTION_TYPES,
@@ -628,13 +632,15 @@ test('authenticated app smoke verifies task CRUD, task notes, and agent review',
 test('date-only task surfaces compare local date keys without UTC parsing', () => {
   const demoTasksSource = readFileSync('lib/tasks.ts', 'utf8')
   const allTasksSource = readFileSync('app/(app)/all/page.tsx', 'utf8')
+  const upcomingSource = readFileSync('app/(app)/upcoming/page.tsx', 'utf8')
 
   expect(demoTasksSource).toContain('const today = getLocalDateKey()')
   expect(demoTasksSource).toContain('return t.due_date > today')
   expect(demoTasksSource).not.toContain('new Date(t.due_date)')
 
-  expect(allTasksSource).toContain('return a.due_date.localeCompare(b.due_date)')
+  expect(allTasksSource).toContain('return compareTasksByDueDateTime(a, b)')
   expect(allTasksSource).not.toContain('new Date(a.due_date)')
+  expect(upcomingSource).toContain('dateTasks.sort(compareTasksByDueDateTime)')
 })
 
 test('active task helpers include active work and exclude closed work', () => {
@@ -701,6 +707,53 @@ test('active task helpers include active work and exclude closed work', () => {
       '2026-05-17'
     ).map((task) => task.id)
   ).toEqual(['active-due'])
+})
+
+test('due-date task comparator orders same-day tasks by due time', () => {
+  const baseTask: Task = {
+    id: 'task-1',
+    user_id: 'user-1',
+    title: 'Review due sorting',
+    raw_input: null,
+    description: null,
+    status: 'todo',
+    priority: 'medium',
+    due_date: null,
+    due_time: null,
+    context: null,
+    source: 'manual',
+    action_type: 'manual',
+    estimated_minutes: null,
+    energy_level: null,
+    people: null,
+    tags: null,
+    parent_task_id: null,
+    related_task_ids: null,
+    agent_output: null,
+    completed_at: null,
+    created_at: '2026-05-17T12:00:00.000Z',
+    updated_at: '2026-05-17T12:00:00.000Z',
+    source_agent_id: null,
+    external_ref: null,
+    ingestion_intent: null,
+    agent_metadata: null,
+  }
+
+  const sorted = [
+    { ...baseTask, id: 'untimed', due_date: '2026-05-18' },
+    { ...baseTask, id: 'later', due_date: '2026-05-18', due_time: '15:00' },
+    { ...baseTask, id: 'undated' },
+    { ...baseTask, id: 'tomorrow', due_date: '2026-05-19', due_time: '09:00' },
+    { ...baseTask, id: 'early', due_date: '2026-05-18', due_time: '09:00' },
+  ].sort(compareTasksByDueDateTime)
+
+  expect(sorted.map((task) => task.id)).toEqual([
+    'early',
+    'later',
+    'untimed',
+    'tomorrow',
+    'undated',
+  ])
 })
 
 test('task export helpers preserve portable task metadata', () => {

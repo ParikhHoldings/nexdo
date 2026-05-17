@@ -10,6 +10,7 @@ import { TaskListSkeleton } from '@/components/ui/skeleton'
 import { useTaskStore } from '@/lib/store'
 import { taskMatchesSearch } from '@/lib/task-search'
 import { hasAgentTrace } from '@/lib/agent-trace'
+import { compareTasksByDueDateTime } from '@/lib/task-filters'
 import {
   taskHasVerifiedAgentOutput,
   taskNeedsAgentReview,
@@ -167,10 +168,7 @@ export default function AllTasksPage() {
     result.sort((a, b) => {
       switch (sortBy) {
         case 'due_date':
-          if (!a.due_date && !b.due_date) return 0
-          if (!a.due_date) return 1
-          if (!b.due_date) return -1
-          return a.due_date.localeCompare(b.due_date)
+          return compareTasksByDueDateTime(a, b)
         case 'priority':
           return priorityOrder[a.priority] - priorityOrder[b.priority]
         case 'title':
