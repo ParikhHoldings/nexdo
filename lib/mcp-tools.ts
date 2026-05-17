@@ -85,7 +85,7 @@ export const MCP_TOOLS: MCPTool[] = [
   {
     name: 'create_task',
     description:
-      'Create a new task in Nexdo using natural language. The input will be parsed to extract title, due date, priority, context, people, and tags automatically.',
+      'Create a new task in Nexdo using natural language. The input will be parsed to extract title, due date, due time, priority, context, people, and tags automatically.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -293,7 +293,7 @@ export const MCP_TOOLS: MCPTool[] = [
   {
     name: 'get_briefing',
     description:
-      "Get today's AI-generated briefing including top priorities, overdue tasks, quick wins, and tasks where someone is waiting.",
+      "Get today's Nexdo briefing including top priorities, overdue tasks, quick wins, and tasks where someone is waiting.",
     inputSchema: {
       type: 'object',
       properties: {},
@@ -321,7 +321,7 @@ export const MCP_TOOLS: MCPTool[] = [
   },
   {
     name: 'get_task',
-    description: 'Get full details of a specific task including agent output.',
+    description: 'Get full details of a specific task including agent output and recent task notes.',
     inputSchema: {
       type: 'object',
       properties: {

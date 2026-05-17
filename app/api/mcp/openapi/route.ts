@@ -34,7 +34,8 @@ const openApiSpec = {
   openapi: '3.0.0',
   info: {
     title: 'Nexdo API',
-    description: 'AI-powered task management. Create, update, complete, and search tasks using natural language.',
+    description:
+      'Bounded, human-reviewable task access for Nexdo. Create, update, complete, note, brief, and search structured tasks with scoped API keys.',
     version: '1.0.0',
   },
   servers: [
@@ -102,7 +103,8 @@ const openApiSpec = {
       post: {
         operationId: 'createTask',
         summary: 'Create a new task',
-        description: 'Create a new task using natural language. The input will be parsed to extract title, due date, priority, context, people, and tags automatically.',
+        description:
+          'Create a new task using natural language. The input will be parsed to extract title, due date, due time, priority, context, people, and tags automatically.',
         requestBody: {
           required: true,
           content: {
@@ -435,7 +437,8 @@ const openApiSpec = {
       post: {
         operationId: 'getBriefing',
         summary: 'Get daily briefing',
-        description: "Get today's AI-generated briefing including top priorities, overdue tasks, quick wins, and tasks where someone is waiting.",
+        description:
+          "Get today's Nexdo briefing including top priorities, overdue tasks, quick wins, and tasks where someone is waiting.",
         requestBody: {
           required: false,
           content: {
@@ -517,7 +520,8 @@ const openApiSpec = {
       post: {
         operationId: 'getTask',
         summary: 'Get task details',
-        description: 'Get full details of a specific task including agent output.',
+        description:
+          'Get full details of a specific task including agent output and recent task notes.',
         requestBody: {
           required: true,
           content: {

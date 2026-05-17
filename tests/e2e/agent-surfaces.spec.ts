@@ -17,6 +17,8 @@ test('OpenAPI exposes the agent action contract', async ({ request }) => {
   const advertisedServerUrl = new URL(spec.servers[0].url)
   expect(spec.openapi).toBe('3.0.0')
   expect(spec.info.title).toBe('Nexdo API')
+  expect(spec.info.description).toContain('Bounded, human-reviewable task access')
+  expect(spec.info.description).not.toContain('AI-powered task management')
   expect(advertisedServerUrl.protocol).toBe('http:')
   expect(['127.0.0.1', 'localhost']).toContain(advertisedServerUrl.hostname)
   expect(advertisedServerUrl.port).toBe('3001')
@@ -63,6 +65,12 @@ test('OpenAPI exposes the agent action contract', async ({ request }) => {
     spec.paths['/api/mcp/actions/create_task'].post.requestBody.content[
       'application/json'
     ].schema
+  expect(spec.paths['/api/mcp/actions/create_task'].post.description).toContain(
+    'due time'
+  )
+  expect(MCP_TOOLS.find((tool) => tool.name === 'create_task')?.description).toContain(
+    'due time'
+  )
   expect(createTaskSchema.properties.source_agent_id).toBeTruthy()
   expect(createTaskSchema.properties.input.maxLength).toBe(2000)
   expect(createTaskSchema.properties.source_agent_id.maxLength).toBe(160)
@@ -144,6 +152,12 @@ test('OpenAPI exposes the agent action contract', async ({ request }) => {
   expect(
     spec.paths['/api/mcp/actions/search_tasks'].post.description
   ).toContain('people')
+  expect(spec.paths['/api/mcp/actions/get_task'].post.description).toContain(
+    'recent task notes'
+  )
+  expect(MCP_TOOLS.find((tool) => tool.name === 'get_task')?.description).toContain(
+    'recent task notes'
+  )
   expect(spec.components.schemas.ErrorResponse.required).toContain('error')
   expect(spec.components.schemas.Task.properties.status.enum).toEqual([
     'todo',
