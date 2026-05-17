@@ -40,7 +40,7 @@ The product promise should be grounded in what the code actually supports:
 - a recent agent activity surface under `/settings/mcp`
 - idempotent agent task creation when callers provide `source_agent_id` plus `external_ref`
 - agent trace metadata on create, update, complete, and task-note MCP writes so source agents and external references can be audited; `external_ref` requires `source_agent_id` on these writes, and create, update, and complete also persist trace metadata on the task row for human review
-- Stripe-backed plan surfaces, quotas, and rate-limit scaffolding, with checkout price IDs derived from server configuration and unknown webhook prices skipped instead of granting paid access
+- Stripe-backed plan surfaces, quotas, and rate-limit scaffolding, with checkout price IDs derived from server configuration, unknown webhook prices skipped instead of granting paid access, and webhook idempotency records kept service-owned
 
 Do not claim verified production readiness until build, lint, environment, database migrations, auth, Stripe, OpenAI, MCP, and deployment target have been checked in the current environment.
 
@@ -49,15 +49,15 @@ Current local verification from 2026-05-17:
 - `npm run lint` passed
 - `npm run typecheck` passed
 - `npm run build` passed with strict TypeScript and ESLint checks enabled
-- `npm run test:e2e` passed for 97 tests covering public landing/signup demo CTA smoke, logged-out demo workflows, task workspace lifecycle, task-detail notes save/reload behavior, Today focus/sidebar/briefing alignment for undated active tasks and cancelled-only work, mobile navigation open/close behavior, local-date due-today behavior, file-import preview/confirm flow, agent output history/review notes, persistent appearance and browser reminder settings, task/agent auth guards, shared executable action-type rails that keep `manual`/`remind` tasks out of AI execution controls, owned task-note route guardrails, authenticated app smoke source coverage for task CRUD and notes, MCP/OpenAPI/action auth smoke tests, API-to-Connect-AI handoff coverage, DB-backed MCP handler and API-key validation coverage including audit preflight failure behavior and `add_task_note` append/readback behavior, agent-completed trace visibility, billing guardrails, deterministic task-intelligence coverage including relative-date title cleanup, import parser coverage, Stripe entitlement mapping, task route validation, local validation helper contracts, invalid date/time rails, MCP/OpenAPI `cancelled` status contract alignment, and cancelled-task UI review/restore coverage
+- `npm run test:e2e` passed for 99 tests covering public landing/signup demo CTA smoke, logged-out demo workflows, task workspace lifecycle, task-detail notes save/reload behavior, Today focus/sidebar/briefing alignment for undated active tasks and cancelled-only work, mobile navigation open/close behavior, local-date due-today behavior, file-import preview/confirm flow, agent output history/review notes, persistent appearance and browser reminder settings, task/agent auth guards, shared executable action-type rails that keep `manual`/`remind` tasks out of AI execution controls, owned task-note route guardrails, authenticated app smoke source coverage for task CRUD and notes, profile/task/task-note/Stripe event grant source coverage, MCP/OpenAPI/action auth smoke tests, API-to-Connect-AI handoff coverage, DB-backed MCP handler and API-key validation coverage including audit preflight failure behavior and `add_task_note` append/readback behavior, agent-completed trace visibility, billing guardrails, deterministic task-intelligence coverage including relative-date title cleanup, import parser coverage, Stripe entitlement mapping, task route validation, local validation helper contracts, invalid date/time rails, MCP/OpenAPI `cancelled` status contract alignment, and cancelled-task UI review/restore coverage
 - `npm audit --audit-level=moderate` passed with 0 vulnerabilities after the Next.js 16 / ESLint 9 upgrade
 - `npm run smoke:launch -- --skip-local --skip-providers --technical-only` passed; provider smokes, public-copy approval, and production deploy approval remain separate manual gates
 - `npm run verify:env` failed because `.env.local` is absent; only `.env.local.example` exists in this workspace
 
 Current PR verification from this pass:
 - GitHub Actions Web rails include install, lint, typecheck, build, dependency audit, and Playwright smoke testing.
-- PR #3 Web rails passed on 2026-05-17 after the task-source spoof hardening and docs refresh.
-- Vercel preview deployment passed on the source-hardening code head, but the latest docs-only head hit the known Vercel account build-rate limit.
+- PR #3 Web rails and Vercel preview deployments have passed on inspected 2026-05-17 heads.
+- One interim docs-only head hit the known Vercel account build-rate limit, so stale Vercel failures should be checked against the current pushed head before being treated as app failures.
 - Direct remote route smoke against protected previews is blocked by Vercel Deployment Protection until `VERCEL_AUTOMATION_BYPASS_SECRET` is available locally or an unprotected preview URL is used.
 - Always inspect current PR checks after later pushes before treating preview deploy as current-green. A Vercel build-rate-limit failure is not evidence of an app build failure, but it does mean that head does not have fresh preview-deploy evidence.
 
@@ -145,9 +145,10 @@ present.
 
 `npm run smoke:supabase -- --write` should verify real migrations, profile
 column grants, direct task and task-note column-grant denials for
-server-managed fields, task-source spoofing, and task content bounds, agent external-ref uniqueness, private audit-event
-reads, browser audit-event insert denial, quota increments/no-ops, and
-rate-limit allow/block behavior.
+server-managed fields, task-source spoofing, task content bounds, agent
+external-ref uniqueness, private audit-event reads, browser audit-event insert
+denial, service-owned Stripe webhook event records, quota increments/no-ops,
+and rate-limit allow/block behavior.
 
 `npm run smoke:routes -- --url=https://preview.example` verifies the
 launch-facing marketing, app, auth, import, settings, MCP setup, privacy, and

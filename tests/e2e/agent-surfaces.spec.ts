@@ -494,6 +494,30 @@ test('browser profile preference writes stay bounded', () => {
   expect(signupPage).toContain('maxLength={MAX_FULL_NAME}')
 })
 
+test('Stripe webhook event records stay service-owned', () => {
+  const migration = readFileSync(
+    'supabase/migrations/013_stripe_event_grants.sql',
+    'utf8'
+  )
+  const webhookRoute = readFileSync('app/api/stripe/webhook/route.ts', 'utf8')
+  const supabaseSmoke = readFileSync('scripts/smoke-supabase.mjs', 'utf8')
+
+  expect(migration).toContain('alter table stripe_events enable row level security')
+  expect(migration).toContain('revoke all on table stripe_events from anon')
+  expect(migration).toContain('revoke all on table stripe_events from authenticated')
+  expect(migration).not.toContain('grant ')
+
+  expect(webhookRoute).toContain('createServiceClient')
+  expect(webhookRoute).toContain(".from('stripe_events')")
+  expect(webhookRoute).toContain("insert({ id: event.id, type: event.type })")
+
+  expect(supabaseSmoke).toContain('Stripe event idempotency service insert')
+  expect(supabaseSmoke).toContain('public cannot read Stripe webhook event records')
+  expect(supabaseSmoke).toContain('browser clients cannot read Stripe webhook event records')
+  expect(supabaseSmoke).toContain('Stripe webhook event records require service-owned writes')
+  expect(supabaseSmoke).toContain('browser client could insert Stripe webhook event records')
+})
+
 test('Connect AI no-key guidance deep-links to API settings', () => {
   const source = readFileSync('app/(app)/settings/mcp/page.tsx', 'utf8')
 

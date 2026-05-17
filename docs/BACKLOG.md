@@ -145,6 +145,7 @@
 - narrowed browser-visible profile columns and direct profile self-updates so authenticated clients cannot read key hashes/Stripe IDs or self-change billing, quota, Stripe, or API-key state
 - added profile content constraints so direct browser profile updates cannot bypass name and timezone bounds, and trimmed/validated signup names before profile creation
 - revoked direct browser profile inserts so missing profile rows cannot be self-created with spoofed entitlement, API-key, Stripe, or quota state
+- kept Stripe webhook idempotency records service-owned so browser clients cannot read or spoof processed billing events
 - made the MCP settings tool list reflect the current API key scopes
 - made the MCP settings setup flow prerequisite-aware so free/no-key profiles cannot test a connection and users are told to use the full one-time key, not the stored key hint
 - added an MCP settings activity list backed by `/api/mcp/events`
@@ -211,7 +212,7 @@
 ## High priority
 - configure and verify the real production deploy target
 - provide `VERCEL_AUTOMATION_BYPASS_SECRET` locally or use an unprotected preview URL so remote route smoke can verify the latest Vercel preview instead of stopping at Vercel Deployment Protection
-- run `npm run smoke:supabase -- --write` against a real Supabase project after applying migrations, including hashed API-key columns, profile column read/update grants, profile insert/content-bound denials, direct task and task-note column-grant denials, audit-event privacy, and agent external-ref uniqueness
+- run `npm run smoke:supabase -- --write` against a real Supabase project after applying migrations, including hashed API-key columns, profile column read/update grants, profile insert/content-bound denials, direct task and task-note column-grant denials, audit-event privacy, Stripe event record privacy/write denial, and agent external-ref uniqueness
 - run `npm run smoke:app` with real Supabase env and the target app URL to verify authenticated app task CRUD, task-note routes, and agent-review persistence
 - run `npm run smoke:openai -- --app` with real OpenAI, Supabase, and target app env
 - run `npm run smoke:stripe -- --write --webhook` with Stripe test-mode keys and target Supabase/app env to verify authenticated checkout, portal, webhook events, quota plan-state boundaries, authenticated task-create quota behavior, and idempotency

@@ -180,6 +180,7 @@ async function writeSmoke() {
   const email = `nexdo-smoke-${Date.now()}@example.com`
   const password = `Nexdo-smoke-${crypto.randomUUID()}!`
   let userId = null
+  const stripeEventIds = []
 
   try {
     const { data: created, error: createError } = await service.auth.admin.createUser({
@@ -500,6 +501,53 @@ async function writeSmoke() {
     if ((leakedTasks || []).length > 0) fail('public client could read a private task')
     console.log('ok public RLS isolation')
 
+    const stripeEventId = `evt_nexdo_smoke_${Date.now()}`
+    stripeEventIds.push(stripeEventId)
+    const { error: stripeEventInsertError } = await service
+      .from('stripe_events')
+      .insert({ id: stripeEventId, type: 'nexdo.smoke' })
+    if (stripeEventInsertError) {
+      fail('service role could not insert Stripe event idempotency record', stripeEventInsertError)
+    }
+    console.log('ok Stripe event idempotency service insert')
+
+    const { data: publicStripeEvents, error: publicStripeReadError } = await publicClient
+      .from('stripe_events')
+      .select('id')
+      .eq('id', stripeEventId)
+    if (!publicStripeReadError && (publicStripeEvents || []).length > 0) {
+      fail('public client could read Stripe webhook event records')
+    }
+    console.log('ok public cannot read Stripe webhook event records')
+
+    const { data: userStripeEvents, error: userStripeReadError } = await userClient
+      .from('stripe_events')
+      .select('id')
+      .eq('id', stripeEventId)
+    if (!userStripeReadError && (userStripeEvents || []).length > 0) {
+      fail('browser client could read Stripe webhook event records')
+    }
+    console.log('ok browser clients cannot read Stripe webhook event records')
+
+    const publicStripeSpoofId = `evt_nexdo_public_spoof_${Date.now()}`
+    stripeEventIds.push(publicStripeSpoofId)
+    const { error: publicStripeInsertError } = await publicClient
+      .from('stripe_events')
+      .insert({ id: publicStripeSpoofId, type: 'nexdo.public_spoof' })
+    if (!publicStripeInsertError) {
+      fail('public client could insert Stripe webhook event records')
+    }
+
+    const userStripeSpoofId = `evt_nexdo_browser_spoof_${Date.now()}`
+    stripeEventIds.push(userStripeSpoofId)
+    const { error: userStripeInsertError } = await userClient
+      .from('stripe_events')
+      .insert({ id: userStripeSpoofId, type: 'nexdo.browser_spoof' })
+    if (!userStripeInsertError) {
+      fail('browser client could insert Stripe webhook event records')
+    }
+    console.log('ok Stripe webhook event records require service-owned writes')
+
     const { data: auditEvent, error: auditError } = await service
       .from('agent_action_events')
       .insert({
@@ -548,6 +596,15 @@ async function writeSmoke() {
 
     await verifyUsageAndRateLimits(userId)
   } finally {
+    if (stripeEventIds.length > 0) {
+      const { error } = await service.from('stripe_events').delete().in('id', stripeEventIds)
+      if (error) {
+        console.error('warning: failed to delete smoke Stripe event records', error)
+      } else {
+        console.log('ok smoke Stripe event cleanup')
+      }
+    }
+
     if (userId) {
       const { error } = await service.auth.admin.deleteUser(userId)
       if (error) {

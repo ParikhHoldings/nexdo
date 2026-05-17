@@ -163,6 +163,7 @@
 - Narrowed browser-visible profile columns and direct profile self-updates so signed-in clients cannot read key hashes/Stripe IDs or self-change billing, quota, Stripe, or API-key state.
 - Added profile content constraints so direct browser profile updates cannot persist blank/oversized names or unsupported timezones, and trimmed/validated signup names before Supabase signup.
 - Revoked direct browser profile inserts so profile rows remain auth-trigger/service-owned and cannot be self-created with spoofed entitlement/API state.
+- Kept Stripe webhook idempotency records service-owned so browser clients cannot read or spoof processed billing event state.
 - Made the MCP settings tool list reflect the current API key scopes.
 - Made the MCP settings setup flow prerequisite-aware, disabled free/no-key connection tests, and clarified that external clients need the full one-time key rather than the stored key hint.
 - Added a recent agent activity surface on the MCP settings page backed by `/api/mcp/events`.

@@ -6,7 +6,7 @@ The goal is not a broad public launch. The credible Monday target is a verified 
 `docs/MVP.md` is the working product contract for this target: capture -> structure -> prioritize -> brief -> bounded execution, plus scoped task-layer access for AI agents.
 
 ### Must ship
-- A local app that passes clean install, lint, typecheck, build, dependency audit, and Playwright smoke tests. Latest full local rail passed 97 tests on 2026-05-17.
+- A local app that passes clean install, lint, typecheck, build, dependency audit, and Playwright smoke tests. Latest full local rail passed 99 tests on 2026-05-17.
 - A usable logged-out demo flow: load `/today`, inspect demo tasks, add a natural-language task, see prioritization, open an executable task, and generate a bounded agent output. Verified locally through the 2026-05-17 Playwright suite.
 - Core task mutation routes now validate allowlisted fields and protect owned-task updates/deletes.
 - Task detail now supports notes for launch context and handoffs, with logged-out demo persistence, authenticated owned-task note routes, and external-agent note appends through MCP/ChatGPT Actions.
@@ -43,7 +43,7 @@ The goal is not a broad public launch. The credible Monday target is a verified 
 - Updated docs that tell future agents what exists, what is verified, and what is still blocked.
 
 ### Must verify before external users
-- Supabase migrations, auth, profile creation, RLS, profile insert/read/update grants and content bounds, task/task-note column grants and content bounds, task CRUD, audit privacy, and agent external-ref uniqueness against a real project.
+- Supabase migrations, auth, profile creation, RLS, profile insert/read/update grants and content bounds, task/task-note column grants and content bounds, task CRUD, Stripe event record privacy/write denial, audit privacy, and agent external-ref uniqueness against a real project.
 - Authenticated app API task CRUD and task-note routes against a real Supabase-backed app session.
 - Rendered front-end routes against the real preview/production origin with `npm run smoke:routes -- --url=<origin>`.
 - OpenAI-backed parse, prioritize, briefing, and research/draft/prep execution with a real API key.

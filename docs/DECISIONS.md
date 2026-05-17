@@ -1,5 +1,15 @@
 # Decisions
 
+## 2026-05-17 - Stripe webhook idempotency is service-owned
+### Decision
+Direct browser access to `stripe_events` is revoked and row-level security is enabled. Only the service-role webhook path should read or insert Stripe event idempotency records.
+
+### Why
+Stripe event ids determine whether billing webhooks have already been processed. Browser clients should not be able to read billing event ids or spoof processed-event state that could interfere with entitlement updates.
+
+### Impact
+Real Supabase smoke must verify service-role inserts still work while public and authenticated browser clients cannot read or insert Stripe webhook event records. Future billing audit tables should default to the same service-owned boundary unless a user-facing read path is intentionally designed.
+
 ## 2026-05-17 - Authenticated app smoke covers task CRUD and notes
 ### Decision
 `npm run smoke:app` should create a disposable Supabase user, sign in through the app cookie flow, verify authenticated task list/create/update/delete routes, and verify task-note validation/create/readback through the deployed app routes. The launch smoke should run this after Supabase write smoke and before provider-specific OpenAI/Stripe/MCP checks.
