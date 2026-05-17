@@ -165,6 +165,15 @@ test('authenticated task mutations surface server failure messages', () => {
   expect(source).toContain('Could not delete task:')
 })
 
+test('authenticated agent execution surfaces server failure messages', () => {
+  const source = readFileSync('components/task-detail.tsx', 'utf8')
+
+  expect(source).toContain('payload?.message ||')
+  expect(source).toContain('payload?.error ||')
+  expect(source).toContain('setExecutionError(')
+  expect(source).toContain('Failed to execute task. Please try again.')
+})
+
 test('authenticated done bulk-clear surfaces server delete messages', () => {
   const source = readFileSync('app/(app)/done/page.tsx', 'utf8')
 

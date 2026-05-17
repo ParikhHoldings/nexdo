@@ -25,6 +25,7 @@
 - Surfaced authenticated import server messages before generic import errors.
 - Surfaced authenticated Done-page bulk-delete server messages while preserving local rollback.
 - Made Google Tasks and Microsoft To Do imports fail closed on nested provider task-list fetch failures.
+- Surfaced authenticated agent-execution and agent-review server messages in task detail.
 
 ### In progress
 - Provider-backed Supabase, OpenAI, Stripe, and MCP smokes remain the main launch-readiness gap.

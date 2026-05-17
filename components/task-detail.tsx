@@ -257,7 +257,11 @@ function AgentReviewPanel({
 
       const payload = await response.json().catch(() => ({}))
       if (!response.ok) {
-        throw new Error(payload?.error || 'Could not save review')
+        throw new Error(
+          payload?.message ||
+            payload?.error ||
+            'Could not save review'
+        )
       }
 
       const savedOutput = normalizeAgentOutput(
@@ -477,6 +481,7 @@ export function TaskDetail() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ taskId: task.id }),
       })
+      const payload = await response.json().catch(() => ({}))
 
       if (!response.ok) {
         if (response.status === 401 || response.status === 503) {
@@ -486,14 +491,17 @@ export function TaskDetail() {
             return
           }
         }
-        throw new Error('Execution failed')
+        throw new Error(
+          payload?.message ||
+            payload?.error ||
+            'Execution failed'
+        )
       }
 
-      const result = await response.json()
-      if (!isAgentOutputEnvelope(result) || !saveAgentEnvelope(result)) {
-        saveAgentOutput(result)
+      if (!isAgentOutputEnvelope(payload) || !saveAgentEnvelope(payload)) {
+        saveAgentOutput(payload)
       }
-    } catch {
+    } catch (error) {
       if (!isAuthenticated) {
         const fallback = executeTaskHeuristic(task)
         if (fallback) {
@@ -501,7 +509,11 @@ export function TaskDetail() {
           return
         }
       }
-      setExecutionError('Failed to execute task. Please try again.')
+      setExecutionError(
+        error instanceof Error && error.message
+          ? error.message
+          : 'Failed to execute task. Please try again.'
+      )
     } finally {
       setIsExecuting(false)
     }
