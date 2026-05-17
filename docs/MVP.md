@@ -169,11 +169,11 @@ Current evidence:
 - `/api/mcp/actions/[tool]` uses a shared formatter for action responses.
 - MCP JSON-RPC rejects malformed non-object request bodies before field access; `tools/call` and ChatGPT Action wrappers reject non-object tool argument payloads before execution, and shared Bearer parsing handles standard case-insensitive auth schemes with harmless extra spacing.
 - `search_tasks` and All Tasks search use the shared metadata search helper across title, context, description, people, and tags.
-- `update_task` accepts the same core planning fields humans can edit: status, due time, action type, estimate, energy level, people, and tags.
+- `update_task` accepts the same core planning fields humans can edit: status, due time, action type, estimate, energy level, people, tags, and owned parent/related task links.
 - `update_task` requires `source_agent_id` when `external_ref` is supplied, matching create, complete, and note traceability rules.
 - `add_task_note` lets external agents append bounded, human-reviewable notes to owned tasks without changing task status, and `get_task` returns recent task notes.
 - `npm run test:e2e` covers OpenAPI, action auth, CORS, and unsupported billing guardrails.
-- `npm run smoke:mcp` exists for real API-key initialized-notification handshake, SSE endpoint discovery, malformed JSON-RPC/action payload guard checks, list/search/briefing/get/structured-update/add-note/complete/idempotency checks, ChatGPT Actions list/search/add-note response-shape checks, optional read-only scope denial, provisioned disposable scoped keys, completed-task trace persistence, and required `agent_action_events` audit verification with `--provision --write --audit` once a real environment is configured.
+- `npm run smoke:mcp` exists for real API-key initialized-notification handshake, SSE endpoint discovery, malformed JSON-RPC/action payload guard checks, list/search/briefing/get/structured-update/relationship-update/add-note/complete/idempotency checks, ChatGPT Actions list/search/add-note response-shape checks, optional read-only scope denial, provisioned disposable scoped keys, completed-task trace persistence, and required `agent_action_events` audit verification with `--provision --write --audit` once a real environment is configured.
 
 ### 2. Agent traceability
 Agent-created work must be distinguishable from human-created work.

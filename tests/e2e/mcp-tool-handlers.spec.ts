@@ -518,6 +518,13 @@ test('MCP tool schemas advertise all accepted task statuses', () => {
   expect(updateTask?.inputSchema.properties.context).toMatchObject({
     type: ['string', 'null'],
   })
+  expect(updateTask?.inputSchema.properties.parent_task_id).toMatchObject({
+    type: ['string', 'null'],
+  })
+  expect(updateTask?.inputSchema.properties.related_task_ids).toMatchObject({
+    type: ['array', 'null'],
+    maxItems: 20,
+  })
   expect(updateTask?.inputSchema.properties.external_ref).toMatchObject({
     description: expect.stringContaining('source_agent_id'),
   })
@@ -742,16 +749,30 @@ test('DB-backed MCP create_task replays idempotent agent refs without parsing or
 })
 
 test('DB-backed MCP mutation handlers update owned tasks and log failures', async () => {
+  const ownedTaskId = '11111111-1111-4111-8111-111111111111'
+  const parentTaskId = '22222222-2222-4222-8222-222222222222'
+  const relatedTaskId = '33333333-3333-4333-8333-333333333333'
+  const otherTaskId = '44444444-4444-4444-8444-444444444444'
   const db = new FakeSupabase({
     tasks: [
       makeTask({
-        id: 'owned-task',
+        id: ownedTaskId,
         user_id: 'user-1',
         status: 'todo',
         context: 'Original context',
       }),
       makeTask({
-        id: 'other-task',
+        id: parentTaskId,
+        user_id: 'user-1',
+        title: 'Parent task',
+      }),
+      makeTask({
+        id: relatedTaskId,
+        user_id: 'user-1',
+        title: 'Related task',
+      }),
+      makeTask({
+        id: otherTaskId,
         user_id: 'user-2',
         status: 'todo',
       }),
@@ -773,11 +794,13 @@ test('DB-backed MCP mutation handlers update owned tasks and log failures', asyn
     tags: string[]
     source_agent_id: string
     external_ref: string
+    parent_task_id: string
+    related_task_ids: string[]
   }>(
     await executeToolWithDependencies(
       'update_task',
       {
-        task_id: 'owned-task',
+        task_id: ownedTaskId,
         title: 'Updated by agent',
         status: 'cancelled',
         context: '  Needs customer input  ',
@@ -788,6 +811,8 @@ test('DB-backed MCP mutation handlers update owned tasks and log failures', asyn
         energy_level: 'deep',
         people: [' Customer Lead ', 'Ops'],
         tags: [' launch ', 'customer'],
+        parent_task_id: parentTaskId,
+        related_task_ids: [relatedTaskId, relatedTaskId, ''],
         source_agent_id: 'agent-beta',
         external_ref: 'ticket-456',
         ingestion_intent: 'update',
@@ -798,7 +823,7 @@ test('DB-backed MCP mutation handlers update owned tasks and log failures', asyn
     )
   )
   expect(updated).toMatchObject({
-    id: 'owned-task',
+    id: ownedTaskId,
     title: 'Updated by agent',
     status: 'cancelled',
     context: 'Needs customer input',
@@ -809,10 +834,12 @@ test('DB-backed MCP mutation handlers update owned tasks and log failures', asyn
     energy_level: 'deep',
     people: ['Customer Lead', 'Ops'],
     tags: ['launch', 'customer'],
+    parent_task_id: parentTaskId,
+    related_task_ids: [relatedTaskId],
     source_agent_id: 'agent-beta',
     external_ref: 'ticket-456',
   })
-  expect(db.tasks.find((task) => task.id === 'owned-task')).toMatchObject({
+  expect(db.tasks.find((task) => task.id === ownedTaskId)).toMatchObject({
     source: 'agent',
     due_date: '2026-05-19',
     due_time: '14:30',
@@ -821,6 +848,8 @@ test('DB-backed MCP mutation handlers update owned tasks and log failures', asyn
     energy_level: 'deep',
     people: ['Customer Lead', 'Ops'],
     tags: ['launch', 'customer'],
+    parent_task_id: parentTaskId,
+    related_task_ids: [relatedTaskId],
     ingestion_intent: 'update',
     agent_metadata: { confidence: 'high' },
   })
@@ -829,7 +858,7 @@ test('DB-backed MCP mutation handlers update owned tasks and log failures', asyn
     await executeToolWithDependencies(
       'complete_task',
       {
-        task_id: 'owned-task',
+        task_id: ownedTaskId,
         source_agent_id: 'agent-beta',
         external_ref: 'ticket-456-complete',
         ingestion_intent: 'complete',
@@ -839,8 +868,8 @@ test('DB-backed MCP mutation handlers update owned tasks and log failures', asyn
       deps
     )
   )
-  expect(completed).toMatchObject({ id: 'owned-task', status: 'done' })
-  expect(db.tasks.find((task) => task.id === 'owned-task')).toMatchObject({
+  expect(completed).toMatchObject({ id: ownedTaskId, status: 'done' })
+  expect(db.tasks.find((task) => task.id === ownedTaskId)).toMatchObject({
     completed_at: expect.any(String),
     source: 'agent',
     source_agent_id: 'agent-beta',
@@ -848,7 +877,7 @@ test('DB-backed MCP mutation handlers update owned tasks and log failures', asyn
     ingestion_intent: 'complete',
     agent_metadata: { confidence: 'high' },
   })
-  expect(db.tasks.find((task) => task.id === 'other-task')?.status).toBe('todo')
+  expect(db.tasks.find((task) => task.id === otherTaskId)?.status).toBe('todo')
   expect(db.agentActionEvents[1]).toMatchObject({
     tool_name: 'complete_task',
     source_agent_id: 'agent-beta',
@@ -860,7 +889,7 @@ test('DB-backed MCP mutation handlers update owned tasks and log failures', asyn
   const invalid = await executeToolWithDependencies(
     'update_task',
     {
-      task_id: 'owned-task',
+      task_id: ownedTaskId,
       agent_metadata: ['not allowed'],
     },
     'user-1',
@@ -872,7 +901,7 @@ test('DB-backed MCP mutation handlers update owned tasks and log failures', asyn
   const invalidStructuredField = await executeToolWithDependencies(
     'update_task',
     {
-      task_id: 'owned-task',
+      task_id: ownedTaskId,
       energy_level: 'whenever',
     },
     'user-1',
@@ -884,7 +913,7 @@ test('DB-backed MCP mutation handlers update owned tasks and log failures', asyn
   const invalidDueDate = await executeToolWithDependencies(
     'update_task',
     {
-      task_id: 'owned-task',
+      task_id: ownedTaskId,
       due_date: '2026-02-30',
     },
     'user-1',
@@ -896,7 +925,7 @@ test('DB-backed MCP mutation handlers update owned tasks and log failures', asyn
   const invalidDueTime = await executeToolWithDependencies(
     'update_task',
     {
-      task_id: 'owned-task',
+      task_id: ownedTaskId,
       due_time: '29:00',
     },
     'user-1',
@@ -908,7 +937,7 @@ test('DB-backed MCP mutation handlers update owned tasks and log failures', asyn
   const invalidUpdateTrace = await executeToolWithDependencies(
     'update_task',
     {
-      task_id: 'owned-task',
+      task_id: ownedTaskId,
       external_ref: 'missing-source',
     },
     'user-1',
@@ -919,10 +948,38 @@ test('DB-backed MCP mutation handlers update owned tasks and log failures', asyn
     'source_agent_id is required'
   )
 
+  const invalidSelfRelationship = await executeToolWithDependencies(
+    'update_task',
+    {
+      task_id: ownedTaskId,
+      parent_task_id: ownedTaskId,
+    },
+    'user-1',
+    deps
+  )
+  expect(invalidSelfRelationship.isError).toBe(true)
+  expect(invalidSelfRelationship.content[0].text).toContain(
+    'Cannot link a task to itself'
+  )
+
+  const invalidOwnedRelationship = await executeToolWithDependencies(
+    'update_task',
+    {
+      task_id: ownedTaskId,
+      related_task_ids: [otherTaskId],
+    },
+    'user-1',
+    deps
+  )
+  expect(invalidOwnedRelationship.isError).toBe(true)
+  expect(invalidOwnedRelationship.content[0].text).toContain(
+    'Linked tasks must belong to the current user'
+  )
+
   const invalidComplete = await executeToolWithDependencies(
     'complete_task',
     {
-      task_id: 'owned-task',
+      task_id: ownedTaskId,
       external_ref: 'missing-source',
     },
     'user-1',
@@ -935,7 +992,7 @@ test('DB-backed MCP mutation handlers update owned tasks and log failures', asyn
 
   const missingUpdate = await executeToolWithDependencies(
     'update_task',
-    { task_id: 'other-task', title: 'Should not update' },
+    { task_id: otherTaskId, title: 'Should not update' },
     'user-1',
     deps
   )
@@ -954,6 +1011,8 @@ test('DB-backed MCP mutation handlers update owned tasks and log failures', asyn
   expect(db.agentActionEvents.map((event) => event.success)).toEqual([
     true,
     true,
+    false,
+    false,
     false,
     false,
     false,

@@ -111,6 +111,9 @@ test('OpenAPI exposes the agent action contract', async ({ request }) => {
   ])
   expect(updateTaskSchema.properties.people.maxItems).toBe(50)
   expect(updateTaskSchema.properties.tags.items.maxLength).toBe(120)
+  expect(updateTaskSchema.properties.parent_task_id.nullable).toBe(true)
+  expect(updateTaskSchema.properties.related_task_ids.maxItems).toBe(20)
+  expect(updateTaskSchema.properties.related_task_ids.nullable).toBe(true)
   expect(updateTaskSchema.properties.external_ref.description).toContain(
     'source_agent_id'
   )
@@ -149,6 +152,8 @@ test('OpenAPI exposes the agent action contract', async ({ request }) => {
   expect(spec.components.schemas.Task.properties.idempotent_replay).toBeTruthy()
   expect(spec.components.schemas.Task.properties.ingestion_intent).toBeTruthy()
   expect(spec.components.schemas.Task.properties.energy_level).toBeTruthy()
+  expect(spec.components.schemas.Task.properties.parent_task_id).toBeTruthy()
+  expect(spec.components.schemas.Task.properties.related_task_ids).toBeTruthy()
   expect(spec.components.schemas.TaskDetails.allOf[1].properties.notes.items).toEqual({
     $ref: '#/components/schemas/TaskNote',
   })

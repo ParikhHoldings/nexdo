@@ -6,6 +6,10 @@ import { checkQuota, consumeQuota } from '@/lib/quota'
 import { getLocalDateKey, normalizeLocalDateKey, normalizeLocalTime } from '@/lib/dates'
 import { taskMatchesSearch } from '@/lib/task-search'
 import { MAX_TASK_NOTE_LENGTH, validateTaskNoteContent } from '@/lib/task-notes'
+import {
+  MAX_RELATED_TASKS,
+  validateTaskRelationshipPatch,
+} from '@/lib/task-relationships'
 import type {
   ActionType,
   EnergyLevel,
@@ -204,6 +208,16 @@ export const MCP_TOOLS: MCPTool[] = [
           description: 'Tags for this task, or null to clear the list',
           items: { type: 'string' },
         },
+        parent_task_id: {
+          type: ['string', 'null'],
+          description: 'Owned parent task id, or null to clear it',
+        },
+        related_task_ids: {
+          type: ['array', 'null'],
+          maxItems: MAX_RELATED_TASKS,
+          description: 'Owned related task ids, or null to clear the list',
+          items: { type: 'string' },
+        },
         source_agent_id: {
           type: 'string',
           maxLength: MAX_AGENT_REF,
@@ -349,6 +363,8 @@ function formatTaskForResponse(task: Task): Record<string, unknown> {
     action_type: task.action_type,
     tags: task.tags,
     people: task.people,
+    parent_task_id: task.parent_task_id,
+    related_task_ids: task.related_task_ids,
     estimated_minutes: task.estimated_minutes,
     energy_level: task.energy_level,
     source_agent_id: task.source_agent_id,
@@ -990,6 +1006,57 @@ const updateTask: ToolHandler = async (args, userId, deps) => {
     const tagsResult = stringArrayArg(args.tags, 'tags')
     if (tagsResult.error) return toolError(tagsResult.error)
     updates.tags = tagsResult.value
+  }
+
+  if (args.parent_task_id !== undefined || args.related_task_ids !== undefined) {
+    const relationshipResult = validateTaskRelationshipPatch(
+      {
+        ...(args.parent_task_id !== undefined
+          ? { parent_task_id: args.parent_task_id }
+          : {}),
+        ...(args.related_task_ids !== undefined
+          ? { related_task_ids: args.related_task_ids }
+          : {}),
+      },
+      taskId
+    )
+
+    if (relationshipResult.errors.length > 0) {
+      const message = relationshipResult.errors
+        .map((error) => `${error.field}: ${error.message}`)
+        .join(' ')
+      return toolError(`Error: ${message}`)
+    }
+
+    const idsToCheck = Array.from(
+      new Set([taskId, ...relationshipResult.referencedTaskIds])
+    )
+    const { data: ownedTasks, error: ownedTasksError } = await supabase
+      .from('tasks')
+      .select('id')
+      .eq('user_id', userId)
+      .in('id', idsToCheck)
+
+    if (ownedTasksError) {
+      return toolError(`Error: ${ownedTasksError.message}`)
+    }
+
+    const ownedTaskIds = new Set(
+      (ownedTasks ?? []).map((task: { id: string }) => task.id)
+    )
+
+    if (!ownedTaskIds.has(taskId)) {
+      return toolError('Error: Task not found')
+    }
+
+    const missingLinkedTaskId = relationshipResult.referencedTaskIds.find(
+      (linkedTaskId) => !ownedTaskIds.has(linkedTaskId)
+    )
+    if (missingLinkedTaskId) {
+      return toolError('Error: Linked tasks must belong to the current user')
+    }
+
+    Object.assign(updates, relationshipResult.updates)
   }
 
   if (args.source_agent_id !== undefined) {

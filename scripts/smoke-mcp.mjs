@@ -669,6 +669,36 @@ async function main() {
       }
       console.log('ok get_task smoke task')
 
+      const parentRef = `${externalRef}-parent`
+      const parentResult = await rpc('tools/call', {
+        name: 'create_task',
+        arguments: {
+          input: `${title} parent task today medium priority`,
+          source_agent_id: sourceAgentId,
+          external_ref: parentRef,
+        },
+      })
+      const parentTask = parseToolContent(parentResult)
+      if (!parentTask?.id) {
+        throw new Error('create_task did not return a parent task id for relationship smoke.')
+      }
+      console.log('ok create_task relationship parent')
+
+      const relatedRef = `${externalRef}-related`
+      const relatedResult = await rpc('tools/call', {
+        name: 'create_task',
+        arguments: {
+          input: `${title} related task today medium priority`,
+          source_agent_id: sourceAgentId,
+          external_ref: relatedRef,
+        },
+      })
+      const relatedTask = parseToolContent(relatedResult)
+      if (!relatedTask?.id) {
+        throw new Error('create_task did not return a related task id for relationship smoke.')
+      }
+      console.log('ok create_task relationship related')
+
       const updateRef = `${externalRef}-update`
       const updatedResult = await rpc('tools/call', {
         name: 'update_task',
@@ -682,6 +712,8 @@ async function main() {
           energy_level: 'deep',
           people: ['MCP Smoke'],
           tags: ['smoke', 'agent'],
+          parent_task_id: parentTask.id,
+          related_task_ids: [relatedTask.id],
           source_agent_id: sourceAgentId,
           external_ref: updateRef,
           ingestion_intent: 'update',
@@ -697,7 +729,9 @@ async function main() {
         updated?.estimated_minutes !== 45 ||
         updated?.energy_level !== 'deep' ||
         !updated?.people?.includes('MCP Smoke') ||
-        !updated?.tags?.includes('agent')
+        !updated?.tags?.includes('agent') ||
+        updated?.parent_task_id !== parentTask.id ||
+        !updated?.related_task_ids?.includes(relatedTask.id)
       ) {
         throw new Error('update_task did not update the smoke task structure.')
       }

@@ -2,7 +2,7 @@
 
 ## 2026-05-17 - Task relationship metadata stays service-owned
 ### Decision
-Direct browser task inserts and updates cannot write `parent_task_id` or `related_task_ids`. Task relationship edits now go through task detail and `app/api/tasks/[id]/relationships/route.ts`, which checks that the current task and every linked task belong to the authenticated user before service-role persistence.
+Direct browser task inserts and updates cannot write `parent_task_id` or `related_task_ids`. Task relationship edits now go through task detail, `app/api/tasks/[id]/relationships/route.ts`, and MCP `update_task`, which check that the current task and every linked task belong to the authenticated user before service-role persistence.
 
 ### Why
 RLS ownership on the task row does not prove that referenced task UUIDs are owned by the same user. Direct browser writes would let clients attach arbitrary task relationships without route-level validation.
@@ -164,7 +164,7 @@ Future MCP tools should be added to the smoke script and audit expectations when
 
 ## 2026-05-17 - Agent task updates cover planning metadata
 ### Decision
-MCP and ChatGPT Actions `update_task` should let external agents update the same core planning metadata humans can edit: due date, due time, context, action type, estimated minutes, energy level, people, and tags, while still preserving bounded validation and server-managed trace fields. When an update includes `external_ref`, it must include `source_agent_id` so trace references remain attributable.
+MCP and ChatGPT Actions `update_task` should let external agents update the same core planning metadata humans can edit: due date, due time, context, action type, estimated minutes, energy level, people, tags, and owned parent/related task links, while still preserving bounded validation, relationship ownership checks, and server-managed trace fields. When an update includes `external_ref`, it must include `source_agent_id` so trace references remain attributable.
 
 ### Why
 Nexdo's agent promise depends on tasks being a useful structured work layer, not only a title/status checklist. Agents need to maintain planning metadata without bypassing ownership, scopes, audit logging, or field limits.

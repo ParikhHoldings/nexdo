@@ -299,6 +299,18 @@ const openApiSpec = {
                     nullable: true,
                     description: 'Tags for this task, or null to clear the list',
                   },
+                  parent_task_id: {
+                    type: 'string',
+                    nullable: true,
+                    description: 'Owned parent task id, or null to clear it',
+                  },
+                  related_task_ids: {
+                    type: 'array',
+                    items: { type: 'string' },
+                    maxItems: 20,
+                    nullable: true,
+                    description: 'Owned related task ids, or null to clear the list',
+                  },
                   source_agent_id: {
                     type: 'string',
                     maxLength: 160,
@@ -583,6 +595,12 @@ const openApiSpec = {
             nullable: true,
           },
           people: {
+            type: 'array',
+            items: { type: 'string' },
+            nullable: true,
+          },
+          parent_task_id: { type: 'string', nullable: true },
+          related_task_ids: {
             type: 'array',
             items: { type: 'string' },
             nullable: true,
