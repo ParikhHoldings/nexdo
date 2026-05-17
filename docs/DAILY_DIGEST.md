@@ -110,7 +110,7 @@
 - Tightened `npm run smoke:mcp -- --write` so real endpoint verification checks `complete_task` returns persisted source-agent trace fields.
 - Added a labeled task-capture submit button and demo smoke coverage for click-submit behavior.
 - Fixed deterministic fallback parsing so relative-date phrases such as `by tomorrow` and `due today` do not leave dangling connector words in task titles.
-- Refreshed repo-facing verification summaries for the latest 97-test local rail.
+- Refreshed repo-facing verification summaries for the latest 100-test local rail.
 - Strengthened Connect AI connection testing so pasted full keys must initialize MCP and return available tools through `tools/list`.
 - Expanded `npm run smoke:app` so real app-session verification covers seeded agent-review validation and save behavior.
 - Expanded `npm run smoke:stripe -- --write --webhook` so protected-preview runs use Vercel bypass headers and verify authenticated checkout/portal app routes.
@@ -164,6 +164,7 @@
 - Added profile content constraints so direct browser profile updates cannot persist blank/oversized names or unsupported timezones, and trimmed/validated signup names before Supabase signup.
 - Revoked direct browser profile inserts so profile rows remain auth-trigger/service-owned and cannot be self-created with spoofed entitlement/API state.
 - Kept Stripe webhook idempotency records service-owned so browser clients cannot read or spoof processed billing event state.
+- Kept usage-event mutations and rate-limit buckets service-owned so browser clients cannot spoof quota history or inspect/reset rate gates.
 - Made the MCP settings tool list reflect the current API key scopes.
 - Made the MCP settings setup flow prerequisite-aware, disabled free/no-key connection tests, and clarified that external clients need the full one-time key rather than the stored key hint.
 - Added a recent agent activity surface on the MCP settings page backed by `/api/mcp/events`.

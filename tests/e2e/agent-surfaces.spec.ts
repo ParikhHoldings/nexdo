@@ -518,6 +518,35 @@ test('Stripe webhook event records stay service-owned', () => {
   expect(supabaseSmoke).toContain('browser client could insert Stripe webhook event records')
 })
 
+test('quota telemetry and rate-limit buckets stay service-mutated', () => {
+  const migration = readFileSync(
+    'supabase/migrations/014_usage_rate_limit_grants.sql',
+    'utf8'
+  )
+  const supabaseSmoke = readFileSync('scripts/smoke-supabase.mjs', 'utf8')
+  const quotaSource = readFileSync('lib/quota.ts', 'utf8')
+  const rateLimitSource = readFileSync('lib/rate-limit.ts', 'utf8')
+
+  expect(migration).toContain('revoke insert, update, delete on table usage_events from anon')
+  expect(migration).toContain(
+    'revoke insert, update, delete on table usage_events from authenticated'
+  )
+  expect(migration).toContain('revoke all on table rate_limits from anon')
+  expect(migration).toContain('revoke all on table rate_limits from authenticated')
+  expect(migration).not.toContain('grant insert')
+  expect(migration).not.toContain('grant update')
+
+  expect(quotaSource).toContain("rpc('increment_usage'")
+  expect(rateLimitSource).toContain("rpc('consume_rate_limit'")
+
+  expect(supabaseSmoke).toContain('browser clients cannot insert usage events')
+  expect(supabaseSmoke).toContain('browser clients cannot insert rate-limit buckets')
+  expect(supabaseSmoke).toContain('usage events remain service-mutated')
+  expect(supabaseSmoke).toContain('rate-limit buckets remain service-owned')
+  expect(supabaseSmoke).toContain('browser client could update usage events directly')
+  expect(supabaseSmoke).toContain('browser client could read rate-limit buckets directly')
+})
+
 test('Connect AI no-key guidance deep-links to API settings', () => {
   const source = readFileSync('app/(app)/settings/mcp/page.tsx', 'utf8')
 

@@ -1,5 +1,15 @@
 # Decisions
 
+## 2026-05-17 - Quota telemetry and rate-limit buckets are service-mutated
+### Decision
+Browser clients cannot insert, update, or delete `usage_events`, and cannot read or mutate `rate_limits` directly. Quota and rate-limit state changes should go through service-role RPCs such as `increment_usage` and `consume_rate_limit`.
+
+### Why
+Usage events and rate-limit buckets control entitlement, quota evidence, and abuse prevention. If browser clients can spoof usage rows or inspect/reset buckets directly, plan limits and agent/API rate gates lose product meaning.
+
+### Impact
+Real Supabase smoke must verify direct browser usage-event mutation denial, rate-limit bucket privacy/write denial, and successful service-role quota/rate-limit RPCs. Future user-facing usage history should expose read-only summaries through an intentional route or a tightly scoped read policy.
+
 ## 2026-05-17 - Stripe webhook idempotency is service-owned
 ### Decision
 Direct browser access to `stripe_events` is revoked and row-level security is enabled. Only the service-role webhook path should read or insert Stripe event idempotency records.

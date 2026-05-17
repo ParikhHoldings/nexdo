@@ -174,6 +174,7 @@ async function verifyUsageAndRateLimits(userId) {
     fail('consume_rate_limit did not block over-limit request', secondGateError)
   }
   console.log('ok rate-limit allow and block')
+  return bucket
 }
 
 async function writeSmoke() {
@@ -548,6 +549,31 @@ async function writeSmoke() {
     }
     console.log('ok Stripe webhook event records require service-owned writes')
 
+    const { error: usageInsertError } = await userClient
+      .from('usage_events')
+      .insert({
+        user_id: userId,
+        event_type: 'task_create',
+        quantity: 999,
+        metadata: { spoofed: true },
+      })
+    if (!usageInsertError) {
+      fail('browser client could insert usage events directly')
+    }
+    console.log('ok browser clients cannot insert usage events')
+
+    const { error: rateLimitInsertError } = await userClient
+      .from('rate_limits')
+      .insert({
+        user_id: userId,
+        bucket: `browser_spoof_${Date.now()}`,
+        count: 999,
+      })
+    if (!rateLimitInsertError) {
+      fail('browser client could insert rate-limit buckets directly')
+    }
+    console.log('ok browser clients cannot insert rate-limit buckets')
+
     const { data: auditEvent, error: auditError } = await service
       .from('agent_action_events')
       .insert({
@@ -594,7 +620,41 @@ async function writeSmoke() {
     }
     console.log('ok browser clients cannot insert agent audit events')
 
-    await verifyUsageAndRateLimits(userId)
+    const rateLimitBucket = await verifyUsageAndRateLimits(userId)
+
+    const { error: usageUpdateError } = await userClient
+      .from('usage_events')
+      .update({ quantity: 999 })
+      .eq('user_id', userId)
+    if (!usageUpdateError) {
+      fail('browser client could update usage events directly')
+    }
+
+    const { error: usageDeleteError } = await userClient
+      .from('usage_events')
+      .delete()
+      .eq('user_id', userId)
+    if (!usageDeleteError) {
+      fail('browser client could delete usage events directly')
+    }
+    console.log('ok usage events remain service-mutated')
+
+    const { data: userRateLimitRows, error: userRateLimitReadError } = await userClient
+      .from('rate_limits')
+      .select('bucket')
+      .eq('bucket', rateLimitBucket)
+    if (!userRateLimitReadError && (userRateLimitRows || []).length > 0) {
+      fail('browser client could read rate-limit buckets directly')
+    }
+
+    const { data: publicRateLimitRows, error: publicRateLimitReadError } = await publicClient
+      .from('rate_limits')
+      .select('bucket')
+      .eq('bucket', rateLimitBucket)
+    if (!publicRateLimitReadError && (publicRateLimitRows || []).length > 0) {
+      fail('public client could read rate-limit buckets directly')
+    }
+    console.log('ok rate-limit buckets remain service-owned')
   } finally {
     if (stripeEventIds.length > 0) {
       const { error } = await service.from('stripe_events').delete().in('id', stripeEventIds)
