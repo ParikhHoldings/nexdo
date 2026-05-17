@@ -152,8 +152,9 @@ quota increments/no-ops, usage-event mutation denial, rate-limit bucket privacy,
 daily briefing cache write denial, and rate-limit allow/block behavior.
 
 `npm run smoke:routes -- --url=https://preview.example` verifies the
-launch-facing marketing, app, auth, import, settings, MCP setup, privacy, and
-terms routes at desktop and mobile widths. It checks for successful responses,
+launch-facing marketing, app, login/signup/password-reset auth, import,
+settings, MCP setup, privacy, and terms routes at desktop and mobile widths.
+It checks for successful responses,
 meaningful rendered body text, page titles, framework/runtime overlays, and
 browser console errors. Add `--screenshot-dir=/tmp/nexdo-routes` when visual
 evidence is useful.

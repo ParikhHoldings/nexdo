@@ -25,6 +25,8 @@ const routes = [
   '/settings/mcp',
   '/auth/login',
   '/auth/signup',
+  '/auth/reset',
+  '/auth/update-password',
   '/privacy',
   '/terms',
 ]

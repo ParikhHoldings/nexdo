@@ -760,6 +760,8 @@ test('launch smoke orchestrates required technical and approval gates', () => {
   )
   expect(source).toContain('--technical-only')
   expect(routeSmokeSource).toContain("'/settings/mcp'")
+  expect(routeSmokeSource).toContain("'/auth/reset'")
+  expect(routeSmokeSource).toContain("'/auth/update-password'")
   expect(routeSmokeSource).toContain("{ name: 'mobile', width: 390, height: 844 }")
   expect(routeSmokeSource).toContain('VERCEL_AUTOMATION_BYPASS_SECRET')
   expect(routeSmokeSource).toContain("'x-vercel-protection-bypass'")
