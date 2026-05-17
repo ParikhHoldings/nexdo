@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 import { readFileSync } from 'node:fs'
 import { formatActionToolResult } from '../../lib/mcp-action-results'
-import { MCP_TOOLS } from '../../lib/mcp-tools'
+import { isToolArgumentRecord, MCP_TOOLS } from '../../lib/mcp-tools'
 
 const actionTools = MCP_TOOLS.map((tool) => tool.name)
 
@@ -287,6 +287,22 @@ test('agent endpoints enforce auth and advertise CORS for action clients', async
   expect([401, 503]).toContain(events.status())
   const eventsBody = await events.json()
   expect(eventsBody.error).toBeTruthy()
+})
+
+test('agent endpoints reject non-object tool arguments before execution', () => {
+  expect(isToolArgumentRecord({ limit: 1 })).toBe(true)
+  expect(isToolArgumentRecord([])).toBe(false)
+  expect(isToolArgumentRecord('limit=1')).toBe(false)
+  expect(isToolArgumentRecord(null)).toBe(false)
+
+  const rpcRoute = readFileSync('app/api/mcp/route.ts', 'utf8')
+  const actionRoute = readFileSync('app/api/mcp/actions/[tool]/route.ts', 'utf8')
+
+  expect(rpcRoute).toContain('Tool call params must be an object')
+  expect(rpcRoute).toContain('Tool arguments must be a JSON object')
+  expect(rpcRoute).toContain('!isToolArgumentRecord(params.arguments)')
+  expect(actionRoute).toContain('Request body must be a JSON object')
+  expect(actionRoute).toContain('!isToolArgumentRecord(parsed)')
 })
 
 test('billing checkout rejects unsupported client-selected plans', async ({

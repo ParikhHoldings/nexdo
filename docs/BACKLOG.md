@@ -52,6 +52,7 @@
 - expanded `npm run smoke:mcp` to verify OpenAPI availability, ChatGPT Actions `list_tasks` response shape, and required real `agent_action_events` audit writes with `--write --audit`
 - expanded `npm run smoke:mcp` across search, briefing, get-task, update, complete, and ChatGPT Actions search/list checks
 - expanded MCP `update_task`, OpenAPI, local handler coverage, and the provider smoke path so agents can update due time, action type, estimate, energy, people, and tags
+- hardened MCP JSON-RPC and ChatGPT Action wrappers so non-object tool arguments are rejected before tool execution
 - expanded `npm run smoke:mcp` to verify the authenticated MCP SSE endpoint advertises the JSON-RPC endpoint before tool execution
 - made the MCP JSON-RPC endpoint accept the standard initialized notification without an `id`, with real-key smoke coverage for the handshake
 - added MCP smoke `--provision` mode to create disposable full/read-only Power-plan API keys for scoped real endpoint verification

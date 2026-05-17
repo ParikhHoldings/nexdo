@@ -3,6 +3,7 @@ import {
   MCP_TOOLS,
   canUseTool,
   executeTool,
+  isToolArgumentRecord,
   missingScopeMessage,
   validateApiKey,
 } from '@/lib/mcp-tools'
@@ -203,14 +204,32 @@ export async function POST(request: NextRequest) {
         )
 
       case 'tools/call': {
-        const toolName = params?.name as string
-        const toolArgs = (params?.arguments || {}) as Record<string, unknown>
+        if (!isToolArgumentRecord(params)) {
+          return NextResponse.json(
+            jsonRpcError(id ?? null, INVALID_PARAMS, 'Tool call params must be an object'),
+            { status: 400 }
+          )
+        }
 
-        if (!toolName) {
+        const toolName = params.name
+
+        if (typeof toolName !== 'string' || !toolName.trim()) {
           return NextResponse.json(
             jsonRpcError(id ?? null, INVALID_PARAMS, 'Tool name is required')
           )
         }
+
+        if (
+          params.arguments !== undefined &&
+          !isToolArgumentRecord(params.arguments)
+        ) {
+          return NextResponse.json(
+            jsonRpcError(id ?? null, INVALID_PARAMS, 'Tool arguments must be a JSON object'),
+            { status: 400 }
+          )
+        }
+
+        const toolArgs = params.arguments ?? {}
 
         const tool = MCP_TOOLS.find((t) => t.name === toolName)
         if (!tool) {

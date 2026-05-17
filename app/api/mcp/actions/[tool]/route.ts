@@ -3,6 +3,7 @@ import {
   MCP_TOOLS,
   canUseTool,
   executeTool,
+  isToolArgumentRecord,
   missingScopeMessage,
   validateApiKey,
 } from '@/lib/mcp-tools'
@@ -66,7 +67,14 @@ export async function POST(
   try {
     const body = await request.text()
     if (body) {
-      args = JSON.parse(body)
+      const parsed = JSON.parse(body)
+      if (!isToolArgumentRecord(parsed)) {
+        return NextResponse.json(
+          { error: 'Request body must be a JSON object' },
+          { status: 400, headers: ACTION_CORS_HEADERS }
+        )
+      }
+      args = parsed
     }
   } catch {
     return NextResponse.json(

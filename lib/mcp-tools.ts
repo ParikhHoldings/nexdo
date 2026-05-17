@@ -424,6 +424,10 @@ function optionalMetadata(value: unknown): Record<string, unknown> | null {
   return byteLength <= MAX_AGENT_METADATA_BYTES ? metadata : null
 }
 
+export function isToolArgumentRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
+}
+
 function optionalIngestionIntent(value: unknown): IngestionIntent | null {
   return INGESTION_INTENTS.includes(value as IngestionIntent)
     ? (value as IngestionIntent)
