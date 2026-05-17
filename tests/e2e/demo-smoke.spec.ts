@@ -117,8 +117,12 @@ test('demo task capture, briefing, prioritization, and agent output work', async
   await page.keyboard.press('Control+K')
   await expect(taskCapture).toBeFocused()
 
+  const addTaskButton = page.getByRole('button', { name: 'Add task' })
+  await expect(addTaskButton).toBeDisabled()
+
   await taskCapture.fill('Research competitor pricing with Sarah today high priority 45 minutes')
-  await page.keyboard.press('Enter')
+  await expect(addTaskButton).toBeEnabled()
+  await addTaskButton.click()
 
   await expect(
     page.getByRole('heading', { name: /Research competitor pricing/ }).first()

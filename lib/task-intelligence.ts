@@ -211,6 +211,8 @@ function cleanTitle(input: string): string {
     .replace(/\b(?:on|by|due)\s+\d{1,2}\/\d{1,2}(?:\/\d{2,4})?\b/gi, ' ')
     .replace(/\b\d{1,2}\/\d{1,2}(?:\/\d{2,4})?\b/g, ' ')
     .replace(new RegExp(`\\b(?:on|by|due)\\s+(?:${WEEKDAYS.join('|')})\\b`, 'gi'), ' ')
+    .replace(/\b(?:on|by|due)\s+(?:today|tomorrow|next week)\b/gi, ' ')
+    .replace(/\b(?:on|by|due)\s+in\s+\d+\s+days?\b/gi, ' ')
     .replace(/\b(?:today|tomorrow|next week)\b/gi, ' ')
     .replace(/\bin\s+\d+\s+days?\b/gi, ' ')
     .replace(/\b(?:at\s*)?\d{1,2}:[0-5]\d\s*(?:am|pm)?\b/gi, ' ')

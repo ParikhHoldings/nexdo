@@ -93,7 +93,7 @@
 - refreshed repo-facing verification summaries for the then-current 92-test local rail
 - added `npm run smoke:app` to verify authenticated app-cookie task list/create/update/delete and task-note validation/create/readback with disposable Supabase data
 - wired `npm run smoke:app` into the launch smoke between Supabase and OpenAI provider checks
-- refreshed repo-facing verification summaries for the latest 95-test local rail
+- refreshed repo-facing verification summaries for the then-current 95-test local rail
 - added dependency audit to the GitHub Actions Web rails and source coverage so CI matches the documented launch/deploy checklist
 - verified PR #3 Web rails and Vercel preview deployment on recent checked heads; later heads still need fresh PR-check evidence
 - added a paid-key handoff from Settings > API to the Connect AI setup page so generated API keys lead directly into MCP/ChatGPT Actions setup
@@ -102,6 +102,9 @@
 - persisted MCP `complete_task` source-agent trace metadata onto the completed task row so agent-completed work remains visible in human task surfaces
 - added rendered Done-page coverage that agent-completed demo tasks expose trace metadata on cards and in task detail
 - tightened `npm run smoke:mcp -- --write` so real endpoint verification checks `complete_task` returns persisted source-agent trace fields
+- added a labeled task-capture submit button and demo smoke coverage for click-submit behavior
+- fixed deterministic fallback parsing so relative-date phrases such as `by tomorrow` and `due today` do not leave dangling connector words in task titles
+- refreshed repo-facing verification summaries for the latest 96-test local rail
 
 ## Completed 2026-05-16
 - read and updated the repo-level agent context and all existing Markdown/text operating files

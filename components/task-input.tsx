@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, Sparkles, Loader2, Command } from 'lucide-react'
+import { ArrowUp, Plus, Sparkles, Loader2, Command } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useTaskStore } from '@/lib/store'
 import { createClient } from '@/lib/supabase/client'
@@ -260,6 +260,7 @@ export function TaskInput({ onTaskCreated }: TaskInputProps) {
 
   const trimmedInput = input.trim()
   const showAiBadge = Boolean(trimmedInput && !/^\/quick(?:\s|$)/i.test(trimmedInput))
+  const canSubmit = Boolean(trimmedInput && !isProcessing)
 
   return (
     <form onSubmit={handleSubmit} className="relative">
@@ -303,7 +304,7 @@ export function TaskInput({ onTaskCreated }: TaskInputProps) {
           placeholder="What needs to get done? Be specific..."
           className={cn(
             'w-full bg-zinc-900 border border-zinc-800 rounded-xl',
-            'pl-12 pr-24 py-4',
+            'pl-12 pr-24 sm:pr-44 py-4',
             'text-zinc-100 placeholder:text-zinc-500',
             'focus:outline-none transition-colors',
             'disabled:opacity-50 disabled:cursor-not-allowed'
@@ -331,6 +332,21 @@ export function TaskInput({ onTaskCreated }: TaskInputProps) {
               <span className="text-xs text-accent">AI</span>
             </motion.div>
           )}
+
+          <button
+            type="submit"
+            aria-label="Add task"
+            title="Add task"
+            disabled={!canSubmit}
+            className={cn(
+              'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border transition-colors',
+              canSubmit
+                ? 'border-accent bg-accent text-white hover:bg-accent/90 focus:outline-none focus:ring-2 focus:ring-accent/50'
+                : 'border-zinc-800 bg-zinc-900 text-zinc-600 cursor-not-allowed'
+            )}
+          >
+            <ArrowUp className="h-4 w-4" />
+          </button>
         </div>
       </div>
 

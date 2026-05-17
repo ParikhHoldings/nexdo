@@ -27,7 +27,8 @@ Acceptance gate:
 
 Current evidence:
 - `TaskInput` supports capture.
-- Natural-language capture now carries parsed due times into demo tasks, authenticated task creation, and MCP-created tasks; local fallback parsing keeps scheduling, priority, and estimate phrases out of the title when those values can be structured separately.
+- Natural-language capture now carries parsed due times into demo tasks, authenticated task creation, and MCP-created tasks; local fallback parsing keeps scheduling, priority, relative-date connectors, and estimate phrases out of the title when those values can be structured separately.
+- Task capture exposes a labeled `Add task` submit control in addition to Enter-key submission.
 - `/quick` capture now trims extra spacing and refuses empty quick-mode submissions instead of creating a malformed task.
 - `npm run test:e2e` covers logged-out task creation and reload persistence.
 - `POST /api/tasks` uses `lib/task-validation.ts` to validate normalized task input and reject protected fields before quota and insert.

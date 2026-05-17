@@ -70,6 +70,26 @@ test('task parsing heuristic extracts launch-relevant metadata', () => {
   expect(parsed.tags).toEqual(expect.arrayContaining(['email', 'customer']))
 })
 
+test('task parsing heuristic removes relative date connectors from titles', () => {
+  const byTomorrow = parseTaskHeuristic(
+    'Draft the Monday launch handoff for Nexdo by tomorrow',
+    new Date('2026-05-17T12:00:00')
+  )
+  expect(byTomorrow).toMatchObject({
+    title: 'Draft the Monday launch handoff for Nexdo',
+    due_date: '2026-05-18',
+    priority: 'high',
+    action_type: 'draft',
+  })
+
+  const dueToday = parseTaskHeuristic(
+    'Review launch blockers due today',
+    new Date('2026-05-17T12:00:00')
+  )
+  expect(dueToday.title).toBe('Review launch blockers')
+  expect(dueToday.due_date).toBe('2026-05-17')
+})
+
 test('task parsing heuristic rejects invalid explicit due dates', () => {
   expect(
     parseTaskHeuristic(
