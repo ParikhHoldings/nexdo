@@ -3,6 +3,7 @@ import {
   MCP_TOOLS,
   canUseTool,
   executeTool,
+  extractBearerTokenHeader,
   isToolArgumentRecord,
   missingScopeMessage,
   validateApiKey,
@@ -17,9 +18,7 @@ const ACTION_CORS_HEADERS = {
 
 // Extract Bearer token from Authorization header
 function extractBearerToken(request: NextRequest): string | null {
-  const auth = request.headers.get('authorization')
-  if (!auth || !auth.startsWith('Bearer ')) return null
-  return auth.slice(7)
+  return extractBearerTokenHeader(request.headers.get('authorization'))
 }
 
 // POST /api/mcp/actions/[tool] — REST wrapper for ChatGPT Actions

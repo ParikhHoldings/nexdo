@@ -1,7 +1,11 @@
 import { expect, test } from '@playwright/test'
 import { readFileSync } from 'node:fs'
 import { formatActionToolResult } from '../../lib/mcp-action-results'
-import { isToolArgumentRecord, MCP_TOOLS } from '../../lib/mcp-tools'
+import {
+  extractBearerTokenHeader,
+  isToolArgumentRecord,
+  MCP_TOOLS,
+} from '../../lib/mcp-tools'
 
 const actionTools = MCP_TOOLS.map((tool) => tool.name)
 
@@ -254,6 +258,11 @@ test('ChatGPT Action formatter matches advertised response shapes', () => {
 test('agent endpoints enforce auth and advertise CORS for action clients', async ({
   request,
 }) => {
+  expect(extractBearerTokenHeader('Bearer nxd_test')).toBe('nxd_test')
+  expect(extractBearerTokenHeader('bearer   nxd_test  ')).toBe('nxd_test')
+  expect(extractBearerTokenHeader('Basic nxd_test')).toBeNull()
+  expect(extractBearerTokenHeader('Bearer   ')).toBeNull()
+
   const preflight = await request.fetch('/api/mcp/actions/list_tasks', {
     method: 'OPTIONS',
   })

@@ -428,6 +428,13 @@ export function isToolArgumentRecord(value: unknown): value is Record<string, un
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
 }
 
+export function extractBearerTokenHeader(value: string | null): string | null {
+  if (!value) return null
+  const match = /^bearer\s+(.+)$/i.exec(value.trim())
+  const token = match?.[1]?.trim()
+  return token || null
+}
+
 function optionalIngestionIntent(value: unknown): IngestionIntent | null {
   return INGESTION_INTENTS.includes(value as IngestionIntent)
     ? (value as IngestionIntent)

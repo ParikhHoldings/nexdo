@@ -55,6 +55,7 @@
 - Expanded MCP smoke execution across search, briefing, get-task, update, complete, and ChatGPT Actions search/list checks instead of only checking tool listing.
 - Expanded MCP `update_task`, OpenAPI, local handler coverage, and the provider smoke path so agents can update due time, action type, estimate, energy, people, and tags.
 - Hardened MCP JSON-RPC and ChatGPT Action wrappers so non-object tool arguments are rejected before tool execution.
+- Centralized MCP/ChatGPT Actions Bearer parsing so real agent clients can use case-insensitive schemes and harmless extra spacing without failing auth.
 - Verified PR #3 head `3f0e288489fcff03eeadbd71ed83ca437db721f8` passed GitHub Web rails and Vercel preview deployment after the MCP/ChatGPT Actions argument validation change.
 - Expanded MCP smoke to verify the authenticated SSE endpoint advertises the JSON-RPC endpoint before tool execution.
 - Made the MCP endpoint accept the standard initialized notification without a JSON-RPC `id`, and added it to the real-key MCP smoke.

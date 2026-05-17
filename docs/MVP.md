@@ -162,7 +162,7 @@ Current evidence:
 - `/api/mcp/openapi` exposes the ChatGPT Actions schema.
 - `/api/mcp/actions/[tool]` enforces bearer auth and scopes.
 - `/api/mcp/actions/[tool]` uses a shared formatter for action responses.
-- MCP JSON-RPC `tools/call` and ChatGPT Action wrappers reject non-object tool argument payloads before execution.
+- MCP JSON-RPC `tools/call` and ChatGPT Action wrappers reject non-object tool argument payloads before execution, and shared Bearer parsing handles standard case-insensitive auth schemes with harmless extra spacing.
 - `search_tasks` and All Tasks search use the shared metadata search helper across title, context, description, people, and tags.
 - `update_task` accepts the same core planning fields humans can edit: status, due time, action type, estimate, energy level, people, and tags.
 - `update_task` requires `source_agent_id` when `external_ref` is supplied, matching create, complete, and note traceability rules.

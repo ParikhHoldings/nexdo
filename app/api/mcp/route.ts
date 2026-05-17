@@ -3,6 +3,7 @@ import {
   MCP_TOOLS,
   canUseTool,
   executeTool,
+  extractBearerTokenHeader,
   isToolArgumentRecord,
   missingScopeMessage,
   validateApiKey,
@@ -67,9 +68,7 @@ function isJsonRpcId(value: unknown): value is string | number | null {
 
 // Extract Bearer token from Authorization header
 function extractBearerToken(request: NextRequest): string | null {
-  const auth = request.headers.get('authorization')
-  if (!auth || !auth.startsWith('Bearer ')) return null
-  return auth.slice(7)
+  return extractBearerTokenHeader(request.headers.get('authorization'))
 }
 
 // GET /api/mcp — SSE stream for MCP protocol
