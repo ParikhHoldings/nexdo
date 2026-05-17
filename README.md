@@ -45,7 +45,7 @@ Last checked on 2026-05-17:
 - `npm audit --audit-level=moderate` passed with 0 vulnerabilities
 - `npm run smoke:launch -- --skip-local --skip-providers --technical-only` passed as a partial technical launch smoke; provider smokes, copy approval, and production deploy approval remain separate gates
 - GitHub Actions Web rails run on pull requests and pushes to `main`/`staging`, with install, lint, typecheck, build, dependency audit, and Playwright smoke testing
-- PR #3 GitHub Actions Web rails passed on current pushed product head `537c04b8b92b6fff38bb1519fe016e3fa7f0a20b`; Vercel preview evidence is per-head, with both successful preview deployments and account build-rate-limited heads observed, so inspect current PR checks before treating the branch as preview-green
+- PR #3 GitHub Actions Web rails and Vercel preview evidence are per-head; inspect current PR checks before treating the branch as green because both successful preview deployments and account build-rate-limited heads have been observed
 - the latest checked Vercel branch preview URL was `https://ph-nexdo-git-codex-launch-rea-42bdec-nathan-happywpcos-projects.vercel.app`
 - direct remote route smoke against that protected preview URL failed at desktop `/` because Vercel Deployment Protection is active until `VERCEL_AUTOMATION_BYPASS_SECRET` is provided locally or an unprotected preview URL is used
 

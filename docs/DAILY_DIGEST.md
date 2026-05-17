@@ -36,7 +36,7 @@
 - Clarified founder/operator AI power users as the first revenue wedge, with agent interoperability as the differentiating Power-user layer after real MCP/API-key verification.
 - Aligned the landing-page draft with the founder/operator AI-power-user wedge while preserving the verified demo CTA and bounded-AI copy guardrails.
 - Tightened MCP and ChatGPT Actions descriptions around bounded, human-reviewable task access, due-time parsing, and recent task-note context.
-- Verified PR #3 browser-reminder product head `537c04b8b92b6fff38bb1519fe016e3fa7f0a20b` passed GitHub Web rails; Vercel preview evidence remains per-head, with both successful preview deployments and account build-rate-limited statuses observed during the launch-readiness pass.
+- Verified PR #3 Web rails on inspected launch-readiness heads; Vercel preview evidence remains per-head, with both successful preview deployments and account build-rate-limited statuses observed during the launch-readiness pass.
 - Verified PR #3 due-time scan-ordering head `1d12864044597dc7202ab068bc423f9ba25cf667` passed GitHub Web rails and Vercel preview deployment; protected-preview route smoke remains blocked by Vercel Deployment Protection without `VERCEL_AUTOMATION_BYPASS_SECRET` or an unprotected URL.
 - Tightened shared task date/time validation so human routes, AI task sanitization/output validation, and MCP updates reject impossible calendar dates and out-of-range local times.
 - Moved deterministic fallback task parsing onto the shared due-date normalizer for explicit dates.
