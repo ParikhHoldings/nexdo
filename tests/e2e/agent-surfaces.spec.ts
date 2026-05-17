@@ -296,6 +296,8 @@ test('MCP smoke can provision disposable scoped API keys', () => {
 
   expect(source).toContain("const provisionKeys = args.has('--provision')")
   expect(source).toContain('async function assertMcpSseEndpoint')
+  expect(source).toContain('async function rpcNotification')
+  expect(source).toContain("await rpcNotification('notifications/initialized')")
   expect(source).toContain("contentType.includes('text/event-stream')")
   expect(source).toContain("text.includes('event: endpoint')")
   expect(source).toContain('await assertMcpSseEndpoint()')
@@ -316,4 +318,12 @@ test('MCP smoke can provision disposable scoped API keys', () => {
   expect(source).toContain(".from('profiles')")
   expect(source).toContain('await cleanupProvisionedUsers(supabase, users)')
   expect(source).toContain('await cleanupProvisionedUsers(provisioned.supabase, provisioned.users)')
+})
+
+test('MCP route accepts initialized notifications without a JSON-RPC id', () => {
+  const source = readFileSync('app/api/mcp/route.ts', 'utf8')
+
+  expect(source).toContain("method !== 'notifications/initialized'")
+  expect(source).toContain('JSON-RPC id is required for this method')
+  expect(source).toContain('return new NextResponse(null, { status: 204 })')
 })

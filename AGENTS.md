@@ -108,12 +108,13 @@ boundaries for the resulting tiers, authenticated `POST /api/tasks` quota
 behavior under those tiers, duplicate webhook idempotency, and cleans up
 disposable Stripe/Supabase data.
 
-`npm run smoke:mcp` accepts `NEXDO_API_KEY` for authenticated MCP SSE,
-JSON-RPC, and ChatGPT Actions checks, optional `NEXDO_READONLY_API_KEY` for
-scoped read-only denial checks, and `-- --write` for disposable task
-creation/update/completion plus idempotency checks. Add `--provision` when
-Supabase service-role env is loaded to create disposable full-access and
-read-only Power-plan API keys instead of using pre-generated keys. Add
+`npm run smoke:mcp` accepts `NEXDO_API_KEY` for authenticated MCP initialized
+notification, SSE, JSON-RPC, and ChatGPT Actions checks, optional
+`NEXDO_READONLY_API_KEY` for scoped read-only denial checks, and `-- --write`
+for disposable task creation/update/completion plus idempotency checks. Add
+`--provision` when Supabase service-role env is loaded to create disposable
+full-access and read-only Power-plan API keys instead of using pre-generated
+keys. Add
 `--audit` to the write smoke when
 `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are loaded and the
 run must prove `agent_action_events` audit rows were written.

@@ -34,6 +34,7 @@
 - Expanded `npm run smoke:mcp` to cover OpenAPI availability, ChatGPT Actions `list_tasks` shape, and real `agent_action_events` audit rows when run with `--write --audit`.
 - Expanded MCP smoke execution across search, briefing, get-task, update, complete, and ChatGPT Actions search/list checks instead of only checking tool listing.
 - Expanded MCP smoke to verify the authenticated SSE endpoint advertises the JSON-RPC endpoint before tool execution.
+- Made the MCP endpoint accept the standard initialized notification without a JSON-RPC `id`, and added it to the real-key MCP smoke.
 - Added MCP smoke `--provision` mode to create disposable full/read-only Power-plan API keys for scoped real endpoint verification.
 - Added `npm run smoke:launch` to load a real env file, run local rails, execute Supabase/OpenAI/Stripe/MCP provider smokes in order, and keep public-copy/deploy approvals explicit.
 - Added optional trace metadata to `complete_task` so agent completion calls can carry `source_agent_id`, `external_ref`, `ingestion_intent`, and bounded metadata into audit rows.

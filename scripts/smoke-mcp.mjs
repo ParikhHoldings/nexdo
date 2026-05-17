@@ -164,6 +164,25 @@ async function rpc(method, params, key = apiKey) {
   return data.result
 }
 
+async function rpcNotification(method, params, key = apiKey) {
+  const body = {
+    jsonrpc: '2.0',
+    method,
+  }
+
+  if (params !== undefined) body.params = params
+
+  const { response, data } = await requestJson('/api/mcp', body, key)
+
+  if (response.status !== 204) {
+    throw new Error(
+      `${method} notification returned ${response.status}, expected 204: ${JSON.stringify(data)}`
+    )
+  }
+
+  console.log(`ok ${method} notification`)
+}
+
 function parseToolContent(result) {
   const text = result?.content?.[0]?.text
   if (!text) return null
@@ -439,6 +458,7 @@ async function main() {
     }
     console.log('ok initialize')
 
+    await rpcNotification('notifications/initialized')
     await assertMcpSseEndpoint()
 
     const toolList = await rpc('tools/list')
