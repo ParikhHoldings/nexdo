@@ -79,9 +79,9 @@ Current evidence:
 - `TaskDetail` supports parent/related task links, with demo persistence and authenticated writes through `app/api/tasks/[id]/relationships/route.ts`.
 - All Tasks defaults to active work but can filter into `done` and `cancelled`; task detail includes `cancelled` in the human status selector.
 - All Tasks includes an Origin filter for isolating agent-traced tasks from human-created tasks.
-- All Tasks includes an agent-output review filter for isolating unreviewed/needs-revision outputs from verified outputs.
+- All Tasks includes an agent review filter for isolating unreviewed/needs-revision outputs and traceable agent-created or agent-updated tasks from verified outputs.
 - Task cards show agent-output review badges for unreviewed, needs-revision, and verified outputs.
-- Sidebar navigation includes an Agent Review queue that deep-links to `/all?review=needs_review`.
+- Sidebar navigation includes an Agent Review queue that deep-links to `/all?review=needs_review` and counts both reviewable agent outputs and traceable agent task mutations.
 - Task cards show status badges for `in_progress`, `waiting`, `done`, and `cancelled`.
 - Task-card menus expose quick `Start`, `Mark waiting`, `Move to to-do`, and `Restore` actions, with the controls visible on mobile/touch viewports as well as desktop hover/focus.
 - Settings > Data exports the tasks currently loaded in the workspace as JSON or CSV through `lib/task-export.ts`.

@@ -33,9 +33,9 @@
 - Task detail now supports parent and related task links through an owned relationship route while direct browser relationship column grants remain closed.
 - Task cards now expose quick status actions for starting work, marking waiting, moving back to to-do, and restoring done/cancelled work from scan views, with mobile-visible controls.
 - All Tasks now includes an Origin filter so agent-traced tasks can be isolated from human-created tasks for review.
-- All Tasks now includes an agent-output review filter so unreviewed/needs-revision outputs can be queued separately from verified outputs.
+- All Tasks now includes an agent review filter so unreviewed/needs-revision outputs and traceable agent-created or agent-updated tasks can be queued separately from verified outputs.
 - Task cards now show agent-output review badges so unreviewed, needs-revision, and verified outputs are visible while scanning.
-- Sidebar navigation now includes an Agent Review queue count that opens `/all?review=needs_review`.
+- Sidebar navigation now includes an Agent Review queue count for reviewable outputs and traceable agent task mutations that opens `/all?review=needs_review`.
 - Bounded agent outputs now keep execution history plus verification status and notes in the task detail panel.
 - The bounded executable action contract is centralized in `lib/task-actions.ts` so UI surfaces, authenticated execution, and agent-output history agree that only research, draft, and prep tasks can run AI execution.
 - Agent `update_task` can now maintain the core planning fields humans can edit, including due time, action type, estimate, energy level, people, tags, and owned parent/related task links; `add_task_note` lets agents append reviewable handoff context or bounded result notes without changing task status.

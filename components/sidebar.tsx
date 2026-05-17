@@ -21,7 +21,7 @@ import { cn } from '@/lib/utils'
 import { useUIStore, useUserStore, useTaskStore } from '@/lib/store'
 import { createClient } from '@/lib/supabase/client'
 import { Badge } from '@/components/ui/badge'
-import { agentOutputReviewStatus } from '@/lib/agent-output'
+import { taskNeedsAgentReview } from '@/lib/agent-review'
 import { isTodayFocusTask } from '@/lib/task-filters'
 import { getLocalDateKey } from '@/lib/dates'
 
@@ -45,13 +45,7 @@ export function Sidebar() {
   // Count today's tasks
   const today = getLocalDateKey()
   const todayCount = tasks.filter((task) => isTodayFocusTask(task, today)).length
-  const reviewQueueCount = tasks.filter((task) => {
-    const reviewStatus = agentOutputReviewStatus(
-      task.agent_output,
-      task.action_type
-    )
-    return reviewStatus === 'unreviewed' || reviewStatus === 'needs_revision'
-  }).length
+  const reviewQueueCount = tasks.filter(taskNeedsAgentReview).length
 
   useEffect(() => {
     const media = window.matchMedia('(max-width: 1023px)')

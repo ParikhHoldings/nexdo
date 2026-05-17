@@ -1077,7 +1077,7 @@ test('non-default task statuses remain visible and reviewable from all tasks', a
   ).toBeVisible()
 })
 
-test('all tasks filters reviewable agent outputs', async ({ page }) => {
+test('all tasks filters the agent review queue', async ({ page }) => {
   const now = new Date().toISOString()
   const draftOutput = (status: 'unreviewed' | 'verified' | 'needs_revision') => ({
     schema_version: 1,
@@ -1152,6 +1152,32 @@ test('all tasks filters reviewable agent outputs', async ({ page }) => {
     },
     {
       ...baseTask,
+      id: 'agent-traced-waiting-task',
+      title: 'Review agent-updated waiting task',
+      status: 'waiting',
+      source: 'agent',
+      action_type: 'manual',
+      agent_output: null,
+      source_agent_id: 'agent-reviewer',
+      external_ref: 'waiting-1',
+      ingestion_intent: 'update',
+      agent_metadata: { queue: 'agent_review' },
+    },
+    {
+      ...baseTask,
+      id: 'agent-traced-cancelled-task',
+      title: 'Review agent-cancelled task',
+      status: 'cancelled',
+      source: 'agent',
+      action_type: 'manual',
+      agent_output: null,
+      source_agent_id: 'agent-reviewer',
+      external_ref: 'cancelled-1',
+      ingestion_intent: 'update',
+      agent_metadata: { queue: 'agent_review' },
+    },
+    {
+      ...baseTask,
       id: 'plain-human-task',
       title: 'Plain human task',
       action_type: 'manual',
@@ -1168,6 +1194,12 @@ test('all tasks filters reviewable agent outputs', async ({ page }) => {
   await expect(page.getByText('unreviewed output', { exact: true })).toBeVisible()
   await expect(page.getByText('needs revision', { exact: true })).toBeVisible()
   await expect(page.getByText('verified output', { exact: true })).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Review agent-updated waiting task' })
+  ).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Review agent-cancelled task' })
+  ).toHaveCount(0)
 
   await page.getByRole('link', { name: 'Today' }).click()
   await page.getByRole('link', { name: /Agent Review/ }).click()
@@ -1181,9 +1213,15 @@ test('all tasks filters reviewable agent outputs', async ({ page }) => {
   await expect(
     page.getByRole('heading', { name: 'Verified agent draft' })
   ).toHaveCount(0)
+  await expect(
+    page.getByRole('heading', { name: 'Review agent-updated waiting task' })
+  ).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Review agent-cancelled task' })
+  ).toBeVisible()
 
   const reviewFilter = page.getByRole('group', {
-    name: 'Agent output review filter',
+    name: 'Agent review filter',
   })
   await expect(reviewFilter.getByRole('button', { name: 'Needs review' })).toHaveClass(
     /bg-accent/
@@ -1201,6 +1239,12 @@ test('all tasks filters reviewable agent outputs', async ({ page }) => {
   await expect(
     page.getByRole('heading', { name: 'Plain human task' })
   ).toHaveCount(0)
+  await expect(
+    page.getByRole('heading', { name: 'Review agent-updated waiting task' })
+  ).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Review agent-cancelled task' })
+  ).toBeVisible()
 
   await reviewFilter.getByRole('button', { name: 'Verified' }).click()
   await expect(
@@ -1208,6 +1252,9 @@ test('all tasks filters reviewable agent outputs', async ({ page }) => {
   ).toBeVisible()
   await expect(
     page.getByRole('heading', { name: 'Review unreviewed agent draft' })
+  ).toHaveCount(0)
+  await expect(
+    page.getByRole('heading', { name: 'Review agent-updated waiting task' })
   ).toHaveCount(0)
 })
 

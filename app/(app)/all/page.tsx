@@ -10,7 +10,10 @@ import { TaskListSkeleton } from '@/components/ui/skeleton'
 import { useTaskStore } from '@/lib/store'
 import { taskMatchesSearch } from '@/lib/task-search'
 import { hasAgentTrace } from '@/lib/agent-trace'
-import { agentOutputReviewStatus } from '@/lib/agent-output'
+import {
+  taskHasVerifiedAgentOutput,
+  taskNeedsAgentReview,
+} from '@/lib/agent-review'
 import { cn } from '@/lib/utils'
 import type { TaskPriority, TaskStatus } from '@/lib/database.types'
 
@@ -131,7 +134,9 @@ export default function AllTasksPage() {
   const filteredTasks = useMemo(() => {
     let result =
       statusFilter === 'all'
-        ? tasks.filter((t) => activeStatuses.includes(t.status))
+        ? reviewFilter === 'all'
+          ? tasks.filter((t) => activeStatuses.includes(t.status))
+          : tasks
         : tasks.filter((t) => t.status === statusFilter)
 
     // Search filter
@@ -153,16 +158,8 @@ export default function AllTasksPage() {
 
     if (reviewFilter !== 'all') {
       result = result.filter((task) => {
-        const reviewStatus = agentOutputReviewStatus(
-          task.agent_output,
-          task.action_type
-        )
-
-        if (reviewFilter === 'verified') return reviewStatus === 'verified'
-        return (
-          reviewStatus === 'unreviewed' ||
-          reviewStatus === 'needs_revision'
-        )
+        if (reviewFilter === 'verified') return taskHasVerifiedAgentOutput(task)
+        return taskNeedsAgentReview(task)
       })
     }
 
@@ -198,7 +195,9 @@ export default function AllTasksPage() {
   const activeTaskCount = tasks.filter((t) => activeStatuses.includes(t.status)).length
   const baseResultCount =
     statusFilter === 'all'
-      ? activeTaskCount
+      ? reviewFilter === 'all'
+        ? activeTaskCount
+        : tasks.length
       : tasks.filter((t) => t.status === statusFilter).length
 
   return (
@@ -344,12 +343,12 @@ export default function AllTasksPage() {
             {/* Review filter */}
             <div>
               <label className="text-sm text-zinc-400 block mb-2">
-                Agent output review
+                Agent review
               </label>
               <div
                 className="flex flex-wrap gap-2"
                 role="group"
-                aria-label="Agent output review filter"
+                aria-label="Agent review filter"
               >
                 {reviewFilters.map((filter) => (
                   <button
