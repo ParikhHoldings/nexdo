@@ -163,6 +163,64 @@ test('demo task capture, briefing, prioritization, and agent output work', async
   expect(unexpectedMessages).toEqual([])
 })
 
+test('agent-created tasks expose trace metadata in task surfaces', async ({ page }) => {
+  const now = new Date().toISOString()
+  const agentTask = {
+    id: 'agent-demo-task',
+    user_id: 'demo-user',
+    title: 'Review agent-created onboarding brief',
+    raw_input: 'Review agent-created onboarding brief',
+    description: null,
+    status: 'todo',
+    priority: 'high',
+    due_date: null,
+    due_time: null,
+    context: 'Created by an external planning agent for human review',
+    source: 'agent',
+    action_type: 'manual',
+    estimated_minutes: 20,
+    energy_level: 'light',
+    people: ['Ops'],
+    tags: ['agent-review'],
+    parent_task_id: null,
+    related_task_ids: null,
+    agent_output: null,
+    completed_at: null,
+    created_at: now,
+    updated_at: now,
+    source_agent_id: 'agent-alpha',
+    external_ref: 'brief-42',
+    ingestion_intent: 'create',
+    agent_metadata: { channel: 'mcp', confidence: 'high' },
+  }
+
+  await page.addInitScript((task: unknown) => {
+    window.localStorage.setItem('nexdo_demo_tasks', JSON.stringify([task]))
+  }, agentTask)
+
+  await page.goto('/today')
+
+  await expect(
+    page.getByRole('heading', { name: 'Review agent-created onboarding brief' })
+  ).toBeVisible()
+  await expect(page.getByText('agent-alpha').first()).toBeVisible()
+
+  await page
+    .getByRole('heading', { name: 'Review agent-created onboarding brief' })
+    .click()
+
+  const trace = page.getByLabel('Agent trace')
+  await expect(trace).toBeVisible()
+  await expect(trace.getByText('Source agent')).toBeVisible()
+  await expect(trace.getByText('agent-alpha')).toBeVisible()
+  await expect(trace.getByText('External ref')).toBeVisible()
+  await expect(trace.getByText('brief-42')).toBeVisible()
+  await expect(trace.getByText('Intent')).toBeVisible()
+  await expect(trace.getByText('Create')).toBeVisible()
+  await expect(trace.getByText('Metadata keys')).toBeVisible()
+  await expect(trace.getByText('channel, confidence')).toBeVisible()
+})
+
 test('task mutation endpoints require configured auth', async ({ request }) => {
   const patch = await request.patch('/api/tasks/not-a-real-task', {
     data: { title: 'Should not update', user_id: 'someone-else' },

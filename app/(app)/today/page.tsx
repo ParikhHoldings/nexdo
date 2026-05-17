@@ -137,7 +137,7 @@ export default function TodayPage() {
               Your day is clear
             </h3>
             <p className="text-zinc-500 max-w-sm mx-auto">
-              Add a task above or let your AI agents do the work.
+              Add a task above, import existing work, or connect a scoped agent from settings.
             </p>
           </div>
         ) : (

@@ -18,8 +18,16 @@ import {
   Trash2,
   Edit3,
   Save,
+  Bot,
 } from 'lucide-react'
 import { cn, formatRelativeDate } from '@/lib/utils'
+import {
+  agentMetadataKeys,
+  agentTraceLabel,
+  compactTraceValue,
+  formatIngestionIntent,
+  hasAgentTrace,
+} from '@/lib/agent-trace'
 import { useTaskStore } from '@/lib/store'
 import { executeTaskHeuristic } from '@/lib/task-intelligence'
 import {
@@ -370,6 +378,10 @@ export function TaskDetail() {
   const isExecutable = ['research', 'draft', 'prep'].includes(task.action_type)
   const agentOutput = normalizeAgentOutput(task.agent_output, task.action_type)
   const hasAgentOutput = agentOutput !== null
+  const showAgentTrace = hasAgentTrace(task)
+  const agentLabel = agentTraceLabel(task)
+  const intentLabel = formatIngestionIntent(task.ingestion_intent)
+  const metadataKeys = agentMetadataKeys(task.agent_metadata)
 
   const resetEditForm = () => {
     setEditError(null)
@@ -559,6 +571,15 @@ export function TaskDetail() {
                   <Badge variant="action" action={task.action_type}>
                     <Sparkles className="h-3 w-3 mr-1" />
                     {task.action_type}
+                  </Badge>
+                )}
+                {showAgentTrace && (
+                  <Badge
+                    variant="outline"
+                    className="border-cyan-500/20 bg-cyan-500/10 text-cyan-300"
+                  >
+                    <Bot className="h-3 w-3 mr-1" />
+                    Agent
                   </Badge>
                 )}
               </div>
@@ -806,6 +827,64 @@ export function TaskDetail() {
                   )}
                 </div>
               </div>
+
+              {showAgentTrace && (
+                <section
+                  aria-label="Agent trace"
+                  className="rounded-lg border border-cyan-500/20 bg-cyan-500/5 p-4"
+                >
+                  <div className="flex items-center gap-2">
+                    <Bot className="h-4 w-4 text-cyan-300" />
+                    <h3 className="text-sm font-medium text-cyan-100">
+                      Agent trace
+                    </h3>
+                  </div>
+                  <dl className="mt-3 grid gap-3 text-sm sm:grid-cols-2">
+                    <div>
+                      <dt className="text-xs uppercase tracking-wide text-zinc-500">
+                        Source agent
+                      </dt>
+                      <dd
+                        className="mt-1 text-zinc-200"
+                        title={task.source_agent_id ?? undefined}
+                      >
+                        {agentLabel}
+                      </dd>
+                    </div>
+                    {task.external_ref && (
+                      <div>
+                        <dt className="text-xs uppercase tracking-wide text-zinc-500">
+                          External ref
+                        </dt>
+                        <dd
+                          className="mt-1 text-zinc-200"
+                          title={task.external_ref}
+                        >
+                          {compactTraceValue(task.external_ref)}
+                        </dd>
+                      </div>
+                    )}
+                    {intentLabel && (
+                      <div>
+                        <dt className="text-xs uppercase tracking-wide text-zinc-500">
+                          Intent
+                        </dt>
+                        <dd className="mt-1 text-zinc-200">{intentLabel}</dd>
+                      </div>
+                    )}
+                    {metadataKeys.length > 0 && (
+                      <div>
+                        <dt className="text-xs uppercase tracking-wide text-zinc-500">
+                          Metadata keys
+                        </dt>
+                        <dd className="mt-1 text-zinc-200">
+                          {metadataKeys.join(', ')}
+                        </dd>
+                      </div>
+                    )}
+                  </dl>
+                </section>
+              )}
 
               {/* Agent execution */}
               {isExecutable && (

@@ -8,11 +8,13 @@ import {
   Users,
   Sparkles,
   Play,
+  Bot,
   MoreHorizontal,
   Trash2,
   Edit3,
 } from 'lucide-react'
 import { cn, formatRelativeDate, getPriorityColor } from '@/lib/utils'
+import { agentTraceLabel, hasAgentTrace } from '@/lib/agent-trace'
 import { useTaskStore } from '@/lib/store'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Badge, TagBadge, PersonBadge } from '@/components/ui/badge'
@@ -52,6 +54,8 @@ export const TaskCard = forwardRef<HTMLDivElement, TaskCardProps>(function TaskC
 
   const isExecutable = ['research', 'draft', 'prep'].includes(task.action_type)
   const isDone = task.status === 'done'
+  const showAgentTrace = hasAgentTrace(task)
+  const agentLabel = agentTraceLabel(task, 20)
 
   return (
     <motion.div
@@ -142,6 +146,20 @@ export const TaskCard = forwardRef<HTMLDivElement, TaskCardProps>(function TaskC
                   <Sparkles className="h-3 w-3 mr-1" />
                   {task.action_type}
                 </Badge>
+              )}
+
+              {showAgentTrace && (
+                <span
+                  className="inline-flex items-center rounded-full border border-cyan-500/20 bg-cyan-500/10 px-2 py-0.5 text-xs font-medium text-cyan-300"
+                  title={
+                    task.source_agent_id
+                      ? `Source agent: ${task.source_agent_id}`
+                      : 'Created or updated by an external agent'
+                  }
+                >
+                  <Bot className="mr-1 h-3 w-3" />
+                  {agentLabel}
+                </span>
               )}
             </div>
 

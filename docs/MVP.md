@@ -159,6 +159,7 @@ Acceptance gate:
 
 Current evidence:
 - MCP create/update/complete schemas expose agent metadata fields.
+- Task cards and task detail show agent-origin trace metadata for agent-created or agent-updated tasks.
 - The idempotency migration and handler logic exist.
 - `npm run smoke:supabase -- --write` can verify the unique database index rejects duplicate `source_agent_id` plus `external_ref` task rows.
 - `npm run smoke:mcp -- --provision --write --audit` can verify real `create_task`, `update_task`, and `complete_task` audit rows with `source_agent_id` plus `external_ref` when Supabase service-role env is loaded.
