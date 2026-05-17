@@ -865,9 +865,9 @@ test('demo settings does not allow free-plan API key generation', async ({ page 
 test('settings tab query opens billing tab', async ({ page }) => {
   const source = readFileSync('app/(app)/settings/page.tsx', 'utf8')
 
-  expect(source).toContain('const requestedActiveTab = isSettingsTab(requestedTab) ? requestedTab :')
-  expect(source).toContain('if (tabState.requestedTab !== requestedTab)')
-  expect(source).toContain('setTabState({ requestedTab, activeTab })')
+  expect(source).toContain("const activeTab = isSettingsTab(requestedTab) ? requestedTab : 'profile'")
+  expect(source).toContain('params.set(\'tab\', activeTab)')
+  expect(source).toContain("router.replace(`/settings?${params.toString()}`, { scroll: false })")
 
   await page.goto('/settings?tab=billing')
 
@@ -875,6 +875,14 @@ test('settings tab query opens billing tab', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Billing' })).toHaveClass(/bg-accent/)
   await expect(page.getByRole('button', { name: 'Notifications' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Sign out' })).toHaveCount(0)
+
+  await page.getByRole('button', { name: 'API' }).click()
+  await expect(page).toHaveURL(/\/settings\?tab=api/)
+  await expect(page.getByRole('heading', { name: 'API Key' })).toBeVisible()
+
+  await page.getByRole('button', { name: 'Upgrade now' }).click()
+  await expect(page).toHaveURL(/\/settings\?tab=billing/)
+  await expect(page.getByRole('heading', { name: 'Current Plan' })).toBeVisible()
 })
 
 test('appearance settings apply and persist theme locally', async ({ page }) => {

@@ -39,7 +39,7 @@
 - fixed date-only task labels so local calendar due dates render as Today/Tomorrow instead of shifting through UTC parsing
 - surfaced authenticated AI briefing and prioritization fallback notices when provider/rate-limit failures force local heuristics
 - surfaced billing checkout and portal server messages before generic settings errors
-- kept Settings `?tab=` deep links synchronized with client-side query changes so billing/API/appearance links continue to land on the intended tab
+- kept Settings tab clicks and `?tab=` deep links synchronized with the URL so billing/API/appearance links continue to land on the intended tab after users click around
 - kept Connect AI setup, activity, and available-tool indicators bound to active paid API access instead of treating old key hints as usable
 - normalized Connect AI test-connection and agent-activity errors across plain, message, and JSON-RPC error payloads
 - expanded Connect AI agent activity rows with mutation intent, safe argument-key summaries, and agent-metadata presence

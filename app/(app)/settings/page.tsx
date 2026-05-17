@@ -2,7 +2,7 @@
 
 import { Suspense, useState } from 'react'
 import Link from 'next/link'
-import { useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import {
   Bell,
   User,
@@ -44,10 +44,11 @@ function formatApiKeyHint(apiKey: string) {
 }
 
 function SettingsContent() {
+  const router = useRouter()
   const searchParams = useSearchParams()
   const checkoutStatus = searchParams.get('checkout')
   const requestedTab = searchParams.get('tab')
-  const requestedActiveTab = isSettingsTab(requestedTab) ? requestedTab : 'profile'
+  const activeTab = isSettingsTab(requestedTab) ? requestedTab : 'profile'
 
   const { profile, isAuthenticated, setProfile } = useUserStore()
   const {
@@ -59,24 +60,10 @@ function SettingsContent() {
     setNotificationPermission,
   } = useUIStore()
 
-  const [tabState, setTabState] = useState<{
-    requestedTab: string | null
-    activeTab: Tab
-  }>({
-    requestedTab,
-    activeTab: requestedActiveTab,
-  })
-
-  if (tabState.requestedTab !== requestedTab) {
-    setTabState({
-      requestedTab,
-      activeTab: requestedActiveTab,
-    })
-  }
-
-  const activeTab = tabState.activeTab
   const setActiveTab = (activeTab: Tab) => {
-    setTabState({ requestedTab, activeTab })
+    const params = new URLSearchParams(searchParams.toString())
+    params.set('tab', activeTab)
+    router.replace(`/settings?${params.toString()}`, { scroll: false })
   }
 
   const [copied, setCopied] = useState(false)
