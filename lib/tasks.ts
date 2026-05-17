@@ -1,4 +1,5 @@
 import type { Task, TaskInsert, TaskUpdate, TaskStatus } from './database.types'
+import { addLocalDays, getLocalDateKey } from './dates'
 
 const DEMO_TASKS_STORAGE_KEY = 'nexdo_demo_tasks'
 
@@ -12,7 +13,7 @@ const mockTasks: Task[] = [
     description: null,
     status: 'todo',
     priority: 'high',
-    due_date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+    due_date: getLocalDateKey(addLocalDays(new Date(), 1)),
     due_time: null,
     context: 'Sarah needs feedback before the exec meeting on Friday',
     source: 'manual',
@@ -40,7 +41,7 @@ const mockTasks: Task[] = [
     description: null,
     status: 'todo',
     priority: 'medium',
-    due_date: new Date(Date.now() + 86400000 * 3).toISOString().split('T')[0],
+    due_date: getLocalDateKey(addLocalDays(new Date(), 3)),
     due_time: null,
     context: 'For the pricing committee meeting next week',
     source: 'manual',
@@ -68,7 +69,7 @@ const mockTasks: Task[] = [
     description: null,
     status: 'todo',
     priority: 'medium',
-    due_date: new Date().toISOString().split('T')[0],
+    due_date: getLocalDateKey(),
     due_time: null,
     context: 'Include sprint progress and blockers',
     source: 'manual',
@@ -96,7 +97,7 @@ const mockTasks: Task[] = [
     description: null,
     status: 'todo',
     priority: 'urgent',
-    due_date: new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0],
+    due_date: getLocalDateKey(addLocalDays(new Date(), 2)),
     due_time: null,
     context: 'Series A follow-up discussion',
     source: 'manual',
@@ -124,7 +125,7 @@ const mockTasks: Task[] = [
     description: null,
     status: 'todo',
     priority: 'high',
-    due_date: new Date().toISOString().split('T')[0],
+    due_date: getLocalDateKey(),
     due_time: null,
     context: 'They loved the new features but had some UX concerns',
     source: 'email',
@@ -296,7 +297,7 @@ export function filterDemoTasks(filter: {
   }
 
   if (filter.dueToday) {
-    const today = new Date().toISOString().split('T')[0]
+    const today = getLocalDateKey()
     filtered = filtered.filter((t) => t.due_date === today)
   }
 

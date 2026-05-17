@@ -6,6 +6,7 @@ import {
   validateApiKeyWithDependencies,
 } from '../../lib/mcp-tools'
 import { apiKeyHint, hashApiKey } from '../../lib/api-keys'
+import { getLocalDateKey } from '../../lib/dates'
 import type {
   BriefingContent,
   ParsedTask,
@@ -288,7 +289,7 @@ function dependenciesFor(
 }
 
 test('DB-backed MCP read handlers filter, search, brief, and audit owned tasks', async () => {
-  const today = new Date().toISOString().split('T')[0]
+  const today = getLocalDateKey()
   const db = new FakeSupabase({
     profiles: [{ id: 'user-1', full_name: 'Maya' }],
     tasks: [

@@ -6,12 +6,19 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
+export interface ImportPreview {
+  count: number
+  sampleTitles: string[]
+  warning?: string | null
+}
+
 export interface ImportSourceCardProps {
   name: string
   description: string
   icon: ReactNode
   type: 'oauth' | 'file' | 'token'
   onImport: (data: { token?: string; file?: File }) => Promise<void>
+  onPreview?: (data: { file: File }) => Promise<ImportPreview>
   isLoading?: boolean
   isComplete?: boolean
   importedCount?: number
@@ -28,6 +35,7 @@ export function ImportSourceCard({
   icon,
   type,
   onImport,
+  onPreview,
   isLoading = false,
   isComplete = false,
   importedCount,
@@ -40,6 +48,9 @@ export function ImportSourceCard({
   const [token, setToken] = useState('')
   const [isDragging, setIsDragging] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [preview, setPreview] = useState<ImportPreview | null>(null)
+  const [previewError, setPreviewError] = useState<string | null>(null)
+  const [isPreviewing, setIsPreviewing] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleTokenSubmit = async () => {
@@ -49,7 +60,30 @@ export function ImportSourceCard({
 
   const handleFileSelect = async (file: File) => {
     setSelectedFile(file)
-    await onImport({ file })
+    setPreview(null)
+    setPreviewError(null)
+
+    if (!onPreview) {
+      await onImport({ file })
+      return
+    }
+
+    setIsPreviewing(true)
+    try {
+      const nextPreview = await onPreview({ file })
+      setPreview(nextPreview)
+    } catch (error) {
+      setPreviewError(
+        error instanceof Error ? error.message : 'Could not preview this file.'
+      )
+    } finally {
+      setIsPreviewing(false)
+    }
+  }
+
+  const handleConfirmFileImport = async () => {
+    if (!selectedFile) return
+    await onImport({ file: selectedFile })
   }
 
   const handleFileInputChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -165,10 +199,12 @@ export function ImportSourceCard({
                   isLoading && 'opacity-50 cursor-not-allowed'
                 )}
               >
-                {isLoading ? (
+                {isLoading || isPreviewing ? (
                   <>
                     <Loader2 className="h-8 w-8 text-zinc-400 animate-spin" />
-                    <span className="text-sm text-zinc-400">Importing...</span>
+                    <span className="text-sm text-zinc-400">
+                      {isPreviewing ? 'Previewing...' : 'Importing...'}
+                    </span>
                   </>
                 ) : (
                   <>
@@ -184,6 +220,39 @@ export function ImportSourceCard({
                   </>
                 )}
               </div>
+              {preview && (
+                <div className="mt-3 rounded-lg border border-zinc-800 bg-zinc-900 p-3 space-y-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-medium text-zinc-100">
+                        {preview.count} task{preview.count !== 1 ? 's' : ''} ready
+                      </p>
+                      {preview.sampleTitles.length > 0 && (
+                        <ul className="mt-2 space-y-1 text-xs text-zinc-500">
+                          {preview.sampleTitles.map((title) => (
+                            <li key={title} className="truncate">
+                              {title}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                    <Button
+                      size="sm"
+                      onClick={handleConfirmFileImport}
+                      isLoading={isLoading}
+                    >
+                      Import
+                    </Button>
+                  </div>
+                  {preview.warning && (
+                    <p className="text-xs text-amber-400">{preview.warning}</p>
+                  )}
+                </div>
+              )}
+              {previewError && (
+                <p className="mt-3 text-sm text-red-400">{previewError}</p>
+              )}
             </>
           )}
 

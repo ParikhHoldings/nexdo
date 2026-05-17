@@ -110,6 +110,13 @@ test('demo file import adds tasks without configured auth', async ({ page }) => 
     ),
   })
 
+  await expect(page.getByText('1 task ready')).toBeVisible()
+  await expect(page.getByText('Imported demo smoke task')).toBeVisible()
+  await expect(
+    page.getByText('Demo file imports are capped at 100 tasks per file.')
+  ).toBeVisible()
+  await page.getByRole('button', { name: 'Import' }).last().click()
+
   await expect(page.getByText('1 task imported successfully')).toBeVisible()
 
   await page.getByRole('link', { name: 'All Tasks' }).click()

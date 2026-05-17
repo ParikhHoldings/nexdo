@@ -34,6 +34,7 @@ import {
   validateResearchOutput,
 } from './ai-response-validation'
 import { isUsableEnv } from './env'
+import { getLocalDateKey } from './dates'
 
 function getOpenAIClient(): OpenAI | null {
   const apiKey = process.env.OPENAI_API_KEY
@@ -124,7 +125,7 @@ export async function generateBriefing(
   }
 
   try {
-    const today = new Date().toISOString().split('T')[0]
+    const today = getLocalDateKey()
     const tasksSummary = tasks.map((t) => ({
       id: t.id,
       title: t.title,

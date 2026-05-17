@@ -3,6 +3,7 @@ import { parseTaskInput, generateBriefing } from '@/lib/openai'
 import { canUseApiAccess, hasRequiredScope, requiredScopeForTool } from '@/lib/agent-scopes'
 import { apiKeyHint, hashApiKey } from '@/lib/api-keys'
 import { consumeQuota } from '@/lib/quota'
+import { getLocalDateKey } from '@/lib/dates'
 import type {
   Task,
   TaskStatus,
@@ -439,7 +440,7 @@ const listTasks: ToolHandler = async (args, userId, deps) => {
   }
 
   if (dueToday) {
-    const today = new Date().toISOString().split('T')[0]
+    const today = getLocalDateKey()
     query = query.eq('due_date', today)
   }
 

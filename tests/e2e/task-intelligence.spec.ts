@@ -9,12 +9,13 @@ import {
   parseTaskHeuristic,
   prioritizeTasksHeuristic,
 } from '../../lib/task-intelligence'
+import { getLocalDateKey } from '../../lib/dates'
 
 function isoDate(offsetDays = 0): string {
   const date = new Date()
   date.setHours(0, 0, 0, 0)
   date.setDate(date.getDate() + offsetDays)
-  return date.toISOString().split('T')[0]
+  return getLocalDateKey(date)
 }
 
 function task(overrides: Partial<Task>): Task {

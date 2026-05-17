@@ -20,6 +20,7 @@ import { cn } from '@/lib/utils'
 import { useUIStore, useUserStore, useTaskStore } from '@/lib/store'
 import { createClient } from '@/lib/supabase/client'
 import { Badge } from '@/components/ui/badge'
+import { getLocalDateKey } from '@/lib/dates'
 
 const navigation = [
   { name: 'Today', href: '/today', icon: Sun },
@@ -37,7 +38,7 @@ export function Sidebar() {
   const { tasks } = useTaskStore()
 
   // Count today's tasks
-  const today = new Date().toISOString().split('T')[0]
+  const today = getLocalDateKey()
   const todayCount = tasks.filter(
     (t) => t.status !== 'done' && t.status !== 'cancelled' && t.due_date === today
   ).length

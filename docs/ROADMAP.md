@@ -18,6 +18,8 @@
 - `npm ci`, `npm run lint`, `npm run typecheck`, `npm run build`, and `npm run test:e2e` passed locally on 2026-05-16.
 - `docs/MVP.md` now defines the smallest trustworthy MVP path around capture, structure, prioritize, brief, bounded execution, and scoped agent task-layer access.
 - Import, billing/quota, MCP, and ChatGPT Actions surfaces exist.
+- File imports now preview task count, sample titles, and plan/cap warnings before tasks are added.
+- Due-today task filters, browser reminders, MCP filtering, and date-only imports now use local calendar dates instead of UTC day strings.
 - Production deploy state, environment completeness, and end-to-end flow status are still unverified in the operating layer.
 
 ## Current themes

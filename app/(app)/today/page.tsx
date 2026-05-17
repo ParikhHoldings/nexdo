@@ -9,6 +9,7 @@ import { DailyBriefing } from '@/components/daily-briefing'
 import { TaskListSkeleton } from '@/components/ui/skeleton'
 import { useTaskStore, useUserStore } from '@/lib/store'
 import { prioritizeTasksHeuristic } from '@/lib/task-intelligence'
+import { getLocalDateKey } from '@/lib/dates'
 import type { PrioritizedTask } from '@/lib/database.types'
 
 export default function TodayPage() {
@@ -18,7 +19,7 @@ export default function TodayPage() {
   const [isPrioritizing, setIsPrioritizing] = useState(false)
 
   // Filter for today's tasks and incomplete tasks
-  const today = new Date().toISOString().split('T')[0]
+  const today = getLocalDateKey()
   const todayTasks = useMemo(
     () =>
       tasks.filter(

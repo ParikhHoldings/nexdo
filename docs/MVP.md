@@ -200,7 +200,7 @@ Monday is not credible if:
 
 ## Next product hardening after MVP
 - Add focused route/helper tests for task validation, quota/rate-limit helpers, and MCP handlers.
-- Add import previews and remaining-quota warnings before authenticated imports.
+- Verify import preview quota warnings against a real Supabase profile near the monthly task limit.
 - Add execution history and verification notes for agent outputs.
 - Add notification delivery only after real notification behavior exists.
 - Add theme controls only after real theme support exists.

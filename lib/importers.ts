@@ -1,4 +1,5 @@
 import type { TaskInsert, TaskPriority, TaskStatus, TaskSource } from './database.types'
+import { getLocalDateKey } from './dates'
 
 // Types for import operations
 export interface ImportedTaskData {
@@ -30,6 +31,12 @@ export function parseDate(dateStr: string | null | undefined): string | null {
       return dateStr.split('T')[0]
     }
 
+    // Date-only exports are already calendar dates; parsing through Date
+    // treats them as UTC midnight and can shift the local day backward.
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+      return dateStr
+    }
+
     // Handle YYYYMMDD format (ICS)
     if (/^\d{8}$/.test(dateStr)) {
       return `${dateStr.slice(0, 4)}-${dateStr.slice(4, 6)}-${dateStr.slice(6, 8)}`
@@ -38,7 +45,7 @@ export function parseDate(dateStr: string | null | undefined): string | null {
     // Handle various date formats
     const date = new Date(dateStr)
     if (!isNaN(date.getTime())) {
-      return date.toISOString().split('T')[0]
+      return getLocalDateKey(date)
     }
 
     return null

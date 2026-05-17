@@ -13,7 +13,7 @@ import {
   FileText,
 } from 'lucide-react'
 import { ImportSourceCard } from '@/components/import-source-card'
-import { useTaskStore } from '@/lib/store'
+import { useTaskStore, useUserStore } from '@/lib/store'
 import {
   autoMapCSVColumns,
   normalizeTask,
@@ -26,6 +26,7 @@ import type { Task, TaskInsert } from '@/lib/database.types'
 const DEMO_USER_ID = 'demo-user'
 const MAX_DEMO_IMPORT_BYTES = 2 * 1024 * 1024
 const MAX_DEMO_IMPORT_TASKS = 100
+const FREE_PLAN_TASK_LIMIT = 25
 
 interface ImportState {
   isLoading: boolean
@@ -103,7 +104,11 @@ function demoTaskFromInsert(task: TaskInsert): Task {
   }
 }
 
-async function parseDemoFileImport(source: ImportSource, file: File): Promise<TaskInsert[]> {
+async function parseFileImport(
+  source: ImportSource,
+  file: File,
+  maxTasks = MAX_DEMO_IMPORT_TASKS
+): Promise<TaskInsert[]> {
   if (file.size > MAX_DEMO_IMPORT_BYTES) {
     throw new Error('Demo imports support files up to 2 MB.')
   }
@@ -136,11 +141,12 @@ async function parseDemoFileImport(source: ImportSource, file: File): Promise<Ta
     throw new Error('No tasks found in this file.')
   }
 
-  return usableTasks.slice(0, MAX_DEMO_IMPORT_TASKS)
+  return usableTasks.slice(0, maxTasks)
 }
 
 export default function ImportPage() {
   const { addTask, isAuthenticated } = useTaskStore()
+  const { profile } = useUserStore()
   const [importStates, setImportStates] = useState<Record<ImportSource, ImportState>>({
     todoist: { isLoading: false, isComplete: false },
     microsoft: { isLoading: false, isComplete: false },
@@ -173,7 +179,7 @@ export default function ImportPage() {
           throw new Error('Sign in to import from connected apps. File imports work in demo mode.')
         }
 
-        const importedTasks = await parseDemoFileImport(source, data.file)
+        const importedTasks = await parseFileImport(source, data.file)
         for (const task of importedTasks) {
           addTask(demoTaskFromInsert(task))
         }
@@ -237,8 +243,39 @@ export default function ImportPage() {
     }
   }
 
+  const previewFileImport = async (source: ImportSource, file: File) => {
+    const importedTasks = await parseFileImport(
+      source,
+      file,
+      isAuthenticated ? Number.MAX_SAFE_INTEGER : MAX_DEMO_IMPORT_TASKS
+    )
+    const sampleTitles = importedTasks
+      .map((task) => task.title?.trim())
+      .filter((title): title is string => Boolean(title))
+      .slice(0, 3)
+
+    let warning: string | null = null
+    if (!isAuthenticated) {
+      warning = `Demo file imports are capped at ${MAX_DEMO_IMPORT_TASKS} tasks per file.`
+    } else if (profile?.subscription_tier === 'free') {
+      const used = profile.task_count_this_month || 0
+      const remaining = Math.max(FREE_PLAN_TASK_LIMIT - used, 0)
+      if (importedTasks.length > remaining) {
+        warning = `Your Free plan has ${remaining} task slot${remaining !== 1 ? 's' : ''} left this month. This import may fail unless you upgrade or reduce the file.`
+      } else {
+        warning = `${remaining} Free-plan task slot${remaining !== 1 ? 's' : ''} left before import.`
+      }
+    }
+
+    return {
+      count: importedTasks.length,
+      sampleTitles,
+      warning,
+    }
+  }
+
   return (
-    <div className="min-h-full">
+    <div className="min-h-full max-w-7xl mx-auto px-4 sm:px-6 py-8 pb-24 lg:pb-8">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
@@ -321,6 +358,7 @@ export default function ImportPage() {
             fileAccept=".ics"
             instructions="Export from Reminders: File > Export, then upload the .ics file"
             {...importStates.apple}
+            onPreview={async ({ file }) => previewFileImport('apple', file)}
             onImport={async ({ file }) => {
               if (file) {
                 await handleImport('apple', '/api/import/ics', { file })
@@ -335,6 +373,7 @@ export default function ImportPage() {
             fileAccept=".json,.csv"
             instructions="Use Things 3 Export feature to create a JSON or CSV file"
             {...importStates.things3}
+            onPreview={async ({ file }) => previewFileImport('things3', file)}
             onImport={async ({ file }) => {
               if (file) {
                 const ext = file.name.split('.').pop()?.toLowerCase()
@@ -357,6 +396,7 @@ export default function ImportPage() {
             fileAccept=".csv"
             instructions="Export from OmniFocus to CSV format, then upload"
             {...importStates.omnifocus}
+            onPreview={async ({ file }) => previewFileImport('omnifocus', file)}
             onImport={async ({ file }) => {
               if (file) {
                 await handleImport('omnifocus', '/api/import/csv', { file })
@@ -371,6 +411,7 @@ export default function ImportPage() {
             fileAccept=".csv"
             instructions="In Asana: Open project > ... > Export/Print > CSV"
             {...importStates.asana}
+            onPreview={async ({ file }) => previewFileImport('asana', file)}
             onImport={async ({ file }) => {
               if (file) {
                 await handleImport('asana', '/api/import/csv', { file })
@@ -385,6 +426,7 @@ export default function ImportPage() {
             fileAccept=".json"
             instructions="In Trello: Menu > More > Print and Export > Export as JSON"
             {...importStates.trello}
+            onPreview={async ({ file }) => previewFileImport('trello', file)}
             onImport={async ({ file }) => {
               if (file) {
                 await handleImport('trello', '/api/import/json', {
@@ -402,6 +444,7 @@ export default function ImportPage() {
             fileAccept=".csv"
             instructions="Export your tasks as CSV. Make sure you have a 'title' or 'name' column. We'll auto-detect other fields like due dates and priority."
             {...importStates.csv}
+            onPreview={async ({ file }) => previewFileImport('csv', file)}
             onImport={async ({ file }) => {
               if (file) {
                 await handleImport('csv', '/api/import/csv', { file })
