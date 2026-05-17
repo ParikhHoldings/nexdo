@@ -96,7 +96,7 @@
 - Rolled back failed authenticated task edits/deletes and surfaced task-store errors through visible notifications.
 - Made the task detail panel's edit action functional for the MVP task fields.
 - Added focused helper coverage for AI task input validation, API-key scope mapping, quota response payloads, and rate-limit response headers.
-- Removed nonfunctional theme and notification controls from the app shell/settings for launch truthfulness.
+- Kept launch controls truthful by backing appearance/notification settings with real local behavior and removing unbacked pricing controls.
 - Aligned the Connect AI setup page with the Power-plan API access gate.
 - Surfaced settings profile/API-key failures in the UI and refreshed local profile state after authenticated saves.
 - Hardened authenticated agent execution so it runs only owned task records and saves output server-side.
