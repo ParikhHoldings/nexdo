@@ -36,8 +36,8 @@ Last checked on 2026-05-17:
 - `npm audit --audit-level=moderate` passed with 0 vulnerabilities
 - `npm run smoke:launch -- --skip-local --skip-providers --technical-only` passed as a partial technical launch smoke; provider smokes, copy approval, and production deploy approval remain separate gates
 - GitHub Actions Web rails run on pull requests and pushes to `main`/`staging`, with install, lint, typecheck, build, dependency audit, and Playwright smoke testing
-- PR #3 Web rails passed on inspected heads in this pass
-- Vercel preview deployment is per-head evidence: one inspected docs-refresh head passed and a later docs-only head hit the known Vercel account build-rate limit, so inspect current PR checks before treating the newest head as preview-deploy verified
+- Most recently inspected before this docs refresh: PR #3 head `74f3b79623c2c0fa26bb166c91d05d7e930a9e3f` passed GitHub Actions Web rails after the task-parse input hardening change
+- Vercel preview deployment is per-head evidence: earlier inspected heads passed, while the latest inspected head `74f3b79623c2c0fa26bb166c91d05d7e930a9e3f` hit the known Vercel account build-rate limit, so inspect current PR checks before treating any newer head as preview-deploy verified
 - direct remote route smoke against protected previews is blocked by Vercel Deployment Protection until `VERCEL_AUTOMATION_BYPASS_SECRET` is provided locally or an unprotected preview URL is used
 
 `npm run verify:env` currently fails because `.env.local` is absent; only `.env.local.example` exists in this workspace. Still unverified: production env, Supabase migrations/auth/profile plus task, task-relationship, and task-note column grants against a real project, OpenAI provider calls, Stripe test-mode flows, scoped MCP/API-key execution, idempotency replay against real task data, agent audit writes, and production deployment rails.

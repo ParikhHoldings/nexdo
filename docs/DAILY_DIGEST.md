@@ -42,6 +42,7 @@
 - Surfaced authenticated AI briefing/prioritization fallback notices when provider or rate-limit failures force local heuristics.
 - Surfaced billing checkout and portal server messages before generic settings errors.
 - Made authenticated task parsing reject blank-after-trim input and send trimmed prompt text through length checks and provider/fallback parsing.
+- Verified PR #3 head `74f3b79623c2c0fa26bb166c91d05d7e930a9e3f` passed GitHub Web rails after the task-parse input hardening change; Vercel remained rate-limited on that head.
 - Trimmed submitted login emails before Supabase sign-in so pasted whitespace does not break otherwise valid account access.
 - Verified the login-email normalization and docs-refresh heads through local rails and GitHub Web rails; Vercel preview deployment remains per-head evidence because one docs-refresh head passed and a later docs-only head hit the known account build-rate limit.
 - Tightened auth redirect helpers so recovery callbacks can still land on update-password while normal login redirects reject auth-page loops, control characters, backslash paths, and encoded authority-like prefixes.
