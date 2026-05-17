@@ -201,6 +201,15 @@ test('authenticated imports surface server failure messages before generic error
   expect(source).toContain("result.message || result.error || 'Import failed'")
 })
 
+test('billing actions surface server messages before generic errors', () => {
+  const source = readFileSync('app/(app)/settings/page.tsx', 'utf8')
+
+  expect(source).toContain('result.message ||')
+  expect(source).toContain('result.error ||')
+  expect(source).toContain('Unable to start checkout right now.')
+  expect(source).toContain('Unable to open billing portal right now.')
+})
+
 test('provider list imports fail closed on nested task fetch failures', () => {
   const googleSource = readFileSync('app/api/import/google/route.ts', 'utf8')
   const microsoftSource = readFileSync('app/api/import/microsoft/route.ts', 'utf8')

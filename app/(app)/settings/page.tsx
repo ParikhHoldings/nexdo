@@ -229,7 +229,11 @@ function SettingsContent() {
       const result = await response.json()
 
       if (!response.ok || !result.url) {
-        throw new Error(result.error || 'Unable to start checkout right now.')
+        throw new Error(
+          result.message ||
+            result.error ||
+            'Unable to start checkout right now.'
+        )
       }
 
       window.location.href = result.url
@@ -253,7 +257,11 @@ function SettingsContent() {
       const result = await response.json()
 
       if (!response.ok || !result.url) {
-        throw new Error(result.error || 'Unable to open billing portal right now.')
+        throw new Error(
+          result.message ||
+            result.error ||
+            'Unable to open billing portal right now.'
+        )
       }
 
       window.location.href = result.url
