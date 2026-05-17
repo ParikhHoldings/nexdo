@@ -110,6 +110,7 @@
 - expanded `npm run smoke:stripe -- --write --webhook` so protected-preview runs use Vercel bypass headers and verify authenticated checkout/portal app routes
 - expanded OpenAI app-route and MCP provider smokes so protected-preview launch checks use Vercel bypass headers when configured
 - hardened Stripe `invoice.payment_failed` handling so failed payments downgrade entitlements to Free and the webhook smoke verifies the downgrade
+- normalized Stripe webhook customer IDs across string and expanded-object event shapes before entitlement updates
 
 ## Completed 2026-05-16
 - read and updated the repo-level agent context and all existing Markdown/text operating files

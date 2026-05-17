@@ -5,6 +5,13 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { tierForStripePriceId } from '@/lib/stripe-entitlements'
 import { updateCustomerSubscriptionTier } from '@/lib/stripe-webhook'
 
+function stripeCustomerId(
+  customer: string | Stripe.Customer | Stripe.DeletedCustomer | null | undefined
+) {
+  if (typeof customer === 'string') return customer
+  return customer?.id ?? null
+}
+
 export async function POST(request: NextRequest) {
   if (!stripe) {
     return NextResponse.json({ error: 'Stripe not configured' }, { status: 500 })
@@ -55,9 +62,9 @@ export async function POST(request: NextRequest) {
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session
-        const customerId = session.customer as string
+        const customerId = stripeCustomerId(session.customer)
         const subscriptionId = session.subscription as string | null
-        if (!subscriptionId) break
+        if (!customerId || !subscriptionId) break
 
         const subscription = await stripe.subscriptions.retrieve(subscriptionId)
         // Only activate the plan if Stripe reports an active/trialing sub.
@@ -81,8 +88,9 @@ export async function POST(request: NextRequest) {
 
       case 'customer.subscription.updated': {
         const subscription = event.data.object as Stripe.Subscription
-        const customerId = subscription.customer as string
+        const customerId = stripeCustomerId(subscription.customer)
         const priceId = subscription.items.data[0]?.price.id
+        if (!customerId) break
 
         // Past-due / unpaid / canceled subs should not retain paid tier.
         if (
@@ -105,7 +113,8 @@ export async function POST(request: NextRequest) {
 
       case 'customer.subscription.deleted': {
         const subscription = event.data.object as Stripe.Subscription
-        const customerId = subscription.customer as string
+        const customerId = stripeCustomerId(subscription.customer)
+        if (!customerId) break
 
         await updateCustomerSubscriptionTier(supabase, customerId, 'free')
         break
@@ -113,10 +122,7 @@ export async function POST(request: NextRequest) {
 
       case 'invoice.payment_failed': {
         const invoice = event.data.object as Stripe.Invoice
-        const customerId =
-          typeof invoice.customer === 'string'
-            ? invoice.customer
-            : invoice.customer?.id
+        const customerId = stripeCustomerId(invoice.customer)
 
         if (!customerId) {
           console.warn('Stripe webhook: invoice.payment_failed missing customer id')

@@ -114,6 +114,7 @@
 - Verified PR #3 Web rails and Vercel preview deployment on the Stripe failed-payment entitlement hardening head (`ce3bdcf`).
 - Expanded OpenAI app-route and MCP provider smokes so protected-preview launch checks use Vercel bypass headers when configured.
 - Hardened Stripe failed-payment handling so `invoice.payment_failed` downgrades entitlements to Free and the webhook smoke verifies it.
+- Normalized Stripe webhook customer IDs across string and expanded-object event shapes before entitlement updates.
 
 ### In progress
 - Provider-backed Supabase, OpenAI, Stripe, and MCP smokes remain the main launch-readiness gap.
