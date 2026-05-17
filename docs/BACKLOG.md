@@ -108,6 +108,7 @@
 - added an All Tasks agent-output review filter so unreviewed/needs-revision outputs can be queued separately from verified outputs
 - expanded the Agent Review queue so traceable agent-created or agent-updated tasks without output also appear for human review
 - verified PR #3 agent-review feature head `fa6aa2ad5fc5b3fb66af0adf6e59ad8e2e9cf374` passed GitHub Web rails and Vercel preview deployment; protected-preview route smoke remains blocked by Vercel Deployment Protection without `VERCEL_AUTOMATION_BYPASS_SECRET` or an unprotected URL
+- verified PR #3 docs-refresh head `4a06840023b93aa5431785480e0451f1135edfc4` passed GitHub Web rails; Vercel was blocked by account build-rate limiting, so that head has no fresh preview-deploy evidence
 - surfaced agent-output review badges on task cards so review state is visible from scan views before opening detail
 - added sidebar Agent Review navigation that deep-links to `/all?review=needs_review` with a live review-queue count
 - added a copyable Agent operating brief to Connect AI setup so external clients get bounded-write, trace-metadata, note-first, and no-side-effect instructions alongside the MCP/OpenAPI config

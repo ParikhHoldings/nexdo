@@ -61,10 +61,10 @@ Current local verification from 2026-05-17:
 - `npm run smoke:launch -- --skip-local --skip-providers --technical-only` passed as a partial technical launch smoke; provider smokes, public-copy approval, and production deploy approval remain separate manual gates
 - `npm run verify:env` failed because `.env.local` is absent; only `.env.local.example` exists in this workspace
 
-Current PR verification from this pass:
+Recent PR verification evidence:
 - GitHub Actions Web rails run on pull requests and pushes to `main`/`staging`, with install, lint, typecheck, build, dependency audit, and Playwright smoke testing.
-- PR #3 GitHub Actions Web rails passed on the inspected agent-review feature head `fa6aa2ad5fc5b3fb66af0adf6e59ad8e2e9cf374`. Recheck PR status after every newer push before treating the branch as current-green.
-- Vercel preview deployment passed on the inspected agent-review feature head `fa6aa2ad5fc5b3fb66af0adf6e59ad8e2e9cf374` with preview URL `https://ph-nexdo-git-codex-launch-rea-42bdec-nathan-happywpcos-projects.vercel.app`.
+- PR #3 GitHub Actions Web rails passed on the docs-refresh head `4a06840023b93aa5431785480e0451f1135edfc4`. Recheck PR status after every newer push before treating the branch as current-green.
+- Vercel preview deployment last passed on the inspected agent-review feature head `fa6aa2ad5fc5b3fb66af0adf6e59ad8e2e9cf374` with preview URL `https://ph-nexdo-git-codex-launch-rea-42bdec-nathan-happywpcos-projects.vercel.app`; the docs-refresh head `4a06840023b93aa5431785480e0451f1135edfc4` hit Vercel account build-rate limiting, so it has no fresh preview-deploy evidence.
 - Direct remote route smoke against that protected preview URL failed on 2026-05-17 at desktop `/` because Vercel Deployment Protection is still active; provide `VERCEL_AUTOMATION_BYPASS_SECRET` locally or use an unprotected preview/production URL before treating rendered route smoke as verified.
 - Always inspect current PR checks after later pushes before treating preview deploy as current-green. A Vercel build-rate-limit failure is not evidence of an app build failure, but it does mean that head does not have fresh preview-deploy evidence.
 
