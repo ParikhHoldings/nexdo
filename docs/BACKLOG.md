@@ -31,6 +31,7 @@
 - normalized Connect AI test-connection and agent-activity errors across plain, message, and JSON-RPC error payloads
 - expanded `npm run smoke:mcp` to verify OpenAPI availability, ChatGPT Actions `list_tasks` response shape, and required real `agent_action_events` audit writes with `--write --audit`
 - expanded `npm run smoke:mcp` across search, briefing, get-task, update, complete, and ChatGPT Actions search/list checks
+- added MCP smoke `--provision` mode to create disposable full/read-only Power-plan API keys for scoped real endpoint verification
 - added optional trace metadata to MCP `complete_task` so completion calls can be audited with source agent and external reference context
 - expanded `npm run smoke:stripe -- --write --webhook` to post signed subscription events, verify unknown-price fail-closed behavior, verify paid/free tier transitions, and verify duplicate webhook idempotency against disposable Supabase/Stripe test data
 - expanded `npm run smoke:stripe -- --write --webhook` to verify free/pro/power quota plan-state boundaries after signed webhook tier changes
@@ -144,7 +145,7 @@
 - smoke test MCP JSON-RPC and ChatGPT Actions OpenAPI/API-key flow
 - smoke test authenticated MCP tool execution against real task data
 - smoke test MCP `create_task` idempotency replay against real task data
-- smoke test scoped MCP key behavior and `agent_action_events` writes against a real Supabase project
+- smoke test scoped MCP key behavior and `agent_action_events` writes against a real Supabase project with `npm run smoke:mcp -- --provision --write --audit`
 - complete Quill/founder review of `app/(marketing)/page.tsx` before public launch
 
 ## Medium priority

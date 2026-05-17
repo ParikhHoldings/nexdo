@@ -290,3 +290,26 @@ test('Connect AI no-key guidance deep-links to API settings', () => {
   expect(source).toContain('href="/settings?tab=api"')
   expect(source).not.toContain('href="/settings" className="underline"')
 })
+
+test('MCP smoke can provision disposable scoped API keys', () => {
+  const source = readFileSync('scripts/smoke-mcp.mjs', 'utf8')
+
+  expect(source).toContain("const provisionKeys = args.has('--provision')")
+  expect(source).toContain('async function provisionSmokeKeys()')
+  expect(source).toContain('async function createProvisionedProfile(')
+  expect(source).toContain("subscription_tier: 'power'")
+  expect(source).toContain('api_key_hash: hashApiKey(key)')
+  expect(source).toContain("api_key_scopes: scopes")
+  expect(source).toContain("password: randomBytes(24).toString('base64url')")
+  const readOnlyProvision = source.match(
+    /const readOnly = await createProvisionedProfile\(supabase, 'readonly', \[([\s\S]*?)\]\)/
+  )
+  expect(readOnlyProvision).toBeTruthy()
+  const readOnlyScopes = readOnlyProvision?.[1] ?? ''
+  expect(readOnlyScopes).toContain("'tasks:read'")
+  expect(readOnlyScopes).toContain("'briefing:read'")
+  expect(readOnlyScopes).not.toContain("'tasks:write'")
+  expect(source).toContain(".from('profiles')")
+  expect(source).toContain('await cleanupProvisionedUsers(supabase, users)')
+  expect(source).toContain('await cleanupProvisionedUsers(provisioned.supabase, provisioned.users)')
+})

@@ -34,6 +34,7 @@ Before production billing is treated as launch-ready, run the webhook smoke agai
 ## 2026-05-17 - Agent write smokes must exercise the full task tool path
 ### Decision
 `npm run smoke:mcp` should call the actual MCP and ChatGPT Actions read surfaces, and its write mode should create, replay, read, update, complete, and optionally audit a disposable task. MCP `complete_task` accepts optional source-agent metadata so completion events can be traced like create and update events.
+When run with `--provision`, it should create disposable Power-plan profiles with full-access and read-only scoped API keys so external-agent verification does not depend on manual key generation.
 
 ### Why
 Listing tools is not enough evidence that an external agent can use Nexdo as a task layer. Launch verification needs to prove the advertised tools execute against real task data and that agent writes leave useful audit context.

@@ -141,7 +141,7 @@ Current evidence:
 - `/api/mcp/actions/[tool]` uses a shared formatter for action responses.
 - `search_tasks` filters title, context, and tags in the MCP handler.
 - `npm run test:e2e` covers OpenAPI, action auth, CORS, and unsupported billing guardrails.
-- `npm run smoke:mcp` exists for real API-key list/search/briefing/get/update/complete/idempotency checks, ChatGPT Actions list/search response-shape checks, optional read-only scope denial, and required `agent_action_events` audit verification with `--write --audit` once a real environment is configured.
+- `npm run smoke:mcp` exists for real API-key list/search/briefing/get/update/complete/idempotency checks, ChatGPT Actions list/search response-shape checks, optional read-only scope denial, provisioned disposable scoped keys, and required `agent_action_events` audit verification with `--provision --write --audit` once a real environment is configured.
 
 ### 2. Agent traceability
 Agent-created work must be distinguishable from human-created work.
@@ -161,7 +161,7 @@ Current evidence:
 - MCP create/update/complete schemas expose agent metadata fields.
 - The idempotency migration and handler logic exist.
 - `npm run smoke:supabase -- --write` can verify the unique database index rejects duplicate `source_agent_id` plus `external_ref` task rows.
-- `npm run smoke:mcp -- --write --audit` can verify real `create_task`, `update_task`, and `complete_task` audit rows with `source_agent_id` plus `external_ref` when Supabase service-role env is loaded.
+- `npm run smoke:mcp -- --provision --write --audit` can verify real `create_task`, `update_task`, and `complete_task` audit rows with `source_agent_id` plus `external_ref` when Supabase service-role env is loaded.
 - Real Supabase/MCP smoke is still required before claiming production readiness.
 
 ### 3. Least privilege and audit
@@ -179,7 +179,7 @@ Current evidence:
 - Hashed key storage and key hints exist.
 - `/settings/mcp` includes prerequisite- and scope-aware setup, disabled no-key connection testing, full-key guidance, and activity surfaces.
 - `/api/mcp/events` filters activity by the authenticated user as well as relying on database policies.
-- `npm run smoke:mcp` can verify read-only scoped keys deny writes and, with `--write --audit`, verify real audit writes.
+- `npm run smoke:mcp` can verify read-only scoped keys deny writes and, with `--provision --write --audit`, create disposable scoped keys and verify real audit writes.
 - Real Supabase/API-key smoke remains a launch blocker.
 
 ## Monday early-access success criteria

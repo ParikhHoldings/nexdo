@@ -32,6 +32,7 @@
 - Normalized Connect AI test-connection and agent-activity error messages across plain, message, and JSON-RPC payloads.
 - Expanded `npm run smoke:mcp` to cover OpenAPI availability, ChatGPT Actions `list_tasks` shape, and real `agent_action_events` audit rows when run with `--write --audit`.
 - Expanded MCP smoke execution across search, briefing, get-task, update, complete, and ChatGPT Actions search/list checks instead of only checking tool listing.
+- Added MCP smoke `--provision` mode to create disposable full/read-only Power-plan API keys for scoped real endpoint verification.
 - Added optional trace metadata to `complete_task` so agent completion calls can carry `source_agent_id`, `external_ref`, `ingestion_intent`, and bounded metadata into audit rows.
 - Expanded `npm run smoke:stripe -- --write --webhook` so Stripe test-mode verification can post signed webhook events, check unknown-price fail-closed behavior, verify paid/free tier transitions, and prove duplicate-event idempotency with disposable test data.
 - Expanded Stripe webhook smoke to verify free/pro/power quota plan-state boundaries after signed tier-change events.
