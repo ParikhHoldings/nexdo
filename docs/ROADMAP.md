@@ -18,11 +18,11 @@
 - `npm run smoke:app` now verifies authenticated app-cookie task CRUD, task-note routes, and seeded agent-review save behavior against a supplied app URL and real Supabase env.
 - Playwright tests cover DB-backed MCP tool handler and API-key validation behavior through an in-memory Supabase double, including owned reads, search, briefing, create idempotency, quota ordering, mutations, agent task-note append/readback, audit logging, hashed-key lookup, legacy-key migration, and paid-plan gating.
 - GitHub Actions verification exists for pull requests and pushes to `main`/`staging`, covering install, lint, typecheck, build, dependency audit, and Playwright smoke testing.
-- PR #3 Web rails passed on inspected heads in this pass, including head `3f0e288489fcff03eeadbd71ed83ca437db721f8`; inspect current checks after each push before treating the newest head as current-green.
-- Vercel preview deployment is volatile by head: inspected head `3f0e288489fcff03eeadbd71ed83ca437db721f8` and earlier heads passed, while one intermediate head hit the known account build-rate limit.
+- PR #3 Web rails passed on inspected heads in this pass, including head `a9eabf66edc12cee1382d725407c4f591bcb6275`; inspect current checks after each push before treating the newest head as current-green.
+- Vercel preview deployment is volatile by head: inspected head `a9eabf66edc12cee1382d725407c4f591bcb6275` and earlier heads passed, while some intermediate heads hit the known account build-rate limit.
 - Direct remote route smoke against protected previews is blocked by Vercel Deployment Protection until an automation bypass secret or unprotected preview URL is available.
 - Dependency audit is clean after the Next.js 16, ESLint 9, and PostCSS remediation.
-- `npm ci`, `npm run lint`, `npm run typecheck`, `npm run build`, `npm run test:e2e` with 101 tests, dependency audit, and the technical launch smoke partial passed locally on 2026-05-17.
+- `npm ci`, `npm run lint`, `npm run typecheck`, `npm run build`, `npm run test:e2e` with 105 tests, dependency audit, and the technical launch smoke partial passed locally on 2026-05-17.
 - `docs/MVP.md` now defines the smallest trustworthy MVP path around capture, structure, prioritize, brief, bounded execution, and scoped agent task-layer access.
 - Import, billing/quota, MCP, and ChatGPT Actions surfaces exist.
 - File imports now preview task count, sample titles, and plan/cap warnings before tasks are added.

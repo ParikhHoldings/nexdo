@@ -37,8 +37,8 @@ Last checked on 2026-05-17:
 - `npm audit --audit-level=moderate` passed with 0 vulnerabilities
 - `npm run smoke:launch -- --skip-local --skip-providers --technical-only` passed as a partial technical launch smoke; provider smokes, copy approval, and production deploy approval remain separate gates
 - GitHub Actions Web rails run on pull requests and pushes to `main`/`staging`, with install, lint, typecheck, build, dependency audit, and Playwright smoke testing
-- PR #3 passed GitHub Actions Web rails on inspected heads in this pass, including head `e49f393f57fc07338016ffe4b9444539a1cef816` after the malformed MCP JSON-RPC body hardening change
-- Vercel preview deployment passed on inspected head `e49f393f57fc07338016ffe4b9444539a1cef816`; earlier inspected heads also passed, while one intermediate head hit the known Vercel account build-rate limit, so inspect current PR checks before treating any newer head as preview-deploy verified
+- PR #3 passed GitHub Actions Web rails on inspected heads in this pass, including head `a9eabf66edc12cee1382d725407c4f591bcb6275` after the launch-smoke URL/env-preflight alignment
+- Vercel preview deployment passed on inspected head `a9eabf66edc12cee1382d725407c4f591bcb6275`; earlier inspected heads also passed, while some intermediate heads hit the known Vercel account build-rate limit, so inspect current PR checks before treating any newer head as preview-deploy verified
 - direct remote route smoke against protected previews is blocked by Vercel Deployment Protection until `VERCEL_AUTOMATION_BYPASS_SECRET` is provided locally or an unprotected preview URL is used
 
 `npm run verify:env` currently fails because `.env.local` is absent; only `.env.local.example` exists in this workspace. Still unverified: production env, Supabase migrations/auth/profile plus task, task-relationship, and task-note column grants against a real project, OpenAI provider calls, Stripe test-mode flows, scoped MCP/API-key execution, idempotency replay against real task data, agent audit writes, and production deployment rails.
