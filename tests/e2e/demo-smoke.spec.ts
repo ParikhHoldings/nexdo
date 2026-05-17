@@ -508,6 +508,74 @@ test('demo workspace supports all, upcoming, and done lifecycle', async ({
   await expect(page.getByText('Nothing completed yet')).toBeVisible()
 })
 
+test('cancelled tasks remain human-reviewable from all tasks', async ({ page }) => {
+  const now = new Date().toISOString()
+  const cancelledTask = {
+    id: 'cancelled-agent-task',
+    user_id: 'demo-user',
+    title: 'Review cancelled agent handoff',
+    raw_input: 'Review cancelled agent handoff',
+    description: null,
+    status: 'cancelled',
+    priority: 'medium',
+    due_date: null,
+    due_time: null,
+    context: 'An external agent cancelled this task and the human still needs visibility.',
+    source: 'agent',
+    action_type: 'manual',
+    estimated_minutes: 15,
+    energy_level: 'light',
+    people: null,
+    tags: ['agent-review'],
+    parent_task_id: null,
+    related_task_ids: null,
+    agent_output: null,
+    completed_at: null,
+    created_at: now,
+    updated_at: now,
+    source_agent_id: 'agent-alpha',
+    external_ref: 'cancel-42',
+    ingestion_intent: 'update',
+    agent_metadata: { reason: 'duplicate' },
+  }
+
+  await page.addInitScript((task: unknown) => {
+    window.localStorage.setItem('nexdo_demo_tasks', JSON.stringify([task]))
+  }, cancelledTask)
+
+  await page.goto('/all')
+
+  await expect(page.getByRole('heading', { name: 'All Tasks' })).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Review cancelled agent handoff' })
+  ).toHaveCount(0)
+
+  await page.getByRole('button', { name: 'Filters' }).click()
+  const statusFilter = page.getByRole('group', { name: 'Status filter' })
+  await statusFilter.getByRole('button', { name: 'cancelled' }).click()
+  await expect(
+    page.getByRole('heading', { name: 'Review cancelled agent handoff' })
+  ).toBeVisible()
+  await expect(page.getByText('cancelled', { exact: true }).first()).toBeVisible()
+
+  await page
+    .getByRole('heading', { name: 'Review cancelled agent handoff' })
+    .click()
+  await expect(page.getByRole('heading', { name: 'Agent trace' })).toBeVisible()
+  const taskStatus = page.getByRole('group', { name: 'Task status' })
+  await expect(taskStatus.getByRole('button', { name: 'cancelled' })).toHaveClass(
+    /bg-accent/
+  )
+
+  await taskStatus.getByRole('button', { name: 'todo' }).click()
+  await statusFilter.getByRole('button', { name: 'All' }).click()
+  await expect(
+    page.getByRole('main').getByRole('heading', {
+      name: 'Review cancelled agent handoff',
+    })
+  ).toBeVisible()
+})
+
 test('demo settings does not allow free-plan API key generation', async ({ page }) => {
   await page.goto('/settings')
   await page.getByRole('button', { name: 'API' }).click()

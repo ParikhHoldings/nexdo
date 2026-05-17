@@ -51,6 +51,7 @@ Required fields:
 
 Acceptance gate:
 - Users can inspect and edit core task fields.
+- Users can explicitly review and restore cancelled tasks so agent-side cancellation does not hide work from the human owner.
 - Failed authenticated edits/deletes do not leave stale optimistic UI without warning.
 - AI/provider output is validated before becoming task data.
 - Generic user edits cannot spoof server-managed agent output.
@@ -58,6 +59,7 @@ Acceptance gate:
 
 Current evidence:
 - `TaskDetail` edit mode supports the MVP task fields, including optional due time and energy level.
+- All Tasks defaults to active work but can filter into `done` and `cancelled`; task detail includes `cancelled` in the human status selector.
 - The task store rolls back failed authenticated edit/delete mutations and surfaces visible app notifications.
 - `lib/ai-response-validation.ts` bounds OpenAI output.
 - `PATCH /api/tasks/[id]` uses `lib/task-validation.ts` to allowlist user-editable fields and reject protected/server-managed fields such as `user_id`, `completed_at`, `source_agent_id`, and `agent_output`.

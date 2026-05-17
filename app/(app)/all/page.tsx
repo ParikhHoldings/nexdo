@@ -12,6 +12,16 @@ import type { TaskPriority, TaskStatus } from '@/lib/database.types'
 
 type SortOption = 'created' | 'due_date' | 'priority' | 'title'
 
+const activeStatuses: TaskStatus[] = ['todo', 'in_progress', 'waiting']
+const statusFilters: Array<TaskStatus | 'all'> = [
+  'all',
+  'todo',
+  'in_progress',
+  'waiting',
+  'done',
+  'cancelled',
+]
+
 const priorityOrder: Record<TaskPriority, number> = {
   urgent: 0,
   high: 1,
@@ -29,7 +39,10 @@ export default function AllTasksPage() {
 
   // Filter and sort tasks
   const filteredTasks = useMemo(() => {
-    let result = tasks.filter((t) => t.status !== 'done' && t.status !== 'cancelled')
+    let result =
+      statusFilter === 'all'
+        ? tasks.filter((t) => activeStatuses.includes(t.status))
+        : tasks.filter((t) => t.status === statusFilter)
 
     // Search filter
     if (search) {
@@ -40,11 +53,6 @@ export default function AllTasksPage() {
           t.context?.toLowerCase().includes(searchLower) ||
           t.tags?.some((tag) => tag.toLowerCase().includes(searchLower))
       )
-    }
-
-    // Status filter
-    if (statusFilter !== 'all') {
-      result = result.filter((t) => t.status === statusFilter)
     }
 
     // Priority filter
@@ -73,6 +81,12 @@ export default function AllTasksPage() {
     return result
   }, [tasks, search, statusFilter, priorityFilter, sortBy])
 
+  const activeTaskCount = tasks.filter((t) => activeStatuses.includes(t.status)).length
+  const baseResultCount =
+    statusFilter === 'all'
+      ? activeTaskCount
+      : tasks.filter((t) => t.status === statusFilter).length
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
       {/* Header */}
@@ -82,7 +96,7 @@ export default function AllTasksPage() {
           <h1 className="text-2xl font-bold text-zinc-100">All Tasks</h1>
         </div>
         <p className="text-zinc-500 mt-1">
-          {tasks.filter((t) => t.status !== 'done').length} active tasks
+          {activeTaskCount} active task{activeTaskCount !== 1 && 's'}
         </p>
       </header>
 
@@ -135,8 +149,12 @@ export default function AllTasksPage() {
             {/* Status filter */}
             <div>
               <label className="text-sm text-zinc-400 block mb-2">Status</label>
-              <div className="flex flex-wrap gap-2">
-                {['all', 'todo', 'in_progress', 'waiting'].map((status) => (
+              <div
+                className="flex flex-wrap gap-2"
+                role="group"
+                aria-label="Status filter"
+              >
+                {statusFilters.map((status) => (
                   <button
                     key={status}
                     onClick={() => setStatusFilter(status as TaskStatus | 'all')}
@@ -237,7 +255,7 @@ export default function AllTasksPage() {
         <p className="text-center text-sm text-zinc-500 mt-6">
           Showing {filteredTasks.length} task{filteredTasks.length !== 1 && 's'}
           {(search || statusFilter !== 'all' || priorityFilter !== 'all') &&
-            ` (filtered from ${tasks.filter((t) => t.status !== 'done').length})`}
+            ` (filtered from ${baseResultCount})`}
         </p>
       )}
     </div>

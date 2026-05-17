@@ -190,6 +190,13 @@ function AgentResult({ output, actionType }: AgentResultProps) {
 const PRIORITIES: TaskPriority[] = ['urgent', 'high', 'medium', 'low']
 const ACTION_TYPES: ActionType[] = ['manual', 'research', 'draft', 'prep', 'remind']
 const ENERGY_LEVELS: EnergyLevel[] = ['deep', 'light', 'quick']
+const TASK_STATUSES: Task['status'][] = [
+  'todo',
+  'in_progress',
+  'waiting',
+  'done',
+  'cancelled',
+]
 const REVIEW_STATUS_LABELS: Record<AgentReviewStatus, string> = {
   unreviewed: 'Unreviewed',
   verified: 'Verified',
@@ -870,23 +877,25 @@ export function TaskDetail() {
               {/* Status selector */}
               <div>
                 <span className="text-sm text-zinc-400 block mb-2">Status</span>
-                <div className="flex flex-wrap gap-2">
-                  {(['todo', 'in_progress', 'waiting', 'done'] as const).map(
-                    (status) => (
-                      <button
-                        key={status}
-                        onClick={() => handleStatusChange(status)}
-                        className={cn(
-                          'px-3 py-1.5 text-sm rounded-lg transition-colors',
-                          task.status === status
-                            ? 'bg-accent text-white'
-                            : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
-                        )}
-                      >
-                        {status.replace('_', ' ')}
-                      </button>
-                    )
-                  )}
+                <div
+                  className="flex flex-wrap gap-2"
+                  role="group"
+                  aria-label="Task status"
+                >
+                  {TASK_STATUSES.map((status) => (
+                    <button
+                      key={status}
+                      onClick={() => handleStatusChange(status)}
+                      className={cn(
+                        'px-3 py-1.5 text-sm rounded-lg transition-colors',
+                        task.status === status
+                          ? 'bg-accent text-white'
+                          : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
+                      )}
+                    >
+                      {status.replace('_', ' ')}
+                    </button>
+                  ))}
                 </div>
               </div>
 

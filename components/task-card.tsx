@@ -54,6 +54,7 @@ export const TaskCard = forwardRef<HTMLDivElement, TaskCardProps>(function TaskC
 
   const isExecutable = ['research', 'draft', 'prep'].includes(task.action_type)
   const isDone = task.status === 'done'
+  const isCancelled = task.status === 'cancelled'
   const showAgentTrace = hasAgentTrace(task)
   const agentLabel = agentTraceLabel(task, 20)
 
@@ -69,7 +70,7 @@ export const TaskCard = forwardRef<HTMLDivElement, TaskCardProps>(function TaskC
         'cursor-pointer transition-all duration-200',
         'hover:bg-zinc-800/50 hover:border-zinc-700',
         getPriorityColor(task.priority),
-        isDone && 'opacity-60'
+        (isDone || isCancelled) && 'opacity-60'
       )}
       onClick={handleClick}
     >
@@ -94,7 +95,7 @@ export const TaskCard = forwardRef<HTMLDivElement, TaskCardProps>(function TaskC
             <h3
               className={cn(
                 'text-sm font-medium text-zinc-100 mb-1',
-                isDone && 'line-through text-zinc-500'
+                (isDone || isCancelled) && 'line-through text-zinc-500'
               )}
             >
               {task.title}
@@ -151,6 +152,15 @@ export const TaskCard = forwardRef<HTMLDivElement, TaskCardProps>(function TaskC
                 </Badge>
               )}
 
+              {isCancelled && (
+                <Badge
+                  variant="outline"
+                  className="border-zinc-700 bg-zinc-800/50 text-zinc-400"
+                >
+                  cancelled
+                </Badge>
+              )}
+
               {showAgentTrace && (
                 <span
                   className="inline-flex items-center rounded-full border border-cyan-500/20 bg-cyan-500/10 px-2 py-0.5 text-xs font-medium text-cyan-300"
@@ -190,7 +200,7 @@ export const TaskCard = forwardRef<HTMLDivElement, TaskCardProps>(function TaskC
 
           {/* Actions */}
           <div className="no-detail-trigger flex items-start gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            {isExecutable && !isDone && (
+            {isExecutable && !isDone && !isCancelled && (
               <button
                 className="p-1.5 hover:bg-zinc-700 rounded-md transition-colors"
                 title="Run agent"

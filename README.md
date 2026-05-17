@@ -16,7 +16,7 @@ This repo currently contains a Next.js app with:
 - imports from Todoist, manual Google/Microsoft access-token imports, and file-based task exports such as CSV, ICS, JSON/Trello/Things-style sources, including client-side demo file imports for logged-out visitors
 - file-import previews with sample task titles and plan/cap warnings before tasks are added
 - Stripe plan, checkout, portal, webhook, quota, and rate-limit scaffolding
-- MCP and ChatGPT Actions surfaces for external agents to list, create, complete, update, search, and brief tasks, including updates to core planning metadata such as due time, action type, estimate, energy, people, tags, and supported task statuses including `cancelled`
+- MCP and ChatGPT Actions surfaces for external agents to list, create, complete, update, search, and brief tasks, including updates to core planning metadata such as due time, action type, estimate, energy, people, tags, and supported task statuses including `cancelled`; cancelled work remains human-reviewable and restorable from All Tasks
 - Power/team-gated API access, scoped API-key permissions, hashed one-time-reveal API keys, restricted browser-visible profile columns, API-key rotation rate limits, prerequisite- and scope-aware MCP setup UI, and an agent action audit table for MCP/API-key calls
 - direct browser task writes are column-limited so agent output, agent source metadata, ingestion intent, and completion timestamps stay server-managed
 - a recent agent activity surface on the MCP settings page
@@ -30,7 +30,7 @@ Last checked on 2026-05-17:
 - `npm run lint` passed
 - `npm run typecheck` passed
 - `npm run build` passed
-- `npm run test:e2e` passed 84 tests covering public landing/signup demo CTA smoke, logged-out demo workflows, task workspace lifecycle, mobile navigation open/close behavior, local-date due-today behavior, file-import preview/confirm flow, agent output history/review notes, persistent appearance and browser reminder settings, MCP/OpenAPI/action auth smoke tests, DB-backed MCP handler and API-key validation coverage, MCP/OpenAPI `cancelled` status contract alignment, billing guardrails, deterministic task-intelligence coverage, import parser coverage, Stripe entitlement mapping, task route validation, and local validation helper contracts
+- `npm run test:e2e` passed 85 tests covering public landing/signup demo CTA smoke, logged-out demo workflows, task workspace lifecycle, mobile navigation open/close behavior, local-date due-today behavior, file-import preview/confirm flow, agent output history/review notes, persistent appearance and browser reminder settings, MCP/OpenAPI/action auth smoke tests, DB-backed MCP handler and API-key validation coverage, MCP/OpenAPI `cancelled` status contract alignment plus cancelled-task UI review/restore coverage, billing guardrails, deterministic task-intelligence coverage, import parser coverage, Stripe entitlement mapping, task route validation, and local validation helper contracts
 - `npm audit --audit-level=moderate` passed with 0 vulnerabilities
 - `npm run smoke:launch -- --skip-local --skip-providers --technical-only` passed; provider smokes, copy approval, and production deploy approval remain separate gates
 - PR #3 Web rails passed
