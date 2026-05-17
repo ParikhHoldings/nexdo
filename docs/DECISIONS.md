@@ -62,13 +62,13 @@ Authenticated task imports now save through the service-role path after auth/quo
 
 ## 2026-05-17 - Browser task-note metadata is column-limited
 ### Decision
-Direct authenticated browser Supabase inserts on `task_notes` are limited to `task_id` and `content`, while note metadata such as `note_type` and `created_at` stays server-managed. Authenticated task-note API routes should write note metadata through service-role paths after checking task ownership.
+Direct authenticated browser Supabase inserts on `task_notes` are limited to `task_id` and `content`, while note metadata such as `note_type` and `created_at` stays server-managed. New task-note rows must also satisfy the same non-empty, 2,000-character content bound used by the app route. Authenticated task-note API routes should write note metadata through service-role paths after checking task ownership.
 
 ### Why
 Task notes are part of the human and agent handoff surface. RLS ownership is enough to keep notes private, but not enough to prevent a signed-in user from spoofing metadata that should carry product meaning later, such as agent-result or file/link note types.
 
 ### Impact
-Future task-note features should keep content user-editable and metadata deliberate. Real Supabase smoke must verify both allowed note-content inserts and denied task-note metadata spoofing.
+Future task-note features should keep content user-editable and metadata deliberate. Real Supabase smoke must verify allowed note-content inserts, denied task-note metadata spoofing, and denied over-limit note content.
 
 ## 2026-05-17 - OpenAI smoke must cover every bounded execution type
 ### Decision

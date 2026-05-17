@@ -692,6 +692,8 @@ test('task note helpers and route keep notes owned and bounded', () => {
   expect(routeSource).toContain(".from('task_notes')")
   expect(routeSource).toContain("note_type: 'note'")
   expect(migrationSource).toContain('grant insert (')
+  expect(migrationSource).toContain('task_notes_content_length')
+  expect(migrationSource).toContain('between 1 and 2000')
   expect(migrationSource).toContain('task_id')
   expect(migrationSource).toContain('content')
   expect(migrationSource).not.toContain('note_type,')

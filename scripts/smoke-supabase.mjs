@@ -309,6 +309,17 @@ async function writeSmoke() {
     }
     console.log('ok RLS task note insert')
 
+    const { error: longNoteInsertError } = await userClient
+      .from('task_notes')
+      .insert({
+        task_id: insertedTask.id,
+        content: 'x'.repeat(2001),
+      })
+    if (!longNoteInsertError) {
+      fail('direct task note insert could bypass content length limit')
+    }
+    console.log('ok direct task note insert enforces content length')
+
     const { data: updatedTask, error: updateError } = await userClient
       .from('tasks')
       .update({ status: 'done' })

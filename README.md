@@ -9,7 +9,7 @@ This repo currently contains a Next.js app with:
 - natural-language task parsing with due-date/due-time extraction, concise fallback titles, daily briefing, prioritization, and limited agent execution through OpenAI
 - bounded validation for OpenAI JSON output before parsed tasks, briefings, prioritization, or agent results are returned or saved
 - shared task-create and task-patch validation that rejects protected/server-managed fields before quota or database mutation
-- task-detail notes for human context and future agent handoffs, with demo localStorage persistence, authenticated owned-task note routes, column-limited browser note metadata, and MCP/ChatGPT Actions support for external agents to append reviewable notes
+- task-detail notes for human context and future agent handoffs, with demo localStorage persistence, authenticated owned-task note routes, column-limited browser note metadata, database-bounded note content, and MCP/ChatGPT Actions support for external agents to append reviewable notes
 - reviewable agent output history with verification status and notes for bounded research, draft, and prep runs, with a shared executable-action contract that keeps manual/reminder tasks out of AI-run controls
 - localStorage-backed demo-mode task and profile data when Supabase is unavailable or the visitor is logged out
 - persistent dark/light appearance preferences for the app workspace

@@ -354,6 +354,8 @@ test('server-managed task fields stay on service-role write paths', () => {
 
   expect(noteMigration).toContain('revoke insert on table task_notes from authenticated')
   expect(noteMigration).toContain('revoke update on table task_notes from authenticated')
+  expect(noteMigration).toContain('task_notes_content_length')
+  expect(noteMigration).toContain('between 1 and 2000')
   const noteInsertGrant = noteMigration.match(
     /grant insert \(([\s\S]*?)\) on table task_notes to authenticated;/i
   )?.[1]
@@ -394,6 +396,7 @@ test('server-managed task fields stay on service-role write paths', () => {
   expect(supabaseSmoke).toContain('task_notes schema')
   expect(supabaseSmoke).toContain('direct task note insert cannot write metadata columns')
   expect(supabaseSmoke).toContain('ok RLS task note insert')
+  expect(supabaseSmoke).toContain('direct task note insert enforces content length')
 
   for (const route of [
     'csv',

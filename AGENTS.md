@@ -32,7 +32,7 @@ The product promise should be grounded in what the code actually supports:
 - hashed API-key storage with one-time key reveal, short key hints in settings, and legacy raw-key migration/fallback
 - narrowed browser-visible profile columns and direct profile self-updates so clients can read/edit needed preferences without direct access to Stripe IDs, raw/hash API-key material, quota internals, or billing mutation fields
 - narrowed direct browser task insert/update columns so agent output, source-agent metadata, ingestion intent, and completion timestamps remain server-managed
-- narrowed direct browser task-note insert/update columns so note type and creation time remain server-managed while note content stays user-editable
+- narrowed direct browser task-note insert/update columns so note type and creation time remain server-managed while bounded note content stays user-editable
 - authenticated import routes persist imported task rows through the service-role path after auth/quota checks so imported completion timestamps and external source references can be kept without reopening those columns to direct browser writes
 - bounded OpenAI response validation for task parsing, prioritization, briefing, and research/draft/prep output before provider content is returned or persisted
 - shared task-create and task-patch validation in `lib/task-validation.ts`, so human task routes reject protected/server-managed fields before quota consumption or database mutation
