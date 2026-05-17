@@ -54,10 +54,10 @@ Current local verification from 2026-05-17:
 - `npm run smoke:launch -- --skip-local --skip-providers --technical-only` passed; provider smokes, public-copy approval, and production deploy approval remain separate manual gates
 - `npm run verify:env` failed because `.env.local` is absent; only `.env.local.example` exists in this workspace
 
-Current PR verification:
+Current PR verification from this pass:
 - GitHub Actions Web rails include install, lint, typecheck, build, dependency audit, and Playwright smoke testing.
-- PR #3 Web rails passed on 2026-05-17 after the task-source spoof hardening.
-- Vercel preview deployment and Vercel Preview Comments passed on the same checked head.
+- PR #3 Web rails passed on 2026-05-17 after the task-source spoof hardening and docs refresh.
+- Vercel preview deployment passed on the source-hardening code head, but the latest docs-only head hit the known Vercel account build-rate limit.
 - Direct remote route smoke against protected previews is blocked by Vercel Deployment Protection until `VERCEL_AUTOMATION_BYPASS_SECRET` is available locally or an unprotected preview URL is used.
 - Always inspect current PR checks after later pushes before treating preview deploy as current-green. A Vercel build-rate-limit failure is not evidence of an app build failure, but it does mean that head does not have fresh preview-deploy evidence.
 
