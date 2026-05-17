@@ -64,8 +64,8 @@ Current local verification from 2026-05-17:
 
 Recent PR verification evidence:
 - GitHub Actions Web rails run on pull requests and pushes to `main`/`staging`, with install, lint, typecheck, build, dependency audit, and Playwright smoke testing.
-- PR #3 GitHub Actions Web rails passed on the docs-refresh head `4a06840023b93aa5431785480e0451f1135edfc4`. Recheck PR status after every newer push before treating the branch as current-green.
-- Vercel preview deployment last passed on the inspected agent-review feature head `fa6aa2ad5fc5b3fb66af0adf6e59ad8e2e9cf374` with preview URL `https://ph-nexdo-git-codex-launch-rea-42bdec-nathan-happywpcos-projects.vercel.app`; the docs-refresh head `4a06840023b93aa5431785480e0451f1135edfc4` hit Vercel account build-rate limiting, so it has no fresh preview-deploy evidence.
+- PR #3 GitHub Actions Web rails and Vercel preview deployment passed on the inspected due-time scan-ordering head `1d12864044597dc7202ab068bc423f9ba25cf667`. Recheck PR status after every newer push before treating the branch as current-green.
+- The latest checked Vercel branch preview URL was `https://ph-nexdo-git-codex-launch-rea-42bdec-nathan-happywpcos-projects.vercel.app`.
 - Direct remote route smoke against that protected preview URL failed on 2026-05-17 at desktop `/` because Vercel Deployment Protection is still active; provide `VERCEL_AUTOMATION_BYPASS_SECRET` locally or use an unprotected preview/production URL before treating rendered route smoke as verified.
 - Always inspect current PR checks after later pushes before treating preview deploy as current-green. A Vercel build-rate-limit failure is not evidence of an app build failure, but it does mean that head does not have fresh preview-deploy evidence.
 

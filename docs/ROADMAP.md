@@ -19,8 +19,8 @@
 - `npm run smoke:app` now verifies authenticated app-cookie task CRUD, task-note routes, and seeded agent-review save behavior against a supplied app URL and real Supabase env.
 - Playwright tests cover DB-backed MCP tool handler and API-key validation behavior through an in-memory Supabase double, including owned reads, search, briefing, create idempotency, quota ordering, mutations, agent task-note append/readback, audit logging, hashed-key lookup, legacy-key migration, and paid-plan gating.
 - GitHub Actions verification exists for pull requests and pushes to `main`/`staging`, covering install, lint, typecheck, build, dependency audit, and Playwright smoke testing.
-- PR #3 Web rails passed on the docs-refresh head `4a06840023b93aa5431785480e0451f1135edfc4`; inspect current checks after each push before treating the newest head as current-green.
-- Vercel preview deployment last passed on the inspected agent-review feature head `fa6aa2ad5fc5b3fb66af0adf6e59ad8e2e9cf374` at `https://ph-nexdo-git-codex-launch-rea-42bdec-nathan-happywpcos-projects.vercel.app`; the docs-refresh head `4a06840023b93aa5431785480e0451f1135edfc4` hit Vercel account build-rate limiting and has no fresh preview-deploy evidence.
+- PR #3 Web rails and Vercel preview deployment passed on the inspected due-time scan-ordering head `1d12864044597dc7202ab068bc423f9ba25cf667`; inspect current checks after each push before treating the newest head as current-green.
+- The latest checked Vercel branch preview URL was `https://ph-nexdo-git-codex-launch-rea-42bdec-nathan-happywpcos-projects.vercel.app`.
 - Direct remote route smoke against that protected preview failed at desktop `/` because Vercel Deployment Protection is active until an automation bypass secret or unprotected preview URL is available.
 - Dependency audit is clean after the Next.js 16, ESLint 9, and PostCSS remediation.
 - `npm ci`, `npm run lint`, `npm run typecheck`, `npm run build`, `npm run test:e2e` with 112 tests, dependency audit, and the technical launch smoke partial passed locally on 2026-05-17.

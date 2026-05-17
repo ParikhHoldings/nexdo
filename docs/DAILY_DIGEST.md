@@ -32,6 +32,7 @@
 - Added due-time and energy-level editing/display to task detail so the MVP task structure is editable from the core workspace.
 - Carried parsed due times from natural-language capture through demo tasks, authenticated task creation, MCP-created tasks, validators, and OpenAI smoke expectations.
 - Ordered All Tasks due-date sorting and Upcoming date groups by same-day due time so timed work scans before untimed work.
+- Verified PR #3 due-time scan-ordering head `1d12864044597dc7202ab068bc423f9ba25cf667` passed GitHub Web rails and Vercel preview deployment; protected-preview route smoke remains blocked by Vercel Deployment Protection without `VERCEL_AUTOMATION_BYPASS_SECRET` or an unprotected URL.
 - Tightened shared task date/time validation so human routes, AI task sanitization/output validation, and MCP updates reject impossible calendar dates and out-of-range local times.
 - Moved deterministic fallback task parsing onto the shared due-date normalizer for explicit dates.
 - Moved import date/time parsing onto the shared schedule normalizers and preserved Google/Microsoft due times from imported datetime fields.
