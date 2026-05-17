@@ -256,7 +256,7 @@ export default function MCPSettingsPage() {
           <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg">
             <p className="text-sm text-amber-400">
               No API key found.{' '}
-              <Link href="/settings" className="underline">
+              <Link href="/settings?tab=api" className="underline">
                 Generate one in Settings &gt; API
               </Link>
             </p>

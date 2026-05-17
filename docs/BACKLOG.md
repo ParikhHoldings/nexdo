@@ -7,6 +7,7 @@
 - tightened the landing page draft toward the verified demo path, bounded AI assistance, and less overbroad productivity/security/agent wording
 - added Playwright coverage so the landing page primary CTA routes to the working `/today` demo
 - added a direct signup-page demo path so preview visitors are not forced through account creation before trying the product
+- deep-linked Connect AI no-key guidance to `/settings?tab=api` so paid users land on API-key generation instead of the profile settings tab
 
 ## Completed 2026-05-16
 - read and updated the repo-level agent context and all existing Markdown/text operating files

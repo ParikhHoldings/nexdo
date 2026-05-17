@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { readFileSync } from 'node:fs'
 import { formatActionToolResult } from '../../lib/mcp-action-results'
 
 const actionTools = [
@@ -185,4 +186,11 @@ test('billing checkout rejects unsupported client-selected plans', async ({
   expect(response.status()).toBe(400)
   const body = await response.json()
   expect(body.error).toContain('Invalid plan')
+})
+
+test('Connect AI no-key guidance deep-links to API settings', () => {
+  const source = readFileSync('app/(app)/settings/mcp/page.tsx', 'utf8')
+
+  expect(source).toContain('href="/settings?tab=api"')
+  expect(source).not.toContain('href="/settings" className="underline"')
 })
