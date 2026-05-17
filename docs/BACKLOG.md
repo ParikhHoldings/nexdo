@@ -23,6 +23,7 @@
 - surfaced authenticated task edit/delete server messages while still rolling back optimistic local changes
 - surfaced authenticated import server messages before generic import errors so quota/profile failures remain actionable
 - surfaced authenticated Done-page bulk-delete server messages while restoring failed deletes locally
+- made Google Tasks and Microsoft To Do imports fail closed when a nested provider task-list fetch fails instead of silently importing partial data
 
 ## Completed 2026-05-16
 - read and updated the repo-level agent context and all existing Markdown/text operating files

@@ -44,14 +44,16 @@ export async function POST(request: Request) {
     }
 
     const listsData = await listsResponse.json()
-    const lists = listsData.value || []
+    const lists = Array.isArray(listsData.value) ? listsData.value : []
 
     // Fetch tasks from each list
     const allTasks: TaskInsert[] = []
 
-    for (const list of lists as Array<{ id: string }>) {
+    for (const list of lists as Array<{ id?: string }>) {
+      if (!list.id) continue
+
       const tasksResponse = await fetch(
-        `https://graph.microsoft.com/v1.0/me/todo/lists/${list.id}/tasks`,
+        `https://graph.microsoft.com/v1.0/me/todo/lists/${encodeURIComponent(list.id)}/tasks`,
         {
           headers: {
             'Authorization': `Bearer ${access_token}`,
@@ -59,13 +61,20 @@ export async function POST(request: Request) {
         }
       )
 
-      if (tasksResponse.ok) {
-        const tasksData = await tasksResponse.json()
-        const tasks = tasksData.value || []
+      if (!tasksResponse.ok) {
+        const errorText = await tasksResponse.text()
+        console.error('Microsoft To Do list API error:', errorText)
+        return NextResponse.json(
+          { error: 'Failed to fetch tasks from a Microsoft To Do list. Please reconnect Microsoft To Do and try again.' },
+          { status: 400 }
+        )
+      }
 
-        for (const task of tasks as Array<Record<string, unknown>>) {
-          allTasks.push(parseMicrosoftTask(task, userId))
-        }
+      const tasksData = await tasksResponse.json()
+      const tasks = Array.isArray(tasksData.value) ? tasksData.value : []
+
+      for (const task of tasks as Array<Record<string, unknown>>) {
+        allTasks.push(parseMicrosoftTask(task, userId))
       }
     }
 
