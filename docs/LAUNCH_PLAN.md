@@ -24,10 +24,10 @@ The goal is not a broad public launch. The credible Monday target is a verified 
 - Authenticated app smoke can now verify deployed app-cookie auth, task list/create/update/delete, and task-note validation/create/readback against a real Supabase-backed app session.
 - The MCP settings page now exposes recent agent activity from the audit table when a user is authenticated.
 - Agent task creation now has local idempotency handling through `source_agent_id` plus `external_ref`; real Supabase/API-key replay verification is still required.
-- PR #3 Web rails passed on the latest inspected pushed head in this pass; inspect current checks after each push before treating the newest head as current-green.
+- PR #3 Web rails passed on head `e0a29a357aeb981eadf287d6ac13da55d3ccb066`; inspect current checks after each push before treating the newest head as current-green.
 - GitHub Actions Web rails run on pull requests and pushes to `main`/`staging`, with install, lint, typecheck, build, dependency audit, and Playwright smoke testing so CI matches the documented launch/deploy checklist.
-- Vercel preview deployment is volatile by head: inspected heads in this pass included successful previews and known account build-rate-limit failures, so current preview evidence must be read from the latest PR checks.
-- Remote route smoke against protected previews needs `VERCEL_AUTOMATION_BYPASS_SECRET` or an unprotected preview URL because those previews are behind Vercel Deployment Protection.
+- Vercel preview deployment passed on head `e0a29a357aeb981eadf287d6ac13da55d3ccb066` at `https://ph-nexdo-iw3lqhgvh-nathan-happywpcos-projects.vercel.app`.
+- Remote route smoke against that protected preview still needs `VERCEL_AUTOMATION_BYPASS_SECRET` or an unprotected preview URL because it is behind Vercel Deployment Protection.
 - Strict build rails: TypeScript and lint failures block `npm run build`. Verified locally on 2026-05-17.
 - OpenAI provider verification now has a repeatable smoke script, `npm run smoke:openai`; it rejects placeholder keys and verifies parse, prioritization, briefing, research, draft, and prep output shapes. With `--app`, it also creates a disposable Supabase user and verifies authenticated app parse, prioritize, briefing, and research/draft/prep execution routes, using Vercel protection bypass headers when configured. It still needs to be run with real OpenAI, Supabase, and target app env.
 - App OpenAI helpers now use the same optional `OPENAI_MODEL` default as the smoke script and fall back locally for placeholder keys.

@@ -60,9 +60,9 @@ Current local verification from 2026-05-17:
 
 Current PR verification from this pass:
 - GitHub Actions Web rails run on pull requests and pushes to `main`/`staging`, with install, lint, typecheck, build, dependency audit, and Playwright smoke testing.
-- PR #3 GitHub Actions Web rails passed on the latest inspected pushed head in this pass. Recheck PR status after every newer push before treating the branch as current-green.
-- Vercel preview deployment is per-head evidence: inspected heads in this pass included successful previews and known account build-rate-limit failures. Recheck PR status after every newer push because preview evidence remains per-head.
-- Direct remote route smoke against the current protected preview URL failed on 2026-05-17 at `/` because Vercel Deployment Protection is still active; provide `VERCEL_AUTOMATION_BYPASS_SECRET` locally or use an unprotected preview/production URL before treating route smoke as verified.
+- PR #3 GitHub Actions Web rails passed on head `e0a29a357aeb981eadf287d6ac13da55d3ccb066`. Recheck PR status after every newer push before treating the branch as current-green.
+- Vercel preview deployment passed on head `e0a29a357aeb981eadf287d6ac13da55d3ccb066` with preview URL `https://ph-nexdo-iw3lqhgvh-nathan-happywpcos-projects.vercel.app`.
+- Direct remote route smoke against that protected preview URL failed on 2026-05-17 at desktop `/` because Vercel Deployment Protection is still active; provide `VERCEL_AUTOMATION_BYPASS_SECRET` locally or use an unprotected preview/production URL before treating route smoke as verified.
 - Always inspect current PR checks after later pushes before treating preview deploy as current-green. A Vercel build-rate-limit failure is not evidence of an app build failure, but it does mean that head does not have fresh preview-deploy evidence.
 
 Production environment, Supabase migrations, OpenAI provider calls, Stripe test-mode flows, scoped MCP/API-key execution, idempotency replay against real task data, agent audit writes, and production deployment rails remain unverified in this pass.
