@@ -77,6 +77,7 @@
 - Moved All Tasks and MCP `search_tasks` onto shared metadata search so people and descriptions are searchable alongside title, context, and tags.
 - Aligned MCP tool schemas and ChatGPT Actions OpenAPI with handler support for the `cancelled` task status.
 - Made cancelled tasks human-reviewable from All Tasks and restorable from task detail so agent-side cancellation remains visible.
+- Surfaced non-default task statuses on task cards so agent-updated waiting/in-progress/cancelled work is visible while scanning the workspace.
 - Verified PR #3 Web rails and a Vercel preview deployment after the route-smoke rail; later docs-only heads can still be Vercel rate-limited.
 - Added `npm run smoke:routes` and wired it into the launch smoke so preview/production route rendering is checked at desktop and mobile widths.
 - Moved import preview cap warnings into a shared helper with local coverage for demo caps and Free-plan near-limit warning copy.

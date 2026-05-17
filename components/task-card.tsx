@@ -18,11 +18,30 @@ import { agentTraceLabel, hasAgentTrace } from '@/lib/agent-trace'
 import { useTaskStore } from '@/lib/store'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Badge, TagBadge, PersonBadge } from '@/components/ui/badge'
-import type { Task } from '@/lib/database.types'
+import type { Task, TaskStatus } from '@/lib/database.types'
 
 interface TaskCardProps {
   task: Task
   showReasoning?: string
+}
+
+const STATUS_BADGE: Partial<Record<TaskStatus, { label: string; className: string }>> = {
+  in_progress: {
+    label: 'in progress',
+    className: 'border-blue-500/20 bg-blue-500/10 text-blue-300',
+  },
+  waiting: {
+    label: 'waiting',
+    className: 'border-amber-500/20 bg-amber-500/10 text-amber-300',
+  },
+  done: {
+    label: 'done',
+    className: 'border-emerald-500/20 bg-emerald-500/10 text-emerald-300',
+  },
+  cancelled: {
+    label: 'cancelled',
+    className: 'border-zinc-700 bg-zinc-800/50 text-zinc-400',
+  },
 }
 
 export const TaskCard = forwardRef<HTMLDivElement, TaskCardProps>(function TaskCard(
@@ -55,6 +74,7 @@ export const TaskCard = forwardRef<HTMLDivElement, TaskCardProps>(function TaskC
   const isExecutable = ['research', 'draft', 'prep'].includes(task.action_type)
   const isDone = task.status === 'done'
   const isCancelled = task.status === 'cancelled'
+  const statusBadge = STATUS_BADGE[task.status]
   const showAgentTrace = hasAgentTrace(task)
   const agentLabel = agentTraceLabel(task, 20)
 
@@ -152,12 +172,9 @@ export const TaskCard = forwardRef<HTMLDivElement, TaskCardProps>(function TaskC
                 </Badge>
               )}
 
-              {isCancelled && (
-                <Badge
-                  variant="outline"
-                  className="border-zinc-700 bg-zinc-800/50 text-zinc-400"
-                >
-                  cancelled
+              {statusBadge && (
+                <Badge variant="outline" className={statusBadge.className}>
+                  {statusBadge.label}
                 </Badge>
               )}
 

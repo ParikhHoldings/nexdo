@@ -517,8 +517,36 @@ test('demo workspace supports all, upcoming, and done lifecycle', async ({
   await expect(page.getByText('Nothing completed yet')).toBeVisible()
 })
 
-test('cancelled tasks remain human-reviewable from all tasks', async ({ page }) => {
+test('non-default task statuses remain visible and reviewable from all tasks', async ({ page }) => {
   const now = new Date().toISOString()
+  const waitingTask = {
+    id: 'waiting-agent-task',
+    user_id: 'demo-user',
+    title: 'Wait for partner brief',
+    raw_input: 'Wait for partner brief',
+    description: null,
+    status: 'waiting',
+    priority: 'high',
+    due_date: null,
+    due_time: null,
+    context: 'External agent marked this as waiting on a partner response.',
+    source: 'agent',
+    action_type: 'manual',
+    estimated_minutes: 10,
+    energy_level: 'quick',
+    people: ['Partner Team'],
+    tags: ['agent-review'],
+    parent_task_id: null,
+    related_task_ids: null,
+    agent_output: null,
+    completed_at: null,
+    created_at: now,
+    updated_at: now,
+    source_agent_id: 'agent-beta',
+    external_ref: 'wait-41',
+    ingestion_intent: 'update',
+    agent_metadata: { reason: 'blocked' },
+  }
   const cancelledTask = {
     id: 'cancelled-agent-task',
     user_id: 'demo-user',
@@ -548,13 +576,17 @@ test('cancelled tasks remain human-reviewable from all tasks', async ({ page }) 
     agent_metadata: { reason: 'duplicate' },
   }
 
-  await page.addInitScript((task: unknown) => {
-    window.localStorage.setItem('nexdo_demo_tasks', JSON.stringify([task]))
-  }, cancelledTask)
+  await page.addInitScript((tasks: unknown[]) => {
+    window.localStorage.setItem('nexdo_demo_tasks', JSON.stringify(tasks))
+  }, [waitingTask, cancelledTask])
 
   await page.goto('/all')
 
   await expect(page.getByRole('heading', { name: 'All Tasks' })).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Wait for partner brief' })
+  ).toBeVisible()
+  await expect(page.getByText('waiting', { exact: true })).toBeVisible()
   await expect(
     page.getByRole('heading', { name: 'Review cancelled agent handoff' })
   ).toHaveCount(0)
