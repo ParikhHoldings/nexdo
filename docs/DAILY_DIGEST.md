@@ -21,6 +21,7 @@
 - Made MCP task read/update/complete calls return stable not-found errors for missing or unowned task IDs.
 - Kept authenticated app boot coherent when profile rows are missing or delayed by using a safe fallback profile and visible load errors.
 - Surfaced authenticated task-capture server messages for profile, quota, and save failures.
+- Surfaced authenticated task edit/delete server messages while preserving optimistic rollback.
 
 ### In progress
 - Provider-backed Supabase, OpenAI, Stripe, and MCP smokes remain the main launch-readiness gap.

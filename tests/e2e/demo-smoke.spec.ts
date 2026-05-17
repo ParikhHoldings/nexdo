@@ -156,6 +156,15 @@ test('authenticated task capture surfaces server save messages', () => {
   expect(source).toContain('Your task was not saved. Please try again.')
 })
 
+test('authenticated task mutations surface server failure messages', () => {
+  const source = readFileSync('lib/store.ts', 'utf8')
+
+  expect(source).toContain('payload?.message ||')
+  expect(source).toContain('payload?.error ||')
+  expect(source).toContain('Could not save task changes:')
+  expect(source).toContain('Could not delete task:')
+})
+
 test('demo file import adds tasks without configured auth', async ({ page }) => {
   await page.goto('/import')
 

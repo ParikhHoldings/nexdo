@@ -109,7 +109,12 @@ export const useTaskStore = create<TaskState>((set, get) => ({
       })
         .then(async (response) => {
           if (!response.ok) {
-            throw new Error('Task update failed')
+            const payload = await response.json().catch(() => ({}))
+            throw new Error(
+              payload?.message ||
+                payload?.error ||
+                'Task update failed'
+            )
           }
 
           const savedTask = (await response.json()) as Task
@@ -123,6 +128,10 @@ export const useTaskStore = create<TaskState>((set, get) => ({
         })
         .catch((error) => {
           console.error('Error updating task:', error)
+          const message =
+            error instanceof Error && error.message
+              ? `Could not save task changes: ${error.message}`
+              : 'Could not save task changes'
           set((current) => ({
             tasks: current.tasks.map((task) =>
               task.id === id ? originalTask : task
@@ -131,7 +140,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
               current.selectedTask?.id === id
                 ? originalTask
                 : current.selectedTask,
-            error: 'Could not save task changes. The previous task state was restored.',
+            error: `${message}. The previous task state was restored.`,
           }))
         })
     }
@@ -161,13 +170,22 @@ export const useTaskStore = create<TaskState>((set, get) => ({
       persistDemoTasks(nextTasks)
     } else {
       fetch(`/api/tasks/${id}`, { method: 'DELETE' })
-        .then((response) => {
+        .then(async (response) => {
           if (!response.ok) {
-            throw new Error('Task delete failed')
+            const payload = await response.json().catch(() => ({}))
+            throw new Error(
+              payload?.message ||
+                payload?.error ||
+                'Task delete failed'
+            )
           }
         })
         .catch((error) => {
           console.error('Error deleting task:', error)
+          const message =
+            error instanceof Error && error.message
+              ? `Could not delete task: ${error.message}`
+              : 'Could not delete task'
           set((current) => {
             const taskExists = current.tasks.some((task) => task.id === id)
             const restoredTasks = taskExists
@@ -180,7 +198,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
 
             return {
               tasks: restoredTasks,
-              error: 'Could not delete task. The task was restored.',
+              error: `${message}. The task was restored.`,
             }
           })
         })
