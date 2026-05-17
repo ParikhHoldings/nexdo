@@ -3,7 +3,10 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-const envFile = process.argv[2] || '.env.local'
+const rawArgs = process.argv.slice(2)
+const envFile = rawArgs.find((arg) => !arg.startsWith('--')) || '.env.local'
+const appUrlArg = rawArgs.find((arg) => arg.startsWith('--app-url='))
+const appUrlOverride = appUrlArg?.slice('--app-url='.length)
 const envPath = path.resolve(process.cwd(), envFile)
 
 function parseEnvFile(filePath) {
@@ -35,6 +38,7 @@ function parseEnvFile(filePath) {
 
 const fileEnv = parseEnvFile(envPath)
 const env = { ...process.env, ...fileEnv }
+if (appUrlOverride) env.NEXT_PUBLIC_APP_URL = appUrlOverride
 
 const checks = [
   {
@@ -94,7 +98,7 @@ const checks = [
       {
         name: 'NEXT_PUBLIC_APP_URL',
         validate: (value) =>
-          isUrl(value) && hasNoPlaceholderRisk(value) && !value.endsWith('/'),
+          isOriginUrl(value) && hasNoPlaceholderRisk(value) && !value.endsWith('/'),
       },
     ],
   },
@@ -108,6 +112,12 @@ function isUrl(value) {
   } catch {
     return false
   }
+}
+
+function isOriginUrl(value) {
+  if (!isUrl(value)) return false
+  const parsed = new URL(value)
+  return parsed.pathname === '/' && !parsed.search && !parsed.hash
 }
 
 function isRealSecret(value) {

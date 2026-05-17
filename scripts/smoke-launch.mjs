@@ -119,7 +119,13 @@ async function runLocalRails() {
 }
 
 async function runProviderSmokes() {
-  await run('Environment preflight', ['run', 'verify:env', '--', envFile])
+  await run('Environment preflight', [
+    'run',
+    'verify:env',
+    '--',
+    envFile,
+    `--app-url=${childEnv.NEXT_PUBLIC_APP_URL}`,
+  ])
   await run('Rendered route smoke', [
     'run',
     'smoke:routes',

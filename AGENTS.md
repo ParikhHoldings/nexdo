@@ -167,7 +167,9 @@ loads the env file into child processes, runs local rails, runs rendered route,
 Supabase, authenticated app, OpenAI, Stripe, and MCP provider smokes in order, and stops short of
 claiming launch approval. Provider smokes in the launch bundle require a remote
 HTTPS `--url` or `NEXT_PUBLIC_APP_URL`; use `--allow-local-url` only for
-intentional local provider debugging, not launch evidence. Omit
+intentional local provider debugging, not launch evidence. The env preflight
+treats an explicit launch-smoke `--url` as the app-origin override for
+`NEXT_PUBLIC_APP_URL` while keeping the rest of the env file authoritative. Omit
 `--technical-only` only when public copy approval and production deploy
 verification can be represented with explicit `--copy-approved` and
 `--production-deploy-verified` flags.

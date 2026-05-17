@@ -62,6 +62,7 @@
 - added MCP smoke `--provision` mode to create disposable full/read-only Power-plan API keys for scoped real endpoint verification
 - added `npm run smoke:launch` to load a real env file, run local rails, run Supabase/OpenAI/Stripe/MCP provider smokes in order, and keep manual launch approval gates explicit
 - hardened `npm run smoke:launch` so provider smokes require an explicit remote HTTPS app URL unless `--allow-local-url` is intentionally used for local debugging
+- aligned `npm run smoke:launch -- --url=...` with env preflight so the explicit smoke target is validated as `NEXT_PUBLIC_APP_URL` instead of a stale app URL from the env file
 - made landing-page pricing CTAs functional without implying verified production checkout: Free opens the demo, Pro/Power open signup, and Team opens the sales email path
 - narrowed pricing feature bullets away from unverified SSO, admin controls, team collaboration, and custom integration promises
 - tightened site metadata and agent system prompt language around early-access, bounded, reviewable AI assistance instead of broad automation claims

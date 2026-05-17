@@ -96,7 +96,9 @@ public-copy approval or production deploy approval.
 
 Provider smokes require a remote HTTPS `--url` or `NEXT_PUBLIC_APP_URL`. Use
 `--allow-local-url` only for intentional local provider debugging, not launch
-evidence.
+evidence. When `--url` is supplied, the launch smoke passes that origin into
+env preflight as the `NEXT_PUBLIC_APP_URL` value so the target being smoked is
+the target being validated.
 
 ## Operating Docs
 - `AGENTS.md` is the repo-level operating contract for Codex and other LLM agents.

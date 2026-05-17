@@ -47,6 +47,9 @@ Required groups:
 The verifier only checks presence, shape, and placeholder risk. It does not prove provider connectivity.
 When an env file is supplied, values in that file override matching shell
 exports so the copied launch-smoke env is the thing being checked.
+The launch smoke is the exception for the app origin: its explicit `--url`
+is passed into env preflight as `NEXT_PUBLIC_APP_URL` so the validated origin
+matches the preview or production target being smoked.
 
 The verifier intentionally rejects common placeholder fragments such as
 `placeholder`, `your-`, `xxx`, `replace`, `example`, `todo`, and `changeme`.
