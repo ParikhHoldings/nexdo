@@ -73,7 +73,7 @@ Acceptance gate:
 
 Current evidence:
 - `TaskDetail` edit mode supports the MVP task fields, including optional due time and energy level.
-- `TaskDetail` supports task notes, with demo localStorage persistence and authenticated owned-task API routes.
+- `TaskDetail` supports task notes and a copyable task handoff brief, with demo localStorage persistence and authenticated owned-task API routes.
 - `TaskDetail` supports parent/related task links, with demo persistence and authenticated writes through `app/api/tasks/[id]/relationships/route.ts`.
 - All Tasks defaults to active work but can filter into `done` and `cancelled`; task detail includes `cancelled` in the human status selector.
 - All Tasks includes an Origin filter for isolating agent-traced tasks from human-created tasks.

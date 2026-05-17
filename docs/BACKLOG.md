@@ -101,6 +101,7 @@
 - made cancelled tasks human-reviewable from All Tasks and restorable from task detail so agent-side cancellation is not hidden from users
 - surfaced non-default task statuses on task cards so agent-updated waiting/in-progress/cancelled work is visible while scanning the workspace
 - added task-card quick status actions for starting work, marking work waiting, moving work back to to-do, and restoring done/cancelled work from scan views; card actions are visible on mobile/touch
+- added a task-detail Agent handoff brief that copies task metadata, context, recent notes, and bounded agent instructions for external-agent work
 - added an All Tasks origin filter so humans can isolate agent-originated work from human-created work during review
 - added an All Tasks agent-output review filter so unreviewed/needs-revision outputs can be queued separately from verified outputs
 - surfaced agent-output review badges on task cards so review state is visible from scan views before opening detail

@@ -4,6 +4,9 @@ const nextConfig = {
   // Enable strict mode for better React practices
   reactStrictMode: true,
 
+  // Keep local mobile QA screenshots and fixed-footers unobscured.
+  devIndicators: false,
+
   // Image optimization domains (add Supabase storage when needed)
   images: {
     remotePatterns: [

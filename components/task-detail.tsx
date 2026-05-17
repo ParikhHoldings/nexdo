@@ -20,6 +20,8 @@ import {
   Save,
   Bot,
   Link2,
+  Copy,
+  Check,
 } from 'lucide-react'
 import { cn, formatDueTime, formatRelativeDate } from '@/lib/utils'
 import {
@@ -47,6 +49,7 @@ import {
   MAX_TASK_NOTE_LENGTH,
   validateTaskNoteContent,
 } from '@/lib/task-notes'
+import { taskHandoffBrief } from '@/lib/task-handoff'
 import { Button } from '@/components/ui/button'
 import { Badge, TagBadge, PersonBadge } from '@/components/ui/badge'
 import type {
@@ -388,6 +391,8 @@ function TaskNotesPanel({ task, isAuthenticated }: TaskNotesPanelProps) {
   const [noteError, setNoteError] = useState<string | null>(null)
   const [noteSaved, setNoteSaved] = useState(false)
   const [isSavingNote, setIsSavingNote] = useState(false)
+  const [handoffCopied, setHandoffCopied] = useState(false)
+  const [handoffError, setHandoffError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -473,6 +478,19 @@ function TaskNotesPanel({ task, isAuthenticated }: TaskNotesPanelProps) {
     }
   }
 
+  const handleCopyHandoff = async () => {
+    setHandoffError(null)
+    setHandoffCopied(false)
+
+    try {
+      await navigator.clipboard.writeText(taskHandoffBrief(task, taskNotes))
+      setHandoffCopied(true)
+      setTimeout(() => setHandoffCopied(false), 2000)
+    } catch {
+      setHandoffError('Could not copy handoff brief.')
+    }
+  }
+
   return (
     <section
       aria-label="Task notes"
@@ -516,6 +534,39 @@ function TaskNotesPanel({ task, isAuthenticated }: TaskNotesPanelProps) {
         )}
         {noteSaved && (
           <p className="text-sm text-emerald-400">Note saved.</p>
+        )}
+      </div>
+
+      <div className="mt-4 border-t border-zinc-800 pt-4">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h4 className="text-sm font-medium text-zinc-200">
+              Agent handoff brief
+            </h4>
+            <p className="mt-1 text-xs text-zinc-500">
+              Copy this task context and recent notes into an external agent.
+            </p>
+          </div>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={handleCopyHandoff}
+            aria-label="Copy agent handoff brief"
+          >
+            {handoffCopied ? (
+              <Check className="h-4 w-4" />
+            ) : (
+              <Copy className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
+        {handoffCopied && (
+          <p className="mt-2 text-sm text-emerald-400">
+            Handoff brief copied.
+          </p>
+        )}
+        {handoffError && (
+          <p className="mt-2 text-sm text-red-400">{handoffError}</p>
         )}
       </div>
 
@@ -985,7 +1036,7 @@ export function TaskDetail() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+            className="fixed inset-0 bg-black/50 z-[60] lg:hidden"
             onClick={handleClose}
           />
 
@@ -995,7 +1046,7 @@ export function TaskDetail() {
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed right-0 top-0 bottom-0 w-full sm:w-[480px] bg-zinc-900 border-l border-zinc-800 z-50 overflow-hidden flex flex-col"
+            className="fixed right-0 top-0 bottom-0 w-full sm:w-[480px] bg-zinc-900 border-l border-zinc-800 z-[70] overflow-hidden flex flex-col"
           >
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-zinc-800">

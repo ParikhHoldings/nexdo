@@ -41,8 +41,9 @@ import {
   tasksToExportPayload,
   tasksToJsonString,
 } from '../../lib/task-export'
+import { taskHandoffBrief } from '../../lib/task-handoff'
 import { formatRelativeDate } from '../../lib/utils'
-import type { Task } from '../../lib/database.types'
+import type { Task, TaskNote } from '../../lib/database.types'
 
 test('AI task input sanitizer trims, bounds, and defaults task fields', () => {
   const result = sanitizeAiTasks(
@@ -756,6 +757,67 @@ test('task export helpers preserve portable task metadata', () => {
   expect(csv).toContain('"Export ""launch"", review"')
   expect(csv).toContain('"Casey; Jordan"')
   expect(csv).toContain('"{""reviewed"":true}"')
+})
+
+test('task handoff brief preserves agent-readable task context and recent notes', () => {
+  const task: Task = {
+    id: 'handoff-task',
+    user_id: 'user-1',
+    title: 'Prepare launch handoff',
+    raw_input: 'Prepare launch handoff by Monday 9am',
+    description: 'Summarize what changed and what remains blocked.',
+    status: 'in_progress',
+    priority: 'high',
+    due_date: '2026-05-18',
+    due_time: '09:00',
+    context: 'Use the latest verification status.',
+    source: 'agent',
+    action_type: 'prep',
+    estimated_minutes: 30,
+    energy_level: 'deep',
+    people: ['Casey', 'Ops'],
+    tags: ['launch', 'handoff'],
+    parent_task_id: null,
+    related_task_ids: null,
+    agent_output: null,
+    completed_at: null,
+    created_at: '2026-05-17T12:00:00.000Z',
+    updated_at: '2026-05-17T12:30:00.000Z',
+    source_agent_id: 'codex',
+    external_ref: 'launch-brief-1',
+    ingestion_intent: 'update',
+    agent_metadata: null,
+  }
+  const notes: TaskNote[] = [
+    {
+      id: 'note-1',
+      task_id: task.id,
+      content: 'Provider smokes still need real env.',
+      note_type: 'note',
+      created_at: '2026-05-17T12:20:00.000Z',
+    },
+    {
+      id: 'note-2',
+      task_id: task.id,
+      content: 'Draft launch summary is ready for review.',
+      note_type: 'agent_result',
+      created_at: '2026-05-17T12:25:00.000Z',
+    },
+  ]
+
+  const brief = taskHandoffBrief(task, notes)
+
+  expect(brief).toContain('# Nexdo Task Handoff')
+  expect(brief).toContain('Title: Prepare launch handoff')
+  expect(brief).toContain('Due: 2026-05-18 09:00')
+  expect(brief).toContain('People: Casey, Ops')
+  expect(brief).toContain('Tags: launch, handoff')
+  expect(brief).toContain('Source agent: codex')
+  expect(brief).toContain('External ref: launch-brief-1')
+  expect(brief).toContain('- note: Provider smokes still need real env.')
+  expect(brief).toContain('- agent result: Draft launch summary is ready for review.')
+  expect(brief).toContain('Prefer add_task_note with note_type=agent_result')
+  expect(brief).toContain('Do not send messages, spend money, or make irreversible external commitments')
 })
 
 test('task relationship validation requires bounded owned-link inputs', () => {

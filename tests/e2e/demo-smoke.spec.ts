@@ -473,6 +473,8 @@ test('remind tasks do not expose AI agent execution controls', async ({ page }) 
 })
 
 test('demo task notes save and reload from task detail', async ({ page }) => {
+  await page.context().grantPermissions(['clipboard-read', 'clipboard-write'])
+
   const now = new Date().toISOString()
   const task = {
     id: 'task-notes-demo-task',
@@ -519,6 +521,16 @@ test('demo task notes save and reload from task detail', async ({ page }) => {
   await notes.getByRole('button', { name: 'Add note' }).click()
   await expect(notes.getByText('Note saved.')).toBeVisible()
   await expect(notes.getByText(note)).toBeVisible()
+  await expect(notes.getByText('Agent handoff brief')).toBeVisible()
+
+  await notes.getByRole('button', { name: 'Copy agent handoff brief' }).click()
+  await expect(notes.getByText('Handoff brief copied.')).toBeVisible()
+  const handoffBrief = await page.evaluate(() => navigator.clipboard.readText())
+  expect(handoffBrief).toContain('# Nexdo Task Handoff')
+  expect(handoffBrief).toContain('Title: Capture launch note context')
+  expect(handoffBrief).toContain('Context: Use notes for human and agent handoff context.')
+  expect(handoffBrief).toContain(`- note: ${note}`)
+  expect(handoffBrief).toContain('Prefer add_task_note with note_type=agent_result')
 
   await page.reload()
   await page.getByRole('heading', { name: 'Capture launch note context' }).click()

@@ -333,6 +333,16 @@ External agents need product-specific operating rails, not only endpoint URLs an
 ### Impact
 Agent setup now has one more copyable artifact that should stay aligned with the MCP tool contract, trace metadata requirements, and public promise of bounded, reviewable assistance.
 
+## 2026-05-17 - Task detail includes a copyable agent handoff
+### Decision
+Task detail should expose a copyable Agent handoff brief built from the task's structured metadata, context, recent notes, and bounded agent instructions.
+
+### Why
+Human users need a fast way to move a single task into an external agent workflow without manually reconstructing context from title, notes, tags, people, and trace metadata. The handoff should still preserve Nexdo's operating boundary: notes first, traceable writes, and no external side effects without explicit human instruction.
+
+### Impact
+The handoff formatter lives in `lib/task-handoff.ts` so tests can verify the artifact independently from the clipboard UI. Keep it aligned with task metadata, note semantics, and MCP trace requirements when those contracts change.
+
 ## 2026-05-16 - Profile browser access is column-limited
 ### Decision
 Direct authenticated profile reads expose only the fields the app needs for account preferences, plan display, key hints, and usage display. Direct authenticated profile updates are limited to `full_name`, `timezone`, and `work_type`. Credential, billing, quota, Stripe, and entitlement fields must be changed by server routes, provider webhooks, or service-role jobs.
