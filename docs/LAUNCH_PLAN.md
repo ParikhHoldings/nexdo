@@ -24,9 +24,9 @@ The goal is not a broad public launch. The credible Monday target is a verified 
 - Authenticated app smoke can now verify deployed app-cookie auth, task list/create/update/delete, and task-note validation/create/readback against a real Supabase-backed app session.
 - The MCP settings page now exposes recent agent activity from the audit table when a user is authenticated.
 - Agent task creation now has local idempotency handling through `source_agent_id` plus `external_ref`; real Supabase/API-key replay verification is still required.
-- PR #3 Web rails passed on the latest inspected code head before this docs refresh, including the login-email normalization change; inspect current checks after each push before treating the newest head as current-green.
+- PR #3 Web rails passed on the latest inspected head in this pass; inspect current checks after each push before treating the newest head as current-green.
 - GitHub Actions Web rails run on pull requests and pushes to `main`/`staging`, with install, lint, typecheck, build, dependency audit, and Playwright smoke testing so CI matches the documented launch/deploy checklist.
-- Vercel preview deployment passed on an earlier checked code head, but the latest inspected code head hit the known Vercel account build-rate limit and still needs fresh preview-deploy evidence.
+- Vercel preview deployment passed on the latest inspected head in this pass; later pushes can still hit the known Vercel account build-rate limit.
 - Remote route smoke against protected previews needs `VERCEL_AUTOMATION_BYPASS_SECRET` or an unprotected preview URL because those previews are behind Vercel Deployment Protection.
 - Strict build rails: TypeScript and lint failures block `npm run build`. Verified locally on 2026-05-17.
 - OpenAI provider verification now has a repeatable smoke script, `npm run smoke:openai`; it rejects placeholder keys and verifies parse, prioritization, briefing, research, draft, and prep output shapes. With `--app`, it also creates a disposable Supabase user and verifies authenticated app parse, prioritize, briefing, and research/draft/prep execution routes, using Vercel protection bypass headers when configured. It still needs to be run with real OpenAI, Supabase, and target app env.

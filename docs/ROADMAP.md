@@ -18,8 +18,8 @@
 - `npm run smoke:app` now verifies authenticated app-cookie task CRUD, task-note routes, and seeded agent-review save behavior against a supplied app URL and real Supabase env.
 - Playwright tests cover DB-backed MCP tool handler and API-key validation behavior through an in-memory Supabase double, including owned reads, search, briefing, create idempotency, quota ordering, mutations, agent task-note append/readback, audit logging, hashed-key lookup, legacy-key migration, and paid-plan gating.
 - GitHub Actions verification exists for pull requests and pushes to `main`/`staging`, covering install, lint, typecheck, build, dependency audit, and Playwright smoke testing.
-- PR #3 Web rails passed on the latest inspected code head before this docs refresh, including the login-email normalization change; inspect current checks after each push before treating the newest head as current-green.
-- Vercel preview deployment passed on an earlier checked code head, but the latest inspected code head hit Vercel account build-rate limits and still needs fresh preview-deploy evidence.
+- PR #3 Web rails passed on the latest inspected head in this pass; inspect current checks after each push before treating the newest head as current-green.
+- Vercel preview deployment passed on the latest inspected head in this pass; later pushes can still hit Vercel account build-rate limits.
 - Direct remote route smoke against protected previews is blocked by Vercel Deployment Protection until an automation bypass secret or unprotected preview URL is available.
 - Dependency audit is clean after the Next.js 16, ESLint 9, and PostCSS remediation.
 - `npm ci`, `npm run lint`, `npm run typecheck`, `npm run build`, `npm run test:e2e` with 101 tests, dependency audit, and the technical launch smoke partial passed locally on 2026-05-17.
