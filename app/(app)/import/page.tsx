@@ -300,7 +300,8 @@ export default function ImportPage() {
           Connect & Import
         </h2>
         <p className="text-sm text-zinc-500 mb-4">
-          Import directly from your task management apps using API tokens or OAuth.
+          Import directly from apps that support personal or OAuth access tokens.
+          Full OAuth connection is a post-launch workflow.
         </p>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <ImportSourceCard
@@ -317,21 +318,27 @@ export default function ImportPage() {
           />
           <ImportSourceCard
             name="Microsoft To Do"
-            description="Sync your Microsoft To Do lists and tasks"
+            description="Import Microsoft To Do lists with a Graph access token"
             icon={<Layers className="h-6 w-6" />}
-            type="oauth"
-            comingSoon
+            type="token"
+            tokenPlaceholder="Microsoft Graph access token"
+            instructions="Use a Microsoft Graph access token with Tasks.Read permissions. Full OAuth connection is planned after launch."
             {...importStates.microsoft}
-            onImport={async () => {}}
+            onImport={async ({ token }) => {
+              await handleImport('microsoft', '/api/import/microsoft', { token })
+            }}
           />
           <ImportSourceCard
             name="Google Tasks"
-            description="Import tasks from Google Tasks"
+            description="Import Google Tasks lists with a Google access token"
             icon={<Calendar className="h-6 w-6" />}
-            type="oauth"
-            comingSoon
+            type="token"
+            tokenPlaceholder="Google Tasks access token"
+            instructions="Use a Google OAuth access token with Google Tasks scope. Full OAuth connection is planned after launch."
             {...importStates.google}
-            onImport={async () => {}}
+            onImport={async ({ token }) => {
+              await handleImport('google', '/api/import/google', { token })
+            }}
           />
         </div>
       </motion.section>

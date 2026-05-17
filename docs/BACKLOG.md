@@ -24,6 +24,7 @@
 - surfaced authenticated import server messages before generic import errors so quota/profile failures remain actionable
 - surfaced authenticated Done-page bulk-delete server messages while restoring failed deletes locally
 - made Google Tasks and Microsoft To Do imports fail closed when a nested provider task-list fetch fails instead of silently importing partial data
+- exposed Google Tasks and Microsoft To Do as honest manual access-token imports while keeping full OAuth marked as post-launch
 - surfaced authenticated agent-execution and agent-review server messages in task detail instead of masking quota/rate-limit/save failures
 - surfaced authenticated AI briefing and prioritization fallback notices when provider/rate-limit failures force local heuristics
 - surfaced billing checkout and portal server messages before generic settings errors

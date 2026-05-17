@@ -25,6 +25,7 @@
 - Surfaced authenticated import server messages before generic import errors.
 - Surfaced authenticated Done-page bulk-delete server messages while preserving local rollback.
 - Made Google Tasks and Microsoft To Do imports fail closed on nested provider task-list fetch failures.
+- Exposed Google Tasks and Microsoft To Do as manual access-token imports and kept full OAuth explicitly post-launch.
 - Surfaced authenticated agent-execution and agent-review server messages in task detail.
 - Surfaced authenticated AI briefing/prioritization fallback notices when provider or rate-limit failures force local heuristics.
 - Surfaced billing checkout and portal server messages before generic settings errors.

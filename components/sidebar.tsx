@@ -226,7 +226,7 @@ export function Sidebar() {
         <button
           onClick={toggleSidebar}
           aria-label="Open navigation"
-          className="fixed bottom-4 left-4 z-40 p-3 bg-accent rounded-full shadow-lg lg:hidden"
+          className="fixed right-4 top-4 z-40 p-3 bg-accent rounded-full shadow-lg lg:hidden"
         >
           <Menu className="h-6 w-6 text-white" />
         </button>

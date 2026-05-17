@@ -22,7 +22,7 @@ export async function POST(request: Request) {
     const dbClient = service as any
 
     const body = await request.json()
-    const { access_token } = body
+    const access_token = body.access_token || body.token
 
     if (!access_token) {
       return NextResponse.json(

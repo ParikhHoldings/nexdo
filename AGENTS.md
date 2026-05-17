@@ -24,7 +24,7 @@ The product promise should be grounded in what the code actually supports:
 - localStorage-backed demo-mode task and profile data when Supabase is unavailable or the visitor is logged out, so logged-out changes survive reloads
 - persistent dark/light appearance preferences for the app workspace
 - local-date-aware browser due-task reminders for active tasks due today or overdue, permission-gated and sent once per task per day while the app is open
-- imports from Todoist plus CSV, ICS, JSON/Trello/Things-style sources, with client-side demo file imports, file previews before mutation, and task quota enforcement for authenticated imports
+- imports from Todoist, manual Google/Microsoft access-token imports, plus CSV, ICS, JSON/Trello/Things-style sources, with client-side demo file imports, file previews before mutation, and task quota enforcement for authenticated imports
 - API key based MCP/ChatGPT Actions interop for listing, creating, completing, updating, searching, and briefing tasks
 - Power/team-gated API-key access, scoped API-key permissions, rotation rate limits, prerequisite- and scope-aware MCP setup UI, and an agent action audit table/migration for MCP/API-key calls
 - Connect AI setup and settings UI should keep API access clearly gated to Power/team plans until pricing or entitlement truth changes

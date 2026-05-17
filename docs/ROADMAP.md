@@ -19,6 +19,7 @@
 - `docs/MVP.md` now defines the smallest trustworthy MVP path around capture, structure, prioritize, brief, bounded execution, and scoped agent task-layer access.
 - Import, billing/quota, MCP, and ChatGPT Actions surfaces exist.
 - File imports now preview task count, sample titles, and plan/cap warnings before tasks are added.
+- Google Tasks and Microsoft To Do are usable through manual access-token imports; full OAuth is still a post-launch integration path.
 - Due-today task filters, browser reminders, MCP filtering, and date-only imports now use local calendar dates instead of UTC day strings.
 - Bounded agent outputs now keep execution history plus verification status and notes in the task detail panel.
 - Human task-create and task-patch routes now share `lib/task-validation.ts` so protected/server-managed fields are rejected before quota or database mutation.

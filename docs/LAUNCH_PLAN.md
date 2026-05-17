@@ -12,6 +12,7 @@ The goal is not a broad public launch. The credible Monday target is a verified 
 - Authenticated agent execution now loads owned task records by `taskId`, rejects unsupported action types, saves output server-side, and checks quota-consumption failures.
 - Bounded agent outputs now include execution history and user verification notes in task detail; authenticated review-note persistence still needs real Supabase verification.
 - Authenticated task imports now pre-check monthly task quota, save imported tasks, then record quota for successfully inserted rows with cleanup if accounting fails.
+- Google Tasks and Microsoft To Do are exposed as manual access-token imports for early verification; full OAuth connection remains a post-launch workflow.
 - Public AI-agent surfaces expose a valid OpenAPI action contract and enforce bearer auth before tool execution. Smoke-tested locally on 2026-05-16.
 - API key rotation now uses the shared rate-limit rail and verifies hashed-key persistence before revealing a new scoped MCP/API key.
 - MCP/API keys now have local scope modeling, scope-aware setup UI, scope-filtered tool listings, scope enforcement, and an agent action audit table. Real Supabase/API-key verification is still required before treating this as production-ready.

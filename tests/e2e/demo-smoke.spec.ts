@@ -215,15 +215,33 @@ test('billing actions surface server messages before generic errors', () => {
 test('provider list imports fail closed on nested task fetch failures', () => {
   const googleSource = readFileSync('app/api/import/google/route.ts', 'utf8')
   const microsoftSource = readFileSync('app/api/import/microsoft/route.ts', 'utf8')
+  const importPageSource = readFileSync('app/(app)/import/page.tsx', 'utf8')
 
+  expect(importPageSource).toContain("handleImport('google', '/api/import/google', { token })")
+  expect(importPageSource).toContain("handleImport('microsoft', '/api/import/microsoft', { token })")
+  expect(googleSource).toContain('body.access_token || body.token')
   expect(googleSource).toContain('if (!tasksResponse.ok)')
   expect(googleSource).toContain('Google Tasks list API error')
   expect(googleSource).toContain('Failed to fetch tasks from a Google Tasks list')
   expect(googleSource).toContain('encodeURIComponent(list.id)')
+  expect(microsoftSource).toContain('body.access_token || body.token')
   expect(microsoftSource).toContain('if (!tasksResponse.ok)')
   expect(microsoftSource).toContain('Microsoft To Do list API error')
   expect(microsoftSource).toContain('Failed to fetch tasks from a Microsoft To Do list')
   expect(microsoftSource).toContain('encodeURIComponent(list.id)')
+})
+
+test('connected app imports expose an honest manual token path', async ({ page }) => {
+  await page.goto('/import')
+
+  await expect(
+    page.getByText('Full OAuth connection is a post-launch workflow.')
+  ).toBeVisible()
+  await expect(page.getByPlaceholder('Microsoft Graph access token')).toBeVisible()
+  await expect(page.getByPlaceholder('Google Tasks access token')).toBeVisible()
+  await expect(page.getByText('Use a Microsoft Graph access token')).toBeVisible()
+  await expect(page.getByText('Use a Google OAuth access token')).toBeVisible()
+  await expect(page.getByText('Coming soon')).toHaveCount(0)
 })
 
 test('demo file import adds tasks without configured auth', async ({ page }) => {
