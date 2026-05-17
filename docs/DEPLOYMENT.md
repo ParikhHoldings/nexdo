@@ -5,7 +5,7 @@ PR #3 has passed the GitHub Actions Web rails workflow on recent launch-readines
 
 ## Branch and release rails
 - Use `main` as the production branch unless a deploy platform is configured differently.
-- Run changes through a PR so `.github/workflows/verify.yml` can execute on a clean runner.
+- Run changes through a PR so `.github/workflows/verify.yml` can execute on a clean runner; the same Web rails also run on pushes to `main` and `staging`.
 - Required checks before deploy: `npm ci`, `npm run lint`, `npm run typecheck`, `npm run build`, `npm run test:e2e`, and `npm audit --audit-level=moderate`.
 - Production deploys require approval.
 

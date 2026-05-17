@@ -710,6 +710,10 @@ test('launch smoke orchestrates required technical and approval gates', () => {
 
   expect(packageJson.scripts['smoke:launch']).toBe('node scripts/smoke-launch.mjs')
   expect(packageJson.scripts['smoke:routes']).toBe('node scripts/smoke-routes.mjs')
+  expect(workflowSource).toContain('pull_request:')
+  expect(workflowSource).toContain('push:')
+  expect(workflowSource).toContain('- main')
+  expect(workflowSource).toContain('- staging')
   expect(workflowSource).toContain('uses: actions/checkout@v5')
   expect(workflowSource).toContain('uses: actions/setup-node@v5')
   expect(workflowSource).toContain('node-version: 22')

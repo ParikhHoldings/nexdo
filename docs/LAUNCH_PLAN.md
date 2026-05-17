@@ -25,7 +25,7 @@ The goal is not a broad public launch. The credible Monday target is a verified 
 - The MCP settings page now exposes recent agent activity from the audit table when a user is authenticated.
 - Agent task creation now has local idempotency handling through `source_agent_id` plus `external_ref`; real Supabase/API-key replay verification is still required.
 - PR #3 Web rails passed on recent launch-readiness heads; inspect current checks after each push before treating the newest head as current-green.
-- GitHub Actions Web rails include install, lint, typecheck, build, dependency audit, and Playwright smoke testing so CI matches the documented launch/deploy checklist.
+- GitHub Actions Web rails run on pull requests and pushes to `main`/`staging`, with install, lint, typecheck, build, dependency audit, and Playwright smoke testing so CI matches the documented launch/deploy checklist.
 - Vercel preview deployment passed on a recent checked code head, but later pushes can hit Vercel account build-rate limits.
 - Remote route smoke against protected previews needs `VERCEL_AUTOMATION_BYPASS_SECRET` or an unprotected preview URL because those previews are behind Vercel Deployment Protection.
 - Strict build rails: TypeScript and lint failures block `npm run build`. Verified locally on 2026-05-17.
