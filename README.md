@@ -9,6 +9,7 @@ This repo currently contains a Next.js app with:
 - natural-language task parsing with due-date/due-time extraction, concise fallback titles, daily briefing, prioritization, and limited agent execution through OpenAI
 - bounded validation for OpenAI JSON output before parsed tasks, briefings, prioritization, or agent results are returned or saved
 - shared task-create and task-patch validation that rejects protected/server-managed fields before quota or database mutation
+- task-detail notes for human context and future agent handoffs, with demo localStorage persistence and authenticated owned-task note routes
 - reviewable agent output history with verification status and notes for bounded research, draft, and prep runs, with a shared executable-action contract that keeps manual/reminder tasks out of AI-run controls
 - localStorage-backed demo-mode task and profile data when Supabase is unavailable or the visitor is logged out
 - persistent dark/light appearance preferences for the app workspace
@@ -30,7 +31,7 @@ Last checked on 2026-05-17:
 - `npm run lint` passed
 - `npm run typecheck` passed
 - `npm run build` passed
-- `npm run test:e2e` passed 89 tests covering public landing/signup demo CTA smoke, logged-out demo workflows, task workspace lifecycle, Today focus/sidebar/briefing alignment for undated active tasks and cancelled-only work, mobile navigation open/close behavior, local-date due-today behavior, file-import preview/confirm flow, agent output history/review notes, persistent appearance and browser reminder settings, shared executable action-type rails for non-executable reminder/manual tasks, MCP/OpenAPI/action auth smoke tests, DB-backed MCP handler and API-key validation coverage, MCP/OpenAPI `cancelled` status contract alignment plus cancelled-task UI review/restore coverage, billing guardrails, deterministic task-intelligence coverage, import parser coverage, Stripe entitlement mapping, task route validation, and local validation helper contracts
+- `npm run test:e2e` passed 91 tests covering public landing/signup demo CTA smoke, logged-out demo workflows, task workspace lifecycle, task-detail notes save/reload behavior, Today focus/sidebar/briefing alignment for undated active tasks and cancelled-only work, mobile navigation open/close behavior, local-date due-today behavior, file-import preview/confirm flow, agent output history/review notes, persistent appearance and browser reminder settings, shared executable action-type rails for non-executable reminder/manual tasks, owned task-note route guardrails, MCP/OpenAPI/action auth smoke tests, DB-backed MCP handler and API-key validation coverage, MCP/OpenAPI `cancelled` status contract alignment plus cancelled-task UI review/restore coverage, billing guardrails, deterministic task-intelligence coverage, import parser coverage, Stripe entitlement mapping, task route validation, and local validation helper contracts
 - `npm audit --audit-level=moderate` passed with 0 vulnerabilities
 - `npm run smoke:launch -- --skip-local --skip-providers --technical-only` passed; provider smokes, copy approval, and production deploy approval remain separate gates
 - PR #3 Web rails passed

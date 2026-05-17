@@ -362,6 +362,59 @@ test('remind tasks do not expose AI agent execution controls', async ({ page }) 
   await expect(page.getByRole('button', { name: /Run remind/i })).toHaveCount(0)
 })
 
+test('demo task notes save and reload from task detail', async ({ page }) => {
+  const now = new Date().toISOString()
+  const task = {
+    id: 'task-notes-demo-task',
+    user_id: 'demo-user',
+    title: 'Capture launch note context',
+    raw_input: 'Capture launch note context',
+    description: null,
+    status: 'todo',
+    priority: 'high',
+    due_date: null,
+    due_time: null,
+    context: 'Use notes for human and agent handoff context.',
+    source: 'manual',
+    action_type: 'manual',
+    estimated_minutes: 10,
+    energy_level: 'quick',
+    people: ['Ops'],
+    tags: ['launch'],
+    parent_task_id: null,
+    related_task_ids: null,
+    agent_output: null,
+    completed_at: null,
+    created_at: now,
+    updated_at: now,
+    source_agent_id: null,
+    external_ref: null,
+    ingestion_intent: null,
+    agent_metadata: null,
+  }
+  const note = 'Customer call confirmed this needs Friday follow-up.'
+
+  await page.addInitScript((tasks: unknown[]) => {
+    window.localStorage.setItem('nexdo_demo_tasks', JSON.stringify(tasks))
+  }, [task])
+
+  await page.goto('/today')
+  await page.getByRole('heading', { name: 'Capture launch note context' }).click()
+
+  const notes = page.getByLabel('Task notes')
+  await expect(notes).toBeVisible()
+  await expect(notes.getByText('No notes yet.')).toBeVisible()
+
+  await notes.getByLabel('Task note').fill(note)
+  await notes.getByRole('button', { name: 'Add note' }).click()
+  await expect(notes.getByText('Note saved.')).toBeVisible()
+  await expect(notes.getByText(note)).toBeVisible()
+
+  await page.reload()
+  await page.getByRole('heading', { name: 'Capture launch note context' }).click()
+  await expect(page.getByLabel('Task notes').getByText(note)).toBeVisible()
+})
+
 test('task mutation endpoints require configured auth', async ({ request }) => {
   const patch = await request.patch('/api/tasks/not-a-real-task', {
     data: { title: 'Should not update', user_id: 'someone-else' },
@@ -380,6 +433,14 @@ test('task mutation endpoints require configured auth', async ({ request }) => {
     data: { status: 'verified', note: 'Checked by smoke test' },
   })
   expect([401, 503]).toContain(review.status())
+
+  const notes = await request.get('/api/tasks/not-a-real-task/notes')
+  expect([401, 503]).toContain(notes.status())
+
+  const noteCreate = await request.post('/api/tasks/not-a-real-task/notes', {
+    data: { content: 'Should not save' },
+  })
+  expect([401, 503]).toContain(noteCreate.status())
 
   const csvImport = await request.post('/api/import/csv', {
     data: { content: 'title\nImported smoke task' },

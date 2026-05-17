@@ -86,7 +86,10 @@
 - Moved import preview cap warnings into a shared helper with local coverage for demo caps and Free-plan near-limit warning copy.
 - Centralized executable AI action types in `lib/task-actions.ts` so task cards, task detail, authenticated execution, and agent-output history share the same research/draft/prep contract.
 - Added regression coverage that `manual` and `remind` tasks stay non-executable and that reminder tasks do not expose AI-agent controls in the rendered workspace.
-- Refreshed repo-facing verification summaries for the latest 89-test local rail.
+- Refreshed repo-facing verification summaries for the then-current 89-test local rail.
+- Added task-detail notes backed by demo localStorage and authenticated owned-task note routes for human decisions, links, and future agent handoff context.
+- Added regression coverage for demo task note save/reload behavior and task-note route validation/ownership rails.
+- Refreshed repo-facing verification summaries for the latest 91-test local rail.
 
 ### In progress
 - Provider-backed Supabase, OpenAI, Stripe, and MCP smokes remain the main launch-readiness gap.

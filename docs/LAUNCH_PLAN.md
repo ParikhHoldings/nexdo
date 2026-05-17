@@ -6,9 +6,10 @@ The goal is not a broad public launch. The credible Monday target is a verified 
 `docs/MVP.md` is the working product contract for this target: capture -> structure -> prioritize -> brief -> bounded execution, plus scoped task-layer access for AI agents.
 
 ### Must ship
-- A local app that passes clean install, lint, typecheck, build, dependency audit, and Playwright smoke tests. Latest full local rail passed 89 tests on 2026-05-17.
+- A local app that passes clean install, lint, typecheck, build, dependency audit, and Playwright smoke tests. Latest full local rail passed 91 tests on 2026-05-17.
 - A usable logged-out demo flow: load `/today`, inspect demo tasks, add a natural-language task, see prioritization, open an executable task, and generate a bounded agent output. Verified locally through the 2026-05-17 Playwright suite.
 - Core task mutation routes now validate allowlisted fields and protect owned-task updates/deletes.
+- Task detail now supports notes for launch context and handoffs, with logged-out demo persistence and authenticated owned-task note routes.
 - Authenticated agent execution now loads owned task records by `taskId`, rejects unsupported action types through the shared executable-action contract, saves output server-side, and checks quota-consumption failures.
 - Bounded agent outputs now include execution history and user verification notes in task detail; authenticated review-note persistence still needs real Supabase verification.
 - Manual and reminder tasks do not expose AI-agent run controls in the task card or detail surfaces.

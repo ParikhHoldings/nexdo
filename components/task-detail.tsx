@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   X,
@@ -40,6 +40,12 @@ import {
   type AgentReviewStatus,
 } from '@/lib/agent-output'
 import { isExecutableActionType } from '@/lib/task-actions'
+import {
+  createDemoTaskNote,
+  getDemoTaskNotes,
+  MAX_TASK_NOTE_LENGTH,
+  validateTaskNoteContent,
+} from '@/lib/task-notes'
 import { Button } from '@/components/ui/button'
 import { Badge, TagBadge, PersonBadge } from '@/components/ui/badge'
 import type {
@@ -48,6 +54,7 @@ import type {
   PrepOutput,
   ResearchOutput,
   Task,
+  TaskNote,
   EnergyLevel,
   TaskPriority,
   TaskUpdate,
@@ -363,6 +370,181 @@ function AgentReviewPanel({
         </Button>
       </div>
     </div>
+  )
+}
+
+interface TaskNotesPanelProps {
+  task: Task
+  isAuthenticated: boolean
+}
+
+function TaskNotesPanel({ task, isAuthenticated }: TaskNotesPanelProps) {
+  const [taskNotes, setTaskNotes] = useState<TaskNote[]>(() =>
+    isAuthenticated ? [] : getDemoTaskNotes(task.id)
+  )
+  const [noteDraft, setNoteDraft] = useState('')
+  const [notesLoading, setNotesLoading] = useState(isAuthenticated)
+  const [noteError, setNoteError] = useState<string | null>(null)
+  const [noteSaved, setNoteSaved] = useState(false)
+  const [isSavingNote, setIsSavingNote] = useState(false)
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      return
+    }
+
+    const controller = new AbortController()
+
+    fetch(`/api/tasks/${task.id}/notes`, { signal: controller.signal })
+      .then(async (response) => {
+        const payload = await response.json().catch(() => ({}))
+        if (!response.ok) {
+          throw new Error(
+            payload?.message ||
+              payload?.error ||
+              'Could not load task notes'
+          )
+        }
+        setTaskNotes(Array.isArray(payload?.notes) ? payload.notes : [])
+      })
+      .catch((error) => {
+        if (error instanceof Error && error.name === 'AbortError') return
+        setTaskNotes([])
+        setNoteError(
+          error instanceof Error && error.message
+            ? error.message
+            : 'Could not load task notes'
+        )
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setNotesLoading(false)
+      })
+
+    return () => controller.abort()
+  }, [task.id, isAuthenticated])
+
+  const handleSaveNote = async () => {
+    const validation = validateTaskNoteContent(noteDraft)
+    if ('error' in validation) {
+      setNoteError(validation.error)
+      setNoteSaved(false)
+      return
+    }
+
+    setIsSavingNote(true)
+    setNoteError(null)
+    setNoteSaved(false)
+
+    try {
+      if (!isAuthenticated) {
+        const note = createDemoTaskNote(task.id, validation.content)
+        setTaskNotes((current) => [note, ...current])
+        setNoteDraft('')
+        setNoteSaved(true)
+        return
+      }
+
+      const response = await fetch(`/api/tasks/${task.id}/notes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: validation.content }),
+      })
+      const payload = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        throw new Error(
+          payload?.message ||
+            payload?.error ||
+            'Could not save task note'
+        )
+      }
+
+      setTaskNotes((current) => [payload as TaskNote, ...current])
+      setNoteDraft('')
+      setNoteSaved(true)
+    } catch (error) {
+      setNoteError(
+        error instanceof Error && error.message
+          ? error.message
+          : 'Could not save task note'
+      )
+    } finally {
+      setIsSavingNote(false)
+    }
+  }
+
+  return (
+    <section
+      aria-label="Task notes"
+      className="rounded-lg border border-zinc-800 bg-zinc-950/40 p-4"
+    >
+      <div className="flex items-center gap-2">
+        <FileText className="h-4 w-4 text-zinc-500" />
+        <h3 className="text-sm font-medium text-zinc-200">
+          Task notes
+        </h3>
+      </div>
+      <div className="mt-4 space-y-3">
+        <textarea
+          aria-label="Task note"
+          value={noteDraft}
+          onChange={(event) => {
+            setNoteDraft(event.target.value)
+            setNoteError(null)
+            setNoteSaved(false)
+          }}
+          rows={3}
+          maxLength={MAX_TASK_NOTE_LENGTH}
+          placeholder="Add context, links, decisions, or handoff notes."
+          className="w-full resize-none rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-500 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/50"
+        />
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-xs text-zinc-500">
+            {noteDraft.length}/{MAX_TASK_NOTE_LENGTH}
+          </span>
+          <Button
+            size="sm"
+            onClick={handleSaveNote}
+            isLoading={isSavingNote}
+          >
+            <Save className="h-4 w-4 mr-2" />
+            Add note
+          </Button>
+        </div>
+        {noteError && (
+          <p className="text-sm text-red-400">{noteError}</p>
+        )}
+        {noteSaved && (
+          <p className="text-sm text-emerald-400">Note saved.</p>
+        )}
+      </div>
+
+      <div className="mt-4 space-y-2">
+        {notesLoading && (
+          <div className="flex items-center gap-2 text-sm text-zinc-500">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Loading notes
+          </div>
+        )}
+        {!notesLoading && taskNotes.length === 0 && (
+          <p className="text-sm text-zinc-500">
+            No notes yet.
+          </p>
+        )}
+        {taskNotes.map((note) => (
+          <article
+            key={note.id}
+            className="rounded-lg bg-zinc-900 px-3 py-2"
+          >
+            <p className="whitespace-pre-wrap text-sm text-zinc-300">
+              {note.content}
+            </p>
+            <p className="mt-2 text-xs text-zinc-500">
+              {new Date(note.created_at).toLocaleString()}
+            </p>
+          </article>
+        ))}
+      </div>
+    </section>
   )
 }
 
@@ -899,6 +1081,12 @@ export function TaskDetail() {
                   ))}
                 </div>
               </div>
+
+              <TaskNotesPanel
+                key={`${task.id}-${isAuthenticated ? 'auth' : 'demo'}`}
+                task={task}
+                isAuthenticated={isAuthenticated}
+              />
 
               {showAgentTrace && (
                 <section

@@ -42,6 +42,7 @@ Required fields:
 - priority
 - due date and optional due time
 - context or description
+- task notes for decisions, links, and handoff context
 - action type
 - estimated minutes
 - energy level
@@ -60,6 +61,7 @@ Acceptance gate:
 
 Current evidence:
 - `TaskDetail` edit mode supports the MVP task fields, including optional due time and energy level.
+- `TaskDetail` supports task notes, with demo localStorage persistence and authenticated owned-task API routes.
 - All Tasks defaults to active work but can filter into `done` and `cancelled`; task detail includes `cancelled` in the human status selector.
 - Task cards show status badges for `in_progress`, `waiting`, `done`, and `cancelled`.
 - The task store rolls back failed authenticated edit/delete mutations and surfaces visible app notifications.

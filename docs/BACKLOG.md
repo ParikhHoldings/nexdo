@@ -83,7 +83,10 @@
 - moved import preview cap warnings into a shared helper with local coverage for demo caps and Free-plan near-limit warning copy
 - centralized executable AI action types in `lib/task-actions.ts` so task cards, task detail, authenticated execution, and agent-output history share the same research/draft/prep contract
 - added regression coverage that `manual` and `remind` tasks stay non-executable and that reminder tasks do not expose AI-agent controls in the rendered workspace
-- refreshed README, launch plan, roadmap, and completion audit verification summaries for the latest 89-test local rail
+- refreshed README, launch plan, roadmap, and completion audit verification summaries for the then-current 89-test local rail
+- added task-detail notes backed by demo localStorage and authenticated owned-task note routes for human decisions, links, and future agent handoff context
+- added regression coverage for demo task note save/reload behavior and task-note route validation/ownership rails
+- refreshed repo-facing verification summaries for the latest 91-test local rail
 
 ## Completed 2026-05-16
 - read and updated the repo-level agent context and all existing Markdown/text operating files
@@ -181,6 +184,7 @@
 - run `npm run smoke:stripe -- --write --webhook` with Stripe test-mode keys and target Supabase/app env to verify checkout, portal, webhook events, quota plan-state boundaries, authenticated task-create quota behavior, and idempotency
 - run `npm run smoke:launch -- --env=.env.production.local --url=<preview-url> --technical-only` once real provider env is available
 - smoke test auth, profile creation, task CRUD, demo-mode fallback, and app navigation
+- smoke test authenticated task notes against a real Supabase project and app session
 - smoke test OpenAI task parse, prioritization, daily briefing, and agent execution with real env
 - smoke test authenticated agent execution against an owned Supabase task after provider env is configured
 - smoke test Stripe checkout, portal, webhook idempotency, and plan/quota updates in test mode

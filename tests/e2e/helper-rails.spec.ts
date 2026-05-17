@@ -28,6 +28,7 @@ import {
   EXECUTABLE_ACTION_TYPES,
   isExecutableActionType,
 } from '../../lib/task-actions'
+import { MAX_TASK_NOTE_LENGTH, validateTaskNoteContent } from '../../lib/task-notes'
 import { formatRelativeDate } from '../../lib/utils'
 import type { Task } from '../../lib/database.types'
 
@@ -640,6 +641,25 @@ test('executable action helpers keep agent execution bounded to owned work types
   expect(executeRouteSource).toContain('isExecutableActionType(actionType)')
   expect(executeRouteSource).toContain('Task type does not support execution')
   expect(agentOutputSource).toContain('asExecutableActionType(actionType)')
+})
+
+test('task note helpers and route keep notes owned and bounded', () => {
+  expect(validateTaskNoteContent('  Keep this context for handoff.  ')).toEqual({
+    content: 'Keep this context for handoff.',
+  })
+  expect(validateTaskNoteContent('   ')).toEqual({
+    error: 'Note content is required.',
+  })
+  expect(validateTaskNoteContent('x'.repeat(MAX_TASK_NOTE_LENGTH + 1))).toEqual({
+    error: `Note content must be ${MAX_TASK_NOTE_LENGTH} characters or fewer.`,
+  })
+
+  const routeSource = readFileSync('app/api/tasks/[id]/notes/route.ts', 'utf8')
+  expect(routeSource).toContain('validateTaskNoteContent')
+  expect(routeSource).toContain(".from('tasks')")
+  expect(routeSource).toContain(".eq('user_id', user.id)")
+  expect(routeSource).toContain(".from('task_notes')")
+  expect(routeSource).toContain("note_type: 'note'")
 })
 
 test('launch smoke orchestrates required technical and approval gates', () => {
