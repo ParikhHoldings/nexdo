@@ -117,6 +117,8 @@
 - Strengthened Connect AI connection testing so pasted full keys must initialize MCP and return available tools through `tools/list`.
 - Expanded `npm run smoke:app` so real app-session verification covers seeded agent-review validation and save behavior.
 - Expanded `npm run smoke:stripe -- --write --webhook` so protected-preview runs use Vercel bypass headers and verify authenticated checkout/portal app routes.
+- Verified PR #3 has passing GitHub Web rails, passing Vercel preview deployment, and clean merge state on an inspected post-settings-tab head.
+- Re-ran remote route smoke against the current Vercel preview; it is still blocked by Vercel Deployment Protection until `VERCEL_AUTOMATION_BYPASS_SECRET` or an unprotected URL is available.
 - Verified PR #3 Web rails and Vercel preview deployment on a checked launch-readiness head; later pushes still require fresh PR-check inspection.
 - Expanded OpenAI app-route and MCP provider smokes so protected-preview launch checks use Vercel bypass headers when configured.
 - Hardened Stripe failed-payment handling so `invoice.payment_failed` downgrades entitlements to Free and the webhook smoke verifies it.

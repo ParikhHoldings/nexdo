@@ -56,9 +56,9 @@ Current local verification from 2026-05-17:
 
 Current PR verification from this pass:
 - GitHub Actions Web rails run on pull requests and pushes to `main`/`staging`, with install, lint, typecheck, build, dependency audit, and Playwright smoke testing.
-- PR #3 Web rails and Vercel preview deployments have passed on inspected 2026-05-17 heads.
+- PR #3 passed GitHub Actions Web rails and Vercel preview deployment on an inspected 2026-05-17 post-settings-tab head; merge state was clean after inspection.
 - One interim docs-only head hit the known Vercel account build-rate limit, so stale Vercel failures should be checked against the current pushed head before being treated as app failures.
-- Direct remote route smoke against protected previews is blocked by Vercel Deployment Protection until `VERCEL_AUTOMATION_BYPASS_SECRET` is available locally or an unprotected preview URL is used.
+- Direct remote route smoke against the current protected preview URL failed on 2026-05-17 at `/` because Vercel Deployment Protection is still active; provide `VERCEL_AUTOMATION_BYPASS_SECRET` locally or use an unprotected preview/production URL before treating route smoke as verified.
 - Always inspect current PR checks after later pushes before treating preview deploy as current-green. A Vercel build-rate-limit failure is not evidence of an app build failure, but it does mean that head does not have fresh preview-deploy evidence.
 
 Production environment, Supabase migrations, OpenAI provider calls, Stripe test-mode flows, scoped MCP/API-key execution, idempotency replay against real task data, agent audit writes, and production deployment rails remain unverified in this pass.
