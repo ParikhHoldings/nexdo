@@ -107,6 +107,7 @@
 - refreshed repo-facing verification summaries for the latest 96-test local rail
 - strengthened Connect AI connection testing so pasted full keys must initialize MCP and return available tools through `tools/list`
 - expanded `npm run smoke:app` so real app-session verification covers seeded agent-review validation and save behavior
+- expanded `npm run smoke:stripe -- --write --webhook` so protected-preview runs use Vercel bypass headers and verify authenticated checkout/portal app routes
 
 ## Completed 2026-05-16
 - read and updated the repo-level agent context and all existing Markdown/text operating files
@@ -202,7 +203,7 @@
 - run `npm run smoke:supabase -- --write` against a real Supabase project after applying migrations, including hashed API-key columns, profile column read/update grants, direct task column-grant denials, audit-event privacy, and agent external-ref uniqueness
 - run `npm run smoke:app` with real Supabase env and the target app URL to verify authenticated app task CRUD, task-note routes, and agent-review persistence
 - run `npm run smoke:openai -- --app` with real OpenAI, Supabase, and target app env
-- run `npm run smoke:stripe -- --write --webhook` with Stripe test-mode keys and target Supabase/app env to verify checkout, portal, webhook events, quota plan-state boundaries, authenticated task-create quota behavior, and idempotency
+- run `npm run smoke:stripe -- --write --webhook` with Stripe test-mode keys and target Supabase/app env to verify authenticated checkout, portal, webhook events, quota plan-state boundaries, authenticated task-create quota behavior, and idempotency
 - run `npm run smoke:launch -- --env=.env.production.local --url=<preview-url> --technical-only` once real provider env is available
 - smoke test auth, profile creation, task CRUD, demo-mode fallback, and app navigation
 - smoke test OpenAI task parse, prioritization, daily briefing, and agent execution with real env

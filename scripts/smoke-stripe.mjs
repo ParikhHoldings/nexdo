@@ -18,6 +18,7 @@ const appUrl = (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000').repl
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+const vercelProtectionBypass = process.env.VERCEL_AUTOMATION_BYPASS_SECRET
 
 const PLAN_LIMITS = {
   free: { tasksPerMonth: 25, agentExecutionsPerMonth: 0 },
@@ -55,6 +56,15 @@ const stripe = new Stripe(secretKey, {
 function fail(message, detail) {
   if (detail) console.error(detail)
   throw new Error(message)
+}
+
+function appHeaders(headers = {}) {
+  const nextHeaders = { ...headers }
+  if (vercelProtectionBypass) {
+    nextHeaders['x-vercel-protection-bypass'] = vercelProtectionBypass
+    nextHeaders['x-vercel-set-bypass-cookie'] = 'true'
+  }
+  return nextHeaders
 }
 
 function sleep(ms) {
@@ -141,10 +151,10 @@ async function postSignedWebhook(event) {
 
   const response = await fetch(`${appUrl}/api/stripe/webhook`, {
     method: 'POST',
-    headers: {
+    headers: appHeaders({
       'Content-Type': 'application/json',
       'Stripe-Signature': signature,
-    },
+    }),
     body: payload,
   })
 
@@ -333,10 +343,10 @@ async function createSmokeSessionCookie({ email, password }) {
 async function postAuthenticatedTask(cookieHeader, title) {
   const response = await fetch(`${appUrl}/api/tasks`, {
     method: 'POST',
-    headers: {
+    headers: appHeaders({
       'Content-Type': 'application/json',
       Cookie: cookieHeader,
-    },
+    }),
     body: JSON.stringify({
       title,
       raw_input: title,
@@ -355,6 +365,47 @@ async function postAuthenticatedTask(cookieHeader, title) {
   }
 
   return { response, data }
+}
+
+async function postAuthenticatedBilling(cookieHeader, path, body) {
+  const response = await fetch(`${appUrl}${path}`, {
+    method: 'POST',
+    headers: appHeaders({
+      'Content-Type': 'application/json',
+      Cookie: cookieHeader,
+    }),
+    body: body === undefined ? undefined : JSON.stringify(body),
+  })
+
+  const text = await response.text()
+  let data = null
+  try {
+    data = text ? JSON.parse(text) : null
+  } catch {
+    data = { raw: text }
+  }
+
+  if (!response.ok) {
+    fail(`${path} failed with ${response.status}`, JSON.stringify(data))
+  }
+
+  return data
+}
+
+async function verifyAuthenticatedBillingRoutes(cookieHeader) {
+  const checkout = await postAuthenticatedBilling(cookieHeader, '/api/stripe/checkout', {
+    plan: 'pro',
+  })
+  if (typeof checkout?.url !== 'string' || !checkout.url.includes('checkout.stripe.com')) {
+    fail('/api/stripe/checkout did not return a Stripe Checkout URL', JSON.stringify(checkout))
+  }
+  console.log('ok authenticated checkout route')
+
+  const portal = await postAuthenticatedBilling(cookieHeader, '/api/stripe/portal')
+  if (typeof portal?.url !== 'string' || !portal.url.includes('billing.stripe.com')) {
+    fail('/api/stripe/portal did not return a Stripe billing portal URL', JSON.stringify(portal))
+  }
+  console.log('ok authenticated billing portal route')
 }
 
 async function loadTaskCount(supabase, userId) {
@@ -528,6 +579,7 @@ async function webhookSmoke() {
     console.log('ok webhook smoke profile bind')
     cookieHeader = await createSmokeSessionCookie(smokeProfile)
     console.log('ok webhook smoke app session')
+    await verifyAuthenticatedBillingRoutes(cookieHeader)
 
     const unknownPriceEvent = subscriptionEvent({
       id: `evt_nexdo_unknown_${randomUUID()}`,
