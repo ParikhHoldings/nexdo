@@ -539,6 +539,8 @@ test('OpenAI smoke can verify authenticated app routes with disposable data', ()
   expect(source).toContain("for (const actionType of ['research', 'draft', 'prep'])")
   expect(source).toContain("subscription_tier: 'power'")
   expect(source).toContain("select('agent_output')")
+  expect(source).toContain('VERCEL_AUTOMATION_BYPASS_SECRET')
+  expect(source).toContain("'x-vercel-protection-bypass'")
 })
 
 test('authenticated app smoke verifies task CRUD, task notes, and agent review', () => {

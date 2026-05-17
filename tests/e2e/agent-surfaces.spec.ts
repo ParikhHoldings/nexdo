@@ -390,6 +390,8 @@ test('MCP smoke can provision disposable scoped API keys', () => {
   expect(source).toContain("await rpcNotification('notifications/initialized')")
   expect(source).toContain("'add_task_note'")
   expect(source).toContain("'/api/mcp/actions/add_task_note'")
+  expect(source).toContain('VERCEL_AUTOMATION_BYPASS_SECRET')
+  expect(source).toContain("'x-vercel-protection-bypass'")
   expect(source).toContain("completed?.source_agent_id !== sourceAgentId")
   expect(source).toContain("completed?.external_ref !== completeRef")
   expect(source).toContain("completed?.ingestion_intent !== 'complete'")

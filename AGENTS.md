@@ -110,6 +110,8 @@ types: research, draft, and prep. Add `-- --app` when Supabase service-role
 env and the target app URL are loaded to create a disposable user and verify
 authenticated parse, prioritize, briefing, and research/draft/prep execution
 routes against the app.
+The app-route smoke uses `VERCEL_AUTOMATION_BYPASS_SECRET` for protected
+Vercel previews when present.
 
 `npm run smoke:app` requires Supabase service-role env and a target app URL.
 It creates a disposable Supabase user, signs in through the app cookie flow,
@@ -137,6 +139,8 @@ keys. Add
 run must prove `agent_action_events` audit rows were written. The write smoke
 also verifies `complete_task` returns the completed task with agent trace
 metadata persisted on the task row.
+It uses `VERCEL_AUTOMATION_BYPASS_SECRET` for protected Vercel previews when
+present.
 
 `npm run smoke:supabase -- --write` should verify real migrations, profile
 column grants, direct task column-grant denials for server-managed fields,

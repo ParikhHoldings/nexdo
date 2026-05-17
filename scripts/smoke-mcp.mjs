@@ -18,6 +18,7 @@ const requireAudit = args.has('--audit') || process.env.NEXDO_MCP_REQUIRE_AUDIT 
 const provisionKeys = args.has('--provision')
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+const vercelProtectionBypass = process.env.VERCEL_AUTOMATION_BYPASS_SECRET
 
 const requiredReadTools = [
   'list_tasks',
@@ -58,13 +59,22 @@ function apiKeyHint(value) {
   return `${value.slice(0, 8)}...${value.slice(-4)}`
 }
 
+function appHeaders(headers = {}) {
+  const nextHeaders = { ...headers }
+  if (vercelProtectionBypass) {
+    nextHeaders['x-vercel-protection-bypass'] = vercelProtectionBypass
+    nextHeaders['x-vercel-set-bypass-cookie'] = 'true'
+  }
+  return nextHeaders
+}
+
 async function requestJson(path, body, key = apiKey) {
   const response = await fetch(`${baseUrl}${path}`, {
     method: 'POST',
-    headers: {
+    headers: appHeaders({
       'Content-Type': 'application/json',
       Authorization: `Bearer ${key}`,
-    },
+    }),
     body: JSON.stringify(body),
   })
 
@@ -80,7 +90,9 @@ async function requestJson(path, body, key = apiKey) {
 }
 
 async function getJson(path) {
-  const response = await fetch(`${baseUrl}${path}`)
+  const response = await fetch(`${baseUrl}${path}`, {
+    headers: appHeaders(),
+  })
   const text = await response.text()
   let data = null
   try {
@@ -114,9 +126,9 @@ async function assertMcpSseEndpoint(key = apiKey) {
 
   try {
     const response = await fetch(`${baseUrl}/api/mcp`, {
-      headers: {
+      headers: appHeaders({
         Authorization: `Bearer ${key}`,
-      },
+      }),
       signal: controller.signal,
     })
 

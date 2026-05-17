@@ -14,6 +14,7 @@ const appUrl = (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000').repl
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+const vercelProtectionBypass = process.env.VERCEL_AUTOMATION_BYPASS_SECRET
 const PLACEHOLDER_FRAGMENTS = [
   'placeholder',
   'your-',
@@ -105,6 +106,15 @@ function createSupabaseAdminClient() {
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+function appHeaders(headers = {}) {
+  const nextHeaders = { ...headers }
+  if (vercelProtectionBypass) {
+    nextHeaders['x-vercel-protection-bypass'] = vercelProtectionBypass
+    nextHeaders['x-vercel-set-bypass-cookie'] = 'true'
+  }
+  return nextHeaders
 }
 
 function createCookieJar() {
@@ -208,10 +218,10 @@ async function createSmokeSessionCookie({ email, password }) {
 async function postAppJson(cookieHeader, path, body) {
   const response = await fetch(`${appUrl}${path}`, {
     method: 'POST',
-    headers: {
+    headers: appHeaders({
       'Content-Type': 'application/json',
       Cookie: cookieHeader,
-    },
+    }),
     body: JSON.stringify(body),
   })
 
