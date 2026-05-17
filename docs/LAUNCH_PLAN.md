@@ -9,7 +9,7 @@ The goal is not a broad public launch. The credible Monday target is a verified 
 - A local app that passes clean install, lint, typecheck, build, dependency audit, and Playwright smoke tests. Latest full local rail passed 109 tests on 2026-05-17.
 - A usable logged-out demo flow: load `/today`, inspect demo tasks, add a natural-language task, see prioritization, open an executable task, and generate a bounded agent output. Verified locally through the 2026-05-17 Playwright suite.
 - Core task mutation routes now validate allowlisted fields and protect owned-task updates/deletes.
-- Task detail now supports notes for launch context and handoffs, with logged-out demo persistence, authenticated owned-task note routes, and external-agent note appends through MCP/ChatGPT Actions.
+- Task detail now supports notes for launch context and handoffs, with logged-out demo persistence, authenticated owned-task note routes, and external-agent note or agent-result appends through MCP/ChatGPT Actions.
 - Authenticated agent execution now loads owned task records by `taskId`, rejects unsupported action types through the shared executable-action contract, saves output server-side, and checks quota-consumption failures.
 - Bounded agent outputs now include execution history and user verification notes in task detail; authenticated review-note persistence still needs real Supabase verification.
 - Manual and reminder tasks do not expose AI-agent run controls in the task card or detail surfaces.

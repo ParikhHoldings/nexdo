@@ -744,6 +744,7 @@ async function main() {
         arguments: {
           task_id: created.id,
           content: noteContent,
+          note_type: 'agent_result',
           source_agent_id: sourceAgentId,
           external_ref: noteRef,
           ingestion_intent: 'update',
@@ -754,6 +755,7 @@ async function main() {
       if (
         noted?.note?.task_id !== created.id ||
         noted?.note?.content !== noteContent ||
+        noted?.note?.note_type !== 'agent_result' ||
         noted?.task?.id !== created.id
       ) {
         throw new Error('add_task_note did not return the created note and task.')

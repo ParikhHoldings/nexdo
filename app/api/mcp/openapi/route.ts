@@ -379,6 +379,12 @@ const openApiSpec = {
                     maxLength: 2000,
                     description: 'Note content to append to the task',
                   },
+                  note_type: {
+                    type: 'string',
+                    enum: ['note', 'agent_result'],
+                    description:
+                      'Use note for general handoff context or agent_result for a bounded result produced by the calling agent',
+                  },
                   source_agent_id: {
                     type: 'string',
                     maxLength: 160,

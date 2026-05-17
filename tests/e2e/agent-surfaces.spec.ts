@@ -123,6 +123,10 @@ test('OpenAPI exposes the agent action contract', async ({ request }) => {
     ].schema
   expect(addTaskNoteSchema.required).toEqual(['task_id', 'content'])
   expect(addTaskNoteSchema.properties.content.maxLength).toBe(2000)
+  expect(addTaskNoteSchema.properties.note_type.enum).toEqual([
+    'note',
+    'agent_result',
+  ])
   expect(addTaskNoteSchema.properties.source_agent_id.maxLength).toBe(160)
   expect(addTaskNoteSchema.properties.external_ref.description).toContain(
     'source_agent_id'

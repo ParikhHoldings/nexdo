@@ -52,10 +52,10 @@ Before claiming authenticated app readiness, run `npm run smoke:app` against the
 
 ## 2026-05-17 - Agent task notes are reviewable context, not execution
 ### Decision
-MCP and ChatGPT Actions expose `add_task_note` as a bounded write tool for appending human-reviewable notes to owned tasks. The tool uses the shared task-note validator, requires `tasks:write`, records source-agent trace metadata through `agent_action_events`, and does not change task status or agent output. `get_task` returns recent notes so external agents can read handoff context before acting.
+MCP and ChatGPT Actions expose `add_task_note` as a bounded write tool for appending human-reviewable notes to owned tasks. The tool uses the shared task-note validator, requires `tasks:write`, records source-agent trace metadata through `agent_action_events`, allows only `note` or `agent_result` note types for external-agent writes, and does not change task status or task-row agent output. `get_task` returns recent notes so external agents can read handoff context before acting.
 
 ### Why
-Nexdo's agent layer should make tasks a useful coordination object without turning every agent interaction into a status mutation or opaque output blob. Notes give agents a safe place to leave findings, decisions, links, and handoff context for the human owner.
+Nexdo's agent layer should make tasks a useful coordination object without turning every agent interaction into a status mutation or opaque output blob. Notes give agents a safe place to leave findings, decisions, links, handoff context, and bounded result summaries for the human owner.
 
 ### Impact
 Future note-like agent capabilities should preserve ownership checks, note length limits, scoped write access, OpenAPI/action schema alignment, and smoke/audit coverage before being treated as part of the external-agent contract.

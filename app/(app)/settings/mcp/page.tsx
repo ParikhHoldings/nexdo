@@ -29,7 +29,7 @@ const MCP_TOOL_DETAILS = [
   { name: 'create_task', desc: 'Create tasks with natural language' },
   { name: 'complete_task', desc: 'Mark tasks as done' },
   { name: 'update_task', desc: 'Update task details' },
-  { name: 'add_task_note', desc: 'Append task notes and handoff context' },
+  { name: 'add_task_note', desc: 'Append task notes and agent results' },
   { name: 'get_briefing', desc: 'Get your daily AI briefing' },
   { name: 'search_tasks', desc: 'Search tasks by keyword' },
   { name: 'get_task', desc: 'Get full task details' },

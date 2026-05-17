@@ -114,6 +114,7 @@
 - added regression coverage for demo task note save/reload behavior and task-note route validation/ownership rails
 - refreshed repo-facing verification summaries for the then-current 91-test local rail
 - added MCP/ChatGPT Actions `add_task_note` so external agents can append bounded, human-reviewable notes to owned tasks without changing task status
+- allowed MCP/ChatGPT Actions `add_task_note` to mark bounded external-agent findings as `agent_result` notes while keeping browser note metadata service-owned
 - made MCP `get_task` return recent task notes for agent context and expanded local handler/OpenAPI/action coverage for note append/readback behavior
 - expanded `npm run smoke:mcp -- --write` to verify JSON-RPC and ChatGPT Actions task-note appends plus note audit rows when `--audit` is enabled
 - refreshed repo-facing verification summaries for the then-current 92-test local rail

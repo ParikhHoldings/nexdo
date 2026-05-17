@@ -528,6 +528,9 @@ test('MCP tool schemas advertise all accepted task statuses', () => {
   expect(updateTask?.inputSchema.properties.external_ref).toMatchObject({
     description: expect.stringContaining('source_agent_id'),
   })
+  expect(addTaskNote?.inputSchema.properties.note_type).toMatchObject({
+    enum: ['note', 'agent_result'],
+  })
   expect(addTaskNote?.inputSchema.properties.content).toMatchObject({
     maxLength: 2000,
   })
@@ -1050,6 +1053,7 @@ test('DB-backed MCP add_task_note appends owned notes, validates input, and logs
       {
         task_id: 'owned-task',
         content: '  Agent found the decision link and next owner.  ',
+        note_type: 'agent_result',
         source_agent_id: 'agent-notes',
         external_ref: 'note-123',
         ingestion_intent: 'update',
@@ -1064,7 +1068,7 @@ test('DB-backed MCP add_task_note appends owned notes, validates input, and logs
     note: {
       task_id: 'owned-task',
       content: 'Agent found the decision link and next owner.',
-      note_type: 'note',
+      note_type: 'agent_result',
     },
     task: {
       id: 'owned-task',
@@ -1075,7 +1079,7 @@ test('DB-backed MCP add_task_note appends owned notes, validates input, and logs
   expect(db.taskNotes[0]).toMatchObject({
     task_id: 'owned-task',
     content: 'Agent found the decision link and next owner.',
-    note_type: 'note',
+    note_type: 'agent_result',
   })
   expect(db.agentActionEvents[0]).toMatchObject({
     tool_name: 'add_task_note',
@@ -1125,6 +1129,19 @@ test('DB-backed MCP add_task_note appends owned notes, validates input, and logs
   expect(invalidTrace.isError).toBe(true)
   expect(invalidTrace.content[0].text).toContain('source_agent_id is required')
 
+  const invalidNoteType = await executeToolWithDependencies(
+    'add_task_note',
+    {
+      task_id: 'owned-task',
+      content: 'This note type is not supported for agent notes.',
+      note_type: 'file',
+    },
+    'user-1',
+    deps
+  )
+  expect(invalidNoteType.isError).toBe(true)
+  expect(invalidNoteType.content[0].text).toContain('note_type')
+
   const missingTask = await executeToolWithDependencies(
     'add_task_note',
     { task_id: 'other-task', content: 'Should not attach across users.' },
@@ -1137,6 +1154,7 @@ test('DB-backed MCP add_task_note appends owned notes, validates input, and logs
   expect(db.agentActionEvents.map((event) => event.success)).toEqual([
     true,
     true,
+    false,
     false,
     false,
     false,

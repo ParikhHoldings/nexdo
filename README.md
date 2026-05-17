@@ -9,7 +9,7 @@ This repo currently contains a Next.js app with:
 - natural-language task parsing with due-date/due-time extraction, concise fallback titles, daily briefing, prioritization, and limited agent execution through OpenAI
 - bounded validation for OpenAI JSON output before parsed tasks, briefings, prioritization, or agent results are returned or saved
 - shared task-create and task-patch validation that rejects protected/server-managed fields before quota or database mutation
-- task-detail notes for human context and future agent handoffs, with demo localStorage persistence, authenticated owned-task note routes, column-limited browser note metadata, database-bounded note content, and MCP/ChatGPT Actions support for external agents to append reviewable notes
+- task-detail notes for human context and future agent handoffs, with demo localStorage persistence, authenticated owned-task note routes, column-limited browser note metadata, database-bounded note content, and MCP/ChatGPT Actions support for external agents to append reviewable notes or bounded agent-result notes
 - task-detail parent/related task links with demo persistence and an authenticated owned-relationship route that verifies linked tasks belong to the current user before service-role persistence
 - reviewable agent output history with verification status and notes for bounded research, draft, and prep runs, with a shared executable-action contract that keeps manual/reminder tasks out of AI-run controls
 - localStorage-backed demo-mode task and profile data when Supabase is unavailable or the visitor is logged out
@@ -25,7 +25,7 @@ This repo currently contains a Next.js app with:
 - direct browser task and task-note writes are column-limited so agent output, the broad task source flag, agent source metadata, ingestion intent, completion timestamps, task relationship metadata, note type, and note creation time stay server-managed; direct task writes also have database content bounds
 - a recent agent activity surface on the MCP settings page
 - idempotent agent task creation when callers provide `source_agent_id` plus `external_ref`
-- agent trace metadata on MCP create, update, and complete writes so externally advanced work remains visible in human task surfaces; agent-provided `external_ref` values require a `source_agent_id`
+- agent trace metadata on MCP create, update, note, and complete writes so externally advanced work remains visible in human task surfaces; agent-provided `external_ref` values require a `source_agent_id`
 
 The current strategic priority is not more broad positioning. It is verifying build/deploy truth, tightening the MVP path, and making every public claim match what the product can actually do.
 

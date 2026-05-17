@@ -17,6 +17,7 @@ import type {
   TaskNote,
   TaskStatus,
   TaskPriority,
+  NoteType,
   BriefingContent,
   IngestionIntent,
 } from '@/lib/database.types'
@@ -26,6 +27,7 @@ const TASK_PRIORITIES = ['urgent', 'high', 'medium', 'low'] as const
 const ACTION_TYPES = ['manual', 'research', 'draft', 'prep', 'remind'] as const
 const ENERGY_LEVELS = ['deep', 'light', 'quick'] as const
 const INGESTION_INTENTS = ['create', 'update', 'complete', 'auto'] as const
+const MCP_NOTE_TYPES = ['note', 'agent_result'] as const
 
 const MAX_AGENT_INPUT = 2000
 const MAX_AGENT_REF = 160
@@ -257,6 +259,12 @@ export const MCP_TOOLS: MCPTool[] = [
           type: 'string',
           maxLength: MAX_TASK_NOTE_LENGTH,
           description: 'Note content to append to the task',
+        },
+        note_type: {
+          type: 'string',
+          enum: ['note', 'agent_result'],
+          description:
+            'Use note for general handoff context or agent_result for a bounded result produced by the calling agent',
         },
         source_agent_id: {
           type: 'string',
@@ -1140,6 +1148,14 @@ const addTaskNote: ToolHandler = async (args, userId, deps) => {
   const contentResult = validateTaskNoteContent(args.content)
   if ('error' in contentResult) return toolError(`Error: ${contentResult.error}`)
 
+  let noteType: NoteType = 'note'
+  if (args.note_type !== undefined) {
+    if (!MCP_NOTE_TYPES.includes(args.note_type as (typeof MCP_NOTE_TYPES)[number])) {
+      return toolError(`Error: note_type must be one of ${MCP_NOTE_TYPES.join(', ')}`)
+    }
+    noteType = args.note_type as NoteType
+  }
+
   const sourceAgentResult = stringArg(args, 'source_agent_id', {
     maxLength: MAX_AGENT_REF,
   })
@@ -1186,7 +1202,7 @@ const addTaskNote: ToolHandler = async (args, userId, deps) => {
     .insert({
       task_id: task.id,
       content: contentResult.content,
-      note_type: 'note',
+      note_type: noteType,
     })
     .select()
     .single()
