@@ -18,6 +18,8 @@ import { createClientProfileFallback } from '../../lib/profile'
 import { quotaExceededResponse, quotaFailureStatus } from '../../lib/quota'
 import { rateLimitResponseHeaders } from '../../lib/rate-limit'
 import { validateTaskInput, validateTaskPatch } from '../../lib/task-validation'
+import { getLocalDateKey } from '../../lib/dates'
+import { formatRelativeDate } from '../../lib/utils'
 
 test('AI task input sanitizer trims, bounds, and defaults task fields', () => {
   const result = sanitizeAiTasks(
@@ -66,6 +68,10 @@ test('AI task input sanitizer trims, bounds, and defaults task fields', () => {
   expect(result.tasks[0].title.length).toBeLessThanOrEqual(500)
   expect(result.tasks[0].context?.length).toBeLessThanOrEqual(1200)
   expect(result.tasks[0].tags).toHaveLength(20)
+})
+
+test('relative date formatter treats date-only strings as local calendar dates', () => {
+  expect(formatRelativeDate(getLocalDateKey())).toBe('Today')
 })
 
 test('AI task input sanitizer fails closed for invalid arrays and required fields', () => {
