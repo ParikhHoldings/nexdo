@@ -14,8 +14,10 @@ test('landing page routes the primary CTA to the working demo path', async ({
 
   const demoLink = page.getByRole('link', { name: 'Try the demo' }).first()
   await expect(demoLink).toHaveAttribute('href', '/today')
-  await demoLink.click()
-  await expect(page.getByRole('heading', { name: 'Today', exact: true })).toBeVisible()
+  await Promise.all([page.waitForURL('**/today'), demoLink.click()])
+  await expect(
+    page.getByRole('heading', { name: 'Today', exact: true })
+  ).toBeVisible({ timeout: 10000 })
 })
 
 test('demo task capture, briefing, prioritization, and agent output work', async ({
