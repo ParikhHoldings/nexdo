@@ -96,13 +96,20 @@ export async function PATCH(request: Request) {
       .update(updates)
       .eq('id', user.id)
       .select(CLIENT_PROFILE_SELECT)
-      .single()
+      .maybeSingle()
 
     if (error) {
       console.error('Error updating profile:', error)
       return NextResponse.json(
         { error: 'Failed to update profile' },
         { status: 500 }
+      )
+    }
+
+    if (!profile) {
+      return NextResponse.json(
+        { error: 'Profile not found' },
+        { status: 404 }
       )
     }
 

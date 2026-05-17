@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { readFileSync } from 'node:fs'
 
 test('landing page routes the primary CTA to the working demo path', async ({
   page,
@@ -128,6 +129,13 @@ test('task mutation endpoints require configured auth', async ({ request }) => {
     data: { full_name: 'Smoke User', timezone: 'Not/AZone', work_type: 'owner' },
   })
   expect([401, 503]).toContain(profile.status())
+})
+
+test('profile update route returns not found when no profile row is updated', () => {
+  const source = readFileSync('app/api/profile/route.ts', 'utf8')
+
+  expect(source).toContain('.maybeSingle()')
+  expect(source).toContain("{ error: 'Profile not found' }")
 })
 
 test('demo file import adds tasks without configured auth', async ({ page }) => {
