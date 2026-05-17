@@ -132,7 +132,9 @@ disposable Stripe/Supabase data.
 notification, SSE, JSON-RPC, and ChatGPT Actions checks, optional
 `NEXDO_READONLY_API_KEY` for scoped read-only denial checks, and `-- --write`
 for disposable task creation, structured task update, note append, completion,
-plus idempotency checks. Add
+plus idempotency checks. It also verifies malformed MCP JSON-RPC bodies,
+malformed `tools/call` params/arguments, and malformed ChatGPT Action request
+bodies fail with clean validation errors before tool execution. Add
 `--provision` when Supabase service-role env is loaded to create disposable
 full-access and read-only Power-plan API keys instead of using pre-generated
 keys. Add

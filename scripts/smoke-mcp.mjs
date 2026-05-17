@@ -161,6 +161,87 @@ async function assertMcpSseEndpoint(key = apiKey) {
   }
 }
 
+function assertJsonRpcError(result, label, expectedStatus, expectedMessage) {
+  if (result.response.status !== expectedStatus) {
+    throw new Error(
+      `${label} returned ${result.response.status}, expected ${expectedStatus}: ${JSON.stringify(result.data)}`
+    )
+  }
+
+  if (result.data?.error?.message !== expectedMessage) {
+    throw new Error(
+      `${label} did not report ${expectedMessage}: ${JSON.stringify(result.data)}`
+    )
+  }
+}
+
+function assertActionError(result, label, expectedStatus, expectedMessage) {
+  if (result.response.status !== expectedStatus) {
+    throw new Error(
+      `${label} returned ${result.response.status}, expected ${expectedStatus}: ${JSON.stringify(result.data)}`
+    )
+  }
+
+  if (result.data?.error !== expectedMessage) {
+    throw new Error(
+      `${label} did not report ${expectedMessage}: ${JSON.stringify(result.data)}`
+    )
+  }
+}
+
+async function assertMalformedPayloadGuards(key = apiKey) {
+  assertJsonRpcError(
+    await requestJson('/api/mcp', null, key),
+    'Malformed JSON-RPC body',
+    400,
+    'Invalid JSON-RPC request'
+  )
+
+  assertJsonRpcError(
+    await requestJson(
+      '/api/mcp',
+      {
+        jsonrpc: '2.0',
+        id: 'bad-params',
+        method: 'tools/call',
+        params: null,
+      },
+      key
+    ),
+    'Malformed JSON-RPC tools/call params',
+    400,
+    'Tool call params must be an object'
+  )
+
+  assertJsonRpcError(
+    await requestJson(
+      '/api/mcp',
+      {
+        jsonrpc: '2.0',
+        id: 'bad-arguments',
+        method: 'tools/call',
+        params: {
+          name: 'list_tasks',
+          arguments: [],
+        },
+      },
+      key
+    ),
+    'Malformed JSON-RPC tool arguments',
+    400,
+    'Tool arguments must be a JSON object'
+  )
+
+  assertActionError(
+    await requestJson('/api/mcp/actions/list_tasks', [], key),
+    'Malformed ChatGPT Action body',
+    400,
+    'Request body must be a JSON object'
+  )
+
+  console.log('ok malformed payload guards')
+}
+
 async function rpc(method, params, key = apiKey) {
   const data = await postJson('/api/mcp', {
     jsonrpc: '2.0',
@@ -475,6 +556,7 @@ async function main() {
 
     await rpcNotification('notifications/initialized')
     await assertMcpSseEndpoint()
+    await assertMalformedPayloadGuards()
 
     const toolList = await rpc('tools/list')
     const toolNames = new Set((toolList.tools || []).map((tool) => tool.name))

@@ -55,6 +55,7 @@
 - hardened MCP JSON-RPC and ChatGPT Action wrappers so non-object tool arguments are rejected before tool execution
 - centralized MCP/ChatGPT Actions Bearer parsing so real agent clients can use case-insensitive schemes and harmless extra spacing without failing auth
 - hardened the MCP JSON-RPC route so malformed non-object request bodies fail with a JSON-RPC validation error before field access
+- expanded `npm run smoke:mcp` so real-key verification now checks malformed MCP JSON-RPC bodies, malformed `tools/call` params/arguments, and malformed ChatGPT Action bodies fail cleanly before tool execution
 - verified PR #3 head `3f0e288489fcff03eeadbd71ed83ca437db721f8` passed GitHub Web rails and Vercel preview deployment after the MCP/ChatGPT Actions argument validation change
 - expanded `npm run smoke:mcp` to verify the authenticated MCP SSE endpoint advertises the JSON-RPC endpoint before tool execution
 - made the MCP JSON-RPC endpoint accept the standard initialized notification without an `id`, with real-key smoke coverage for the handshake
