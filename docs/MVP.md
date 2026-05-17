@@ -205,8 +205,8 @@ Monday is not credible if:
 - Approval for any production deploy or public launch commitment.
 
 ## Next product hardening after MVP
-- Add focused route/helper tests for task validation, quota/rate-limit helpers, and MCP handlers.
+- Run the full technical launch smoke against a real preview URL and real provider env.
 - Verify import preview quota warnings against a real Supabase profile near the monthly task limit.
 - Verify agent output history and review-note persistence against a real authenticated Supabase task.
-- Add notification delivery only after real notification behavior exists.
-- Add theme controls only after real theme support exists.
+- Verify scoped MCP idempotency replay, read-only denial, and audit rows against real task data.
+- Decide the first revenue wedge before broadening integrations or agent action types.

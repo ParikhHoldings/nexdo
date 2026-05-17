@@ -15,12 +15,12 @@
 - GitHub Actions verification exists for install, lint, typecheck, build, and Playwright smoke testing.
 - PR #3 Web rails passed in GitHub Actions, and the Vercel preview deployment completed.
 - Dependency audit is clean after the Next.js 16, ESLint 9, and PostCSS remediation.
-- `npm ci`, `npm run lint`, `npm run typecheck`, `npm run build`, and `npm run test:e2e` passed locally on 2026-05-16.
+- `npm ci`, `npm run lint`, `npm run typecheck`, `npm run build`, `npm run test:e2e`, dependency audit, and the technical launch smoke partial passed locally on 2026-05-17.
 - `docs/MVP.md` now defines the smallest trustworthy MVP path around capture, structure, prioritize, brief, bounded execution, and scoped agent task-layer access.
 - Import, billing/quota, MCP, and ChatGPT Actions surfaces exist.
 - File imports now preview task count, sample titles, and plan/cap warnings before tasks are added.
 - Google Tasks and Microsoft To Do are usable through manual access-token imports; full OAuth is still a post-launch integration path.
-- Due-today task filters, browser reminders, MCP filtering, and date-only imports now use local calendar dates instead of UTC day strings.
+- Due-today task filters, browser reminders, MCP filtering, date-only imports, and relative labels now use local calendar dates instead of UTC day strings.
 - Bounded agent outputs now keep execution history plus verification status and notes in the task detail panel.
 - Human task-create and task-patch routes now share `lib/task-validation.ts` so protected/server-managed fields are rejected before quota or database mutation.
 - Direct browser task writes are now column-limited so agent output, source-agent metadata, ingestion intent, and completion timestamps stay server-managed; server import routes persist imported external refs/completion timestamps through the service-role path after auth/quota checks.

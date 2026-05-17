@@ -48,6 +48,7 @@ Current local verification from 2026-05-17:
 - `npm run build` passed with strict TypeScript and ESLint checks enabled
 - `npm run test:e2e` passed for public landing/signup demo CTA smoke, logged-out demo workflows, task workspace lifecycle, local-date due-today behavior, file-import preview/confirm flow, agent output history/review notes, persistent appearance and browser reminder settings, task/agent auth guards, MCP/OpenAPI/action auth smoke tests, DB-backed MCP handler and API-key validation coverage, billing guardrails, deterministic task-intelligence coverage, import parser coverage, Stripe entitlement mapping, task route validation, and local validation helper contracts
 - `npm audit --audit-level=moderate` passed with 0 vulnerabilities after the Next.js 16 / ESLint 9 upgrade
+- `npm run smoke:launch -- --skip-local --skip-providers --technical-only` passed; provider smokes, public-copy approval, and production deploy approval remain separate manual gates
 - `npm run verify:env` failed because `.env.local` is absent; only `.env.local.example` exists in this workspace
 
 Current PR verification:

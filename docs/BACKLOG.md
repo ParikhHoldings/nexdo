@@ -27,6 +27,7 @@
 - exposed Google Tasks and Microsoft To Do as honest manual access-token imports while keeping full OAuth marked as post-launch
 - surfaced authenticated agent-execution and agent-review server messages in task detail instead of masking quota/rate-limit/save failures
 - added due-time and energy-level editing/display to task detail so the MVP task structure is editable from the core workspace
+- fixed date-only task labels so local calendar due dates render as Today/Tomorrow instead of shifting through UTC parsing
 - surfaced authenticated AI briefing and prioritization fallback notices when provider/rate-limit failures force local heuristics
 - surfaced billing checkout and portal server messages before generic settings errors
 - kept Connect AI setup, activity, and available-tool indicators bound to active paid API access instead of treating old key hints as usable
@@ -103,7 +104,6 @@
 - added client-side demo file import parsing for CSV, JSON, and ICS so logged-out visitors can exercise imports without weakening authenticated API import guards
 - added file-import previews with sample task titles and plan/cap warnings before tasks are added
 - aligned due-today task filters, demo seed dates, notification delivery, MCP due-today filtering, and imported calendar dates on local calendar keys instead of UTC day strings
-- fixed date-only task labels so local calendar due dates render as Today/Tomorrow instead of shifting through UTC parsing
 - added reviewable agent output history with verification status and notes for bounded research/draft/prep task execution
 - added representative import parser coverage for Todoist, CSV, ICS, Trello JSON, Things-style JSON, and invalid JSON exports
 - prevented authenticated task-capture save failures from creating local-only demo tasks; failed saves now restore the input and surface an error
