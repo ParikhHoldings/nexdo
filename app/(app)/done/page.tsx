@@ -73,11 +73,21 @@ export default function DonePage() {
           })
         )
       )
-      const failures = results.filter((r) => r.status === 'rejected').length
+      const failedIds = new Set(
+        results
+          .map((result, index) =>
+            result.status === 'rejected' ? toDelete[index]?.id : null
+          )
+          .filter((id): id is string => Boolean(id))
+      )
+      const failures = failedIds.size
       if (failures > 0) {
+        setTasks(
+          tasks.filter((task) => task.status !== 'done' || failedIds.has(task.id))
+        )
         toast.error(
           `${failures} task${failures === 1 ? '' : 's'} could not be deleted`,
-          'They will reappear on refresh. Please try again.'
+          'They were restored locally. Please try again.'
         )
       } else {
         toast.success(`Cleared ${toDelete.length} completed task${toDelete.length === 1 ? '' : 's'}`)

@@ -8,6 +8,7 @@
 - added Playwright coverage so the landing page primary CTA routes to the working `/today` demo
 - added a direct signup-page demo path so preview visitors are not forced through account creation before trying the product
 - deep-linked Connect AI no-key guidance to `/settings?tab=api` so paid users land on API-key generation instead of the profile settings tab
+- restored failed authenticated Done-page bulk deletes back into local state immediately instead of making users refresh to see failed deletions
 
 ## Completed 2026-05-16
 - read and updated the repo-level agent context and all existing Markdown/text operating files
@@ -62,6 +63,7 @@
 - sanitized prioritization and briefing task arrays before rate-limit consumption and AI provider/fallback execution
 - validated and bounded OpenAI JSON responses before parsed tasks, prioritization, briefings, or agent outputs are returned or saved
 - hardened task mutation routes with allowlisted PATCH fields and owned-delete 404 handling
+- made Done-page bulk deletion restore failed authenticated deletes locally and show a visible error
 - made task detail editing functional for title, context, due date, priority, action type, estimate, people, and tags
 - rolled back failed authenticated task edits/deletes and surfaced visible task-store error notifications instead of console-only failures
 - added focused helper coverage for AI task input validation, API-key scope mapping, quota response payloads, and rate-limit response headers

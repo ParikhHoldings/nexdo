@@ -9,6 +9,7 @@
 - Added Playwright coverage for the landing page primary CTA routing to `/today`.
 - Added a direct signup-page demo path with browser coverage.
 - Deep-linked Connect AI no-key guidance to `/settings?tab=api` and covered it with a regression check.
+- Restored failed authenticated Done-page bulk deletes back into local state and updated the failure toast.
 
 ### In progress
 - Provider-backed Supabase, OpenAI, Stripe, and MCP smokes remain the main launch-readiness gap.
