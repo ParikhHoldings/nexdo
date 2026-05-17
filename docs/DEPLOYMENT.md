@@ -1,7 +1,7 @@
 # Deployment
 
 ## Current status
-PR #3 passed the GitHub Actions Web rails workflow, and Vercel preview deployment passed on a recent code head after the route-smoke rail. Some documentation-only pushes have intermittently hit Vercel account build-rate limits, so inspect the current PR checks before treating the newest head as preview-deploy verified. Local `npm run verify:env` currently fails because `.env.local` is absent; only `.env.local.example` exists in this workspace. No production deploy target or production provider credentials were verified in this operating pass. Treat Nexdo as locally and CI verified, with recent preview-deploy evidence on this branch, but not production-ready until the checks below pass against the real deployment environment.
+PR #3 passed the GitHub Actions Web rails workflow, and Vercel preview deployment passed on a recent code head after the route-smoke rail. Later PR heads have intermittently hit Vercel account build-rate limits, so inspect the current PR checks before treating the newest head as preview-deploy verified. Local `npm run verify:env` currently fails because `.env.local` is absent; only `.env.local.example` exists in this workspace. No production deploy target or production provider credentials were verified in this operating pass. Treat Nexdo as locally and CI verified, with recent preview-deploy evidence on this branch, but not production-ready until the checks below pass against the real deployment environment.
 
 ## Branch and release rails
 - Use `main` as the production branch unless a deploy platform is configured differently.

@@ -11,6 +11,7 @@ import type {
   TaskPriority,
 } from './database.types'
 import { normalizeLocalDateKey } from './dates'
+import { isActiveTask } from './task-filters'
 
 const WEEKDAYS = [
   'sunday',
@@ -333,7 +334,7 @@ export function generateBriefingHeuristic(
   userName = 'there',
   now = new Date()
 ): BriefingContent {
-  const activeTasks = tasks.filter((task) => task.status !== 'done' && task.status !== 'cancelled')
+  const activeTasks = tasks.filter((task) => isActiveTask(task))
   const ranked = prioritizeTasksHeuristic(activeTasks, now)
   const today = now
   const todayKey = isoDate(today)

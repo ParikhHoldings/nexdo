@@ -1,5 +1,6 @@
 import type { Task } from './database.types'
 import { getLocalDateKey } from './dates'
+import { isActiveTask } from './task-filters'
 
 export { getLocalDateKey }
 
@@ -11,7 +12,6 @@ export const BROWSER_NOTIFICATIONS_ENABLED_STORAGE_KEY =
   'nexdo_browser_notifications_enabled'
 
 const NOTIFIED_TASKS_STORAGE_PREFIX = 'nexdo_notified_due_tasks'
-const ACTIVE_STATUSES = new Set(['todo', 'in_progress', 'waiting'])
 const PRIORITY_RANK = { urgent: 0, high: 1, medium: 2, low: 3 }
 
 function canUseLocalStorage() {
@@ -75,7 +75,7 @@ export function getDueTasksForBrowserNotification(
 ) {
   return tasks
     .filter((task) => {
-      if (!ACTIVE_STATUSES.has(task.status)) return false
+      if (!isActiveTask(task)) return false
       return Boolean(task.due_date && task.due_date <= today)
     })
     .sort((a, b) => {

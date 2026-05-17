@@ -68,8 +68,8 @@
 - Added regression coverage for the task column-grant/service-role write boundary across task mutation, agent execution/review, and import routes.
 - Moved agent execution service-role output persistence preflight ahead of rate-limit, quota, and provider work.
 - Updated the GitHub Actions verify workflow to Node-24-runtime action releases while keeping the app test runtime on Node 22.
-- Verified PR #3 Web rails and Vercel preview deployment after the local-date task surface rail; documented that some documentation-only pushes can still hit the Vercel account build-rate limit.
-- Refreshed README, launch plan, and roadmap verification summaries so repo-facing docs match the latest 86-test local rail and current PR check state.
+- Verified PR #3 Web rails and Vercel preview deployment after the local-date task surface rail; documented that later PR heads can still hit the Vercel account build-rate limit.
+- Refreshed README, launch plan, and roadmap verification summaries so repo-facing docs match the latest 87-test local rail and current PR check state.
 - Added mobile sidebar open/close and post-navigation collapse coverage to the rendered demo smoke path.
 - Tightened the Microsoft To Do import token placeholder so the rendered import card does not clip the input text.
 - Tightened deterministic fallback task parsing so captured task titles stay concise while schedule, priority, and estimate phrases become structured metadata.
@@ -79,7 +79,8 @@
 - Made cancelled tasks human-reviewable from All Tasks and restorable from task detail so agent-side cancellation remains visible.
 - Surfaced non-default task statuses on task cards so agent-updated waiting/in-progress/cancelled work is visible while scanning the workspace.
 - Aligned the Today sidebar badge with the Today focus list so undated active tasks count the same way they appear in the daily workspace.
-- Verified PR #3 Web rails and a Vercel preview deployment after the route-smoke rail; later docs-only heads can still be Vercel rate-limited.
+- Aligned daily briefing, provider briefing inputs, local heuristic briefings, and due-task reminders on the same active-task definition so cancelled work does not inflate focus counts.
+- Verified PR #3 Web rails and a Vercel preview deployment after the route-smoke rail; later PR heads can still be Vercel rate-limited.
 - Added `npm run smoke:routes` and wired it into the launch smoke so preview/production route rendering is checked at desktop and mobile widths.
 - Moved import preview cap warnings into a shared helper with local coverage for demo caps and Free-plan near-limit warning copy.
 

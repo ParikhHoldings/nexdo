@@ -200,6 +200,51 @@ test('demo task capture, briefing, prioritization, and agent output work', async
   expect(unexpectedMessages).toEqual([])
 })
 
+test('today briefing ignores cancelled-only work as active focus', async ({ page }) => {
+  const now = new Date().toISOString()
+  const cancelledTask = {
+    id: 'cancelled-focus-task',
+    user_id: 'demo-user',
+    title: 'Cancelled agent duplicate',
+    raw_input: 'Cancelled agent duplicate',
+    description: null,
+    status: 'cancelled',
+    priority: 'high',
+    due_date: null,
+    due_time: null,
+    context: 'External agent cancelled this duplicate handoff.',
+    source: 'agent',
+    action_type: 'manual',
+    estimated_minutes: 15,
+    energy_level: 'quick',
+    people: ['Agent Ops'],
+    tags: ['agent-review'],
+    parent_task_id: null,
+    related_task_ids: null,
+    agent_output: null,
+    completed_at: null,
+    created_at: now,
+    updated_at: now,
+    source_agent_id: 'agent-alpha',
+    external_ref: 'cancelled-focus-1',
+    ingestion_intent: 'update',
+    agent_metadata: { reason: 'duplicate' },
+  }
+
+  await page.addInitScript((tasks: unknown[]) => {
+    window.localStorage.setItem('nexdo_demo_tasks', JSON.stringify(tasks))
+  }, [cancelledTask])
+
+  await page.goto('/today')
+
+  await expect(page.getByRole('heading', { name: 'Today', exact: true })).toBeVisible()
+  await expect(page.getByText('No active tasks to focus on right now.')).toBeVisible()
+  await expect(page.getByText('Your day is clear')).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Cancelled agent duplicate' })
+  ).toHaveCount(0)
+})
+
 test('agent-created tasks expose trace metadata in task surfaces', async ({ page }) => {
   const now = new Date().toISOString()
   const agentTask = {

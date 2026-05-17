@@ -13,6 +13,7 @@ import {
 import { useBriefingStore, useTaskStore } from '@/lib/store'
 import { BriefingSkeleton } from '@/components/ui/skeleton'
 import { getGreeting } from '@/lib/utils'
+import { isActiveTask } from '@/lib/task-filters'
 import { generateBriefingHeuristic } from '@/lib/task-intelligence'
 import type { BriefingContent, Task } from '@/lib/database.types'
 
@@ -46,9 +47,14 @@ export function DailyBriefing({ userName = 'there' }: DailyBriefingProps) {
     useBriefingStore()
   const { tasks, selectTask, isAuthenticated } = useTaskStore()
   const [fallbackNotice, setFallbackNotice] = useState<string | null>(null)
+  const activeTasks = useMemo(
+    () => tasks.filter((task) => isActiveTask(task)),
+    [tasks]
+  )
+  const activeTaskCount = activeTasks.length
   const briefingSignature = useMemo(
-    () => getBriefingSignature(tasks, userName),
-    [tasks, userName]
+    () => getBriefingSignature(activeTasks, userName),
+    [activeTasks, userName]
   )
   const lastFetchedSignature = useRef<string | null>(null)
 
@@ -60,15 +66,24 @@ export function DailyBriefing({ userName = 'there' }: DailyBriefingProps) {
     if (isDismissed) return
 
     setBriefing(
-      tasks.length > 0 ? generateBriefingHeuristic(tasks, userName) : null
+      activeTaskCount > 0
+        ? generateBriefingHeuristic(activeTasks, userName)
+        : null
     )
-  }, [isAuthenticated, isDismissed, setBriefing, tasks, userName])
+  }, [
+    activeTaskCount,
+    activeTasks,
+    isAuthenticated,
+    isDismissed,
+    setBriefing,
+    userName,
+  ])
 
   useEffect(() => {
     if (!isAuthenticated) return
     if (isDismissed) return
 
-    if (tasks.length === 0) {
+    if (activeTaskCount === 0) {
       lastFetchedSignature.current = null
       setBriefing(null)
       return
@@ -83,7 +98,7 @@ export function DailyBriefing({ userName = 'there' }: DailyBriefingProps) {
         const response = await fetch('/api/briefing', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ tasks, userName }),
+          body: JSON.stringify({ tasks: activeTasks, userName }),
         })
 
         const payload = await response.json().catch(() => ({}))
@@ -99,12 +114,12 @@ export function DailyBriefing({ userName = 'there' }: DailyBriefingProps) {
               'AI briefing is unavailable.'
             }`
           )
-          setBriefing(generateBriefingHeuristic(tasks, userName))
+          setBriefing(generateBriefingHeuristic(activeTasks, userName))
         }
       } catch (error) {
         console.error('Failed to fetch briefing:', error)
         setFallbackNotice('Using local briefing: AI briefing is unavailable.')
-        setBriefing(generateBriefingHeuristic(tasks, userName))
+        setBriefing(generateBriefingHeuristic(activeTasks, userName))
       } finally {
         setLoading(false)
       }
@@ -112,12 +127,13 @@ export function DailyBriefing({ userName = 'there' }: DailyBriefingProps) {
 
     fetchBriefing()
   }, [
+    activeTaskCount,
+    activeTasks,
     briefingSignature,
     isAuthenticated,
     isDismissed,
     setBriefing,
     setLoading,
-    tasks,
     userName,
   ])
 
@@ -135,7 +151,7 @@ export function DailyBriefing({ userName = 'there' }: DailyBriefingProps) {
   }
 
   const visibleFallbackNotice =
-    isAuthenticated && tasks.length > 0 ? fallbackNotice : null
+    isAuthenticated && activeTaskCount > 0 ? fallbackNotice : null
 
   if (!briefing) {
     // Show a simple greeting when no briefing is available
@@ -152,7 +168,9 @@ export function DailyBriefing({ userName = 'there' }: DailyBriefingProps) {
             <p className="text-sm text-zinc-400">
               {tasks.length === 0
                 ? "Add your first task to get started."
-                : `You have ${tasks.filter((t) => t.status !== 'done').length} tasks to focus on.`}
+                : activeTaskCount === 0
+                  ? 'No active tasks to focus on right now.'
+                  : `You have ${activeTaskCount} tasks to focus on.`}
             </p>
             {visibleFallbackNotice && (
               <p className="mt-2 flex items-start gap-2 text-xs text-amber-300">

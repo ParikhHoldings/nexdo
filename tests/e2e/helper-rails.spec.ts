@@ -15,13 +15,14 @@ import {
   updateAgentReview,
 } from '../../lib/agent-output'
 import { validateParsedTask } from '../../lib/ai-response-validation'
+import { getDueTasksForBrowserNotification } from '../../lib/browser-notifications'
 import { createClientProfileFallback } from '../../lib/profile'
 import { importPreviewWarning } from '../../lib/import-preview'
 import { quotaExceededResponse, quotaFailureStatus } from '../../lib/quota'
 import { rateLimitResponseHeaders } from '../../lib/rate-limit'
 import { validateTaskInput, validateTaskPatch } from '../../lib/task-validation'
 import { getLocalDateKey } from '../../lib/dates'
-import { isTodayFocusTask } from '../../lib/task-filters'
+import { isActiveTask, isTodayFocusTask } from '../../lib/task-filters'
 import { formatRelativeDate } from '../../lib/utils'
 import type { Task } from '../../lib/database.types'
 
@@ -545,7 +546,7 @@ test('date-only task surfaces compare local date keys without UTC parsing', () =
   expect(allTasksSource).not.toContain('new Date(a.due_date)')
 })
 
-test('today focus helper includes undated active tasks and excludes closed work', () => {
+test('active task helpers include active work and exclude closed work', () => {
   const baseTask: Task = {
     id: 'task-1',
     user_id: 'user-1',
@@ -575,6 +576,10 @@ test('today focus helper includes undated active tasks and excludes closed work'
     agent_metadata: null,
   }
 
+  expect(isActiveTask(baseTask)).toBe(true)
+  expect(isActiveTask({ ...baseTask, status: 'done' })).toBe(false)
+  expect(isActiveTask({ ...baseTask, status: 'cancelled' })).toBe(false)
+
   expect(isTodayFocusTask(baseTask, '2026-05-17')).toBe(true)
   expect(
     isTodayFocusTask({ ...baseTask, due_date: '2026-05-17' }, '2026-05-17')
@@ -588,6 +593,23 @@ test('today focus helper includes undated active tasks and excludes closed work'
   expect(
     isTodayFocusTask({ ...baseTask, status: 'cancelled' }, '2026-05-17')
   ).toBe(false)
+
+  expect(
+    getDueTasksForBrowserNotification(
+      [
+        { ...baseTask, id: 'active-due', due_date: '2026-05-17' },
+        { ...baseTask, id: 'done-due', due_date: '2026-05-17', status: 'done' },
+        {
+          ...baseTask,
+          id: 'cancelled-due',
+          due_date: '2026-05-17',
+          status: 'cancelled',
+        },
+        { ...baseTask, id: 'future', due_date: '2026-05-18' },
+      ],
+      '2026-05-17'
+    ).map((task) => task.id)
+  ).toEqual(['active-due'])
 })
 
 test('launch smoke orchestrates required technical and approval gates', () => {

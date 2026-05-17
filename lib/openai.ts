@@ -35,6 +35,7 @@ import {
 } from './ai-response-validation'
 import { isUsableEnv } from './env'
 import { getLocalDateKey } from './dates'
+import { isActiveTask } from './task-filters'
 
 function getOpenAIClient(): OpenAI | null {
   const apiKey = process.env.OPENAI_API_KEY
@@ -122,14 +123,19 @@ export async function generateBriefing(
   tasks: Task[],
   userName: string
 ): Promise<BriefingContent | null> {
+  const activeTasks = tasks.filter((task) => isActiveTask(task))
+  if (activeTasks.length === 0) {
+    return generateBriefingHeuristic(activeTasks, userName)
+  }
+
   const openai = getOpenAIClient()
   if (!openai) {
-    return generateBriefingHeuristic(tasks, userName)
+    return generateBriefingHeuristic(activeTasks, userName)
   }
 
   try {
     const today = getLocalDateKey()
-    const tasksSummary = tasks.map((t) => ({
+    const tasksSummary = activeTasks.map((t) => ({
       id: t.id,
       title: t.title,
       priority: t.priority,
@@ -158,13 +164,13 @@ export async function generateBriefing(
     })
 
     const content = completion.choices[0]?.message?.content
-    if (!content) return generateBriefingHeuristic(tasks, userName)
+    if (!content) return generateBriefingHeuristic(activeTasks, userName)
 
-    return validateBriefingContent(parseJsonResponse(content), tasks) ??
-      generateBriefingHeuristic(tasks, userName)
+    return validateBriefingContent(parseJsonResponse(content), activeTasks) ??
+      generateBriefingHeuristic(activeTasks, userName)
   } catch (error) {
     console.error('Error generating briefing:', error)
-    return generateBriefingHeuristic(tasks, userName)
+    return generateBriefingHeuristic(activeTasks, userName)
   }
 }
 

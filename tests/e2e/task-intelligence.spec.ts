@@ -160,7 +160,7 @@ test('prioritization heuristic orders timed same-day tasks by due time', () => {
   expect(ranked[0].reasoning).toContain('09:00')
 })
 
-test('briefing heuristic summarizes active tasks without completed work', () => {
+test('briefing heuristic summarizes active tasks without closed work', () => {
   const briefing = generateBriefingHeuristic(
     [
       task({
@@ -183,6 +183,14 @@ test('briefing heuristic summarizes active tasks without completed work', () => 
         priority: 'urgent',
         due_date: isoDate(-5),
       }),
+      task({
+        id: 'cancelled',
+        title: 'Cancelled handoff',
+        status: 'cancelled',
+        priority: 'urgent',
+        due_date: isoDate(-5),
+        people: ['Taylor'],
+      }),
     ],
     'Casey'
   )
@@ -201,6 +209,8 @@ test('briefing heuristic summarizes active tasks without completed work', () => 
   expect(briefing.someone_waiting).toEqual([
     expect.objectContaining({ task_id: 'overdue', person: 'Jordan' }),
   ])
+  expect(briefing.top_priorities.map((item) => item.task_id)).not.toContain('cancelled')
+  expect(briefing.overdue.map((item) => item.task_id)).not.toContain('cancelled')
   expect(briefing.summary).toContain('2 active tasks')
 })
 
