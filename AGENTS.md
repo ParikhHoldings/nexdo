@@ -100,8 +100,9 @@ types: research, draft, and prep.
 `npm run smoke:stripe -- --write --webhook` posts signed test-mode
 subscription events to the configured app URL, verifies unknown-price
 fail-closed behavior, free/pro/power profile tier transitions, quota plan-state
-boundaries for the resulting tiers, duplicate webhook idempotency, and cleans
-up disposable Stripe/Supabase data.
+boundaries for the resulting tiers, authenticated `POST /api/tasks` quota
+behavior under those tiers, duplicate webhook idempotency, and cleans up
+disposable Stripe/Supabase data.
 
 `npm run smoke:mcp` accepts `NEXDO_API_KEY` for normal JSON-RPC and ChatGPT
 Actions checks, optional `NEXDO_READONLY_API_KEY` for scoped read-only denial

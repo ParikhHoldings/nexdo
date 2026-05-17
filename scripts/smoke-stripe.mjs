@@ -2,7 +2,8 @@
 
 import { randomUUID } from 'node:crypto'
 import Stripe from 'stripe'
-import { createClient } from '@supabase/supabase-js'
+import { createBrowserClient } from '@supabase/ssr'
+import { createClient as createSupabaseJsClient } from '@supabase/supabase-js'
 
 const args = new Set(process.argv.slice(2))
 const allowWrite = args.has('--write')
@@ -15,6 +16,7 @@ const proPriceId = process.env.STRIPE_PRO_PRICE_ID
 const powerPriceId = process.env.STRIPE_POWER_PRICE_ID
 const appUrl = (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000').replace(/\/$/, '')
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
 const PLAN_LIMITS = {
@@ -34,9 +36,9 @@ if (allowWebhook && !allowWrite) {
   process.exit(1)
 }
 
-if (allowWebhook && (!webhookSecret || !supabaseUrl || !supabaseServiceRoleKey)) {
+if (allowWebhook && (!webhookSecret || !supabaseUrl || !supabaseAnonKey || !supabaseServiceRoleKey)) {
   console.error(
-    'Webhook smoke requires STRIPE_WEBHOOK_SECRET, NEXT_PUBLIC_SUPABASE_URL, and SUPABASE_SERVICE_ROLE_KEY.'
+    'Webhook smoke requires STRIPE_WEBHOOK_SECRET, NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, and SUPABASE_SERVICE_ROLE_KEY.'
   )
   process.exit(1)
 }
@@ -121,8 +123,8 @@ async function writeSmoke() {
   }
 }
 
-function createSupabaseClient() {
-  return createClient(supabaseUrl, supabaseServiceRoleKey, {
+function createSupabaseAdminClient() {
+  return createSupabaseJsClient(supabaseUrl, supabaseServiceRoleKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,
@@ -200,8 +202,10 @@ function subscriptionEvent({ id, type, customerId, priceId, status }) {
 
 async function createSmokeProfile(supabase, customerId) {
   const email = `nexdo-stripe-webhook-smoke-${Date.now()}@example.com`
+  const password = `Nexdo-stripe-smoke-${randomUUID()}!aA1`
   const { data, error } = await supabase.auth.admin.createUser({
     email,
+    password,
     email_confirm: true,
     user_metadata: {
       full_name: 'Nexdo Stripe Webhook Smoke',
@@ -230,7 +234,7 @@ async function createSmokeProfile(supabase, customerId) {
         fail('failed to bind Stripe customer to smoke profile', updateError.message)
       }
 
-      if (profile?.id) return userId
+      if (profile?.id) return { userId, email, password }
 
       await sleep(500)
     }
@@ -276,6 +280,145 @@ function quotaWouldAllow(profile, kind, quantity = 1) {
       : profile.agent_executions_this_month
 
   return limit === -1 || used + quantity <= limit
+}
+
+function createCookieJar() {
+  const cookies = new Map()
+
+  return {
+    getAll() {
+      return Array.from(cookies.entries()).map(([name, value]) => ({ name, value }))
+    },
+    setAll(cookiesToSet) {
+      for (const { name, value, options } of cookiesToSet) {
+        if (!value || options?.maxAge === 0) {
+          cookies.delete(name)
+        } else {
+          cookies.set(name, value)
+        }
+      }
+    },
+    header() {
+      return Array.from(cookies.entries())
+        .map(([name, value]) => `${name}=${value}`)
+        .join('; ')
+    },
+  }
+}
+
+async function createSmokeSessionCookie({ email, password }) {
+  const jar = createCookieJar()
+  const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey, {
+    isSingleton: false,
+    cookies: {
+      getAll: () => jar.getAll(),
+      setAll: (cookiesToSet) => jar.setAll(cookiesToSet),
+    },
+    auth: {
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+    },
+  })
+
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+  if (error || !data.session) {
+    fail('failed to create authenticated smoke session', error?.message)
+  }
+
+  const cookieHeader = jar.header()
+  if (!cookieHeader) fail('authenticated smoke session did not set Supabase cookies')
+  return cookieHeader
+}
+
+async function postAuthenticatedTask(cookieHeader, title) {
+  const response = await fetch(`${appUrl}/api/tasks`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Cookie: cookieHeader,
+    },
+    body: JSON.stringify({
+      title,
+      raw_input: title,
+      context: 'Stripe webhook smoke task quota action.',
+      priority: 'medium',
+      source: 'stripe_smoke',
+    }),
+  })
+
+  const text = await response.text()
+  let data = null
+  try {
+    data = text ? JSON.parse(text) : null
+  } catch {
+    data = { raw: text }
+  }
+
+  return { response, data }
+}
+
+async function loadTaskCount(supabase, userId) {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('task_count_this_month')
+    .eq('id', userId)
+    .maybeSingle()
+
+  if (error || !data) fail('failed to load smoke task count', error?.message)
+  return data.task_count_this_month ?? 0
+}
+
+async function verifyAuthenticatedTaskQuotaAction({
+  supabase,
+  userId,
+  cookieHeader,
+  expectedTier,
+  expectAllowed,
+}) {
+  const before = await loadTaskCount(supabase, userId)
+  const title = `Stripe app quota smoke ${expectedTier} ${new Date().toISOString()}`
+  const { response, data } = await postAuthenticatedTask(cookieHeader, title)
+
+  if (expectAllowed) {
+    if (!response.ok) {
+      fail(
+        `${expectedTier} authenticated task_create action failed with ${response.status}`,
+        JSON.stringify(data)
+      )
+    }
+
+    if (!data?.id || data.user_id !== userId || data.title !== title) {
+      fail(`${expectedTier} authenticated task_create response did not return the created task`)
+    }
+
+    const after = await loadTaskCount(supabase, userId)
+    if (after !== before + 1) {
+      fail(`${expectedTier} authenticated task_create did not consume task quota`)
+    }
+
+    console.log(`ok authenticated task_create quota action ${expectedTier}`)
+    return
+  }
+
+  if (response.status !== 402 || data?.tier !== expectedTier) {
+    fail(
+      `${expectedTier} authenticated task_create limit should fail with 402`,
+      JSON.stringify(data)
+    )
+  }
+
+  const { data: existing, error } = await supabase
+    .from('tasks')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('title', title)
+
+  if (error) fail('failed to verify denied task_create cleanup', error.message)
+  if ((existing ?? []).length > 0) {
+    fail(`${expectedTier} denied task_create still inserted a task`)
+  }
+
+  console.log(`ok authenticated task_create quota denial ${expectedTier}`)
 }
 
 async function setUsageState(supabase, userId, fields) {
@@ -364,9 +507,10 @@ async function cleanupWebhookSmoke({ supabase, customerId, userId, eventIds }) {
 }
 
 async function webhookSmoke() {
-  const supabase = createSupabaseClient()
+  const supabase = createSupabaseAdminClient()
   let customer = null
   let userId = null
+  let cookieHeader = null
   const eventIds = []
 
   try {
@@ -379,8 +523,11 @@ async function webhookSmoke() {
     })
     console.log(`ok webhook customer create ${customer.id}`)
 
-    userId = await createSmokeProfile(supabase, customer.id)
+    const smokeProfile = await createSmokeProfile(supabase, customer.id)
+    userId = smokeProfile.userId
     console.log('ok webhook smoke profile bind')
+    cookieHeader = await createSmokeSessionCookie(smokeProfile)
+    console.log('ok webhook smoke app session')
 
     const unknownPriceEvent = subscriptionEvent({
       id: `evt_nexdo_unknown_${randomUUID()}`,
@@ -394,6 +541,13 @@ async function webhookSmoke() {
     await waitForProfileTier(supabase, userId, 'free')
     console.log('ok webhook unknown price leaves tier unchanged')
     await verifyQuotaPlanState(supabase, userId, 'free')
+    await verifyAuthenticatedTaskQuotaAction({
+      supabase,
+      userId,
+      cookieHeader,
+      expectedTier: 'free',
+      expectAllowed: false,
+    })
 
     const proEvent = subscriptionEvent({
       id: `evt_nexdo_pro_${randomUUID()}`,
@@ -407,6 +561,13 @@ async function webhookSmoke() {
     await waitForProfileTier(supabase, userId, 'pro')
     console.log('ok webhook subscription.updated -> pro')
     await verifyQuotaPlanState(supabase, userId, 'pro')
+    await verifyAuthenticatedTaskQuotaAction({
+      supabase,
+      userId,
+      cookieHeader,
+      expectedTier: 'pro',
+      expectAllowed: true,
+    })
 
     const powerEvent = subscriptionEvent({
       id: `evt_nexdo_power_${randomUUID()}`,
@@ -420,6 +581,13 @@ async function webhookSmoke() {
     await waitForProfileTier(supabase, userId, 'power')
     console.log('ok webhook subscription.updated -> power')
     await verifyQuotaPlanState(supabase, userId, 'power')
+    await verifyAuthenticatedTaskQuotaAction({
+      supabase,
+      userId,
+      cookieHeader,
+      expectedTier: 'power',
+      expectAllowed: true,
+    })
 
     const duplicate = await postSignedWebhook(powerEvent)
     if (!duplicate?.duplicate) fail('duplicate webhook did not report duplicate replay')
@@ -438,6 +606,13 @@ async function webhookSmoke() {
     await waitForProfileTier(supabase, userId, 'free')
     console.log('ok webhook subscription.deleted -> free')
     await verifyQuotaPlanState(supabase, userId, 'free')
+    await verifyAuthenticatedTaskQuotaAction({
+      supabase,
+      userId,
+      cookieHeader,
+      expectedTier: 'free',
+      expectAllowed: false,
+    })
   } finally {
     await cleanupWebhookSmoke({
       supabase,
