@@ -56,7 +56,7 @@ Current local verification from 2026-05-17:
 Current PR verification:
 - GitHub Actions Web rails include install, lint, typecheck, build, dependency audit, and Playwright smoke testing.
 - PR #3 Web rails passed on the latest checked PR head after dependency audit was added to CI.
-- Vercel preview deployment and Vercel Preview Comments passed on the latest checked PR head.
+- Vercel preview deployment and Vercel Preview Comments passed on a recent branch head, but the latest checked PR head is blocked by Vercel's account build-rate limit and lacks fresh preview-deploy evidence.
 - Direct remote route smoke against protected previews is blocked by Vercel Deployment Protection until `VERCEL_AUTOMATION_BYPASS_SECRET` is available locally or an unprotected preview URL is used.
 - Always inspect current PR checks after later pushes before treating preview deploy as current-green. A Vercel build-rate-limit failure is not evidence of an app build failure, but it does mean that head does not have fresh preview-deploy evidence.
 
