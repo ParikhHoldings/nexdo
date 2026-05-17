@@ -384,6 +384,15 @@ test('DB-backed MCP read handlers filter, search, brief, and audit owned tasks',
   expect(task.id).toBe('waiting-task')
   expect(task.agent_output).toBeNull()
 
+  const missingTask = await executeToolWithDependencies(
+    'get_task',
+    { task_id: 'other-user-task' },
+    'user-1',
+    deps
+  )
+  expect(missingTask.isError).toBe(true)
+  expect(missingTask.content[0].text).toContain('Task not found')
+
   const briefing = parseResult<BriefingContent>(
     await executeToolWithDependencies('get_briefing', {}, 'user-1', deps)
   )
@@ -396,9 +405,16 @@ test('DB-backed MCP read handlers filter, search, brief, and audit owned tasks',
     'list_tasks',
     'search_tasks',
     'get_task',
+    'get_task',
     'get_briefing',
   ])
-  expect(db.agentActionEvents.every((event) => event.success)).toBe(true)
+  expect(db.agentActionEvents.map((event) => event.success)).toEqual([
+    true,
+    true,
+    true,
+    false,
+    true,
+  ])
 })
 
 test('DB-backed MCP create_task pre-checks quota, inserts parsed agent tasks, records quota, and logs metadata', async () => {
@@ -692,9 +708,30 @@ test('DB-backed MCP mutation handlers update owned tasks and log failures', asyn
   )
   expect(invalid.isError).toBe(true)
   expect(invalid.content[0].text).toContain('agent_metadata must be an object')
+
+  const missingUpdate = await executeToolWithDependencies(
+    'update_task',
+    { task_id: 'other-task', title: 'Should not update' },
+    'user-1',
+    deps
+  )
+  expect(missingUpdate.isError).toBe(true)
+  expect(missingUpdate.content[0].text).toContain('Task not found')
+
+  const missingComplete = await executeToolWithDependencies(
+    'complete_task',
+    { task_id: 'missing-task' },
+    'user-1',
+    deps
+  )
+  expect(missingComplete.isError).toBe(true)
+  expect(missingComplete.content[0].text).toContain('Task not found')
+
   expect(db.agentActionEvents.map((event) => event.success)).toEqual([
     true,
     true,
+    false,
+    false,
     false,
   ])
 })

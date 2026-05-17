@@ -18,6 +18,7 @@
 - Made owned task PATCH misses return 404 instead of generic Supabase no-row failures.
 - Made agent execution quota pre-check failures return service-failure status when quota/profile state cannot be verified.
 - Made profile update misses return 404 instead of generic Supabase no-row failures.
+- Made MCP task read/update/complete calls return stable not-found errors for missing or unowned task IDs.
 
 ### In progress
 - Provider-backed Supabase, OpenAI, Stripe, and MCP smokes remain the main launch-readiness gap.

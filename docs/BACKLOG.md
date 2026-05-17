@@ -17,6 +17,7 @@
 - made owned task PATCH misses return `404 Task not found` instead of surfacing Supabase no-row errors as generic failures
 - made agent-execution quota pre-check failures use the shared quota status helper so service/profile failures return 500 instead of a misleading upgrade-required status
 - made profile update misses return `404 Profile not found` instead of treating missing profile rows as generic update failures
+- made MCP `get_task`, `update_task`, and `complete_task` return stable `Task not found` errors for missing or unowned task IDs
 
 ## Completed 2026-05-16
 - read and updated the repo-level agent context and all existing Markdown/text operating files

@@ -613,13 +613,17 @@ const completeTask: ToolHandler = async (args, userId, deps) => {
     .eq('id', taskId)
     .eq('user_id', userId)
     .select()
-    .single()
+    .maybeSingle()
 
   if (error) {
     return {
       content: [{ type: 'text', text: `Error: ${error.message}` }],
       isError: true,
     }
+  }
+
+  if (!task) {
+    return toolError('Error: Task not found')
   }
 
   return {
@@ -734,13 +738,17 @@ const updateTask: ToolHandler = async (args, userId, deps) => {
     .eq('id', taskId)
     .eq('user_id', userId)
     .select()
-    .single()
+    .maybeSingle()
 
   if (error) {
     return {
       content: [{ type: 'text', text: `Error: ${error.message}` }],
       isError: true,
     }
+  }
+
+  if (!task) {
+    return toolError('Error: Task not found')
   }
 
   return {
@@ -872,13 +880,17 @@ const getTask: ToolHandler = async (args, userId, deps) => {
     .select('*')
     .eq('id', taskId)
     .eq('user_id', userId)
-    .single()
+    .maybeSingle()
 
   if (error) {
     return {
       content: [{ type: 'text', text: `Error: ${error.message}` }],
       isError: true,
     }
+  }
+
+  if (!task) {
+    return toolError('Error: Task not found')
   }
 
   // Include full task details with agent_output
