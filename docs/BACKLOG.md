@@ -95,9 +95,10 @@
 - wired `npm run smoke:app` into the launch smoke between Supabase and OpenAI provider checks
 - refreshed repo-facing verification summaries for the latest 94-test local rail
 - added dependency audit to the GitHub Actions Web rails and source coverage so CI matches the documented launch/deploy checklist
-- verified PR #3 Web rails on the latest checked PR head; Vercel preview deployment and Vercel Preview Comments have passed on recent branch heads, but current-head preview evidence depends on current PR checks
+- verified PR #3 Web rails, Vercel preview deployment, and Vercel Preview Comments on the latest checked PR head; later heads still need fresh PR-check evidence
 - added a paid-key handoff from Settings > API to the Connect AI setup page so generated API keys lead directly into MCP/ChatGPT Actions setup
 - added `.env.production.local.example` so preview/production launch smokes have a concrete env template separate from no-provider local development
+- added demo smoke coverage for the Cmd/Ctrl+K task-capture shortcut and made the shortcut case-insensitive so Playwright `Control+K` focuses capture reliably
 
 ## Completed 2026-05-16
 - read and updated the repo-level agent context and all existing Markdown/text operating files
