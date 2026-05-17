@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useMemo, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { AnimatePresence } from 'framer-motion'
 import { Inbox, Search, Filter, SortAsc } from 'lucide-react'
 import { TaskInput } from '@/components/task-input'
@@ -36,6 +37,19 @@ const reviewFilters: Array<{ key: ReviewFilter; label: string }> = [
   { key: 'needs_review', label: 'Needs review' },
   { key: 'verified', label: 'Verified' },
 ]
+const priorityFilters: Array<TaskPriority | 'all'> = [
+  'all',
+  'urgent',
+  'high',
+  'medium',
+  'low',
+]
+const sortOptions: Array<{ key: SortOption; label: string }> = [
+  { key: 'created', label: 'Created' },
+  { key: 'due_date', label: 'Due date' },
+  { key: 'priority', label: 'Priority' },
+  { key: 'title', label: 'Title' },
+]
 
 const priorityOrder: Record<TaskPriority, number> = {
   urgent: 0,
@@ -44,15 +58,74 @@ const priorityOrder: Record<TaskPriority, number> = {
   low: 3,
 }
 
+function includesValue<T extends string>(
+  values: readonly T[],
+  value: string | null
+): value is T {
+  return value !== null && values.includes(value as T)
+}
+
 export default function AllTasksPage() {
   const { tasks, isLoading } = useTaskStore()
-  const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState<TaskStatus | 'all'>('all')
-  const [priorityFilter, setPriorityFilter] = useState<TaskPriority | 'all'>('all')
-  const [originFilter, setOriginFilter] = useState<OriginFilter>('all')
-  const [reviewFilter, setReviewFilter] = useState<ReviewFilter>('all')
-  const [sortBy, setSortBy] = useState<SortOption>('created')
-  const [showFilters, setShowFilters] = useState(false)
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const queryString = searchParams.toString()
+  const search = searchParams.get('q') ?? ''
+  const statusParam = searchParams.get('status')
+  const priorityParam = searchParams.get('priority')
+  const originParam = searchParams.get('origin')
+  const reviewParam = searchParams.get('review')
+  const sortParam = searchParams.get('sort')
+  const statusFilter: TaskStatus | 'all' = includesValue(
+    statusFilters,
+    statusParam
+  )
+    ? statusParam
+    : 'all'
+  const priorityFilter: TaskPriority | 'all' = includesValue(
+    priorityFilters,
+    priorityParam
+  )
+    ? priorityParam
+    : 'all'
+  const originFilter: OriginFilter = includesValue(
+    originFilters.map((origin) => origin.key),
+    originParam
+  )
+    ? originParam
+    : 'all'
+  const reviewFilter: ReviewFilter = includesValue(
+    reviewFilters.map((filter) => filter.key),
+    reviewParam
+  )
+    ? reviewParam
+    : 'all'
+  const sortBy: SortOption = includesValue(
+    sortOptions.map((option) => option.key),
+    sortParam
+  )
+    ? sortParam
+    : 'created'
+  const hasQueryFilters = Boolean(
+    statusParam || priorityParam || originParam || reviewParam || sortParam
+  )
+  const [showFilters, setShowFilters] = useState(hasQueryFilters)
+  const showFilterPanel = showFilters || hasQueryFilters
+
+  const updateQuery = (updates: Record<string, string | null>) => {
+    const params = new URLSearchParams(queryString)
+
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value) {
+        params.set(key, value)
+      } else {
+        params.delete(key)
+      }
+    })
+
+    const nextQuery = params.toString()
+    router.replace(nextQuery ? `/all?${nextQuery}` : '/all', { scroll: false })
+  }
 
   // Filter and sort tasks
   const filteredTasks = useMemo(() => {
@@ -155,7 +228,7 @@ export default function AllTasksPage() {
             type="text"
             placeholder="Search tasks..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => updateQuery({ q: e.target.value || null })}
             className="w-full bg-zinc-900 border border-zinc-800 rounded-lg pl-10 pr-4 py-2.5 text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent"
           />
         </div>
@@ -166,7 +239,7 @@ export default function AllTasksPage() {
             onClick={() => setShowFilters(!showFilters)}
             className={cn(
               'flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors',
-              showFilters
+              showFilterPanel
                 ? 'bg-accent/10 text-accent'
                 : 'bg-zinc-800 text-zinc-400 hover:text-zinc-100'
             )}
@@ -185,7 +258,7 @@ export default function AllTasksPage() {
         </div>
 
         {/* Expanded filters */}
-        {showFilters && (
+        {showFilterPanel && (
           <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4 space-y-4">
             {/* Status filter */}
             <div>
@@ -198,7 +271,9 @@ export default function AllTasksPage() {
                 {statusFilters.map((status) => (
                   <button
                     key={status}
-                    onClick={() => setStatusFilter(status as TaskStatus | 'all')}
+                    onClick={() =>
+                      updateQuery({ status: status === 'all' ? null : status })
+                    }
                     className={cn(
                       'px-3 py-1.5 text-sm rounded-lg transition-colors',
                       statusFilter === status
@@ -216,10 +291,14 @@ export default function AllTasksPage() {
             <div>
               <label className="text-sm text-zinc-400 block mb-2">Priority</label>
               <div className="flex flex-wrap gap-2">
-                {['all', 'urgent', 'high', 'medium', 'low'].map((priority) => (
+                {priorityFilters.map((priority) => (
                   <button
                     key={priority}
-                    onClick={() => setPriorityFilter(priority as TaskPriority | 'all')}
+                    onClick={() =>
+                      updateQuery({
+                        priority: priority === 'all' ? null : priority,
+                      })
+                    }
                     className={cn(
                       'px-3 py-1.5 text-sm rounded-lg transition-colors',
                       priorityFilter === priority
@@ -244,7 +323,11 @@ export default function AllTasksPage() {
                 {originFilters.map((origin) => (
                   <button
                     key={origin.key}
-                    onClick={() => setOriginFilter(origin.key)}
+                    onClick={() =>
+                      updateQuery({
+                        origin: origin.key === 'all' ? null : origin.key,
+                      })
+                    }
                     className={cn(
                       'px-3 py-1.5 text-sm rounded-lg transition-colors',
                       originFilter === origin.key
@@ -271,7 +354,11 @@ export default function AllTasksPage() {
                 {reviewFilters.map((filter) => (
                   <button
                     key={filter.key}
-                    onClick={() => setReviewFilter(filter.key)}
+                    onClick={() =>
+                      updateQuery({
+                        review: filter.key === 'all' ? null : filter.key,
+                      })
+                    }
                     className={cn(
                       'px-3 py-1.5 text-sm rounded-lg transition-colors',
                       reviewFilter === filter.key
@@ -289,15 +376,14 @@ export default function AllTasksPage() {
             <div>
               <label className="text-sm text-zinc-400 block mb-2">Sort by</label>
               <div className="flex flex-wrap gap-2">
-                {[
-                  { key: 'created', label: 'Created' },
-                  { key: 'due_date', label: 'Due date' },
-                  { key: 'priority', label: 'Priority' },
-                  { key: 'title', label: 'Title' },
-                ].map((option) => (
+                {sortOptions.map((option) => (
                   <button
                     key={option.key}
-                    onClick={() => setSortBy(option.key as SortOption)}
+                    onClick={() =>
+                      updateQuery({
+                        sort: option.key === 'created' ? null : option.key,
+                      })
+                    }
                     className={cn(
                       'px-3 py-1.5 text-sm rounded-lg transition-colors',
                       sortBy === option.key

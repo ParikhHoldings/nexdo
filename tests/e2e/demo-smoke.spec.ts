@@ -1099,11 +1099,26 @@ test('all tasks filters reviewable agent outputs', async ({ page }) => {
   await expect(page.getByText('unreviewed output', { exact: true })).toBeVisible()
   await expect(page.getByText('needs revision', { exact: true })).toBeVisible()
   await expect(page.getByText('verified output', { exact: true })).toBeVisible()
-  await page.getByRole('button', { name: 'Filters' }).click()
+
+  await page.getByRole('link', { name: 'Today' }).click()
+  await page.getByRole('link', { name: /Agent Review/ }).click()
+  await expect(page).toHaveURL(/\/all\?review=needs_review/)
+  await expect(
+    page.getByRole('heading', { name: 'Review unreviewed agent draft' })
+  ).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Revise agent draft' })
+  ).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Verified agent draft' })
+  ).toHaveCount(0)
 
   const reviewFilter = page.getByRole('group', {
     name: 'Agent output review filter',
   })
+  await expect(reviewFilter.getByRole('button', { name: 'Needs review' })).toHaveClass(
+    /bg-accent/
+  )
   await reviewFilter.getByRole('button', { name: 'Needs review' }).click()
   await expect(
     page.getByRole('heading', { name: 'Review unreviewed agent draft' })

@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react'
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import {
   Sun,
   Calendar,
@@ -15,11 +15,13 @@ import {
   Sparkles,
   Download,
   Plug,
+  Bot,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useUIStore, useUserStore, useTaskStore } from '@/lib/store'
 import { createClient } from '@/lib/supabase/client'
 import { Badge } from '@/components/ui/badge'
+import { agentOutputReviewStatus } from '@/lib/agent-output'
 import { isTodayFocusTask } from '@/lib/task-filters'
 import { getLocalDateKey } from '@/lib/dates'
 
@@ -27,12 +29,14 @@ const navigation = [
   { name: 'Today', href: '/today', icon: Sun },
   { name: 'Upcoming', href: '/upcoming', icon: Calendar },
   { name: 'All Tasks', href: '/all', icon: Inbox },
+  { name: 'Agent Review', href: '/all?review=needs_review', icon: Bot },
   { name: 'Done', href: '/done', icon: CheckCircle2 },
   { name: 'Import', href: '/import', icon: Download },
 ]
 
 export function Sidebar() {
   const pathname = usePathname()
+  const searchParams = useSearchParams()
   const router = useRouter()
   const { sidebarCollapsed, toggleSidebar, setSidebarCollapsed } = useUIStore()
   const { profile, isAuthenticated } = useUserStore()
@@ -41,6 +45,13 @@ export function Sidebar() {
   // Count today's tasks
   const today = getLocalDateKey()
   const todayCount = tasks.filter((task) => isTodayFocusTask(task, today)).length
+  const reviewQueueCount = tasks.filter((task) => {
+    const reviewStatus = agentOutputReviewStatus(
+      task.agent_output,
+      task.action_type
+    )
+    return reviewStatus === 'unreviewed' || reviewStatus === 'needs_revision'
+  }).length
 
   useEffect(() => {
     const media = window.matchMedia('(max-width: 1023px)')
@@ -109,9 +120,20 @@ export function Sidebar() {
         {/* Navigation */}
         <nav className="flex-1 p-4 space-y-1">
           {navigation.map((item) => {
-            const isActive = pathname === item.href
+            const isReviewQueue = item.href === '/all?review=needs_review'
+            const isActive = isReviewQueue
+              ? pathname === '/all' && searchParams.get('review') === 'needs_review'
+              : item.href === '/all'
+                ? pathname === '/all' &&
+                  searchParams.get('review') !== 'needs_review'
+                : pathname === item.href
             const Icon = item.icon
-            const showBadge = item.name === 'Today' && todayCount > 0
+            const badgeCount =
+              item.name === 'Today'
+                ? todayCount
+                : item.name === 'Agent Review'
+                  ? reviewQueueCount
+                  : 0
 
             return (
               <Link
@@ -129,9 +151,9 @@ export function Sidebar() {
                 {!sidebarCollapsed && (
                   <>
                     <span className="flex-1 font-medium">{item.name}</span>
-                    {showBadge && (
+                    {badgeCount > 0 && (
                       <Badge variant="default" className="bg-accent/20 text-accent">
-                        {todayCount}
+                        {badgeCount}
                       </Badge>
                     )}
                   </>

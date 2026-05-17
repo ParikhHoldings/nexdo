@@ -79,6 +79,7 @@ Current evidence:
 - All Tasks includes an Origin filter for isolating agent-traced tasks from human-created tasks.
 - All Tasks includes an agent-output review filter for isolating unreviewed/needs-revision outputs from verified outputs.
 - Task cards show agent-output review badges for unreviewed, needs-revision, and verified outputs.
+- Sidebar navigation includes an Agent Review queue that deep-links to `/all?review=needs_review`.
 - Task cards show status badges for `in_progress`, `waiting`, `done`, and `cancelled`.
 - Task-card menus expose quick `Start`, `Mark waiting`, `Move to to-do`, and `Restore` actions, with the controls visible on mobile/touch viewports as well as desktop hover/focus.
 - Settings > Data exports the tasks currently loaded in the workspace as JSON or CSV through `lib/task-export.ts`.
