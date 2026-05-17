@@ -39,6 +39,7 @@
 - moved authenticated import persistence to service-role writes after auth/quota checks so imported completion timestamps and external source refs survive the new browser task column grants
 - expanded `npm run smoke:supabase -- --write` to verify browser clients cannot write task server-managed columns, cannot insert agent audit events, public clients cannot read audit events, and duplicate agent external refs are rejected
 - added focused Playwright regression coverage that checks task column grants exclude server-managed fields and task/import server routes use service-role write paths after auth/quota checks
+- moved authenticated agent execution service-role output persistence preflight ahead of rate-limit, quota, and provider work so runs do not spend work when output cannot be saved
 
 ## Completed 2026-05-16
 - read and updated the repo-level agent context and all existing Markdown/text operating files

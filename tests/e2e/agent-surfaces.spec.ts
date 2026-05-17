@@ -199,11 +199,25 @@ test('billing checkout rejects unsupported client-selected plans', async ({
 
 test('agent execution maps quota service failures through shared status helper', () => {
   const source = readFileSync('app/api/agent/execute/route.ts', 'utf8')
+  const servicePreflightIndex = source.indexOf(
+    'const service = await createServiceClient()'
+  )
 
   expect(source).toContain('status: quotaFailureStatus(preQuota)')
   expect(source).not.toContain(
     'quotaExceededResponse(preQuota), { status: 402 }'
   )
+  expect(servicePreflightIndex).toBeGreaterThan(-1)
+  expect(servicePreflightIndex).toBeLessThan(
+    source.indexOf('const gate = await consumeRateLimit')
+  )
+  expect(servicePreflightIndex).toBeLessThan(
+    source.indexOf('result = await executeResearch')
+  )
+  expect(servicePreflightIndex).toBeLessThan(
+    source.indexOf("consumeQuota(auth.userId, 'agent_execute')")
+  )
+  expect(source.match(/const service = await createServiceClient\(\)/g)).toHaveLength(1)
 })
 
 test('server-managed task fields stay on service-role write paths', () => {

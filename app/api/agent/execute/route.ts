@@ -64,6 +64,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unknown action type' }, { status: 400 })
   }
 
+  // Preflight the output persistence path before spending rate-limit, quota,
+  // or provider work. Agent execution is only useful if the result can be
+  // saved to the owned task record.
+  const service = await createServiceClient()
+  if (!service) {
+    return NextResponse.json(
+      { error: 'Database not configured' },
+      { status: 503 }
+    )
+  }
+
   // Gate 1: rate limit (bursts of calls from a single user).
   const gate = await consumeRateLimit(auth.userId, RATE_LIMITS.aiAgent)
   if (!gate.allowed) {
@@ -122,14 +133,6 @@ export async function POST(request: NextRequest) {
       result,
       typedTask.action_type
     )
-
-    const service = await createServiceClient()
-    if (!service) {
-      return NextResponse.json(
-        { error: 'Database not configured' },
-        { status: 503 }
-      )
-    }
 
     const { data: updatedTask, error: updateError } = await (service as any)
       .from('tasks')
