@@ -27,10 +27,13 @@ function validateProfilePatch(body: Record<string, unknown>) {
       updates.full_name = null
     } else if (typeof body.full_name !== 'string') {
       errors.push({ field: 'full_name', message: 'Must be a string or null.' })
-    } else if (body.full_name.length > MAX_FULL_NAME) {
-      errors.push({ field: 'full_name', message: `Must be ${MAX_FULL_NAME} characters or fewer.` })
     } else {
-      updates.full_name = body.full_name.trim() || null
+      const normalizedName = body.full_name.trim()
+      if (normalizedName.length > MAX_FULL_NAME) {
+        errors.push({ field: 'full_name', message: `Must be ${MAX_FULL_NAME} characters or fewer.` })
+      } else {
+        updates.full_name = normalizedName || null
+      }
     }
   }
 

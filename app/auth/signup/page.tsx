@@ -14,6 +14,7 @@ const features = [
   'Agent execution (research, draft, prep)',
   'Daily briefings',
 ]
+const MAX_FULL_NAME = 120
 
 export default function SignupPage() {
   const router = useRouter()
@@ -30,6 +31,22 @@ export default function SignupPage() {
     setIsLoading(true)
     setError(null)
 
+    const normalizedFullName = fullName.trim()
+    const normalizedEmail = email.trim()
+    if (!normalizedFullName) {
+      setError('Full name is required.')
+      setIsLoading(false)
+      return
+    }
+    if (normalizedFullName.length > MAX_FULL_NAME) {
+      setError(`Full name must be ${MAX_FULL_NAME} characters or fewer.`)
+      setIsLoading(false)
+      return
+    }
+    if (normalizedEmail !== email) {
+      setEmail(normalizedEmail)
+    }
+
     const supabase = createClient()
 
     // Demo mode: if Supabase isn't configured, go straight to app
@@ -40,11 +57,11 @@ export default function SignupPage() {
 
     try {
       const { error: authError } = await supabase.auth.signUp({
-        email,
+        email: normalizedEmail,
         password,
         options: {
           data: {
-            full_name: fullName,
+            full_name: normalizedFullName,
           },
           emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
@@ -138,6 +155,7 @@ export default function SignupPage() {
               onChange={(e) => setFullName(e.target.value)}
               icon={<User className="h-4 w-4" />}
               required
+              maxLength={MAX_FULL_NAME}
               autoComplete="name"
             />
 

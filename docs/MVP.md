@@ -53,6 +53,7 @@ Required fields:
 
 Acceptance gate:
 - Users can inspect and edit core task fields.
+- Users can save bounded profile preferences that keep account personalization valid.
 - Users can explicitly review and restore cancelled tasks so agent-side cancellation does not hide work from the human owner.
 - Non-default task statuses are visible on task cards so human owners can spot work that is in progress, waiting, done, or cancelled.
 - Failed authenticated edits/deletes do not leave stale optimistic UI without warning.
@@ -225,7 +226,7 @@ Monday is not credible if:
 - the product is described as autonomous beyond bounded research/draft/prep output
 
 ## Launch blockers
-- Real Supabase migrations, auth, RLS, task CRUD, task-note CRUD, profile/task/task-note column grants, quota, uniqueness, and audit smoke.
+- Real Supabase migrations, auth, RLS, task CRUD, task-note CRUD, profile/task/task-note column grants and content bounds, quota, uniqueness, and audit smoke.
 - Real authenticated app API task CRUD, task-note, and agent-review route smoke with `npm run smoke:app`.
 - Real OpenAI parse, prioritize, briefing, and execution smoke. `npm run smoke:openai -- --app` can verify the authenticated app routes against a disposable Supabase user once real OpenAI/Supabase/app env is loaded.
 - Stripe test-mode checkout, portal, signed webhook, entitlement, quota, and idempotency smoke. `npm run smoke:stripe -- --write --webhook` now covers authenticated checkout and portal routes, signed webhook delivery, unknown-price fail-closed behavior, free/pro/power tier transitions, payment-failure downgrade to Free, quota plan-state boundaries, authenticated `POST /api/tasks` quota behavior under those tiers, and duplicate webhook replay.

@@ -237,6 +237,30 @@ async function writeSmoke() {
     if (profileUpdateError) fail('allowed profile update failed', profileUpdateError)
     console.log('ok profile self-update allowed fields')
 
+    const invalidProfileUpdates = [
+      {
+        label: 'blank profile name',
+        payload: { full_name: '   ' },
+      },
+      {
+        label: 'oversized profile name',
+        payload: { full_name: 'x'.repeat(121) },
+      },
+      {
+        label: 'invalid profile timezone',
+        payload: { timezone: 'Not/AZone' },
+      },
+    ]
+
+    for (const { label, payload } of invalidProfileUpdates) {
+      const { error } = await userClient
+        .from('profiles')
+        .update(payload)
+        .eq('id', userId)
+      if (!error) fail(`direct profile update accepted ${label}`)
+    }
+    console.log('ok profile self-update enforces content bounds')
+
     const { error: tierUpdateError } = await userClient
       .from('profiles')
       .update({ subscription_tier: 'power' })

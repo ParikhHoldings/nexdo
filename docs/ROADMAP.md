@@ -48,7 +48,7 @@
 ## Near-term priorities
 - verify install, lint, build, and local dev rails
 - keep `npm run lint`, `npm run typecheck`, `npm run build`, and `npm run test:e2e` passing
-- verify Supabase migrations, RLS, auth, demo-mode fallback, profile/task/task-note column grants, audit privacy, and profile/task flows
+- verify Supabase migrations, RLS, auth, demo-mode fallback, profile/task/task-note column grants and content bounds, audit privacy, and profile/task flows
 - verify authenticated app API task CRUD and task-note routes with real Supabase env
 - verify OpenAI parse/prioritize/briefing/agent execution behavior with real env
 - verify Stripe checkout/portal/webhook behavior in test mode before any pricing commitment

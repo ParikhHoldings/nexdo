@@ -455,6 +455,37 @@ test('server-managed task fields stay on service-role write paths', () => {
   }
 })
 
+test('browser profile preference writes stay bounded', () => {
+  const grants = readFileSync('supabase/migrations/006_profile_column_grants.sql', 'utf8')
+  const constraints = readFileSync(
+    'supabase/migrations/011_profile_content_constraints.sql',
+    'utf8'
+  )
+  const profileRoute = readFileSync('app/api/profile/route.ts', 'utf8')
+  const supabaseSmoke = readFileSync('scripts/smoke-supabase.mjs', 'utf8')
+  const signupPage = readFileSync('app/auth/signup/page.tsx', 'utf8')
+
+  expect(grants).toContain('grant update (full_name, timezone, work_type)')
+  expect(grants).not.toContain('subscription_tier)')
+  expect(grants).not.toContain('stripe_customer_id')
+  expect(grants).not.toContain('api_key_hash')
+
+  expect(constraints).toContain('profiles_full_name_length')
+  expect(constraints).toContain('char_length(btrim(full_name)) between 1 and 120')
+  expect(constraints).toContain('profiles_timezone_allowed')
+  expect(constraints).toContain("'America/Chicago'")
+  expect(constraints).toContain("'America/Los_Angeles'")
+  expect(constraints).toContain("'UTC'")
+
+  expect(supabaseSmoke).toContain('profile self-update enforces content bounds')
+  expect(supabaseSmoke).toContain('direct profile update accepted')
+  expect(profileRoute).toContain('const normalizedName = body.full_name.trim()')
+  expect(profileRoute).toContain('updates.full_name = normalizedName || null')
+  expect(signupPage).toContain('const normalizedFullName = fullName.trim()')
+  expect(signupPage).toContain('full_name: normalizedFullName')
+  expect(signupPage).toContain('maxLength={MAX_FULL_NAME}')
+})
+
 test('Connect AI no-key guidance deep-links to API settings', () => {
   const source = readFileSync('app/(app)/settings/mcp/page.tsx', 'utf8')
 

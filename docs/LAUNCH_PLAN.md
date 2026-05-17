@@ -43,7 +43,7 @@ The goal is not a broad public launch. The credible Monday target is a verified 
 - Updated docs that tell future agents what exists, what is verified, and what is still blocked.
 
 ### Must verify before external users
-- Supabase migrations, auth, profile creation, RLS, profile/task/task-note column grants, task CRUD, audit privacy, and agent external-ref uniqueness against a real project.
+- Supabase migrations, auth, profile creation, RLS, profile/task/task-note column grants and content bounds, task CRUD, audit privacy, and agent external-ref uniqueness against a real project.
 - Authenticated app API task CRUD and task-note routes against a real Supabase-backed app session.
 - Rendered front-end routes against the real preview/production origin with `npm run smoke:routes -- --url=<origin>`.
 - OpenAI-backed parse, prioritize, briefing, and research/draft/prep execution with a real API key.

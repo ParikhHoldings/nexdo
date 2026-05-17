@@ -70,6 +70,16 @@ Route validation protects app API writes, but direct browser Supabase writes can
 ### Impact
 Future task field limits should be updated in both `lib/task-validation.ts` and the database constraint layer. Real Supabase smoke must verify direct browser denial for invalid task content as well as server-managed metadata columns.
 
+## 2026-05-17 - Browser profile preferences are database-bounded
+### Decision
+Direct authenticated browser Supabase updates on `profiles` remain limited to `full_name`, `timezone`, and `work_type`, and those preference columns must satisfy database constraints for non-empty bounded names and supported timezone values.
+
+### Why
+Profile names and timezones flow into settings, briefings, and account state. Route validation protects `/api/profile`, but direct browser Supabase updates still need the same content boundary so clients cannot persist invalid personalization state.
+
+### Impact
+Future profile preference fields should be added to both the route validator and the database constraint layer. Real Supabase smoke must verify direct denial for invalid profile names/timezones as well as sensitive profile column updates.
+
 ## 2026-05-17 - Browser task-note metadata is column-limited
 ### Decision
 Direct authenticated browser Supabase inserts on `task_notes` are limited to `task_id` and `content`, while note metadata such as `note_type` and `created_at` stays server-managed. New task-note rows must also satisfy the same non-empty, 2,000-character content bound used by the app route. Authenticated task-note API routes should write note metadata through service-role paths after checking task ownership.
