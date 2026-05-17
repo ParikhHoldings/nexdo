@@ -33,6 +33,7 @@
 - Carried parsed due times from natural-language capture through demo tasks, authenticated task creation, MCP-created tasks, validators, and OpenAI smoke expectations.
 - Ordered All Tasks due-date sorting and Upcoming date groups by same-day due time so timed work scans before untimed work.
 - Made local browser due-task reminders order due-today work by due time before priority and show due time in today's reminder body.
+- Verified PR #3 browser-reminder product head `537c04b8b92b6fff38bb1519fe016e3fa7f0a20b` passed GitHub Web rails; Vercel remained account build-rate-limited on that head, so fresh preview-deploy evidence is still blocked.
 - Verified PR #3 due-time scan-ordering head `1d12864044597dc7202ab068bc423f9ba25cf667` passed GitHub Web rails and Vercel preview deployment; protected-preview route smoke remains blocked by Vercel Deployment Protection without `VERCEL_AUTOMATION_BYPASS_SECRET` or an unprotected URL.
 - Tightened shared task date/time validation so human routes, AI task sanitization/output validation, and MCP updates reject impossible calendar dates and out-of-range local times.
 - Moved deterministic fallback task parsing onto the shared due-date normalizer for explicit dates.
