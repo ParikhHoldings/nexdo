@@ -339,6 +339,18 @@ async function writeSmoke() {
     }
     console.log('ok direct task insert cannot spoof task source')
 
+    const { error: relationshipInsertError } = await userClient
+      .from('tasks')
+      .insert({
+        user_id: userId,
+        title: 'Nexdo browser relationship spoof insert',
+        related_task_ids: [crypto.randomUUID()],
+      })
+    if (!relationshipInsertError) {
+      fail('direct task insert could write relationship metadata')
+    }
+    console.log('ok direct task insert cannot write relationship metadata')
+
     const invalidTaskInserts = [
       {
         label: 'blank task title',
@@ -464,6 +476,15 @@ async function writeSmoke() {
       fail('direct task update could bypass task content bounds')
     }
     console.log('ok direct task update enforces task content bounds')
+
+    const { error: relationshipUpdateError } = await userClient
+      .from('tasks')
+      .update({ related_task_ids: [crypto.randomUUID()] })
+      .eq('id', insertedTask.id)
+    if (!relationshipUpdateError) {
+      fail('direct task update could write relationship metadata')
+    }
+    console.log('ok direct task update cannot write relationship metadata')
 
     const { error: protectedTaskUpdateError } = await userClient
       .from('tasks')

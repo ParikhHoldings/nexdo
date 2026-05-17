@@ -38,12 +38,12 @@ The goal is not a broad public launch. The credible Monday target is a verified 
 - MCP provider verification now uses Vercel protection bypass headers when configured, covering OpenAPI, JSON-RPC, SSE, ChatGPT Actions, scoped-key denial, write, and audit checks against protected previews.
 - Authenticated app-route verification now has a repeatable smoke script, `npm run smoke:app`, including task CRUD, task notes, and agent-review save behavior; it still needs to be run with real Supabase credentials against the target app URL.
 - Supabase migrations now include quota cleanup so usage read probes reset monthly counters without writing zero-quantity audit events.
-- Supabase migrations now column-limit and content-bound direct browser task inserts/updates so the broad task source flag, agent output, source-agent metadata, ingestion intent, completion timestamps, blank titles, oversized text, impossible estimates, and unbounded people/tag arrays stay controlled; direct browser task-note inserts cannot spoof note type or creation time; authenticated task creation, imports, and note routes use service-role persistence after auth/quota/ownership checks to preserve server-managed fields.
+- Supabase migrations now column-limit and content-bound direct browser task inserts/updates so the broad task source flag, agent output, source-agent metadata, ingestion intent, completion timestamps, task relationship metadata, blank titles, oversized text, impossible estimates, and unbounded people/tag arrays stay controlled; direct browser task-note inserts cannot spoof note type or creation time; authenticated task creation, imports, and note routes use service-role persistence after auth/quota/ownership checks to preserve server-managed fields.
 - Truthful public copy that describes bounded AI assistance instead of open-ended autonomous task completion. Draft tightened on 2026-05-16; still needs Quill/founder approval before external use.
 - Updated docs that tell future agents what exists, what is verified, and what is still blocked.
 
 ### Must verify before external users
-- Supabase migrations, auth, profile creation, RLS, profile insert/read/update grants and content bounds, task/task-note column grants and content bounds, task CRUD, Stripe event record privacy/write denial, usage-event mutation denial, rate-limit bucket privacy, daily briefing cache write denial, audit privacy, and agent external-ref uniqueness against a real project.
+- Supabase migrations, auth, profile creation, RLS, profile insert/read/update grants and content bounds, task/task-note column grants and content bounds, task relationship write denial, task CRUD, Stripe event record privacy/write denial, usage-event mutation denial, rate-limit bucket privacy, daily briefing cache write denial, audit privacy, and agent external-ref uniqueness against a real project.
 - Authenticated app API task CRUD and task-note routes against a real Supabase-backed app session.
 - Rendered front-end routes against the real preview/production origin with `npm run smoke:routes -- --url=<origin>`.
 - OpenAI-backed parse, prioritize, briefing, and research/draft/prep execution with a real API key.
@@ -68,7 +68,7 @@ The goal is not a broad public launch. The credible Monday target is a verified 
 ## AI-agent product path
 1. Stabilize the API-key based task layer around list, create, update, add notes, complete, search, get, and brief.
 2. Make agent-created, agent-updated, agent-noted, and agent-completed task mutations distinguishable with `source_agent_id`, `external_ref`, `ingestion_intent`, and `agent_metadata`.
-3. Verify idempotency, direct browser column denial, and safer conflict handling for agent writes against a real Supabase project.
+3. Verify idempotency, direct browser column denial including task relationship metadata, and safer conflict handling for agent writes against a real Supabase project.
 4. Verify scoped API keys and least-privilege permissions against a real Supabase project.
 5. Verify audit trails for agent actions with real MCP/API-key execution.
 6. Expand from task access to controlled execution requests only after the bounded human flow is trusted.

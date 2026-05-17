@@ -333,6 +333,10 @@ test('server-managed task fields stay on service-role write paths', () => {
     'supabase/migrations/009_task_source_grants.sql',
     'utf8'
   )
+  const relationshipMigration = readFileSync(
+    'supabase/migrations/016_task_relationship_grants.sql',
+    'utf8'
+  )
   const contentMigration = readFileSync(
     'supabase/migrations/010_task_content_constraints.sql',
     'utf8'
@@ -353,12 +357,22 @@ test('server-managed task fields stay on service-role write paths', () => {
   const updateGrant = sourceMigration.match(
     /grant update \(([\s\S]*?)\) on table tasks to authenticated;/i
   )?.[1]
+  const relationshipInsertGrant = relationshipMigration.match(
+    /grant insert \(([\s\S]*?)\) on table tasks to authenticated;/i
+  )?.[1]
+  const relationshipUpdateGrant = relationshipMigration.match(
+    /grant update \(([\s\S]*?)\) on table tasks to authenticated;/i
+  )?.[1]
   expect(metadataInsertGrant).toBeTruthy()
   expect(metadataUpdateGrant).toBeTruthy()
   expect(insertGrant).toBeTruthy()
   expect(updateGrant).toBeTruthy()
+  expect(relationshipInsertGrant).toBeTruthy()
+  expect(relationshipUpdateGrant).toBeTruthy()
   expect(sourceMigration).toContain('revoke insert on table tasks from authenticated')
   expect(sourceMigration).toContain('revoke update on table tasks from authenticated')
+  expect(relationshipMigration).toContain('revoke insert on table tasks from authenticated')
+  expect(relationshipMigration).toContain('revoke update on table tasks from authenticated')
   expect(contentMigration).toContain('tasks_title_length')
   expect(contentMigration).toContain('char_length(btrim(title)) between 1 and 500')
   expect(contentMigration).toContain('tasks_context_length')
@@ -380,6 +394,10 @@ test('server-managed task fields stay on service-role write paths', () => {
   }
   expect(insertGrant).not.toMatch(/\bsource\b/)
   expect(updateGrant).not.toMatch(/\bsource\b/)
+  for (const grant of [relationshipInsertGrant, relationshipUpdateGrant]) {
+    expect(grant).not.toContain('parent_task_id')
+    expect(grant).not.toContain('related_task_ids')
+  }
 
   expect(noteMigration).toContain('revoke insert on table task_notes from authenticated')
   expect(noteMigration).toContain('revoke update on table task_notes from authenticated')
@@ -431,6 +449,8 @@ test('server-managed task fields stay on service-role write paths', () => {
   expect(supabaseSmoke).toContain('task_notes schema')
   expect(supabaseSmoke).toContain('direct task insert cannot spoof task source')
   expect(supabaseSmoke).toContain('direct task update cannot spoof task source')
+  expect(supabaseSmoke).toContain('direct task insert cannot write relationship metadata')
+  expect(supabaseSmoke).toContain('direct task update cannot write relationship metadata')
   expect(supabaseSmoke).toContain('direct task insert enforces task content bounds')
   expect(supabaseSmoke).toContain('direct task update enforces task content bounds')
   expect(supabaseSmoke).toContain('direct task note insert cannot write metadata columns')

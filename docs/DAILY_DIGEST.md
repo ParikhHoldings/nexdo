@@ -166,6 +166,7 @@
 - Kept Stripe webhook idempotency records service-owned so browser clients cannot read or spoof processed billing event state.
 - Kept usage-event mutations and rate-limit buckets service-owned so browser clients cannot spoof quota history or inspect/reset rate gates.
 - Kept cached daily briefing writes service-owned so browser clients cannot spoof provider-generated briefing cache rows.
+- Kept task relationship metadata service-owned so direct browser task writes cannot set parent or related-task links until ownership-aware linking exists.
 - Made the MCP settings tool list reflect the current API key scopes.
 - Made the MCP settings setup flow prerequisite-aware, disabled free/no-key connection tests, and clarified that external clients need the full one-time key rather than the stored key hint.
 - Added a recent agent activity surface on the MCP settings page backed by `/api/mcp/events`.

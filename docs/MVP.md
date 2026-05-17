@@ -60,6 +60,7 @@ Acceptance gate:
 - AI/provider output is validated before becoming task data.
 - Generic user edits cannot spoof server-managed agent output.
 - Direct browser Supabase writes cannot spoof server-managed agent output, the broad task source flag, source-agent metadata, ingestion intent, or completion timestamps.
+- Direct browser Supabase writes cannot set task relationship metadata until owned task linking exists.
 - Direct browser Supabase writes cannot bypass core task content bounds for blank titles, oversized text, impossible estimates, or unbounded people/tag arrays.
 - Direct browser Supabase writes cannot spoof task-note metadata such as note type or creation time.
 - Direct browser Supabase writes cannot bypass the bounded task-note content contract.
@@ -72,7 +73,7 @@ Current evidence:
 - The task store rolls back failed authenticated edit/delete mutations and surfaces visible app notifications.
 - `lib/ai-response-validation.ts` bounds OpenAI output.
 - `PATCH /api/tasks/[id]` uses `lib/task-validation.ts` to allowlist user-editable fields and reject protected/server-managed fields such as `user_id`, `completed_at`, `source_agent_id`, and `agent_output`.
-- Migrations `007_task_column_grants.sql`, `009_task_source_grants.sql`, and `010_task_content_constraints.sql` limit direct authenticated task inserts/updates to user-editable columns that exclude the broad task source flag and still enforce the core task content bounds, while human task creation, task completion, agent output, trace metadata, and imported completion/external refs are written through server/service-role paths.
+- Migrations `007_task_column_grants.sql`, `009_task_source_grants.sql`, `010_task_content_constraints.sql`, and `016_task_relationship_grants.sql` limit direct authenticated task inserts/updates to user-editable columns that exclude the broad task source flag, task relationship metadata, and other server-managed fields while still enforcing the core task content bounds; human task creation, task completion, agent output, trace metadata, and imported completion/external refs are written through server/service-role paths.
 - Migration `008_task_note_column_grants.sql` limits direct authenticated task-note inserts to `task_id` and `content`, while also enforcing non-empty note content up to 2,000 characters; authenticated note routes write server-managed note metadata through the service-role path after ownership checks.
 
 ### 3. Prioritize
@@ -226,7 +227,7 @@ Monday is not credible if:
 - the product is described as autonomous beyond bounded research/draft/prep output
 
 ## Launch blockers
-- Real Supabase migrations, auth, RLS, task CRUD, task-note CRUD, profile insert/read/update grants and content bounds, task/task-note column grants and content bounds, Stripe event record privacy/write denial, usage-event mutation denial, rate-limit bucket privacy, daily briefing cache write denial, quota, uniqueness, and audit smoke.
+- Real Supabase migrations, auth, RLS, task CRUD, task-note CRUD, profile insert/read/update grants and content bounds, task/task-relationship/task-note column grants and content bounds, Stripe event record privacy/write denial, usage-event mutation denial, rate-limit bucket privacy, daily briefing cache write denial, quota, uniqueness, and audit smoke.
 - Real authenticated app API task CRUD, task-note, and agent-review route smoke with `npm run smoke:app`.
 - Real OpenAI parse, prioritize, briefing, and execution smoke. `npm run smoke:openai -- --app` can verify the authenticated app routes against a disposable Supabase user once real OpenAI/Supabase/app env is loaded.
 - Stripe test-mode checkout, portal, signed webhook, entitlement, quota, and idempotency smoke. `npm run smoke:stripe -- --write --webhook` now covers authenticated checkout and portal routes, signed webhook delivery, unknown-price fail-closed behavior, free/pro/power tier transitions, payment-failure downgrade to Free, quota plan-state boundaries, authenticated `POST /api/tasks` quota behavior under those tiers, and duplicate webhook replay.

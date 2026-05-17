@@ -31,7 +31,7 @@ The product promise should be grounded in what the code actually supports:
 - Connect AI setup and settings UI should keep API access clearly gated to Power/team plans until pricing or entitlement truth changes
 - hashed API-key storage with one-time key reveal, short key hints in settings, and legacy raw-key migration/fallback
 - narrowed browser-visible profile columns, direct profile inserts, and direct profile self-updates so profile rows stay server-owned while clients can read/edit bounded preferences without direct access to Stripe IDs, raw/hash API-key material, quota internals, or billing mutation fields
-- narrowed direct browser task insert/update columns so agent output, the broad task source flag, source-agent metadata, ingestion intent, and completion timestamps remain server-managed, with database bounds on user-editable task content
+- narrowed direct browser task insert/update columns so agent output, the broad task source flag, source-agent metadata, ingestion intent, completion timestamps, and task relationship metadata remain server-managed, with database bounds on user-editable task content
 - narrowed direct browser task-note insert/update columns so note type and creation time remain server-managed while bounded note content stays user-editable
 - authenticated import routes persist imported task rows through the service-role path after auth/quota checks so imported completion timestamps and external source references can be kept without reopening those columns to direct browser writes
 - bounded OpenAI response validation for task parsing, prioritization, briefing, and research/draft/prep output before provider content is returned or persisted
@@ -49,7 +49,7 @@ Current local verification from 2026-05-17:
 - `npm run lint` passed
 - `npm run typecheck` passed
 - `npm run build` passed with strict TypeScript and ESLint checks enabled
-- `npm run test:e2e` passed for 101 tests covering public landing/signup demo CTA smoke, logged-out demo workflows, task workspace lifecycle, task-detail notes save/reload behavior, Today focus/sidebar/briefing alignment for undated active tasks and cancelled-only work, mobile navigation open/close behavior, local-date due-today behavior, file-import preview/confirm flow, agent output history/review notes, persistent appearance and browser reminder settings, task/agent auth guards, shared executable action-type rails that keep `manual`/`remind` tasks out of AI execution controls, owned task-note route guardrails, authenticated app smoke source coverage for task CRUD and notes, profile/task/task-note/Stripe event/usage/rate-limit/daily-briefing grant source coverage, MCP/OpenAPI/action auth smoke tests, API-to-Connect-AI handoff coverage, DB-backed MCP handler and API-key validation coverage including audit preflight failure behavior and `add_task_note` append/readback behavior, agent-completed trace visibility, billing guardrails, deterministic task-intelligence coverage including relative-date title cleanup, import parser coverage, Stripe entitlement mapping, task route validation, local validation helper contracts, invalid date/time rails, MCP/OpenAPI `cancelled` status contract alignment, and cancelled-task UI review/restore coverage
+- `npm run test:e2e` passed for 101 tests covering public landing/signup demo CTA smoke, logged-out demo workflows, task workspace lifecycle, task-detail notes save/reload behavior, Today focus/sidebar/briefing alignment for undated active tasks and cancelled-only work, mobile navigation open/close behavior, local-date due-today behavior, file-import preview/confirm flow, agent output history/review notes, persistent appearance and browser reminder settings, task/agent auth guards, shared executable action-type rails that keep `manual`/`remind` tasks out of AI execution controls, owned task-note route guardrails, authenticated app smoke source coverage for task CRUD and notes, profile/task/task-relationship/task-note/Stripe event/usage/rate-limit/daily-briefing grant source coverage, MCP/OpenAPI/action auth smoke tests, API-to-Connect-AI handoff coverage, DB-backed MCP handler and API-key validation coverage including audit preflight failure behavior and `add_task_note` append/readback behavior, agent-completed trace visibility, billing guardrails, deterministic task-intelligence coverage including relative-date title cleanup, import parser coverage, Stripe entitlement mapping, task route validation, local validation helper contracts, invalid date/time rails, MCP/OpenAPI `cancelled` status contract alignment, and cancelled-task UI review/restore coverage
 - `npm audit --audit-level=moderate` passed with 0 vulnerabilities after the Next.js 16 / ESLint 9 upgrade
 - `npm run smoke:launch -- --skip-local --skip-providers --technical-only` passed; provider smokes, public-copy approval, and production deploy approval remain separate manual gates
 - `npm run verify:env` failed because `.env.local` is absent; only `.env.local.example` exists in this workspace
@@ -145,11 +145,11 @@ present.
 
 `npm run smoke:supabase -- --write` should verify real migrations, profile
 column grants, direct task and task-note column-grant denials for
-server-managed fields, task-source spoofing, task content bounds, agent
-external-ref uniqueness, private audit-event reads, browser audit-event insert
-denial, service-owned Stripe webhook event records, quota increments/no-ops,
-usage-event mutation denial, rate-limit bucket privacy, daily briefing cache
-write denial, and rate-limit allow/block behavior.
+server-managed fields, task-source spoofing, task relationship write denial,
+task content bounds, agent external-ref uniqueness, private audit-event reads,
+browser audit-event insert denial, service-owned Stripe webhook event records,
+quota increments/no-ops, usage-event mutation denial, rate-limit bucket privacy,
+daily briefing cache write denial, and rate-limit allow/block behavior.
 
 `npm run smoke:routes -- --url=https://preview.example` verifies the
 launch-facing marketing, app, auth, import, settings, MCP setup, privacy, and

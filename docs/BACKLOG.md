@@ -68,6 +68,7 @@
 - added migration `008_task_note_column_grants.sql` to keep task-note type and creation time server-managed, enforce bounded note content for direct inserts, move authenticated note metadata writes through the service-role route, and expand Supabase smoke/source coverage for note metadata and length denials
 - added migration `009_task_source_grants.sql` to keep the broad task `source` flag server-mediated, moved authenticated task creation through the service-role route after validation/quota checks, and expanded Supabase smoke/source coverage for direct `source: agent` spoof denial
 - added migration `010_task_content_constraints.sql` so direct browser task inserts/updates cannot bypass core task content bounds for blank titles, oversized text, impossible estimates, or unbounded people/tag arrays
+- added migration `016_task_relationship_grants.sql` so direct browser task inserts/updates cannot set `parent_task_id` or `related_task_ids` until a real ownership-aware linking feature exists
 - moved authenticated agent execution service-role output persistence preflight ahead of rate-limit, quota, and provider work so runs do not spend work when output cannot be saved
 - updated the GitHub Actions verify workflow to `actions/checkout@v5` and `actions/setup-node@v5` so the CI rail no longer depends on deprecated Node 20 action runtimes
 - refreshed README, launch plan, and roadmap verification summaries so repo-facing docs matched the then-current local rail and PR check state
@@ -214,7 +215,7 @@
 ## High priority
 - configure and verify the real production deploy target
 - provide `VERCEL_AUTOMATION_BYPASS_SECRET` locally or use an unprotected preview URL so remote route smoke can verify the latest Vercel preview instead of stopping at Vercel Deployment Protection
-- run `npm run smoke:supabase -- --write` against a real Supabase project after applying migrations, including hashed API-key columns, profile column read/update grants, profile insert/content-bound denials, direct task and task-note column-grant denials, audit-event privacy, Stripe event record privacy/write denial, usage-event mutation denial, rate-limit bucket privacy, daily briefing cache write denial, and agent external-ref uniqueness
+- run `npm run smoke:supabase -- --write` against a real Supabase project after applying migrations, including hashed API-key columns, profile column read/update grants, profile insert/content-bound denials, direct task/task-relationship/task-note column-grant denials, audit-event privacy, Stripe event record privacy/write denial, usage-event mutation denial, rate-limit bucket privacy, daily briefing cache write denial, and agent external-ref uniqueness
 - run `npm run smoke:app` with real Supabase env and the target app URL to verify authenticated app task CRUD, task-note routes, and agent-review persistence
 - run `npm run smoke:openai -- --app` with real OpenAI, Supabase, and target app env
 - run `npm run smoke:stripe -- --write --webhook` with Stripe test-mode keys and target Supabase/app env to verify authenticated checkout, portal, webhook events, quota plan-state boundaries, authenticated task-create quota behavior, and idempotency
