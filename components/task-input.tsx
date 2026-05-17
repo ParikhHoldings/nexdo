@@ -45,13 +45,22 @@ export function TaskInput({ onTaskCreated }: TaskInputProps) {
 
     try {
       // Check for quick mode: /quick prefix
-      const isQuickMode = rawInput.startsWith('/quick ')
-      const taskInput = isQuickMode ? rawInput.slice(7) : rawInput
+      const quickModeMatch = /^\/quick(?:\s+|$)/i.exec(rawInput)
+      const isQuickMode = Boolean(quickModeMatch)
+      const taskInput = isQuickMode
+        ? rawInput.slice(quickModeMatch![0].length).trim()
+        : rawInput
       const supabase = createClient()
 
       let parsedTask: ParsedTask
 
       if (isQuickMode) {
+        if (!taskInput) {
+          setInput('/quick ')
+          toast.info('Add a task after /quick', 'Quick mode skips AI parsing.')
+          return
+        }
+
         // Quick mode: skip AI parsing
         parsedTask = {
           title: taskInput,
@@ -249,6 +258,9 @@ export function TaskInput({ onTaskCreated }: TaskInputProps) {
     }
   }
 
+  const trimmedInput = input.trim()
+  const showAiBadge = Boolean(trimmedInput && !/^\/quick(?:\s|$)/i.test(trimmedInput))
+
   return (
     <form onSubmit={handleSubmit} className="relative">
       <div
@@ -309,7 +321,7 @@ export function TaskInput({ onTaskCreated }: TaskInputProps) {
           </div>
 
           {/* AI badge */}
-          {input.trim() && !input.startsWith('/quick') && (
+          {showAiBadge && (
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}

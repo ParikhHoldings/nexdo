@@ -124,6 +124,18 @@ test('demo task capture, briefing, prioritization, and agent output work', async
   await expect(page.getByText(/6 active tasks/)).toBeVisible()
   await expect(page.getByText('Why now:').first()).toBeVisible()
 
+  const taskCapture = page.getByPlaceholder('What needs to get done? Be specific...')
+  await taskCapture.fill('/quick')
+  await page.keyboard.press('Enter')
+  await expect(taskCapture).toHaveValue('/quick ')
+  await expect(page.getByText('Add a task after /quick')).toBeVisible()
+
+  await taskCapture.fill('/quick   Quick capture smoke')
+  await page.keyboard.press('Enter')
+  await expect(
+    page.getByRole('heading', { name: 'Quick capture smoke' })
+  ).toBeVisible()
+
   await page.getByRole('heading', { name: 'Send weekly update to team' }).click()
   await expect(page.getByRole('heading', { name: 'AI Agent' })).toBeVisible()
 
