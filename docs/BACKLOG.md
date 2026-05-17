@@ -249,6 +249,7 @@
 - added real local browser due-task reminders before reintroducing notification controls
 - made local browser due-task reminders order due-today work by due time before priority and show due time in today's reminder body
 - clarified the first revenue wedge around founder/operator AI power users, with agent interoperability as the differentiating Power-user layer instead of the only front-door promise
+- aligned the landing-page draft with the founder/operator AI-power-user wedge while keeping the demo CTA and bounded-AI guardrails
 - tightened launch-facing copy away from open-ended autonomy, unverified traction, and unverified enterprise-security claims
 - verified `npm ci`, `npm run lint`, `npm run typecheck`, `npm run build`, and `npm run test:e2e` locally
 

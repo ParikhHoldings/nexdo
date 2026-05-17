@@ -58,7 +58,7 @@ export default function LandingPage() {
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 border border-accent/20 mb-8">
             <Sparkles className="h-4 w-4 text-accent" />
-            <span className="text-sm text-accent">Early-access task workspace</span>
+            <span className="text-sm text-accent">For founder/operator AI power users</span>
           </div>
 
           {/* Headline */}
@@ -71,8 +71,9 @@ export default function LandingPage() {
 
           {/* Subhead */}
           <p className="text-xl text-zinc-400 max-w-2xl mx-auto mb-10">
-            Nexdo turns messy task capture into structured priorities, daily
-            briefings, and reviewable AI assistance for bounded work.
+            Nexdo helps founders and operators turn messy task capture into
+            structured priorities, daily briefings, and reviewable AI
+            assistance for bounded work.
           </p>
 
           {/* CTAs */}
@@ -95,7 +96,7 @@ export default function LandingPage() {
           {/* Product trust */}
           <div className="mt-12 inline-flex items-center gap-3 rounded-full border border-zinc-800 bg-zinc-900/60 px-4 py-2 text-sm text-zinc-400">
             <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-            <span>Demo path: capture, prioritize, brief, and review bounded AI output.</span>
+            <span>Demo path: capture real work, prioritize the day, and review bounded AI output.</span>
           </div>
         </div>
 
@@ -115,11 +116,12 @@ export default function LandingPage() {
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl sm:text-4xl font-bold text-zinc-100 mb-4">
-              Static to-do lists lose the context
+              Founder/operator task lists lose the context
             </h2>
             <p className="text-lg text-zinc-400 max-w-2xl mx-auto">
               They strip the &quot;why&quot; from your tasks, leaving you with a lifeless
-              list that doesn&apos;t understand context, urgency, or who&apos;s waiting.
+              list that doesn&apos;t understand urgency, who&apos;s waiting, or which
+              next step will actually move the business.
             </p>
           </div>
 
@@ -128,17 +130,17 @@ export default function LandingPage() {
               {
                 title: 'No context',
                 description:
-                  'Tasks become generic items disconnected from their real-world importance.',
+                  'Investor follow-ups, customer requests, and internal priorities flatten into generic checklist items.',
               },
               {
                 title: 'Manual prioritization',
                 description:
-                  "You waste mental energy deciding what to do next instead of just doing it.",
+                  'You burn focus deciding what matters before you can start the work itself.',
               },
               {
                 title: 'Little execution support',
                 description:
-                  'The app stores tasks but gives little help preparing the next move.',
+                  'The app stores the task but rarely helps prepare the next message, brief, or research pass.',
               },
             ].map((problem) => (
               <div
@@ -173,7 +175,7 @@ export default function LandingPage() {
                 step: '01',
                 title: 'Capture naturally',
                 description:
-                  'Dump your thoughts in natural language. Tell us the context, the people involved, and why it matters.',
+                  'Drop the messy task in plain language, including the people, timing, and context that make it matter.',
                 icon: Brain,
               },
               {
@@ -187,7 +189,7 @@ export default function LandingPage() {
                 step: '03',
                 title: 'Agent assists',
                 description:
-                  'For research, drafting, and prep tasks, Nexdo can generate a useful starting point directly in the app.',
+                  'For research, drafting, and prep tasks, Nexdo can generate a useful starting point for human review.',
                 icon: Zap,
               },
             ].map((item) => {
@@ -294,7 +296,7 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold text-zinc-100 mb-4">
-              Built for today&apos;s users and tomorrow&apos;s agents
+              Built for operators now and agent workflows next
             </h2>
           </div>
 
@@ -305,18 +307,18 @@ export default function LandingPage() {
                 <Users className="h-6 w-6 text-emerald-400" />
               </div>
               <h3 className="text-2xl font-bold text-zinc-100 mb-4">
-                Human Operators
+                Founder/Operator Workflow
               </h3>
               <p className="text-zinc-400 mb-6">
-                Capture messy work in plain language and turn it into an
-                organized, prioritized action plan.
+                Capture customer, fundraising, hiring, product, and operating
+                work in plain language, then turn it into a prioritized plan.
               </p>
               <ul className="space-y-3">
                 {[
                   'Natural language task input',
                   'Contextual daily briefings',
                   'Smart prioritization',
-                  'Reviewable AI output',
+                  'Reviewable research, draft, and prep output',
                 ].map((item) => (
                   <li key={item} className="flex items-center gap-3 text-sm text-zinc-300">
                     <CheckCircle2 className="h-4 w-4 text-emerald-400 flex-shrink-0" />
@@ -335,8 +337,8 @@ export default function LandingPage() {
                 Agent Workflows
               </h3>
               <p className="text-zinc-400 mb-6">
-                A task layer for external AI tools to inspect and update
-                through scoped, reviewable access.
+                A Power-user task layer for external AI tools to inspect and
+                update through scoped, reviewable access.
               </p>
               <ul className="space-y-3">
                 {[
@@ -398,7 +400,7 @@ export default function LandingPage() {
             {[
               {
                 q: 'How is Nexdo different from other to-do apps?',
-                a: 'Nexdo is built around structured task context. It parses natural-language capture, helps prioritize the day, and can generate bounded outputs for research, drafting, and prep tasks.',
+                a: 'Nexdo is built around structured task context for founders and operators. It parses natural-language capture, helps prioritize the day, and can generate bounded outputs for research, drafting, and prep tasks.',
               },
               {
                 q: 'What are "agent executions"?',
@@ -436,11 +438,11 @@ export default function LandingPage() {
         <div className="max-w-4xl mx-auto text-center">
           <div className="bg-gradient-to-br from-accent/20 to-blue-500/10 border border-accent/20 rounded-2xl p-12">
             <h2 className="text-3xl sm:text-4xl font-bold text-zinc-100 mb-4">
-              Ready to move tasks forward?
+              Ready to turn operating work into forward motion?
             </h2>
             <p className="text-lg text-zinc-400 mb-8 max-w-2xl mx-auto">
-              Try a task manager built around context, prioritization, and
-              bounded AI assistance.
+              Try a founder/operator task workspace built around context,
+              prioritization, and bounded AI assistance.
             </p>
             <Link
               href="/today"

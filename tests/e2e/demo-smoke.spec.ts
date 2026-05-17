@@ -11,7 +11,10 @@ test('landing page routes the primary CTA to the working demo path', async ({
   await expect(
     page.getByRole('heading', { name: /Move tasks from capture to/i })
   ).toBeVisible()
+  await expect(page.getByText('For founder/operator AI power users')).toBeVisible()
+  await expect(page.getByText(/helps founders and operators/i)).toBeVisible()
   await expect(page.getByText('bounded AI assistance')).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Founder/Operator Workflow' })).toBeVisible()
   await expect(page.getByText('front-door launch claim')).toHaveCount(0)
 
   const demoLink = page.getByRole('link', { name: 'Try the demo' }).first()
