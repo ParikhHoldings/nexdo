@@ -67,12 +67,13 @@
 - added focused Playwright regression coverage that checks task column grants exclude server-managed fields and task/import server routes use service-role write paths after auth/quota checks
 - moved authenticated agent execution service-role output persistence preflight ahead of rate-limit, quota, and provider work so runs do not spend work when output cannot be saved
 - updated the GitHub Actions verify workflow to `actions/checkout@v5` and `actions/setup-node@v5` so the CI rail no longer depends on deprecated Node 20 action runtimes
-- refreshed README, launch plan, and roadmap verification summaries so repo-facing docs match the latest 82-test local rail and recent preview-deploy evidence
+- refreshed README, launch plan, and roadmap verification summaries so repo-facing docs match the latest 83-test local rail and current PR check state
 - added mobile sidebar open/close and post-navigation collapse coverage to the rendered demo smoke path
 - tightened the Microsoft To Do import token placeholder so the rendered import card does not clip the input text
 - tightened deterministic fallback task parsing so captured task titles stay concise while schedule, priority, and estimate phrases become structured metadata
 - hardened `/quick` capture so empty quick-mode submissions are rejected and extra spacing is trimmed before task creation
 - aligned MCP tool schemas and ChatGPT Actions OpenAPI with handler support for the `cancelled` task status
+- verified PR #3 Web rails; Vercel is blocked by the account build-rate limit on the latest checked PR head
 
 ## Completed 2026-05-16
 - read and updated the repo-level agent context and all existing Markdown/text operating files

@@ -53,7 +53,8 @@ Current local verification from 2026-05-17:
 - `npm run verify:env` failed because `.env.local` is absent; only `.env.local.example` exists in this workspace
 
 Current PR verification:
-- PR #3 Web rails and Vercel preview deployments have passed on recent code heads, including after the local-date task surface rail.
+- PR #3 Web rails passed.
+- Vercel preview deployments have passed on recent code heads, including after the local-date task surface rail, but the latest checked PR head is blocked by the Vercel account build-rate limit.
 - Some documentation-only pushes have hit Vercel account build-rate limits.
 - Always inspect current PR checks before treating preview deploy as current-green. A Vercel build-rate-limit failure is not evidence of an app build failure, but it does mean that head does not have fresh preview-deploy evidence.
 

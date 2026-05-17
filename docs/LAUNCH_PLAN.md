@@ -6,7 +6,7 @@ The goal is not a broad public launch. The credible Monday target is a verified 
 `docs/MVP.md` is the working product contract for this target: capture -> structure -> prioritize -> brief -> bounded execution, plus scoped task-layer access for AI agents.
 
 ### Must ship
-- A local app that passes clean install, lint, typecheck, build, dependency audit, and Playwright smoke tests. Latest full local rail passed 82 tests on 2026-05-17.
+- A local app that passes clean install, lint, typecheck, build, dependency audit, and Playwright smoke tests. Latest full local rail passed 83 tests on 2026-05-17.
 - A usable logged-out demo flow: load `/today`, inspect demo tasks, add a natural-language task, see prioritization, open an executable task, and generate a bounded agent output. Verified locally through the 2026-05-17 Playwright suite.
 - Core task mutation routes now validate allowlisted fields and protect owned-task updates/deletes.
 - Authenticated agent execution now loads owned task records by `taskId`, rejects unsupported action types, saves output server-side, and checks quota-consumption failures.
@@ -19,7 +19,7 @@ The goal is not a broad public launch. The credible Monday target is a verified 
 - MCP smoke can now verify OpenAPI availability, initialized-notification handshake, authenticated SSE endpoint discovery, JSON-RPC list/search/briefing/get/update/complete execution, ChatGPT Actions list/search response shape, read-only scoped key denial, provisioned disposable scoped keys, write idempotency, and required audit rows when run with `--provision --write --audit`.
 - The MCP settings page now exposes recent agent activity from the audit table when a user is authenticated.
 - Agent task creation now has local idempotency handling through `source_agent_id` plus `external_ref`; real Supabase/API-key replay verification is still required.
-- PR #3 Web rails and Vercel preview deployments passed on recent code heads, including after the local-date task surface rail; some documentation-only pushes can still hit Vercel account build-rate limits.
+- PR #3 Web rails passed; Vercel preview deployments passed on recent code heads, including after the local-date task surface rail, but the latest checked PR head is blocked by the Vercel account build-rate limit.
 - Strict build rails: TypeScript and lint failures block `npm run build`. Verified locally on 2026-05-17.
 - OpenAI provider verification now has a repeatable smoke script, `npm run smoke:openai`; it rejects placeholder keys and verifies parse, prioritization, briefing, research, draft, and prep output shapes. With `--app`, it also creates a disposable Supabase user and verifies authenticated app parse, prioritize, briefing, and research/draft/prep execution routes. It still needs to be run with real OpenAI, Supabase, and target app env.
 - App OpenAI helpers now use the same optional `OPENAI_MODEL` default as the smoke script and fall back locally for placeholder keys.
