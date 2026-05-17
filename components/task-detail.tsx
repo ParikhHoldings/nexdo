@@ -39,6 +39,7 @@ import {
   type AgentOutput,
   type AgentReviewStatus,
 } from '@/lib/agent-output'
+import { isExecutableActionType } from '@/lib/task-actions'
 import { Button } from '@/components/ui/button'
 import { Badge, TagBadge, PersonBadge } from '@/components/ui/badge'
 import type {
@@ -386,7 +387,7 @@ export function TaskDetail() {
   if (!selectedTask) return null
 
   const task = selectedTask
-  const isExecutable = ['research', 'draft', 'prep'].includes(task.action_type)
+  const isExecutable = isExecutableActionType(task.action_type)
   const agentOutput = normalizeAgentOutput(task.agent_output, task.action_type)
   const hasAgentOutput = agentOutput !== null
   const showAgentTrace = hasAgentTrace(task)

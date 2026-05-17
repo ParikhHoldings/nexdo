@@ -23,6 +23,11 @@ import { rateLimitResponseHeaders } from '../../lib/rate-limit'
 import { validateTaskInput, validateTaskPatch } from '../../lib/task-validation'
 import { getLocalDateKey } from '../../lib/dates'
 import { isActiveTask, isTodayFocusTask } from '../../lib/task-filters'
+import {
+  asExecutableActionType,
+  EXECUTABLE_ACTION_TYPES,
+  isExecutableActionType,
+} from '../../lib/task-actions'
 import { formatRelativeDate } from '../../lib/utils'
 import type { Task } from '../../lib/database.types'
 
@@ -610,6 +615,31 @@ test('active task helpers include active work and exclude closed work', () => {
       '2026-05-17'
     ).map((task) => task.id)
   ).toEqual(['active-due'])
+})
+
+test('executable action helpers keep agent execution bounded to owned work types', () => {
+  expect(EXECUTABLE_ACTION_TYPES).toEqual(['research', 'draft', 'prep'])
+
+  for (const actionType of EXECUTABLE_ACTION_TYPES) {
+    expect(isExecutableActionType(actionType)).toBe(true)
+    expect(asExecutableActionType(actionType)).toBe(actionType)
+  }
+
+  expect(isExecutableActionType('manual')).toBe(false)
+  expect(isExecutableActionType('remind')).toBe(false)
+  expect(asExecutableActionType('manual')).toBeNull()
+  expect(asExecutableActionType('remind')).toBeNull()
+
+  const taskCardSource = readFileSync('components/task-card.tsx', 'utf8')
+  const taskDetailSource = readFileSync('components/task-detail.tsx', 'utf8')
+  const executeRouteSource = readFileSync('app/api/agent/execute/route.ts', 'utf8')
+  const agentOutputSource = readFileSync('lib/agent-output.ts', 'utf8')
+
+  expect(taskCardSource).toContain('isExecutableActionType(task.action_type)')
+  expect(taskDetailSource).toContain('isExecutableActionType(task.action_type)')
+  expect(executeRouteSource).toContain('isExecutableActionType(actionType)')
+  expect(executeRouteSource).toContain('Task type does not support execution')
+  expect(agentOutputSource).toContain('asExecutableActionType(actionType)')
 })
 
 test('launch smoke orchestrates required technical and approval gates', () => {

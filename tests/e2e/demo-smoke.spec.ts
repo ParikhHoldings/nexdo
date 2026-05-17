@@ -303,6 +303,65 @@ test('agent-created tasks expose trace metadata in task surfaces', async ({ page
   await expect(trace.getByText('channel, confidence')).toBeVisible()
 })
 
+test('remind tasks do not expose AI agent execution controls', async ({ page }) => {
+  const now = new Date().toISOString()
+  const remindTask = {
+    id: 'remind-non-executable-task',
+    user_id: 'demo-user',
+    title: 'Remind me to confirm the launch checklist',
+    raw_input: 'Remind me to confirm the launch checklist',
+    description: null,
+    status: 'todo',
+    priority: 'high',
+    due_date: null,
+    due_time: null,
+    context: 'This should stay a reminder, not an executable AI task.',
+    source: 'manual',
+    action_type: 'remind',
+    estimated_minutes: 5,
+    energy_level: 'quick',
+    people: null,
+    tags: ['launch'],
+    parent_task_id: null,
+    related_task_ids: null,
+    agent_output: null,
+    completed_at: null,
+    created_at: now,
+    updated_at: now,
+    source_agent_id: null,
+    external_ref: null,
+    ingestion_intent: null,
+    agent_metadata: null,
+  }
+
+  await page.addInitScript((tasks: unknown[]) => {
+    window.localStorage.setItem('nexdo_demo_tasks', JSON.stringify(tasks))
+  }, [remindTask])
+
+  await page.goto('/today')
+
+  await expect(
+    page.getByRole('heading', {
+      name: 'Remind me to confirm the launch checklist',
+    })
+  ).toBeVisible()
+  await expect(
+    page.getByRole('button', {
+      name: 'Run agent for "Remind me to confirm the launch checklist"',
+    })
+  ).toHaveCount(0)
+
+  await page
+    .getByRole('heading', { name: 'Remind me to confirm the launch checklist' })
+    .click()
+
+  await expect(
+    page.locator('h2', { hasText: 'Remind me to confirm the launch checklist' })
+  ).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'AI Agent' })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: /Run remind/i })).toHaveCount(0)
+})
+
 test('task mutation endpoints require configured auth', async ({ request }) => {
   const patch = await request.patch('/api/tasks/not-a-real-task', {
     data: { title: 'Should not update', user_id: 'someone-else' },

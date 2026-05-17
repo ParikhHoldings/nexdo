@@ -11,6 +11,7 @@ import {
   quotaFailureStatus,
 } from '@/lib/quota'
 import { appendAgentExecution } from '@/lib/agent-output'
+import { isExecutableActionType } from '@/lib/task-actions'
 
 export async function POST(request: NextRequest) {
   const auth = await requireUser()
@@ -53,15 +54,13 @@ export async function POST(request: NextRequest) {
 
   const typedTask = task as Task
 
-  if (typedTask.action_type === 'manual' || typedTask.action_type === 'remind') {
+  const actionType = typedTask.action_type
+
+  if (!isExecutableActionType(actionType)) {
     return NextResponse.json(
       { error: 'Task type does not support execution' },
       { status: 400 }
     )
-  }
-
-  if (!['research', 'draft', 'prep'].includes(typedTask.action_type)) {
-    return NextResponse.json({ error: 'Unknown action type' }, { status: 400 })
   }
 
   // Preflight the output persistence path before spending rate-limit, quota,
@@ -99,7 +98,7 @@ export async function POST(request: NextRequest) {
 
   try {
     let result = null
-    switch (typedTask.action_type) {
+    switch (actionType) {
       case 'research':
         result = await executeResearch(typedTask)
         break
@@ -131,7 +130,7 @@ export async function POST(request: NextRequest) {
     const agentOutput = appendAgentExecution(
       typedTask.agent_output,
       result,
-      typedTask.action_type
+      actionType
     )
 
     const { data: updatedTask, error: updateError } = await (service as any)

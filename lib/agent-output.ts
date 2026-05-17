@@ -5,13 +5,17 @@ import type {
   PrepOutput,
   ResearchOutput,
 } from './database.types'
+import {
+  asExecutableActionType,
+  type ExecutableActionType,
+} from './task-actions'
 
 export type AgentOutput = ResearchOutput | DraftOutput | PrepOutput
 export type AgentReviewStatus = 'unreviewed' | 'verified' | 'needs_revision'
 
 export interface AgentExecutionRecord {
   id: string
-  action_type: Extract<ActionType, 'research' | 'draft' | 'prep'>
+  action_type: ExecutableActionType
   output: AgentOutput
   created_at: string
 }
@@ -45,12 +49,6 @@ function executionId() {
   return globalThis.crypto?.randomUUID?.() ?? `run-${Date.now()}-${Math.random()}`
 }
 
-function executableActionType(actionType: ActionType) {
-  return ['research', 'draft', 'prep'].includes(actionType)
-    ? (actionType as AgentExecutionRecord['action_type'])
-    : null
-}
-
 function normalizeReview(value: unknown): AgentReview {
   if (!isRecord(value)) {
     return { status: 'unreviewed', note: null, updated_at: null }
@@ -77,7 +75,7 @@ function recordFrom(
   actionType: ActionType,
   createdAt = new Date().toISOString()
 ): AgentExecutionRecord | null {
-  const executable = executableActionType(actionType)
+  const executable = asExecutableActionType(actionType)
   if (!executable) return null
 
   return {
@@ -118,8 +116,8 @@ export function normalizeAgentOutput(
       .map((record) => ({
         id: typeof record.id === 'string' ? record.id : executionId(),
         action_type:
-          executableActionType(record.action_type as ActionType) ??
-          executableActionType(actionType) ??
+          asExecutableActionType(record.action_type as ActionType) ??
+          asExecutableActionType(actionType) ??
           'draft',
         output: isRecord(record.output)
           ? (record.output as AgentOutput)

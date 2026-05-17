@@ -120,7 +120,9 @@ Acceptance gate:
 
 Current evidence:
 - `/api/agent/execute` requires `taskId`, loads owned task records, rejects unsupported action types, and saves output server-side.
+- `lib/task-actions.ts` is the shared executable-action contract for task cards, task detail, authenticated execution, and agent-output history.
 - Playwright verifies demo draft execution produces reviewable output, verification notes, and execution history.
+- Playwright verifies `remind` tasks do not expose AI-agent run controls.
 
 ## AI-agent MVP
 

@@ -16,6 +16,7 @@ import {
 import { cn, formatDueTime, formatRelativeDate, getPriorityColor } from '@/lib/utils'
 import { agentTraceLabel, hasAgentTrace } from '@/lib/agent-trace'
 import { useTaskStore } from '@/lib/store'
+import { isExecutableActionType } from '@/lib/task-actions'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Badge, TagBadge, PersonBadge } from '@/components/ui/badge'
 import type { Task, TaskStatus } from '@/lib/database.types'
@@ -71,7 +72,7 @@ export const TaskCard = forwardRef<HTMLDivElement, TaskCardProps>(function TaskC
     setShowMenu(false)
   }
 
-  const isExecutable = ['research', 'draft', 'prep'].includes(task.action_type)
+  const isExecutable = isExecutableActionType(task.action_type)
   const isDone = task.status === 'done'
   const isCancelled = task.status === 'cancelled'
   const statusBadge = STATUS_BADGE[task.status]

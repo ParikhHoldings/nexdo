@@ -1,5 +1,15 @@
 # Decisions
 
+## 2026-05-17 - Executable AI task types are a shared contract
+### Decision
+`research`, `draft`, and `prep` are the only MVP task action types that can expose AI-agent execution. `manual` and `remind` tasks remain structured planning/reminder tasks, not executable agent jobs. The shared contract lives in `lib/task-actions.ts` and should be used by task cards, task detail, authenticated execution, and agent-output history.
+
+### Why
+The MVP promise is bounded execution, not broad automation. Duplicating the executable action list across UI and server code makes it easy for a future edit to expose a run button or execution path for unsupported task types.
+
+### Impact
+Future executable task types must update `lib/task-actions.ts`, provider output validation, OpenAI smoke coverage, UI copy, server execution handling, and Playwright coverage before they become part of the product promise.
+
 ## 2026-05-17 - Route smoke must distinguish Vercel protection from app failures
 ### Decision
 `npm run smoke:routes` supports Vercel's Deployment Protection automation bypass through `VERCEL_AUTOMATION_BYPASS_SECRET`. When a target preview returns the Vercel login wall, the smoke should fail fast with that specific blocker instead of reporting the preview as an app route failure.
