@@ -329,6 +329,10 @@ test('server-managed task fields stay on service-role write paths', () => {
     'supabase/migrations/007_task_column_grants.sql',
     'utf8'
   )
+  const noteMigration = readFileSync(
+    'supabase/migrations/008_task_note_column_grants.sql',
+    'utf8'
+  )
   const insertGrant = migration.match(
     /grant insert \(([\s\S]*?)\) on table tasks to authenticated;/i
   )?.[1]
@@ -347,6 +351,17 @@ test('server-managed task fields stay on service-role write paths', () => {
     expect(grant).not.toContain('completed_at')
     expect(grant).not.toContain('updated_at')
   }
+
+  expect(noteMigration).toContain('revoke insert on table task_notes from authenticated')
+  expect(noteMigration).toContain('revoke update on table task_notes from authenticated')
+  const noteInsertGrant = noteMigration.match(
+    /grant insert \(([\s\S]*?)\) on table task_notes to authenticated;/i
+  )?.[1]
+  expect(noteInsertGrant).toBeTruthy()
+  expect(noteInsertGrant).toContain('task_id')
+  expect(noteInsertGrant).toContain('content')
+  expect(noteInsertGrant).not.toContain('note_type')
+  expect(noteInsertGrant).not.toContain('created_at')
 
   const taskRoute = readFileSync('app/api/tasks/[id]/route.ts', 'utf8')
   expect(taskRoute).toContain('createClient, createServiceClient')
@@ -369,6 +384,16 @@ test('server-managed task fields stay on service-role write paths', () => {
   expect(reviewRoute).toContain('const service = await createServiceClient()')
   expect(reviewRoute).toContain('agent_output: reviewedOutput')
   expect(reviewRoute).toContain(".eq('user_id', user.id)")
+
+  const notesRoute = readFileSync('app/api/tasks/[id]/notes/route.ts', 'utf8')
+  expect(notesRoute).toContain('createClient, createServiceClient')
+  expect(notesRoute).toContain('const service = await createServiceClient()')
+  expect(notesRoute).toContain("note_type: 'note'")
+
+  const supabaseSmoke = readFileSync('scripts/smoke-supabase.mjs', 'utf8')
+  expect(supabaseSmoke).toContain('task_notes schema')
+  expect(supabaseSmoke).toContain('direct task note insert cannot write metadata columns')
+  expect(supabaseSmoke).toContain('ok RLS task note insert')
 
   for (const route of [
     'csv',

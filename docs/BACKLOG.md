@@ -65,6 +65,7 @@
 - moved authenticated import persistence to service-role writes after auth/quota checks so imported completion timestamps and external source refs survive the new browser task column grants
 - expanded `npm run smoke:supabase -- --write` to verify browser clients cannot write task server-managed columns, cannot insert agent audit events, public clients cannot read audit events, and duplicate agent external refs are rejected
 - added focused Playwright regression coverage that checks task column grants exclude server-managed fields and task/import server routes use service-role write paths after auth/quota checks
+- added migration `008_task_note_column_grants.sql` to keep task-note type and creation time server-managed, moved authenticated note metadata writes through the service-role route, and expanded Supabase smoke/source coverage for note metadata denial
 - moved authenticated agent execution service-role output persistence preflight ahead of rate-limit, quota, and provider work so runs do not spend work when output cannot be saved
 - updated the GitHub Actions verify workflow to `actions/checkout@v5` and `actions/setup-node@v5` so the CI rail no longer depends on deprecated Node 20 action runtimes
 - refreshed README, launch plan, and roadmap verification summaries so repo-facing docs matched the then-current local rail and PR check state
@@ -206,7 +207,7 @@
 ## High priority
 - configure and verify the real production deploy target
 - provide `VERCEL_AUTOMATION_BYPASS_SECRET` locally or use an unprotected preview URL so remote route smoke can verify the latest Vercel preview instead of stopping at Vercel Deployment Protection
-- run `npm run smoke:supabase -- --write` against a real Supabase project after applying migrations, including hashed API-key columns, profile column read/update grants, direct task column-grant denials, audit-event privacy, and agent external-ref uniqueness
+- run `npm run smoke:supabase -- --write` against a real Supabase project after applying migrations, including hashed API-key columns, profile column read/update grants, direct task and task-note column-grant denials, audit-event privacy, and agent external-ref uniqueness
 - run `npm run smoke:app` with real Supabase env and the target app URL to verify authenticated app task CRUD, task-note routes, and agent-review persistence
 - run `npm run smoke:openai -- --app` with real OpenAI, Supabase, and target app env
 - run `npm run smoke:stripe -- --write --webhook` with Stripe test-mode keys and target Supabase/app env to verify authenticated checkout, portal, webhook events, quota plan-state boundaries, authenticated task-create quota behavior, and idempotency

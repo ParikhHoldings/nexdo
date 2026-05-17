@@ -33,7 +33,7 @@
 - The bounded executable action contract is centralized in `lib/task-actions.ts` so UI surfaces, authenticated execution, and agent-output history agree that only research, draft, and prep tasks can run AI execution.
 - Agent `update_task` can now maintain the core planning fields humans can edit, including due time, action type, estimate, energy level, people, and tags; `add_task_note` lets agents append reviewable handoff context without changing task status.
 - Human task-create and task-patch routes now share `lib/task-validation.ts` so protected/server-managed fields are rejected before quota or database mutation.
-- Direct browser task writes are now column-limited so agent output, source-agent metadata, ingestion intent, and completion timestamps stay server-managed; server import routes persist imported external refs/completion timestamps through the service-role path after auth/quota checks.
+- Direct browser task writes are now column-limited so agent output, source-agent metadata, ingestion intent, and completion timestamps stay server-managed; direct browser task-note writes are column-limited so note type and creation time stay server-managed; server import and note routes persist server-managed fields through service-role paths after auth/quota checks.
 - The landing/signup draft now routes demo CTAs to the verified demo path and avoids treating unverified agent flows as a broad launch claim.
 - Connect AI setup guidance now routes paid users without a copied key directly to the API settings tab.
 - Done-page bulk delete now restores failed authenticated deletes immediately instead of hiding failed tasks until refresh.
@@ -48,7 +48,7 @@
 ## Near-term priorities
 - verify install, lint, build, and local dev rails
 - keep `npm run lint`, `npm run typecheck`, `npm run build`, and `npm run test:e2e` passing
-- verify Supabase migrations, RLS, auth, demo-mode fallback, profile/task column grants, audit privacy, and profile/task flows
+- verify Supabase migrations, RLS, auth, demo-mode fallback, profile/task/task-note column grants, audit privacy, and profile/task flows
 - verify authenticated app API task CRUD and task-note routes with real Supabase env
 - verify OpenAI parse/prioritize/briefing/agent execution behavior with real env
 - verify Stripe checkout/portal/webhook behavior in test mode before any pricing commitment

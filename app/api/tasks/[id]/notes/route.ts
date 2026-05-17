@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { validateTaskNoteContent } from '@/lib/task-notes'
 
 async function requireOwnedTask(id: string) {
@@ -94,7 +94,15 @@ export async function POST(
     return NextResponse.json({ error: validation.error }, { status: 400 })
   }
 
-  const { data: note, error } = await (owned.supabase as any)
+  const service = await createServiceClient()
+  if (!service) {
+    return NextResponse.json(
+      { error: 'Database not configured' },
+      { status: 503 }
+    )
+  }
+
+  const { data: note, error } = await (service as any)
     .from('task_notes')
     .insert({
       task_id: id,

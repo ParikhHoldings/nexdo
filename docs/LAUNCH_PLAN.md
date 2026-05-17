@@ -38,12 +38,12 @@ The goal is not a broad public launch. The credible Monday target is a verified 
 - MCP provider verification now uses Vercel protection bypass headers when configured, covering OpenAPI, JSON-RPC, SSE, ChatGPT Actions, scoped-key denial, write, and audit checks against protected previews.
 - Authenticated app-route verification now has a repeatable smoke script, `npm run smoke:app`, including task CRUD, task notes, and agent-review save behavior; it still needs to be run with real Supabase credentials against the target app URL.
 - Supabase migrations now include quota cleanup so usage read probes reset monthly counters without writing zero-quantity audit events.
-- Supabase migrations now column-limit direct browser task inserts/updates so agent output, source-agent metadata, ingestion intent, and completion timestamps stay server-managed; authenticated imports use service-role persistence after auth/quota checks to preserve imported completion timestamps and external refs.
+- Supabase migrations now column-limit direct browser task inserts/updates so agent output, source-agent metadata, ingestion intent, and completion timestamps stay server-managed; direct browser task-note inserts cannot spoof note type or creation time; authenticated imports and note routes use service-role persistence after auth/quota/ownership checks to preserve server-managed fields.
 - Truthful public copy that describes bounded AI assistance instead of open-ended autonomous task completion. Draft tightened on 2026-05-16; still needs Quill/founder approval before external use.
 - Updated docs that tell future agents what exists, what is verified, and what is still blocked.
 
 ### Must verify before external users
-- Supabase migrations, auth, profile creation, RLS, profile/task column grants, task CRUD, audit privacy, and agent external-ref uniqueness against a real project.
+- Supabase migrations, auth, profile creation, RLS, profile/task/task-note column grants, task CRUD, audit privacy, and agent external-ref uniqueness against a real project.
 - Authenticated app API task CRUD and task-note routes against a real Supabase-backed app session.
 - Rendered front-end routes against the real preview/production origin with `npm run smoke:routes -- --url=<origin>`.
 - OpenAI-backed parse, prioritize, briefing, and research/draft/prep execution with a real API key.

@@ -60,6 +60,16 @@ RLS ownership alone does not stop a signed-in user from spoofing agent output, t
 ### Impact
 Authenticated task imports now save through the service-role path after auth/quota checks so imported completion timestamps and external source references still persist. Real Supabase smoke must verify direct browser denial, agent external-ref uniqueness, audit-event privacy, and normal task CRUD before launch readiness is claimed.
 
+## 2026-05-17 - Browser task-note metadata is column-limited
+### Decision
+Direct authenticated browser Supabase inserts on `task_notes` are limited to `task_id` and `content`, while note metadata such as `note_type` and `created_at` stays server-managed. Authenticated task-note API routes should write note metadata through service-role paths after checking task ownership.
+
+### Why
+Task notes are part of the human and agent handoff surface. RLS ownership is enough to keep notes private, but not enough to prevent a signed-in user from spoofing metadata that should carry product meaning later, such as agent-result or file/link note types.
+
+### Impact
+Future task-note features should keep content user-editable and metadata deliberate. Real Supabase smoke must verify both allowed note-content inserts and denied task-note metadata spoofing.
+
 ## 2026-05-17 - OpenAI smoke must cover every bounded execution type
 ### Decision
 `npm run smoke:openai` should reject obvious placeholder keys and verify JSON-mode output for parsing, prioritization, briefing, and each supported bounded execution type: research, draft, and prep.

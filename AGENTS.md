@@ -32,6 +32,7 @@ The product promise should be grounded in what the code actually supports:
 - hashed API-key storage with one-time key reveal, short key hints in settings, and legacy raw-key migration/fallback
 - narrowed browser-visible profile columns and direct profile self-updates so clients can read/edit needed preferences without direct access to Stripe IDs, raw/hash API-key material, quota internals, or billing mutation fields
 - narrowed direct browser task insert/update columns so agent output, source-agent metadata, ingestion intent, and completion timestamps remain server-managed
+- narrowed direct browser task-note insert/update columns so note type and creation time remain server-managed while note content stays user-editable
 - authenticated import routes persist imported task rows through the service-role path after auth/quota checks so imported completion timestamps and external source references can be kept without reopening those columns to direct browser writes
 - bounded OpenAI response validation for task parsing, prioritization, briefing, and research/draft/prep output before provider content is returned or persisted
 - shared task-create and task-patch validation in `lib/task-validation.ts`, so human task routes reject protected/server-managed fields before quota consumption or database mutation
@@ -84,7 +85,7 @@ Production environment, Supabase migrations, OpenAI provider calls, Stripe test-
 - Billing: Stripe helpers and plan limits in `lib/stripe.ts`; checkout, portal, and webhook routes under `app/api/stripe/`. Checkout accepts only server-known `pro`/`power` plan keys, and webhook tier updates require explicit Stripe price ID mappings.
 - Agent interop: MCP definitions and handlers in `lib/mcp-tools.ts`; JSON-RPC MCP endpoint at `app/api/mcp/route.ts`; ChatGPT Actions OpenAPI at `app/api/mcp/openapi/route.ts`; action wrappers under `app/api/mcp/actions/[tool]/route.ts`. Keep MCP tool schemas, OpenAPI enums/nullability, trace requirements, and handler validation aligned when task statuses or fields change.
 - Agent governance: API key scopes are modeled in `lib/agent-scopes.ts`; key generation/hashing helpers live in `lib/api-keys.ts`; hashed keys and key hints are persisted on profiles; agent calls preflight and finalize `agent_action_events` rows, and audit write failures should not be swallowed.
-- Task notes: shared note validation and demo persistence live in `lib/task-notes.ts`; authenticated owned-task note routes live at `app/api/tasks/[id]/notes/route.ts`; `add_task_note` in `lib/mcp-tools.ts` is the external-agent note append path; task detail is the human-facing notes surface.
+- Task notes: shared note validation and demo persistence live in `lib/task-notes.ts`; authenticated owned-task note routes live at `app/api/tasks/[id]/notes/route.ts`; `add_task_note` in `lib/mcp-tools.ts` is the external-agent note append path; task detail is the human-facing notes surface. Task-note metadata is column-limited by migration `008_task_note_column_grants.sql`, and server routes should write note metadata through service-role paths after ownership checks.
 - Imports: source-specific and generic normalization in `lib/importers.ts`; import routes under `app/api/import/`.
 - Demo mode: `lib/tasks.ts` provides local demo tasks and `lib/demo-profile.ts` provides a local demo profile when Supabase is not configured or no user is authenticated; browser demo changes persist to localStorage and must never be treated as authenticated product data.
 
@@ -143,9 +144,10 @@ It uses `VERCEL_AUTOMATION_BYPASS_SECRET` for protected Vercel previews when
 present.
 
 `npm run smoke:supabase -- --write` should verify real migrations, profile
-column grants, direct task column-grant denials for server-managed fields,
-agent external-ref uniqueness, private audit-event reads, browser audit-event
-insert denial, quota increments/no-ops, and rate-limit allow/block behavior.
+column grants, direct task and task-note column-grant denials for
+server-managed fields, agent external-ref uniqueness, private audit-event
+reads, browser audit-event insert denial, quota increments/no-ops, and
+rate-limit allow/block behavior.
 
 `npm run smoke:routes -- --url=https://preview.example` verifies the
 launch-facing marketing, app, auth, import, settings, MCP setup, privacy, and

@@ -66,6 +66,7 @@
 - Moved authenticated import persistence to service-role writes after auth/quota checks so imported completion timestamps and external source refs stay compatible with browser column limits.
 - Expanded Supabase write smoke for task server-managed column denial, agent external-ref uniqueness, private audit-event reads, and audit-event insert denial.
 - Added regression coverage for the task column-grant/service-role write boundary across task mutation, agent execution/review, and import routes.
+- Added task-note column grants so direct browser Supabase writes cannot spoof note type or creation time, moved authenticated note metadata writes through the service-role route, and expanded Supabase smoke/source coverage for note metadata denial.
 - Moved agent execution service-role output persistence preflight ahead of rate-limit, quota, and provider work.
 - Updated the GitHub Actions verify workflow to Node-24-runtime action releases while keeping the app test runtime on Node 22.
 - Verified PR #3 Web rails and Vercel preview deployment after the local-date task surface rail; documented that later PR heads can still hit the Vercel account build-rate limit.

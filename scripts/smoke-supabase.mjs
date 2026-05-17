@@ -68,6 +68,11 @@ async function readSmoke() {
   )
 
   await assertQuery(
+    'task_notes schema',
+    service.from('task_notes').select('id, task_id, content, note_type, created_at').limit(1)
+  )
+
+  await assertQuery(
     'usage_events schema',
     service.from('usage_events').select('id, user_id, event_type, created_at').limit(1)
   )
@@ -272,6 +277,37 @@ async function writeSmoke() {
       .single()
     if (insertError || !insertedTask?.id) fail('RLS task insert failed', insertError)
     console.log('ok RLS task insert')
+
+    const { error: protectedNoteInsertError } = await userClient
+      .from('task_notes')
+      .insert({
+        task_id: insertedTask.id,
+        content: 'Spoofed metadata note',
+        note_type: 'agent_result',
+        created_at: '2000-01-01T00:00:00.000Z',
+      })
+    if (!protectedNoteInsertError) {
+      fail('direct task note insert could write server-managed note metadata')
+    }
+    console.log('ok direct task note insert cannot write metadata columns')
+
+    const { data: insertedNote, error: noteInsertError } = await userClient
+      .from('task_notes')
+      .insert({
+        task_id: insertedTask.id,
+        content: 'Nexdo Supabase smoke note',
+      })
+      .select('id, task_id, content, note_type')
+      .single()
+    if (
+      noteInsertError ||
+      !insertedNote?.id ||
+      insertedNote.task_id !== insertedTask.id ||
+      insertedNote.note_type !== 'note'
+    ) {
+      fail('RLS task note insert failed', noteInsertError)
+    }
+    console.log('ok RLS task note insert')
 
     const { data: updatedTask, error: updateError } = await userClient
       .from('tasks')

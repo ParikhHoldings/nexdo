@@ -59,6 +59,7 @@ Acceptance gate:
 - AI/provider output is validated before becoming task data.
 - Generic user edits cannot spoof server-managed agent output.
 - Direct browser Supabase writes cannot spoof server-managed agent output, source-agent metadata, ingestion intent, or completion timestamps.
+- Direct browser Supabase writes cannot spoof task-note metadata such as note type or creation time.
 
 Current evidence:
 - `TaskDetail` edit mode supports the MVP task fields, including optional due time and energy level.
@@ -69,6 +70,7 @@ Current evidence:
 - `lib/ai-response-validation.ts` bounds OpenAI output.
 - `PATCH /api/tasks/[id]` uses `lib/task-validation.ts` to allowlist user-editable fields and reject protected/server-managed fields such as `user_id`, `completed_at`, `source_agent_id`, and `agent_output`.
 - Migration `007_task_column_grants.sql` limits direct authenticated task inserts/updates to user-editable columns, while task completion, agent output, trace metadata, and imported completion/external refs are written through server/service-role paths.
+- Migration `008_task_note_column_grants.sql` limits direct authenticated task-note inserts to `task_id` and `content`; authenticated note routes write server-managed note metadata through the service-role path after ownership checks.
 
 ### 3. Prioritize
 The product should make the daily list more useful than a static checklist.
@@ -221,7 +223,7 @@ Monday is not credible if:
 - the product is described as autonomous beyond bounded research/draft/prep output
 
 ## Launch blockers
-- Real Supabase migrations, auth, RLS, task CRUD, profile/task column grants, quota, uniqueness, and audit smoke.
+- Real Supabase migrations, auth, RLS, task CRUD, task-note CRUD, profile/task/task-note column grants, quota, uniqueness, and audit smoke.
 - Real authenticated app API task CRUD, task-note, and agent-review route smoke with `npm run smoke:app`.
 - Real OpenAI parse, prioritize, briefing, and execution smoke. `npm run smoke:openai -- --app` can verify the authenticated app routes against a disposable Supabase user once real OpenAI/Supabase/app env is loaded.
 - Stripe test-mode checkout, portal, signed webhook, entitlement, quota, and idempotency smoke. `npm run smoke:stripe -- --write --webhook` now covers authenticated checkout and portal routes, signed webhook delivery, unknown-price fail-closed behavior, free/pro/power tier transitions, payment-failure downgrade to Free, quota plan-state boundaries, authenticated `POST /api/tasks` quota behavior under those tiers, and duplicate webhook replay.

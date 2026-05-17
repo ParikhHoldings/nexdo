@@ -97,7 +97,7 @@ npm run smoke:launch -- --env=.env.production.local --url=https://your-productio
 
 ## Provider smoke tests still required
 - Routes: run `npm run smoke:routes -- --url=<preview-or-production-origin>` to verify launch-facing marketing, app, auth, import, settings, MCP setup, privacy, and terms routes render at desktop and mobile widths without response failures, blank bodies, framework overlays, or console errors. For protected Vercel previews, export `VERCEL_AUTOMATION_BYPASS_SECRET` first.
-- Supabase: apply migrations to a real project, create a user, verify profile creation, RLS, task CRUD, import quota enforcement, hashed API-key storage, API key scope persistence and rotation rate limits, profile column read/update grants, direct task column-grant denial for server-managed fields, agent external-ref uniqueness, `agent_action_events` audit writes/privacy, quota no-op behavior, and service-role RPCs.
+- Supabase: apply migrations to a real project, create a user, verify profile creation, RLS, task CRUD, task-note CRUD, import quota enforcement, hashed API-key storage, API key scope persistence and rotation rate limits, profile column read/update grants, direct task and task-note column-grant denial for server-managed fields, agent external-ref uniqueness, `agent_action_events` audit writes/privacy, quota no-op behavior, and service-role RPCs.
 - Authenticated app API: run `npm run smoke:app` against the same app URL and Supabase project to verify app-cookie auth, task list/create/update/delete, task-note validation/create/readback, and seeded agent-review validation/save behavior through the deployed API routes. For protected Vercel previews, export `VERCEL_AUTOMATION_BYPASS_SECRET` first.
 - OpenAI: verify parse, prioritization, briefing, and owned-task research/draft/prep execution with real credentials, server-side output persistence, quota use, and rate-limit behavior. For protected Vercel previews, export `VERCEL_AUTOMATION_BYPASS_SECRET` first.
 - Stripe: verify authenticated checkout, authenticated portal, signed webhook handling, duplicate webhook idempotency, subscription tier updates/deletes, payment-failure downgrade, quota enforcement, authenticated task-create quota behavior after entitlement changes, and unknown-price behavior in test mode. For protected Vercel previews, export `VERCEL_AUTOMATION_BYPASS_SECRET` first.
@@ -140,7 +140,7 @@ Read-only Supabase schema smoke:
 npm run smoke:supabase
 ```
 
-Write Supabase smoke that creates and deletes disposable auth/task/audit data and verifies profile grants, task column grants, audit privacy, uniqueness, quota, and rate limits:
+Write Supabase smoke that creates and deletes disposable auth/task/note/audit data and verifies profile grants, task and task-note column grants, audit privacy, uniqueness, quota, and rate limits:
 
 ```bash
 npm run smoke:supabase -- --write

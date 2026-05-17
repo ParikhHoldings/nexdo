@@ -9,7 +9,7 @@ This repo currently contains a Next.js app with:
 - natural-language task parsing with due-date/due-time extraction, concise fallback titles, daily briefing, prioritization, and limited agent execution through OpenAI
 - bounded validation for OpenAI JSON output before parsed tasks, briefings, prioritization, or agent results are returned or saved
 - shared task-create and task-patch validation that rejects protected/server-managed fields before quota or database mutation
-- task-detail notes for human context and future agent handoffs, with demo localStorage persistence, authenticated owned-task note routes, and MCP/ChatGPT Actions support for external agents to append reviewable notes
+- task-detail notes for human context and future agent handoffs, with demo localStorage persistence, authenticated owned-task note routes, column-limited browser note metadata, and MCP/ChatGPT Actions support for external agents to append reviewable notes
 - reviewable agent output history with verification status and notes for bounded research, draft, and prep runs, with a shared executable-action contract that keeps manual/reminder tasks out of AI-run controls
 - localStorage-backed demo-mode task and profile data when Supabase is unavailable or the visitor is logged out
 - persistent dark/light appearance preferences for the app workspace
@@ -19,7 +19,7 @@ This repo currently contains a Next.js app with:
 - Stripe plan, checkout, portal, webhook, quota, and rate-limit scaffolding
 - MCP and ChatGPT Actions surfaces for external agents to list, create, complete, update, add notes to, search, read, and brief tasks, including updates to core planning metadata such as due time, action type, estimate, energy, people, tags, and supported task statuses including `cancelled`; cancelled work remains human-reviewable and restorable from All Tasks
 - Power/team-gated API access, scoped API-key permissions, hashed one-time-reveal API keys, restricted browser-visible profile columns, API-key rotation rate limits, prerequisite- and scope-aware MCP setup UI, and an agent action audit table for MCP/API-key calls; MCP tool execution fails before handler mutation when audit logging is unavailable
-- direct browser task writes are column-limited so agent output, agent source metadata, ingestion intent, and completion timestamps stay server-managed
+- direct browser task and task-note writes are column-limited so agent output, agent source metadata, ingestion intent, completion timestamps, note type, and note creation time stay server-managed
 - a recent agent activity surface on the MCP settings page
 - idempotent agent task creation when callers provide `source_agent_id` plus `external_ref`
 - agent trace metadata on MCP create, update, and complete writes so externally advanced work remains visible in human task surfaces; agent-provided `external_ref` values require a `source_agent_id`
@@ -40,9 +40,9 @@ Last checked on 2026-05-17:
 - PR #3 Vercel preview deployment and Vercel Preview Comments passed on the same checked head; inspect current PR checks after later pushes before treating the newest head as preview-deploy verified because later pushes can hit Vercel account build-rate limits
 - direct remote route smoke against protected previews is blocked by Vercel Deployment Protection until `VERCEL_AUTOMATION_BYPASS_SECRET` is provided locally or an unprotected preview URL is used
 
-`npm run verify:env` currently fails because `.env.local` is absent; only `.env.local.example` exists in this workspace. Still unverified: production env, Supabase migrations/auth/profile and task column grants against a real project, OpenAI provider calls, Stripe test-mode flows, scoped MCP/API-key execution, idempotency replay against real task data, agent audit writes, and production deployment rails.
+`npm run verify:env` currently fails because `.env.local` is absent; only `.env.local.example` exists in this workspace. Still unverified: production env, Supabase migrations/auth/profile plus task and task-note column grants against a real project, OpenAI provider calls, Stripe test-mode flows, scoped MCP/API-key execution, idempotency replay against real task data, agent audit writes, and production deployment rails.
 
-The Supabase provider smoke now includes task column-grant denial, audit-event privacy, audit insert denial, and agent external-ref uniqueness checks, but it still needs to be run against a real migrated project.
+The Supabase provider smoke now includes task and task-note column-grant denial, audit-event privacy, audit insert denial, and agent external-ref uniqueness checks, but it still needs to be run against a real migrated project.
 
 ## Stack
 - Next.js 16 app router

@@ -680,11 +680,22 @@ test('task note helpers and route keep notes owned and bounded', () => {
   })
 
   const routeSource = readFileSync('app/api/tasks/[id]/notes/route.ts', 'utf8')
+  const migrationSource = readFileSync(
+    'supabase/migrations/008_task_note_column_grants.sql',
+    'utf8'
+  )
   expect(routeSource).toContain('validateTaskNoteContent')
   expect(routeSource).toContain(".from('tasks')")
   expect(routeSource).toContain(".eq('user_id', user.id)")
+  expect(routeSource).toContain('createClient, createServiceClient')
+  expect(routeSource).toContain('const service = await createServiceClient()')
   expect(routeSource).toContain(".from('task_notes')")
   expect(routeSource).toContain("note_type: 'note'")
+  expect(migrationSource).toContain('grant insert (')
+  expect(migrationSource).toContain('task_id')
+  expect(migrationSource).toContain('content')
+  expect(migrationSource).not.toContain('note_type,')
+  expect(migrationSource).not.toContain('created_at')
 })
 
 test('launch smoke orchestrates required technical and approval gates', () => {
