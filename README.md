@@ -82,6 +82,10 @@ That command runs local rails plus Supabase, OpenAI, Stripe, and MCP provider
 smokes in sequence. It does not replace Quill/founder public-copy approval or
 production deploy approval.
 
+Provider smokes require a remote HTTPS `--url` or `NEXT_PUBLIC_APP_URL`. Use
+`--allow-local-url` only for intentional local provider debugging, not launch
+evidence.
+
 ## Operating Docs
 - `AGENTS.md` is the repo-level operating contract for Codex and other LLM agents.
 - `docs/VISION.md` captures the product promise and non-goals.

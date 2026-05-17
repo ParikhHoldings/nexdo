@@ -62,6 +62,11 @@ Stripe, and MCP smoke sequence below. `--technical-only` intentionally keeps
 manual gates visible: public copy approval and production deploy approval are
 not implied by passing technical smokes.
 
+Provider smokes in the launch bundle require a remote HTTPS `--url` or
+`NEXT_PUBLIC_APP_URL`. Use `--allow-local-url` only when intentionally
+debugging provider callbacks against a local app; do not use it as launch
+evidence.
+
 For a final launch gate after approvals and production deploy verification:
 
 ```bash

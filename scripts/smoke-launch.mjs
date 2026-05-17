@@ -16,6 +16,7 @@ const technicalOnly = args.has('--technical-only')
 const copyApproved = args.has('--copy-approved')
 const productionDeployVerified = args.has('--production-deploy-verified')
 const allowLiveStripe = args.has('--allow-live-stripe')
+const allowLocalUrl = args.has('--allow-local-url')
 
 const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm'
 const envPath = path.resolve(process.cwd(), envFile)
@@ -26,6 +27,39 @@ const childEnv = {
 }
 
 if (appUrl) childEnv.NEXT_PUBLIC_APP_URL = appUrl
+
+function validateProviderAppUrl(value) {
+  if (!value) {
+    return 'Provider launch smokes require --url=https://your-preview.example or NEXT_PUBLIC_APP_URL in the loaded env.'
+  }
+
+  let parsed
+  try {
+    parsed = new URL(value)
+  } catch {
+    return `Provider launch smokes require a valid app URL, got: ${value}`
+  }
+
+  if (parsed.pathname !== '/' || parsed.search || parsed.hash) {
+    return 'Provider launch smokes require an origin only app URL with no path, query, or hash.'
+  }
+
+  if (value.endsWith('/')) {
+    return 'Provider launch smokes require NEXT_PUBLIC_APP_URL without a trailing slash.'
+  }
+
+  const localHosts = new Set(['localhost', '127.0.0.1', '::1'])
+  const isLocal = localHosts.has(parsed.hostname) || parsed.hostname.endsWith('.local')
+  if (isLocal && !allowLocalUrl) {
+    return 'Provider launch smokes require a remote preview/production URL. Pass --allow-local-url only for intentional local debugging.'
+  }
+
+  if (parsed.protocol !== 'https:' && !(allowLocalUrl && isLocal)) {
+    return 'Provider launch smokes require an HTTPS app URL.'
+  }
+
+  return null
+}
 
 function readEnvFile(filePath) {
   if (!fs.existsSync(filePath)) return {}
@@ -118,6 +152,10 @@ async function main() {
   }
 
   if (!skipProviders) {
+    const appUrlError = validateProviderAppUrl(childEnv.NEXT_PUBLIC_APP_URL)
+    if (appUrlError) {
+      throw new Error(appUrlError)
+    }
     await runProviderSmokes()
   } else {
     console.log('\nskip provider smokes; --skip-providers was provided')

@@ -127,9 +127,11 @@ insert denial, quota increments/no-ops, and rate-limit allow/block behavior.
 `npm run smoke:launch -- --env=.env.production.local --url=https://preview.example --technical-only`
 loads the env file into child processes, runs local rails, runs the Supabase,
 OpenAI, Stripe, and MCP provider smokes in order, and stops short of claiming
-launch approval. Omit `--technical-only` only when public copy approval and
-production deploy verification can be represented with explicit
-`--copy-approved` and `--production-deploy-verified` flags.
+launch approval. Provider smokes in the launch bundle require a remote HTTPS
+`--url` or `NEXT_PUBLIC_APP_URL`; use `--allow-local-url` only for intentional
+local provider debugging, not launch evidence. Omit `--technical-only` only
+when public copy approval and production deploy verification can be represented
+with explicit `--copy-approved` and `--production-deploy-verified` flags.
 
 Use the smallest relevant verification. For docs-only changes, a diff review is usually enough. For code changes, prefer `npm run lint`, `npm run typecheck`, and `npm run build` when dependencies and environment allow it. For launch-facing app behavior, run `npm run test:e2e` as well. If a check cannot run, record why and add a follow-up task.
 

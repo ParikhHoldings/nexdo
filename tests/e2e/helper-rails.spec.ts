@@ -428,7 +428,13 @@ test('launch smoke orchestrates required technical and approval gates', () => {
 
   expect(packageJson.scripts['smoke:launch']).toBe('node scripts/smoke-launch.mjs')
   expect(source).toContain("const envArg = rawArgs.find((arg) => arg.startsWith('--env='))")
+  expect(source).toContain("const allowLocalUrl = args.has('--allow-local-url')")
   expect(source).toContain('...fileEnv')
+  expect(source).toContain('function validateProviderAppUrl(value)')
+  expect(source).toContain('Provider launch smokes require --url=https://your-preview.example')
+  expect(source).toContain('Provider launch smokes require a remote preview/production URL')
+  expect(source).toContain('Provider launch smokes require an HTTPS app URL')
+  expect(source).toContain('const appUrlError = validateProviderAppUrl(childEnv.NEXT_PUBLIC_APP_URL)')
   expect(source).toContain("await run('Lint', ['run', 'lint'])")
   expect(source).toContain("await run('Typecheck', ['run', 'typecheck'])")
   expect(source).toContain("await run('Build', ['run', 'build'])")
