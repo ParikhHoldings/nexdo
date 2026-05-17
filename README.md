@@ -31,7 +31,7 @@ Last checked on 2026-05-17:
 - `npm run lint` passed
 - `npm run typecheck` passed
 - `npm run build` passed
-- `npm run test:e2e` passed 92 tests covering public landing/signup demo CTA smoke, logged-out demo workflows, task workspace lifecycle, task-detail notes save/reload behavior, Today focus/sidebar/briefing alignment for undated active tasks and cancelled-only work, mobile navigation open/close behavior, local-date due-today behavior, file-import preview/confirm flow, agent output history/review notes, persistent appearance and browser reminder settings, shared executable action-type rails for non-executable reminder/manual tasks, owned task-note route guardrails, MCP/OpenAPI/action auth smoke tests, DB-backed MCP handler and API-key validation coverage including `add_task_note` append/readback behavior, MCP/OpenAPI `cancelled` status contract alignment plus cancelled-task UI review/restore coverage, billing guardrails, deterministic task-intelligence coverage, import parser coverage, Stripe entitlement mapping, task route validation, and local validation helper contracts
+- `npm run test:e2e` passed 93 tests covering public landing/signup demo CTA smoke, logged-out demo workflows, task workspace lifecycle, task-detail notes save/reload behavior, Today focus/sidebar/briefing alignment for undated active tasks and cancelled-only work, mobile navigation open/close behavior, local-date due-today behavior, file-import preview/confirm flow, agent output history/review notes, persistent appearance and browser reminder settings, shared executable action-type rails for non-executable reminder/manual tasks, owned task-note route guardrails, authenticated app smoke source coverage for task CRUD and notes, MCP/OpenAPI/action auth smoke tests, DB-backed MCP handler and API-key validation coverage including `add_task_note` append/readback behavior, MCP/OpenAPI `cancelled` status contract alignment plus cancelled-task UI review/restore coverage, billing guardrails, deterministic task-intelligence coverage, import parser coverage, Stripe entitlement mapping, task route validation, and local validation helper contracts
 - `npm audit --audit-level=moderate` passed with 0 vulnerabilities
 - `npm run smoke:launch -- --skip-local --skip-providers --technical-only` passed; provider smokes, copy approval, and production deploy approval remain separate gates
 - PR #3 Web rails passed
@@ -63,6 +63,7 @@ npm run verify:env
 npm run smoke:openai
 npm run smoke:stripe
 npm run smoke:supabase
+npm run smoke:app
 npm run smoke:mcp
 npm run smoke:routes
 npm run smoke:launch
@@ -83,8 +84,8 @@ For a full technical launch pass, export or provide real provider env and run:
 npm run smoke:launch -- --env=.env.production.local --url=https://your-preview.example --technical-only
 ```
 
-That command runs local rails plus rendered route, Supabase, OpenAI, Stripe,
-and MCP provider smokes in sequence. It does not replace Quill/founder
+That command runs local rails plus rendered route, Supabase, authenticated app,
+OpenAI, Stripe, and MCP provider smokes in sequence. It does not replace Quill/founder
 public-copy approval or production deploy approval.
 
 Provider smokes require a remote HTTPS `--url` or `NEXT_PUBLIC_APP_URL`. Use

@@ -1,5 +1,15 @@
 # Decisions
 
+## 2026-05-17 - Authenticated app smoke covers task CRUD and notes
+### Decision
+`npm run smoke:app` should create a disposable Supabase user, sign in through the app cookie flow, verify authenticated task list/create/update/delete routes, and verify task-note validation/create/readback through the deployed app routes. The launch smoke should run this after Supabase write smoke and before provider-specific OpenAI/Stripe/MCP checks.
+
+### Why
+Direct Supabase RLS checks and local Playwright demo checks are not enough evidence that the deployed app session can mutate real task data. Notes and task CRUD are core launch behavior and need a provider-backed route smoke that is independent of OpenAI, Stripe, and MCP credentials.
+
+### Impact
+Before claiming authenticated app readiness, run `npm run smoke:app` against the same preview/production URL and Supabase project used for launch verification. Protected Vercel previews need `VERCEL_AUTOMATION_BYPASS_SECRET`.
+
 ## 2026-05-17 - Agent task notes are reviewable context, not execution
 ### Decision
 MCP and ChatGPT Actions expose `add_task_note` as a bounded write tool for appending human-reviewable notes to owned tasks. The tool uses the shared task-note validator, requires `tasks:write`, records source-agent trace metadata through `agent_action_events`, and does not change task status or agent output. `get_task` returns recent notes so external agents can read handoff context before acting.

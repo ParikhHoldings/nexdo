@@ -48,7 +48,7 @@ Current local verification from 2026-05-17:
 - `npm run lint` passed
 - `npm run typecheck` passed
 - `npm run build` passed with strict TypeScript and ESLint checks enabled
-- `npm run test:e2e` passed for 92 tests covering public landing/signup demo CTA smoke, logged-out demo workflows, task workspace lifecycle, task-detail notes save/reload behavior, Today focus/sidebar/briefing alignment for undated active tasks and cancelled-only work, mobile navigation open/close behavior, local-date due-today behavior, file-import preview/confirm flow, agent output history/review notes, persistent appearance and browser reminder settings, task/agent auth guards, shared executable action-type rails that keep `manual`/`remind` tasks out of AI execution controls, owned task-note route guardrails, MCP/OpenAPI/action auth smoke tests, DB-backed MCP handler and API-key validation coverage including `add_task_note` append/readback behavior, billing guardrails, deterministic task-intelligence coverage, import parser coverage, Stripe entitlement mapping, task route validation, local validation helper contracts, invalid date/time rails, MCP/OpenAPI `cancelled` status contract alignment, and cancelled-task UI review/restore coverage
+- `npm run test:e2e` passed for 93 tests covering public landing/signup demo CTA smoke, logged-out demo workflows, task workspace lifecycle, task-detail notes save/reload behavior, Today focus/sidebar/briefing alignment for undated active tasks and cancelled-only work, mobile navigation open/close behavior, local-date due-today behavior, file-import preview/confirm flow, agent output history/review notes, persistent appearance and browser reminder settings, task/agent auth guards, shared executable action-type rails that keep `manual`/`remind` tasks out of AI execution controls, owned task-note route guardrails, authenticated app smoke source coverage for task CRUD and notes, MCP/OpenAPI/action auth smoke tests, DB-backed MCP handler and API-key validation coverage including `add_task_note` append/readback behavior, billing guardrails, deterministic task-intelligence coverage, import parser coverage, Stripe entitlement mapping, task route validation, local validation helper contracts, invalid date/time rails, MCP/OpenAPI `cancelled` status contract alignment, and cancelled-task UI review/restore coverage
 - `npm audit --audit-level=moderate` passed with 0 vulnerabilities after the Next.js 16 / ESLint 9 upgrade
 - `npm run smoke:launch -- --skip-local --skip-providers --technical-only` passed; provider smokes, public-copy approval, and production deploy approval remain separate manual gates
 - `npm run verify:env` failed because `.env.local` is absent; only `.env.local.example` exists in this workspace
@@ -98,6 +98,7 @@ Production environment, Supabase migrations, OpenAI provider calls, Stripe test-
 - OpenAI provider smoke: `npm run smoke:openai`
 - Stripe provider smoke: `npm run smoke:stripe`
 - Supabase provider smoke: `npm run smoke:supabase`
+- Authenticated app smoke: `npm run smoke:app`
 - MCP provider smoke: `npm run smoke:mcp`
 - Rendered route smoke: `npm run smoke:routes -- --url=<app-origin>`
 - Full launch smoke bundle: `npm run smoke:launch`
@@ -108,6 +109,12 @@ types: research, draft, and prep. Add `-- --app` when Supabase service-role
 env and the target app URL are loaded to create a disposable user and verify
 authenticated parse, prioritize, briefing, and research/draft/prep execution
 routes against the app.
+
+`npm run smoke:app` requires Supabase service-role env and a target app URL.
+It creates a disposable Supabase user, signs in through the app cookie flow,
+then verifies authenticated task list/create/update/delete plus task-note
+validation, creation, and readback. It uses
+`VERCEL_AUTOMATION_BYPASS_SECRET` for protected Vercel previews when present.
 
 `npm run smoke:stripe -- --write --webhook` posts signed test-mode
 subscription events to the configured app URL, verifies unknown-price
@@ -142,7 +149,7 @@ evidence is useful.
 
 `npm run smoke:launch -- --env=.env.production.local --url=https://preview.example --technical-only`
 loads the env file into child processes, runs local rails, runs rendered route,
-Supabase, OpenAI, Stripe, and MCP provider smokes in order, and stops short of
+Supabase, authenticated app, OpenAI, Stripe, and MCP provider smokes in order, and stops short of
 claiming launch approval. Provider smokes in the launch bundle require a remote
 HTTPS `--url` or `NEXT_PUBLIC_APP_URL`; use `--allow-local-url` only for
 intentional local provider debugging, not launch evidence. Omit

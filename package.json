@@ -12,6 +12,7 @@
     "verify:env": "node scripts/verify-env.mjs",
     "smoke:openai": "node scripts/smoke-openai.mjs",
     "smoke:launch": "node scripts/smoke-launch.mjs",
+    "smoke:app": "node scripts/smoke-app.mjs",
     "smoke:mcp": "node scripts/smoke-mcp.mjs",
     "smoke:routes": "node scripts/smoke-routes.mjs",
     "smoke:stripe": "node scripts/smoke-stripe.mjs",

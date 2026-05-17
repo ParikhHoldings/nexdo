@@ -541,6 +541,24 @@ test('OpenAI smoke can verify authenticated app routes with disposable data', ()
   expect(source).toContain("select('agent_output')")
 })
 
+test('authenticated app smoke verifies task CRUD and task notes', () => {
+  const packageJson = JSON.parse(readFileSync('package.json', 'utf8'))
+  const source = readFileSync('scripts/smoke-app.mjs', 'utf8')
+
+  expect(packageJson.scripts['smoke:app']).toBe('node scripts/smoke-app.mjs')
+  expect(source).toContain("import { createBrowserClient } from '@supabase/ssr'")
+  expect(source).toContain('await supabase.auth.signInWithPassword({ email, password })')
+  expect(source).toContain("subscription_tier: 'power'")
+  expect(source).toContain("appJson(cookieHeader, '/api/tasks'")
+  expect(source).toContain("appJson(cookieHeader, `/api/tasks/${created.id}`")
+  expect(source).toContain("appJson(cookieHeader, `/api/tasks/${created.id}/notes`")
+  expect(source).toContain('Note content is required')
+  expect(source).toContain('Authenticated app smoke note for launch handoff.')
+  expect(source).toContain('VERCEL_AUTOMATION_BYPASS_SECRET')
+  expect(source).toContain("'x-vercel-protection-bypass'")
+  expect(source).toContain('await supabase.auth.admin.deleteUser(userId)')
+})
+
 test('date-only task surfaces compare local date keys without UTC parsing', () => {
   const demoTasksSource = readFileSync('lib/tasks.ts', 'utf8')
   const allTasksSource = readFileSync('app/(app)/all/page.tsx', 'utf8')
@@ -686,6 +704,7 @@ test('launch smoke orchestrates required technical and approval gates', () => {
   expect(source).toContain("await run('Environment preflight', ['run', 'verify:env', '--', envFile])")
   expect(source).toContain("await run('Rendered route smoke'")
   expect(source).toContain("await run('Supabase write smoke', ['run', 'smoke:supabase', '--', '--write'])")
+  expect(source).toContain("await run('Authenticated app smoke', ['run', 'smoke:app'])")
   expect(source).toContain("await run('OpenAI app-route smoke', ['run', 'smoke:openai', '--', '--app'])")
   expect(source).toContain("const stripeArgs = ['run', 'smoke:stripe', '--', '--write', '--webhook']")
   expect(source).toContain("'--provision', '--write', '--audit'")

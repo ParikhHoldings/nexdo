@@ -15,12 +15,13 @@
 - Playwright now covers demo workspace navigation across mobile sidebar open/close, All Tasks search/filtering, Upcoming grouping, and Done task lifecycle.
 - Playwright smoke tests cover OpenAPI action schema availability, MCP/action auth failures, and action CORS headers.
 - `npm run smoke:routes` now verifies launch-facing routes at desktop and mobile widths against a supplied app URL.
+- `npm run smoke:app` now verifies authenticated app-cookie task CRUD and task-note routes against a supplied app URL and real Supabase env.
 - Playwright tests cover DB-backed MCP tool handler and API-key validation behavior through an in-memory Supabase double, including owned reads, search, briefing, create idempotency, quota ordering, mutations, agent task-note append/readback, audit logging, hashed-key lookup, legacy-key migration, and paid-plan gating.
 - GitHub Actions verification exists for install, lint, typecheck, build, and Playwright smoke testing.
 - PR #3 Web rails passed, and Vercel preview deployment passed on a recent code head after the route-smoke rail.
 - Latest Vercel preview deployment is green, but direct remote route smoke is blocked by Vercel Deployment Protection until an automation bypass secret or unprotected preview URL is available.
 - Dependency audit is clean after the Next.js 16, ESLint 9, and PostCSS remediation.
-- `npm ci`, `npm run lint`, `npm run typecheck`, `npm run build`, `npm run test:e2e` with 92 tests, dependency audit, and the technical launch smoke partial passed locally on 2026-05-17.
+- `npm ci`, `npm run lint`, `npm run typecheck`, `npm run build`, `npm run test:e2e` with 93 tests, dependency audit, and the technical launch smoke partial passed locally on 2026-05-17.
 - `docs/MVP.md` now defines the smallest trustworthy MVP path around capture, structure, prioritize, brief, bounded execution, and scoped agent task-layer access.
 - Import, billing/quota, MCP, and ChatGPT Actions surfaces exist.
 - File imports now preview task count, sample titles, and plan/cap warnings before tasks are added.
@@ -47,6 +48,7 @@
 - verify install, lint, build, and local dev rails
 - keep `npm run lint`, `npm run typecheck`, `npm run build`, and `npm run test:e2e` passing
 - verify Supabase migrations, RLS, auth, demo-mode fallback, profile/task column grants, audit privacy, and profile/task flows
+- verify authenticated app API task CRUD and task-note routes with real Supabase env
 - verify OpenAI parse/prioritize/briefing/agent execution behavior with real env
 - verify Stripe checkout/portal/webhook behavior in test mode before any pricing commitment
 - verify MCP and ChatGPT Actions against the real API key flow

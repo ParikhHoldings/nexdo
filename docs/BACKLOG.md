@@ -90,7 +90,10 @@
 - added MCP/ChatGPT Actions `add_task_note` so external agents can append bounded, human-reviewable notes to owned tasks without changing task status
 - made MCP `get_task` return recent task notes for agent context and expanded local handler/OpenAPI/action coverage for note append/readback behavior
 - expanded `npm run smoke:mcp -- --write` to verify JSON-RPC and ChatGPT Actions task-note appends plus note audit rows when `--audit` is enabled
-- refreshed repo-facing verification summaries for the latest 92-test local rail
+- refreshed repo-facing verification summaries for the then-current 92-test local rail
+- added `npm run smoke:app` to verify authenticated app-cookie task list/create/update/delete and task-note validation/create/readback with disposable Supabase data
+- wired `npm run smoke:app` into the launch smoke between Supabase and OpenAI provider checks
+- refreshed repo-facing verification summaries for the latest 93-test local rail
 
 ## Completed 2026-05-16
 - read and updated the repo-level agent context and all existing Markdown/text operating files
@@ -184,11 +187,11 @@
 - configure and verify the real production deploy target
 - provide `VERCEL_AUTOMATION_BYPASS_SECRET` locally or use an unprotected preview URL so remote route smoke can verify the latest Vercel preview instead of stopping at Vercel Deployment Protection
 - run `npm run smoke:supabase -- --write` against a real Supabase project after applying migrations, including hashed API-key columns, profile column read/update grants, direct task column-grant denials, audit-event privacy, and agent external-ref uniqueness
+- run `npm run smoke:app` with real Supabase env and the target app URL to verify authenticated app task CRUD and task-note routes
 - run `npm run smoke:openai -- --app` with real OpenAI, Supabase, and target app env
 - run `npm run smoke:stripe -- --write --webhook` with Stripe test-mode keys and target Supabase/app env to verify checkout, portal, webhook events, quota plan-state boundaries, authenticated task-create quota behavior, and idempotency
 - run `npm run smoke:launch -- --env=.env.production.local --url=<preview-url> --technical-only` once real provider env is available
 - smoke test auth, profile creation, task CRUD, demo-mode fallback, and app navigation
-- smoke test authenticated task notes against a real Supabase project and app session
 - smoke test OpenAI task parse, prioritization, daily briefing, and agent execution with real env
 - smoke test authenticated agent execution against an owned Supabase task after provider env is configured
 - smoke test Stripe checkout, portal, webhook idempotency, and plan/quota updates in test mode

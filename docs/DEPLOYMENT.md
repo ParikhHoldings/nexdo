@@ -58,7 +58,7 @@ npm run smoke:launch -- --env=.env.production.local --url=https://your-preview.e
 
 The bundle loads the env file into child processes, runs lint, typecheck,
 build, Playwright, dependency audit, env preflight, rendered route smoke, and
-the Supabase, OpenAI, Stripe, and MCP smoke sequence below. `--technical-only`
+the Supabase, authenticated app, OpenAI, Stripe, and MCP smoke sequence below. `--technical-only`
 intentionally keeps manual gates visible: public copy approval and production
 deploy approval are not implied by passing technical smokes.
 
@@ -94,6 +94,7 @@ npm run smoke:launch -- --env=.env.production.local --url=https://your-productio
 ## Provider smoke tests still required
 - Routes: run `npm run smoke:routes -- --url=<preview-or-production-origin>` to verify launch-facing marketing, app, auth, import, settings, MCP setup, privacy, and terms routes render at desktop and mobile widths without response failures, blank bodies, framework overlays, or console errors. For protected Vercel previews, export `VERCEL_AUTOMATION_BYPASS_SECRET` first.
 - Supabase: apply migrations to a real project, create a user, verify profile creation, RLS, task CRUD, import quota enforcement, hashed API-key storage, API key scope persistence and rotation rate limits, profile column read/update grants, direct task column-grant denial for server-managed fields, agent external-ref uniqueness, `agent_action_events` audit writes/privacy, quota no-op behavior, and service-role RPCs.
+- Authenticated app API: run `npm run smoke:app` against the same app URL and Supabase project to verify app-cookie auth, task list/create/update/delete, and task-note validation/create/readback through the deployed API routes. For protected Vercel previews, export `VERCEL_AUTOMATION_BYPASS_SECRET` first.
 - OpenAI: verify parse, prioritization, briefing, and owned-task research/draft/prep execution with real credentials, server-side output persistence, quota use, and rate-limit behavior.
 - Stripe: verify checkout, portal, signed webhook handling, duplicate webhook idempotency, subscription tier updates/deletes, quota enforcement, authenticated task-create quota behavior after entitlement changes, and unknown-price behavior in test mode.
 - MCP/ChatGPT Actions: provision real scoped API keys or provide existing smoke keys, then run authenticated SSE endpoint discovery and list/create/update/add-note/complete/search/briefing/get-task calls against real task data, including `create_task` replay with a repeated `source_agent_id` plus `external_ref`, `add_task_note` note readback, and `agent_action_events` audit rows.
@@ -139,6 +140,14 @@ Write Supabase smoke that creates and deletes disposable auth/task/audit data an
 
 ```bash
 npm run smoke:supabase -- --write
+```
+
+Authenticated app API smoke. Run this against a local or preview app with
+matching Supabase env loaded; it creates and deletes a disposable Supabase user
+and verifies app-cookie auth, authenticated task CRUD, and task-note routes:
+
+```bash
+npm run smoke:app
 ```
 
 OpenAI provider smoke:

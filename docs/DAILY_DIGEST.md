@@ -93,7 +93,10 @@
 - Added MCP/ChatGPT Actions `add_task_note` so external agents can append bounded, human-reviewable notes to owned tasks.
 - Made MCP `get_task` return recent task notes and covered note append/readback through local handler, OpenAPI, action formatter, and scope tests.
 - Expanded `npm run smoke:mcp -- --write` to verify JSON-RPC and ChatGPT Actions task-note appends plus note audit rows when `--audit` is enabled.
-- Refreshed repo-facing verification summaries for the latest 92-test local rail.
+- Refreshed repo-facing verification summaries for the then-current 92-test local rail.
+- Added `npm run smoke:app` to verify authenticated app-cookie task list/create/update/delete plus task-note validation/create/readback with disposable Supabase data.
+- Wired `npm run smoke:app` into the launch smoke between Supabase and OpenAI provider checks.
+- Refreshed repo-facing verification summaries for the latest 93-test local rail.
 
 ### In progress
 - Provider-backed Supabase, OpenAI, Stripe, and MCP smokes remain the main launch-readiness gap.

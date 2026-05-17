@@ -127,6 +127,7 @@ async function runProviderSmokes() {
     `--url=${childEnv.NEXT_PUBLIC_APP_URL}`,
   ])
   await run('Supabase write smoke', ['run', 'smoke:supabase', '--', '--write'])
+  await run('Authenticated app smoke', ['run', 'smoke:app'])
   await run('OpenAI app-route smoke', ['run', 'smoke:openai', '--', '--app'])
 
   const stripeArgs = ['run', 'smoke:stripe', '--', '--write', '--webhook']
