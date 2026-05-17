@@ -15,6 +15,7 @@
 - Moved authenticated imports to quota pre-check, post-save accounting for successfully inserted rows, and cleanup when accounting fails.
 - Hardened billing profile persistence so checkout and webhook entitlement updates no longer silently ignore failed profile writes.
 - Hardened API-key rotation persistence so generated one-time keys are not returned unless the hashed key and scopes are written.
+- Made owned task PATCH misses return 404 instead of generic Supabase no-row failures.
 
 ### In progress
 - Provider-backed Supabase, OpenAI, Stripe, and MCP smokes remain the main launch-readiness gap.

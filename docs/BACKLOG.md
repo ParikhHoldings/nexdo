@@ -14,6 +14,7 @@
 - moved authenticated imports to quota pre-check plus post-save usage accounting for successfully inserted rows, with inserted-task cleanup if accounting fails
 - hardened billing profile writes so checkout fails if the Stripe customer ID cannot be saved and webhook entitlement updates fail for retry if no profile row is written
 - hardened API-key rotation persistence so one-time keys are returned only after the hashed key and scopes are written to the profile
+- made owned task PATCH misses return `404 Task not found` instead of surfacing Supabase no-row errors as generic failures
 
 ## Completed 2026-05-16
 - read and updated the repo-level agent context and all existing Markdown/text operating files

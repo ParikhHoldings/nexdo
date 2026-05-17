@@ -53,7 +53,7 @@ export async function PATCH(
       .eq('id', id)
       .eq('user_id', user.id)
       .select()
-      .single()
+      .maybeSingle()
 
     if (error) {
       console.error('Error updating task:', error)
