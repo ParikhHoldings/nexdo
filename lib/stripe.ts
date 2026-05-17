@@ -1,8 +1,9 @@
 import Stripe from 'stripe'
+import { isUsableEnv } from './env'
 
 function getStripeClient(): Stripe | null {
   const secretKey = process.env.STRIPE_SECRET_KEY
-  if (!secretKey || secretKey.includes('placeholder')) {
+  if (!isUsableEnv(secretKey)) {
     return null
   }
   return new Stripe(secretKey, {
@@ -35,7 +36,7 @@ export const PLAN_LIMITS = {
       'AI task parsing',
       'Daily briefing',
       '50 agent executions/month',
-      'Priority support',
+      'Higher usage limits',
     ],
   },
   power: {
@@ -46,8 +47,8 @@ export const PLAN_LIMITS = {
       'Everything in Pro',
       'Unlimited agent executions',
       'API access',
-      'Agent integrations (coming soon)',
-      'Priority support',
+      'MCP and ChatGPT Actions setup',
+      'Scoped API keys',
     ],
   },
   team: {
@@ -56,10 +57,10 @@ export const PLAN_LIMITS = {
     price: null, // Contact sales
     features: [
       'Everything in Power',
-      'Team collaboration',
-      'Admin controls',
-      'SSO',
-      'Custom integrations',
+      'Custom task and agent limits',
+      'Team rollout planning',
+      'Security review before rollout',
+      'Integration planning by approval',
     ],
   },
 } as const

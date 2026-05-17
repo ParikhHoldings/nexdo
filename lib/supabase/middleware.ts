@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { isUsableEnv } from '@/lib/env'
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -10,7 +11,7 @@ export async function updateSession(request: NextRequest) {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   // Skip Supabase middleware if not configured
-  if (!supabaseUrl || !supabaseAnonKey || supabaseUrl.includes('placeholder')) {
+  if (!isUsableEnv(supabaseUrl) || !isUsableEnv(supabaseAnonKey)) {
     return supabaseResponse
   }
 
@@ -27,7 +28,6 @@ export async function updateSession(request: NextRequest) {
           request,
         })
         cookiesToSet.forEach(({ name, value, options }) =>
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           supabaseResponse.cookies.set(name, value, options as any)
         )
       },
@@ -50,7 +50,10 @@ export async function updateSession(request: NextRequest) {
   if (isProtectedRoute && !user) {
     const url = request.nextUrl.clone()
     url.pathname = '/auth/login'
-    url.searchParams.set('redirect', request.nextUrl.pathname)
+    url.searchParams.set(
+      'redirect',
+      `${request.nextUrl.pathname}${request.nextUrl.search}`
+    )
     return NextResponse.redirect(url)
   }
 

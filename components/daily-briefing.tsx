@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Sun,
@@ -8,52 +8,134 @@ import {
   Clock,
   AlertTriangle,
   Users,
-  ChevronDown,
   ChevronUp,
 } from 'lucide-react'
 import { useBriefingStore, useTaskStore } from '@/lib/store'
 import { BriefingSkeleton } from '@/components/ui/skeleton'
 import { getGreeting } from '@/lib/utils'
-import type { BriefingContent } from '@/lib/database.types'
+import { isActiveTask } from '@/lib/task-filters'
+import { generateBriefingHeuristic } from '@/lib/task-intelligence'
+import type { BriefingContent, Task } from '@/lib/database.types'
 
 interface DailyBriefingProps {
   userName?: string
 }
 
+function getBriefingSignature(tasks: Task[], userName: string): string {
+  return JSON.stringify({
+    userName,
+    tasks: tasks.map((task) => ({
+      id: task.id,
+      title: task.title,
+      status: task.status,
+      priority: task.priority,
+      due_date: task.due_date,
+      due_time: task.due_time,
+      context: task.context,
+      action_type: task.action_type,
+      estimated_minutes: task.estimated_minutes,
+      energy_level: task.energy_level,
+      people: task.people,
+      tags: task.tags,
+      updated_at: task.updated_at,
+    })),
+  })
+}
+
 export function DailyBriefing({ userName = 'there' }: DailyBriefingProps) {
   const { briefing, isLoading, isDismissed, setBriefing, setLoading, dismiss } =
     useBriefingStore()
-  const { tasks, selectTask } = useTaskStore()
+  const { tasks, selectTask, isAuthenticated } = useTaskStore()
+  const [fallbackNotice, setFallbackNotice] = useState<string | null>(null)
+  const activeTasks = useMemo(
+    () => tasks.filter((task) => isActiveTask(task)),
+    [tasks]
+  )
+  const activeTaskCount = activeTasks.length
+  const briefingSignature = useMemo(
+    () => getBriefingSignature(activeTasks, userName),
+    [activeTasks, userName]
+  )
+  const lastFetchedSignature = useRef<string | null>(null)
 
   useEffect(() => {
-    const fetchBriefing = async () => {
-      // Don't fetch if already have briefing or dismissed
-      if (briefing || isDismissed) return
+    if (isAuthenticated) {
+      lastFetchedSignature.current = null
+      return
+    }
+    if (isDismissed) return
 
+    setBriefing(
+      activeTaskCount > 0
+        ? generateBriefingHeuristic(activeTasks, userName)
+        : null
+    )
+  }, [
+    activeTaskCount,
+    activeTasks,
+    isAuthenticated,
+    isDismissed,
+    setBriefing,
+    userName,
+  ])
+
+  useEffect(() => {
+    if (!isAuthenticated) return
+    if (isDismissed) return
+
+    if (activeTaskCount === 0) {
+      lastFetchedSignature.current = null
+      setBriefing(null)
+      return
+    }
+
+    if (lastFetchedSignature.current === briefingSignature) return
+
+    const fetchBriefing = async () => {
+      lastFetchedSignature.current = briefingSignature
       setLoading(true)
       try {
         const response = await fetch('/api/briefing', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ tasks, userName }),
+          body: JSON.stringify({ tasks: activeTasks, userName }),
         })
 
+        const payload = await response.json().catch(() => ({}))
+
         if (response.ok) {
-          const data = await response.json()
-          setBriefing(data)
+          setFallbackNotice(null)
+          setBriefing(payload)
+        } else {
+          setFallbackNotice(
+            `Using local briefing: ${
+              payload?.message ||
+              payload?.error ||
+              'AI briefing is unavailable.'
+            }`
+          )
+          setBriefing(generateBriefingHeuristic(activeTasks, userName))
         }
       } catch (error) {
         console.error('Failed to fetch briefing:', error)
+        setFallbackNotice('Using local briefing: AI briefing is unavailable.')
+        setBriefing(generateBriefingHeuristic(activeTasks, userName))
       } finally {
         setLoading(false)
       }
     }
 
-    // Only fetch if we have tasks
-    if (tasks.length > 0) {
-      fetchBriefing()
-    }
-  }, [tasks.length]) // Only re-run when task count changes
+    fetchBriefing()
+  }, [
+    activeTaskCount,
+    activeTasks,
+    briefingSignature,
+    isAuthenticated,
+    isDismissed,
+    setBriefing,
+    setLoading,
+    userName,
+  ])
 
   const handleTaskClick = (taskId: string) => {
     const task = tasks.find((t) => t.id === taskId)
@@ -67,6 +149,9 @@ export function DailyBriefing({ userName = 'there' }: DailyBriefingProps) {
   if (isLoading) {
     return <BriefingSkeleton />
   }
+
+  const visibleFallbackNotice =
+    isAuthenticated && activeTaskCount > 0 ? fallbackNotice : null
 
   if (!briefing) {
     // Show a simple greeting when no briefing is available
@@ -83,8 +168,16 @@ export function DailyBriefing({ userName = 'there' }: DailyBriefingProps) {
             <p className="text-sm text-zinc-400">
               {tasks.length === 0
                 ? "Add your first task to get started."
-                : `You have ${tasks.filter((t) => t.status !== 'done').length} tasks to focus on.`}
+                : activeTaskCount === 0
+                  ? 'No active tasks to focus on right now.'
+                  : `You have ${activeTaskCount} tasks to focus on.`}
             </p>
+            {visibleFallbackNotice && (
+              <p className="mt-2 flex items-start gap-2 text-xs text-amber-300">
+                <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
+                <span>{visibleFallbackNotice}</span>
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -109,6 +202,12 @@ export function DailyBriefing({ userName = 'there' }: DailyBriefingProps) {
                 {briefing.greeting}
               </h2>
               <p className="text-sm text-zinc-400">{briefing.summary}</p>
+              {visibleFallbackNotice && (
+                <p className="mt-2 flex items-start gap-2 text-xs text-amber-300">
+                  <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
+                  <span>{visibleFallbackNotice}</span>
+                </p>
+              )}
             </div>
           </div>
           <button
@@ -186,7 +285,9 @@ export function DailyBriefing({ userName = 'there' }: DailyBriefingProps) {
                 >
                   <p className="text-sm text-zinc-200">{item.title}</p>
                   <p className="text-xs text-red-400 mt-1">
-                    {item.days_overdue} day{item.days_overdue > 1 ? 's' : ''} overdue
+                    {item.days_overdue === 0
+                      ? 'Past due today'
+                      : `${item.days_overdue} day${item.days_overdue > 1 ? 's' : ''} overdue`}
                   </p>
                 </button>
               ))}

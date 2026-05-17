@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createBillingPortalSession } from '@/lib/stripe'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 
 export async function POST() {
   try {
@@ -18,19 +18,31 @@ export async function POST() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: profile } = await (supabase as any)
+    const service = await createServiceClient()
+    if (!service) {
+      return NextResponse.json({ error: 'Billing is not configured yet' }, { status: 503 })
+    }
+
+    const { data: profile, error: profileError } = await (service as any)
       .from('profiles')
       .select('stripe_customer_id')
       .eq('id', user.id)
-      .single()
+      .maybeSingle()
+
+    if (profileError) {
+      console.error('Error loading billing profile:', profileError)
+      return NextResponse.json({ error: 'Billing profile is not available yet' }, { status: 500 })
+    }
 
     if (!profile?.stripe_customer_id) {
       return NextResponse.json({ error: 'No billing account found' }, { status: 404 })
     }
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-    const session = await createBillingPortalSession(profile.stripe_customer_id, `${appUrl}/settings`)
+    const session = await createBillingPortalSession(
+      profile.stripe_customer_id,
+      `${appUrl}/settings?tab=billing`
+    )
 
     if (!session?.url) {
       return NextResponse.json({ error: 'Unable to open billing portal' }, { status: 500 })

@@ -1,0 +1,1752 @@
+import { expect, test } from '@playwright/test'
+import { readFileSync } from 'node:fs'
+import { addLocalDays, getLocalDateKey } from '../../lib/dates'
+
+test('landing page routes the primary CTA to the working demo path', async ({
+  page,
+}) => {
+  await page.goto('/')
+
+  await expect(page).toHaveTitle('Nexdo - Early-Access Task Workspace')
+  await expect(
+    page.getByRole('heading', { name: /Move tasks from capture to/i })
+  ).toBeVisible()
+  await expect(page.getByText('For founder/operator AI power users')).toBeVisible()
+  await expect(page.getByText(/helps founders and operators/i)).toBeVisible()
+  await expect(page.getByText('bounded AI assistance')).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Founder/Operator Workflow' })).toBeVisible()
+  await expect(page.getByText('front-door launch claim')).toHaveCount(0)
+
+  const demoLink = page.getByRole('link', { name: 'Try the demo' }).first()
+  await expect(demoLink).toHaveAttribute('href', '/today')
+
+  const pricingSection = page.locator('#pricing')
+  await expect(
+    pricingSection.getByRole('link', { name: 'Try demo' })
+  ).toHaveAttribute('href', '/today')
+  await expect(
+    pricingSection.getByRole('link', { name: 'Create account' })
+  ).toHaveCount(2)
+  await expect(
+    pricingSection.getByRole('link', { name: 'Create account' }).first()
+  ).toHaveAttribute('href', '/auth/signup')
+  await expect(
+    pricingSection.getByRole('link', { name: 'Create account' }).nth(1)
+  ).toHaveAttribute('href', '/auth/signup')
+  await expect(
+    pricingSection.getByRole('link', { name: 'Contact Sales' })
+  ).toHaveAttribute('href', 'mailto:sales@nexdo.ai?subject=Team Plan Inquiry')
+  await expect(pricingSection.getByText('Team collaboration')).toHaveCount(0)
+  await expect(pricingSection.getByText('Admin controls')).toHaveCount(0)
+  await expect(pricingSection.getByText('SSO')).toHaveCount(0)
+  await expect(pricingSection.getByText('Custom integrations')).toHaveCount(0)
+
+  await Promise.all([page.waitForURL('**/today'), demoLink.click()])
+  await expect(
+    page.getByRole('heading', { name: 'Today', exact: true })
+  ).toBeVisible({ timeout: 10000 })
+})
+
+test('public metadata and prompts stay below autonomous claims', () => {
+  const layoutSource = readFileSync('app/layout.tsx', 'utf8')
+  const promptSource = readFileSync('lib/prompts.ts', 'utf8')
+  const manifest = JSON.parse(readFileSync('public/manifest.json', 'utf8'))
+  const privacySource = readFileSync('app/(marketing)/privacy/page.tsx', 'utf8')
+  const termsSource = readFileSync('app/(marketing)/terms/page.tsx', 'utf8')
+  const readmeSource = readFileSync('README.md', 'utf8')
+
+  expect(layoutSource).toContain('Nexdo - Early-Access Task Workspace')
+  expect(layoutSource).toContain('review bounded AI assistance')
+  expect(layoutSource).not.toContain('The AI-Native Task Manager')
+  expect(layoutSource).not.toContain("'automation'")
+  expect(manifest.description).toBe(
+    'Early-access task workspace for humans and AI agents'
+  )
+  expect(manifest.description).not.toContain('AI-native')
+
+  expect(promptSource).toContain(
+    'Generate bounded, reviewable outputs for research, drafting, and preparation tasks'
+  )
+  expect(promptSource).toContain(
+    'When a task needs external side effects or judgment'
+  )
+  expect(promptSource).not.toContain('tasks that can be automated')
+  expect(promptSource).not.toContain("complete a task automatically")
+
+  expect(privacySource).toContain('provide requested bounded AI assistance')
+  expect(privacySource).toContain('provider-backed safeguards')
+  expect(privacySource).not.toContain('run requested AI actions')
+  expect(privacySource).not.toContain('trusted vendors')
+  expect(privacySource).not.toContain('industry-standard safeguards')
+
+  expect(termsSource).toContain('If you start a paid plan')
+  expect(termsSource).not.toContain('Paid plans renew automatically')
+
+  expect(readmeSource).toContain('file uploads from CSV, ICS, JSON/Trello/Things-style task exports')
+  expect(readmeSource).not.toContain('file-based task exports')
+})
+
+test('public robots sitemap points to an existing public sitemap', async ({ request }) => {
+  const robots = await request.get('/robots.txt')
+  expect(robots.ok()).toBeTruthy()
+  const robotsText = await robots.text()
+  expect(robotsText).toContain('Sitemap: https://nexdo.ai/sitemap.xml')
+
+  const sitemap = await request.get('/sitemap.xml')
+  expect(sitemap.ok()).toBeTruthy()
+  expect(sitemap.headers()['content-type']).toContain('application/xml')
+  const sitemapText = await sitemap.text()
+  expect(sitemapText).toContain('<loc>https://nexdo.ai/</loc>')
+  expect(sitemapText).toContain('<loc>https://nexdo.ai/privacy</loc>')
+  expect(sitemapText).toContain('<loc>https://nexdo.ai/terms</loc>')
+  expect(sitemapText).not.toContain('/settings')
+  expect(sitemapText).not.toContain('/api/')
+})
+
+test('password reset keeps recovery links on the serving origin', async ({ page }) => {
+  const source = readFileSync('app/auth/reset/page.tsx', 'utf8')
+  const windowOriginIndex = source.indexOf('window.location.origin')
+  const envOriginIndex = source.indexOf('process.env.NEXT_PUBLIC_APP_URL')
+
+  expect(source).toContain('const normalizedEmail = email.trim()')
+  expect(source).toContain('resetPasswordForEmail(')
+  expect(source).toContain('normalizedEmail,')
+  expect(windowOriginIndex).toBeGreaterThan(-1)
+  expect(envOriginIndex).toBeGreaterThan(-1)
+  expect(windowOriginIndex).toBeLessThan(envOriginIndex)
+
+  await page.goto('/auth/reset')
+  const emailInput = page.getByLabel('Email')
+  await emailInput.fill('  reset-smoke@example.com  ')
+  await page.getByRole('button', { name: /Send reset link/ }).click()
+
+  await expect(emailInput).toHaveValue('reset-smoke@example.com')
+  await expect(
+    page.getByText('Authentication is not configured for this deployment.')
+  ).toBeVisible()
+})
+
+test('login surfaces callback errors and uses safe redirect helpers', async ({ page }) => {
+  const loginSource = readFileSync('app/auth/login/page.tsx', 'utf8')
+  const callbackSource = readFileSync('app/auth/callback/route.ts', 'utf8')
+
+  expect(loginSource).toContain('const normalizedEmail = email.trim()')
+  expect(loginSource).toContain('email: normalizedEmail')
+  expect(loginSource).toContain("safeLoginRedirect(searchParams.get('redirect'))")
+  expect(loginSource).toContain("authErrorMessage(searchParams.get('error'))")
+  expect(callbackSource).toContain("safeAuthRedirect(searchParams.get('next'))")
+
+  await page.goto('/auth/login?error=callback_error&redirect=https://example.com')
+
+  await expect(
+    page.getByText('Could not finish sign-in. Request a fresh link or sign in again.')
+  ).toBeVisible()
+  await page.getByRole('button', { name: 'Try demo mode' }).click()
+  await expect(page).toHaveURL(/\/today$/)
+})
+
+test('demo task capture, briefing, prioritization, and agent output work', async ({
+  page,
+}) => {
+  const consoleMessages: string[] = []
+  page.on('console', (message) => {
+    if (['error', 'warning'].includes(message.type())) {
+      consoleMessages.push(`${message.type()}: ${message.text()}`)
+    }
+  })
+  page.on('pageerror', (error) => {
+    consoleMessages.push(`pageerror: ${error.message}`)
+  })
+
+  await page.goto('/today')
+
+  await expect(page.getByRole('heading', { name: 'Today', exact: true })).toBeVisible()
+  await expect(page.getByText('Top Priorities')).toBeVisible()
+
+  const taskCapture = page.getByPlaceholder('What needs to get done? Be specific...')
+  await page.keyboard.press('Control+K')
+  await expect(taskCapture).toBeFocused()
+
+  const addTaskButton = page.getByRole('button', { name: 'Add task' })
+  await expect(addTaskButton).toBeDisabled()
+
+  await taskCapture.fill('Research competitor pricing with Sarah today high priority 45 minutes')
+  await expect(addTaskButton).toBeEnabled()
+  await addTaskButton.click()
+
+  await expect(
+    page.getByRole('heading', { name: /Research competitor pricing/ }).first()
+  ).toBeVisible()
+  await expect(page.getByText(/6 active tasks/)).toBeVisible()
+  await expect(page.getByText('Why now:').first()).toBeVisible()
+
+  await taskCapture.fill('/quick')
+  await page.keyboard.press('Enter')
+  await expect(taskCapture).toHaveValue('/quick ')
+  await expect(page.getByText('Add a task after /quick')).toBeVisible()
+
+  await taskCapture.fill('/quick   Quick capture smoke')
+  await page.keyboard.press('Enter')
+  await expect(
+    page.getByRole('heading', { name: 'Quick capture smoke' })
+  ).toBeVisible()
+  await expect(
+    page.getByRole('link', { name: /^Today\s+4$/ })
+  ).toBeVisible()
+
+  await page.getByRole('heading', { name: 'Send weekly update to team' }).click()
+  await expect(page.getByRole('heading', { name: 'AI Agent' })).toBeVisible()
+
+  await page.getByRole('button', { name: 'Edit task' }).click()
+  await page.getByLabel('Task title').fill('Send weekly update to product team')
+  await page.getByLabel('Task due time').fill('09:30')
+  await page.getByLabel('Task estimate').fill('20')
+  await page.getByLabel('Task energy level').selectOption('quick')
+  await page.getByRole('button', { name: /Save/ }).click()
+  await expect(
+    page.locator('h2', { hasText: 'Send weekly update to product team' })
+  ).toBeVisible()
+  await expect(page.getByText('09:30', { exact: true })).toBeVisible()
+  await expect(page.getByText('quick energy')).toBeVisible()
+
+  await page.getByRole('button', { name: /Run draft/i }).click()
+  await expect(page.getByText('Completed')).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Draft' })).toBeVisible()
+  await expect(page.getByText('Verification notes')).toBeVisible()
+  await page.getByRole('button', { name: 'Verified' }).click()
+  await page.getByLabel('Agent review note').fill('Checked tone and next step.')
+  await page.getByRole('button', { name: 'Save review' }).click()
+  await expect(page.getByText('Review saved.')).toBeVisible()
+  await expect(page.getByText('Execution history')).toBeVisible()
+  await expect(page.getByText('1 run')).toBeVisible()
+  await page.getByRole('button', { name: 'Run again' }).click()
+  await expect(page.getByText('2 runs')).toBeVisible()
+  await page.screenshot({ path: '/tmp/nexdo-smoke-desktop.png', fullPage: false })
+
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/today')
+  await expect(page.getByRole('heading', { name: 'Today', exact: true })).toBeVisible()
+  await expect(page.getByPlaceholder('What needs to get done? Be specific...')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Open navigation' })).toBeVisible()
+
+  const sidebarRightEdge = async () => {
+    const box = await page.locator('aside').boundingBox()
+    expect(box).not.toBeNull()
+    return box!.x + box!.width
+  }
+
+  await expect.poll(sidebarRightEdge).toBeLessThanOrEqual(1)
+
+  await page.getByRole('button', { name: 'Open navigation' }).click()
+  await expect(page.getByRole('link', { name: 'Import' })).toBeVisible()
+  await page.getByRole('link', { name: 'Import' }).click()
+  await expect(page).toHaveURL(/\/import$/)
+  await expect(page.getByRole('heading', { name: 'Import Your Tasks' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Open navigation' })).toBeVisible()
+
+  await expect.poll(sidebarRightEdge).toBeLessThanOrEqual(1)
+
+  await page.screenshot({ path: '/tmp/nexdo-smoke-mobile.png', fullPage: false })
+
+  const unexpectedMessages = consoleMessages.filter(
+    (message) =>
+      !message.includes('Failed to load resource: the server responded with a status of 401')
+  )
+  expect(unexpectedMessages).toEqual([])
+})
+
+test('today briefing ignores cancelled-only work as active focus', async ({ page }) => {
+  const now = new Date().toISOString()
+  const cancelledTask = {
+    id: 'cancelled-focus-task',
+    user_id: 'demo-user',
+    title: 'Cancelled agent duplicate',
+    raw_input: 'Cancelled agent duplicate',
+    description: null,
+    status: 'cancelled',
+    priority: 'high',
+    due_date: null,
+    due_time: null,
+    context: 'External agent cancelled this duplicate handoff.',
+    source: 'agent',
+    action_type: 'manual',
+    estimated_minutes: 15,
+    energy_level: 'quick',
+    people: ['Agent Ops'],
+    tags: ['agent-review'],
+    parent_task_id: null,
+    related_task_ids: null,
+    agent_output: null,
+    completed_at: null,
+    created_at: now,
+    updated_at: now,
+    source_agent_id: 'agent-alpha',
+    external_ref: 'cancelled-focus-1',
+    ingestion_intent: 'update',
+    agent_metadata: { reason: 'duplicate' },
+  }
+
+  await page.addInitScript((tasks: unknown[]) => {
+    window.localStorage.setItem('nexdo_demo_tasks', JSON.stringify(tasks))
+  }, [cancelledTask])
+
+  await page.goto('/today')
+
+  await expect(page.getByRole('heading', { name: 'Today', exact: true })).toBeVisible()
+  await expect(page.getByText('No active tasks to focus on right now.')).toBeVisible()
+  await expect(page.getByText('Your day is clear')).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Cancelled agent duplicate' })
+  ).toHaveCount(0)
+})
+
+test('agent-created tasks expose trace metadata in task surfaces', async ({ page }) => {
+  const now = new Date().toISOString()
+  const agentTask = {
+    id: 'agent-demo-task',
+    user_id: 'demo-user',
+    title: 'Review agent-created onboarding brief',
+    raw_input: 'Review agent-created onboarding brief',
+    description: null,
+    status: 'todo',
+    priority: 'high',
+    due_date: null,
+    due_time: null,
+    context: 'Created by an external planning agent for human review',
+    source: 'agent',
+    action_type: 'manual',
+    estimated_minutes: 20,
+    energy_level: 'light',
+    people: ['Ops'],
+    tags: ['agent-review'],
+    parent_task_id: null,
+    related_task_ids: null,
+    agent_output: null,
+    completed_at: null,
+    created_at: now,
+    updated_at: now,
+    source_agent_id: 'agent-alpha',
+    external_ref: 'brief-42',
+    ingestion_intent: 'create',
+    agent_metadata: { channel: 'mcp', confidence: 'high' },
+  }
+
+  await page.addInitScript((task: unknown) => {
+    window.localStorage.setItem('nexdo_demo_tasks', JSON.stringify([task]))
+  }, agentTask)
+
+  await page.goto('/today')
+
+  await expect(
+    page.getByRole('heading', { name: 'Review agent-created onboarding brief' })
+  ).toBeVisible()
+  await expect(page.getByText('agent-alpha').first()).toBeVisible()
+
+  await page
+    .getByRole('heading', { name: 'Review agent-created onboarding brief' })
+    .click()
+
+  const trace = page.getByLabel('Agent trace')
+  await expect(trace).toBeVisible()
+  await expect(trace.getByText('Source agent')).toBeVisible()
+  await expect(trace.getByText('agent-alpha')).toBeVisible()
+  await expect(trace.getByText('External ref')).toBeVisible()
+  await expect(trace.getByText('brief-42')).toBeVisible()
+  await expect(trace.getByText('Intent')).toBeVisible()
+  await expect(trace.getByText('Create')).toBeVisible()
+  await expect(trace.getByText('Metadata keys')).toBeVisible()
+  await expect(trace.getByText('channel, confidence')).toBeVisible()
+})
+
+test('agent-completed tasks expose trace metadata in done surfaces', async ({ page }) => {
+  const now = new Date().toISOString()
+  const completedTask = {
+    id: 'agent-completed-task',
+    user_id: 'demo-user',
+    title: 'Archive agent-completed launch follow-up',
+    raw_input: 'Archive agent-completed launch follow-up',
+    description: null,
+    status: 'done',
+    priority: 'medium',
+    due_date: null,
+    due_time: null,
+    context: 'Completed by an external agent after syncing the source system',
+    source: 'agent',
+    action_type: 'manual',
+    estimated_minutes: 10,
+    energy_level: 'quick',
+    people: ['Ops'],
+    tags: ['agent-review'],
+    parent_task_id: null,
+    related_task_ids: null,
+    agent_output: null,
+    completed_at: now,
+    created_at: now,
+    updated_at: now,
+    source_agent_id: 'agent-completer',
+    external_ref: 'done-42',
+    ingestion_intent: 'complete',
+    agent_metadata: { channel: 'mcp', confidence: 'medium' },
+  }
+
+  await page.addInitScript((task: unknown) => {
+    window.localStorage.setItem('nexdo_demo_tasks', JSON.stringify([task]))
+  }, completedTask)
+
+  await page.goto('/done')
+
+  await expect(page.getByRole('heading', { name: 'Done' })).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Archive agent-completed launch follow-up' })
+  ).toBeVisible()
+  await expect(page.getByText('agent-completer').first()).toBeVisible()
+
+  await page
+    .getByRole('heading', { name: 'Archive agent-completed launch follow-up' })
+    .click()
+
+  const trace = page.getByLabel('Agent trace')
+  await expect(trace).toBeVisible()
+  await expect(trace.getByText('Source agent')).toBeVisible()
+  await expect(trace.getByText('agent-completer')).toBeVisible()
+  await expect(trace.getByText('External ref')).toBeVisible()
+  await expect(trace.getByText('done-42')).toBeVisible()
+  await expect(trace.getByText('Intent')).toBeVisible()
+  await expect(trace.getByText('Complete', { exact: true })).toBeVisible()
+  await expect(trace.getByText('Metadata keys')).toBeVisible()
+  await expect(trace.getByText('channel, confidence')).toBeVisible()
+})
+
+test('remind tasks do not expose AI agent execution controls', async ({ page }) => {
+  const now = new Date().toISOString()
+  const remindTask = {
+    id: 'remind-non-executable-task',
+    user_id: 'demo-user',
+    title: 'Remind me to confirm the launch checklist',
+    raw_input: 'Remind me to confirm the launch checklist',
+    description: null,
+    status: 'todo',
+    priority: 'high',
+    due_date: null,
+    due_time: null,
+    context: 'This should stay a reminder, not an executable AI task.',
+    source: 'manual',
+    action_type: 'remind',
+    estimated_minutes: 5,
+    energy_level: 'quick',
+    people: null,
+    tags: ['launch'],
+    parent_task_id: null,
+    related_task_ids: null,
+    agent_output: null,
+    completed_at: null,
+    created_at: now,
+    updated_at: now,
+    source_agent_id: null,
+    external_ref: null,
+    ingestion_intent: null,
+    agent_metadata: null,
+  }
+
+  await page.addInitScript((tasks: unknown[]) => {
+    window.localStorage.setItem('nexdo_demo_tasks', JSON.stringify(tasks))
+  }, [remindTask])
+
+  await page.goto('/today')
+
+  await expect(
+    page.getByRole('heading', {
+      name: 'Remind me to confirm the launch checklist',
+    })
+  ).toBeVisible()
+  await expect(
+    page.getByRole('button', {
+      name: 'Run agent for "Remind me to confirm the launch checklist"',
+    })
+  ).toHaveCount(0)
+
+  await page
+    .getByRole('heading', { name: 'Remind me to confirm the launch checklist' })
+    .click()
+
+  await expect(
+    page.locator('h2', { hasText: 'Remind me to confirm the launch checklist' })
+  ).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'AI Agent' })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: /Run remind/i })).toHaveCount(0)
+})
+
+test('demo task notes save and reload from task detail', async ({ page }) => {
+  await page.context().grantPermissions(['clipboard-read', 'clipboard-write'])
+
+  const now = new Date().toISOString()
+  const task = {
+    id: 'task-notes-demo-task',
+    user_id: 'demo-user',
+    title: 'Capture launch note context',
+    raw_input: 'Capture launch note context',
+    description: null,
+    status: 'todo',
+    priority: 'high',
+    due_date: null,
+    due_time: null,
+    context: 'Use notes for human and agent handoff context.',
+    source: 'manual',
+    action_type: 'manual',
+    estimated_minutes: 10,
+    energy_level: 'quick',
+    people: ['Ops'],
+    tags: ['launch'],
+    parent_task_id: null,
+    related_task_ids: null,
+    agent_output: null,
+    completed_at: null,
+    created_at: now,
+    updated_at: now,
+    source_agent_id: null,
+    external_ref: null,
+    ingestion_intent: null,
+    agent_metadata: null,
+  }
+  const note = 'Customer call confirmed this needs Friday follow-up.'
+
+  await page.addInitScript((tasks: unknown[]) => {
+    window.localStorage.setItem('nexdo_demo_tasks', JSON.stringify(tasks))
+  }, [task])
+
+  await page.goto('/today')
+  await page.getByRole('heading', { name: 'Capture launch note context' }).click()
+
+  const notes = page.getByLabel('Task notes')
+  await expect(notes).toBeVisible()
+  await expect(notes.getByText('No notes yet.')).toBeVisible()
+
+  await notes.getByLabel('Task note').fill(note)
+  await notes.getByRole('button', { name: 'Add note' }).click()
+  await expect(notes.getByText('Note saved.')).toBeVisible()
+  await expect(notes.getByText(note)).toBeVisible()
+  await expect(notes.getByText('Agent handoff brief')).toBeVisible()
+
+  await notes.getByRole('button', { name: 'Copy agent handoff brief' }).click()
+  await expect(notes.getByText('Handoff brief copied.')).toBeVisible()
+  const handoffBrief = await page.evaluate(() => navigator.clipboard.readText())
+  expect(handoffBrief).toContain('# Nexdo Task Handoff')
+  expect(handoffBrief).toContain('Title: Capture launch note context')
+  expect(handoffBrief).toContain('Context: Use notes for human and agent handoff context.')
+  expect(handoffBrief).toContain(`- note: ${note}`)
+  expect(handoffBrief).toContain('Prefer add_task_note with note_type=agent_result')
+
+  await page.reload()
+  await page.getByRole('heading', { name: 'Capture launch note context' }).click()
+  await expect(page.getByLabel('Task notes').getByText(note)).toBeVisible()
+})
+
+test('demo task relationships save and navigate from task detail', async ({ page }) => {
+  await page.goto('/all')
+
+  await page.getByRole('heading', { name: 'Review Q4 marketing proposal' }).click()
+  const relationships = page.getByLabel('Task relationships')
+  await expect(relationships.getByRole('heading', { name: 'Task relationships' })).toBeVisible()
+
+  await relationships.getByLabel('Parent task').selectOption({
+    label: 'Prepare for investor meeting',
+  })
+  await expect(
+    relationships.getByRole('button', { name: 'Prepare for investor meeting' })
+  ).toBeVisible()
+
+  await relationships.getByLabel('Add related task').selectOption({
+    label: 'Send weekly update to team',
+  })
+  await expect(
+    relationships.getByRole('button', {
+      name: 'Send weekly update to team',
+      exact: true,
+    })
+  ).toBeVisible()
+
+  await page.reload()
+  await page.getByRole('heading', { name: 'Review Q4 marketing proposal' }).click()
+  const persistedRelationships = page.getByLabel('Task relationships')
+  await expect(
+    persistedRelationships.getByRole('button', { name: 'Prepare for investor meeting' })
+  ).toBeVisible()
+  await expect(
+    persistedRelationships.getByRole('button', {
+      name: 'Send weekly update to team',
+      exact: true,
+    })
+  ).toBeVisible()
+
+  await persistedRelationships
+    .getByRole('button', {
+      name: 'Send weekly update to team',
+      exact: true,
+    })
+    .click()
+  await expect(
+    page.locator('h2', { hasText: 'Send weekly update to team' })
+  ).toBeVisible()
+})
+
+test('task mutation endpoints require configured auth', async ({ request }) => {
+  const patch = await request.patch('/api/tasks/not-a-real-task', {
+    data: { title: 'Should not update', user_id: 'someone-else' },
+  })
+  expect([401, 503]).toContain(patch.status())
+
+  const del = await request.delete('/api/tasks/not-a-real-task')
+  expect([401, 503]).toContain(del.status())
+
+  const execute = await request.post('/api/agent/execute', {
+    data: { taskId: 'not-a-real-task' },
+  })
+  expect([401, 503]).toContain(execute.status())
+
+  const review = await request.patch('/api/tasks/not-a-real-task/agent-review', {
+    data: { status: 'verified', note: 'Checked by smoke test' },
+  })
+  expect([401, 503]).toContain(review.status())
+
+  const notes = await request.get('/api/tasks/not-a-real-task/notes')
+  expect([401, 503]).toContain(notes.status())
+
+  const noteCreate = await request.post('/api/tasks/not-a-real-task/notes', {
+    data: { content: 'Should not save' },
+  })
+  expect([401, 503]).toContain(noteCreate.status())
+
+  const csvImport = await request.post('/api/import/csv', {
+    data: { content: 'title\nImported smoke task' },
+  })
+  expect([401, 503]).toContain(csvImport.status())
+
+  const jsonImport = await request.post('/api/import/json', {
+    data: { content: '[{"title":"Imported smoke task"}]' },
+  })
+  expect([401, 503]).toContain(jsonImport.status())
+
+  const icsImport = await request.post('/api/import/ics', {
+    data: { content: 'BEGIN:VCALENDAR\nEND:VCALENDAR' },
+  })
+  expect([401, 503]).toContain(icsImport.status())
+
+  const apiKey = await request.post('/api/profile/api-key', {
+    data: { scopes: ['tasks:read'] },
+  })
+  expect([401, 503]).toContain(apiKey.status())
+
+  const profile = await request.patch('/api/profile', {
+    data: { full_name: 'Smoke User', timezone: 'Not/AZone', work_type: 'owner' },
+  })
+  expect([401, 503]).toContain(profile.status())
+})
+
+test('profile update route returns not found when no profile row is updated', () => {
+  const source = readFileSync('app/api/profile/route.ts', 'utf8')
+
+  expect(source).toContain('.maybeSingle()')
+  expect(source).toContain("{ error: 'Profile not found' }")
+})
+
+test('authenticated app boot keeps user and task auth state aligned on profile misses', () => {
+  const source = readFileSync('app/(app)/layout.tsx', 'utf8')
+
+  expect(source).toContain('createClientProfileFallback(user, timezone)')
+  expect(source).toContain('setUserAuthenticated(true)')
+  expect(source).toContain('setTasksAuthenticated(true)')
+  expect(source).toContain('.maybeSingle()')
+  expect(source).toContain('Could not load your tasks')
+})
+
+test('authenticated task capture surfaces server save messages', () => {
+  const source = readFileSync('components/task-input.tsx', 'utf8')
+
+  expect(source).toContain('payload?.message ||')
+  expect(source).toContain('payload?.error ||')
+  expect(source).toContain('Your task was not saved. Please try again.')
+})
+
+test('authenticated task mutations surface server failure messages', () => {
+  const source = readFileSync('lib/store.ts', 'utf8')
+
+  expect(source).toContain('payload?.message ||')
+  expect(source).toContain('payload?.error ||')
+  expect(source).toContain('Could not save task changes:')
+  expect(source).toContain('Could not delete task:')
+})
+
+test('authenticated agent execution surfaces server failure messages', () => {
+  const source = readFileSync('components/task-detail.tsx', 'utf8')
+
+  expect(source).toContain('payload?.message ||')
+  expect(source).toContain('payload?.error ||')
+  expect(source).toContain('setExecutionError(')
+  expect(source).toContain('Failed to execute task. Please try again.')
+})
+
+test('authenticated AI fallback notices surface provider failure messages', () => {
+  const briefingSource = readFileSync('components/daily-briefing.tsx', 'utf8')
+  const todaySource = readFileSync('app/(app)/today/page.tsx', 'utf8')
+
+  expect(briefingSource).toContain('Using local briefing:')
+  expect(briefingSource).toContain('payload?.message ||')
+  expect(briefingSource).toContain('payload?.error ||')
+  expect(todaySource).toContain('Using local priority order:')
+  expect(todaySource).toContain('payload?.message ||')
+  expect(todaySource).toContain('payload?.error ||')
+})
+
+test('authenticated done bulk-clear surfaces server delete messages', () => {
+  const source = readFileSync('app/(app)/done/page.tsx', 'utf8')
+
+  expect(source).toContain('payload?.message ||')
+  expect(source).toContain('payload?.error ||')
+  expect(source).toContain('Task delete failed')
+  expect(source).toContain('They were restored locally. Please try again.')
+})
+
+test('authenticated imports surface server failure messages before generic errors', () => {
+  const source = readFileSync('app/(app)/import/page.tsx', 'utf8')
+
+  expect(source).toContain("result.message || result.error || 'Import failed'")
+  expect(source).toContain('Array.isArray(result.tasks)')
+  expect(source).toContain('Keep the visible workspace in sync with server-side imports.')
+  expect(source).not.toContain('if (!isAuthenticated && result.tasks)')
+})
+
+test('billing actions surface server messages before generic errors', () => {
+  const source = readFileSync('app/(app)/settings/page.tsx', 'utf8')
+
+  expect(source).toContain('result.message ||')
+  expect(source).toContain('result.error ||')
+  expect(source).toContain('Unable to start checkout right now.')
+  expect(source).toContain('Unable to open billing portal right now.')
+})
+
+test('provider list imports fail closed on nested task fetch failures', () => {
+  const googleSource = readFileSync('app/api/import/google/route.ts', 'utf8')
+  const microsoftSource = readFileSync('app/api/import/microsoft/route.ts', 'utf8')
+  const importPageSource = readFileSync('app/(app)/import/page.tsx', 'utf8')
+
+  expect(importPageSource).toContain("handleImport('google', '/api/import/google', { token })")
+  expect(importPageSource).toContain("handleImport('microsoft', '/api/import/microsoft', { token })")
+  expect(googleSource).toContain('body.access_token || body.token')
+  expect(googleSource).toContain('if (!tasksResponse.ok)')
+  expect(googleSource).toContain('Google Tasks list API error')
+  expect(googleSource).toContain('Failed to fetch tasks from a Google Tasks list')
+  expect(googleSource).toContain('encodeURIComponent(list.id)')
+  expect(microsoftSource).toContain('body.access_token || body.token')
+  expect(microsoftSource).toContain('if (!tasksResponse.ok)')
+  expect(microsoftSource).toContain('Microsoft To Do list API error')
+  expect(microsoftSource).toContain('Failed to fetch tasks from a Microsoft To Do list')
+  expect(microsoftSource).toContain('encodeURIComponent(list.id)')
+})
+
+test('connected app imports expose an honest manual token path', async ({ page }) => {
+  const importCardSource = readFileSync('components/import-source-card.tsx', 'utf8')
+
+  expect(importCardSource).not.toContain("type: 'oauth'")
+  expect(importCardSource).not.toContain('comingSoon')
+  expect(importCardSource).not.toContain('Connect Account')
+
+  await page.goto('/import')
+
+  await expect(
+    page.getByText('Full OAuth connection is a post-launch workflow.')
+  ).toBeVisible()
+  await expect(page.getByPlaceholder('Graph access token')).toBeVisible()
+  await expect(page.getByPlaceholder('Google Tasks access token')).toBeVisible()
+  await expect(page.getByText('Use a Microsoft Graph access token')).toBeVisible()
+  await expect(page.getByText('Use a Google OAuth access token')).toBeVisible()
+  await expect(page.getByText('Coming soon')).toHaveCount(0)
+})
+
+test('demo file import adds tasks without configured auth', async ({ page }) => {
+  await page.goto('/import')
+
+  await page.locator('input[accept=".csv"]').last().setInputFiles({
+    name: 'nexdo-demo-import.csv',
+    mimeType: 'text/csv',
+    buffer: Buffer.from(
+      'title,priority,context\nImported demo smoke task,high,Imported through the demo CSV flow\n'
+    ),
+  })
+
+  await expect(page.getByText('1 task ready')).toBeVisible()
+  await expect(page.getByText('Imported demo smoke task')).toBeVisible()
+  await expect(
+    page.getByText('Demo file imports are capped at 100 tasks per file.')
+  ).toBeVisible()
+  await page.getByRole('button', { name: 'Import' }).last().click()
+
+  await expect(page.getByText('1 task imported successfully')).toBeVisible()
+
+  await page.getByRole('link', { name: 'All Tasks' }).click()
+  await expect(
+    page.getByRole('heading', { name: 'Imported demo smoke task' })
+  ).toBeVisible()
+})
+
+test('demo handoff import restores task context and notes', async ({ page }) => {
+  const handoffBrief = [
+    '# Nexdo Task Handoff',
+    'Title: Imported agent handoff',
+    'Status: waiting',
+    'Priority: high',
+    'Action type: prep',
+    'Due: 2026-05-18 09:00',
+    'Estimate: 20 minutes',
+    'Energy: deep',
+    'People: Ops, Casey',
+    'Tags: launch, handoff',
+    'Context: Use this handoff to resume launch verification.',
+    'Description: Confirm which checks remain blocked.',
+    'Original input: Import this Nexdo handoff',
+    'Source agent: codex',
+    'External ref: handoff-123',
+    'Ingestion intent: update',
+    '',
+    'Recent notes:',
+    '- note: Keep route smoke blocked until the Vercel bypass secret exists.',
+    '- agent result: Drafted the verification summary.',
+    '',
+    'Agent instructions:',
+    '- Read the task details and notes before changing task state.',
+  ].join('\n')
+
+  await page.goto('/import')
+  await page.getByLabel('Nexdo task handoff brief').fill(handoffBrief)
+  await page.getByRole('button', { name: 'Import handoff' }).click()
+  await expect(
+    page.getByText('Added Imported agent handoff with 3 notes.')
+  ).toBeVisible()
+
+  await page.goto('/today')
+  await expect(
+    page.getByRole('button', { name: /Imported agent handoff/ }).first()
+  ).toBeVisible()
+  await page.getByRole('button', { name: /Imported agent handoff/ }).first().click()
+
+  await expect(page.locator('h2', { hasText: 'Imported agent handoff' })).toBeVisible()
+  await expect(page.getByText('Use this handoff to resume launch verification.')).toBeVisible()
+  await expect(page.getByText('Ops', { exact: true })).toBeVisible()
+  await expect(page.getByText('launch', { exact: true })).toBeVisible()
+  await expect(
+    page.getByRole('button', { name: 'waiting', exact: true })
+  ).toBeVisible()
+
+  const notes = page.getByLabel('Task notes')
+  await expect(notes.getByText('Imported handoff trace: source_agent_id=codex')).toBeVisible()
+  await expect(
+    notes.getByText('Keep route smoke blocked until the Vercel bypass secret exists.')
+  ).toBeVisible()
+  await expect(notes.getByText('agent result: Drafted the verification summary.')).toBeVisible()
+})
+
+test('demo workspace supports all, upcoming, and done lifecycle', async ({
+  page,
+}) => {
+  await page.goto('/all')
+
+  await expect(page.getByRole('heading', { name: 'All Tasks' })).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Reply to customer feedback email' })
+  ).toBeVisible()
+
+  await page.getByPlaceholder('Search tasks...').fill('customer')
+  await expect(
+    page.getByRole('heading', { name: 'Reply to customer feedback email' })
+  ).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Review Q4 marketing proposal' })
+  ).toHaveCount(0)
+  await expect(page.getByText('Showing 1 task (filtered from 5)')).toBeVisible()
+
+  await page.getByPlaceholder('Search tasks...').fill('sequoia')
+  await expect(
+    page.getByRole('heading', { name: 'Prepare for investor meeting' })
+  ).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Reply to customer feedback email' })
+  ).toHaveCount(0)
+  await expect(page.getByText('Showing 1 task (filtered from 5)')).toBeVisible()
+
+  await page.getByPlaceholder('Search tasks...').fill('')
+  await page.getByRole('button', { name: 'Filters' }).click()
+  await page.getByRole('button', { name: 'High' }).click()
+  await expect(page.getByText('Showing 2 tasks (filtered from 5)')).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Reply to customer feedback email' })
+  ).toBeVisible()
+
+  await page.getByRole('link', { name: 'Upcoming' }).click()
+  await expect(page.getByRole('heading', { name: 'Upcoming' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /Tomorrow/ })).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Review Q4 marketing proposal' })
+  ).toBeVisible()
+
+  await page.getByRole('link', { name: 'All Tasks' }).click()
+  await page
+    .getByRole('checkbox', {
+      name: 'Mark "Reply to customer feedback email" complete',
+    })
+    .locator('xpath=ancestor::label')
+    .click()
+  await expect(
+    page.getByRole('heading', { name: 'Reply to customer feedback email' })
+  ).toHaveCount(0)
+
+  await page.getByRole('link', { name: 'Done' }).click()
+  await expect(page.getByRole('heading', { name: 'Done' })).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Reply to customer feedback email' })
+  ).toBeVisible()
+
+  await page.reload()
+  await expect(
+    page.getByRole('heading', { name: 'Reply to customer feedback email' })
+  ).toBeVisible()
+
+  await page.getByRole('button', { name: 'Clear all' }).click()
+  await expect(page.getByRole('dialog')).toBeVisible()
+  await page.getByRole('button', { name: 'Delete all' }).click()
+  await expect(page.getByText('Nothing completed yet')).toBeVisible()
+
+  await page.reload()
+  await expect(page.getByText('Nothing completed yet')).toBeVisible()
+})
+
+test('scan views order same-day tasks by due time', async ({ page }) => {
+  const now = new Date().toISOString()
+  const tomorrow = getLocalDateKey(addLocalDays(new Date(), 1))
+  const tasks = [
+    {
+      id: 'untimed-scan-task',
+      user_id: 'demo-user',
+      title: 'Untimed same-day scan',
+      raw_input: 'Untimed same-day scan',
+      description: null,
+      status: 'todo',
+      priority: 'medium',
+      due_date: tomorrow,
+      due_time: null,
+      context: null,
+      source: 'manual',
+      action_type: 'manual',
+      estimated_minutes: null,
+      energy_level: null,
+      people: null,
+      tags: null,
+      parent_task_id: null,
+      related_task_ids: null,
+      agent_output: null,
+      completed_at: null,
+      created_at: now,
+      updated_at: now,
+      source_agent_id: null,
+      external_ref: null,
+      ingestion_intent: null,
+      agent_metadata: null,
+    },
+    {
+      id: 'afternoon-scan-task',
+      user_id: 'demo-user',
+      title: 'Afternoon timed scan',
+      raw_input: 'Afternoon timed scan',
+      description: null,
+      status: 'todo',
+      priority: 'medium',
+      due_date: tomorrow,
+      due_time: '15:00',
+      context: null,
+      source: 'manual',
+      action_type: 'manual',
+      estimated_minutes: null,
+      energy_level: null,
+      people: null,
+      tags: null,
+      parent_task_id: null,
+      related_task_ids: null,
+      agent_output: null,
+      completed_at: null,
+      created_at: now,
+      updated_at: now,
+      source_agent_id: null,
+      external_ref: null,
+      ingestion_intent: null,
+      agent_metadata: null,
+    },
+    {
+      id: 'morning-scan-task',
+      user_id: 'demo-user',
+      title: 'Morning timed scan',
+      raw_input: 'Morning timed scan',
+      description: null,
+      status: 'todo',
+      priority: 'medium',
+      due_date: tomorrow,
+      due_time: '09:00',
+      context: null,
+      source: 'manual',
+      action_type: 'manual',
+      estimated_minutes: null,
+      energy_level: null,
+      people: null,
+      tags: null,
+      parent_task_id: null,
+      related_task_ids: null,
+      agent_output: null,
+      completed_at: null,
+      created_at: now,
+      updated_at: now,
+      source_agent_id: null,
+      external_ref: null,
+      ingestion_intent: null,
+      agent_metadata: null,
+    },
+  ]
+
+  await page.addInitScript((demoTasks: unknown[]) => {
+    window.localStorage.setItem('nexdo_demo_tasks', JSON.stringify(demoTasks))
+  }, tasks)
+
+  await page.goto('/all?sort=due_date')
+  await expect(page.getByRole('heading', { name: 'All Tasks' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Morning timed scan' })).toBeVisible()
+
+  await expect
+    .poll(async () => page.locator('h3').allTextContents())
+    .toEqual(['Morning timed scan', 'Afternoon timed scan', 'Untimed same-day scan'])
+
+  await page.goto('/upcoming')
+  await expect(page.getByRole('heading', { name: 'Upcoming' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Tomorrow' })).toBeVisible()
+  await expect
+    .poll(async () => page.locator('h3').allTextContents())
+    .toEqual(['Morning timed scan', 'Afternoon timed scan', 'Untimed same-day scan'])
+})
+
+test('non-default task statuses remain visible and reviewable from all tasks', async ({ page }) => {
+  const now = new Date().toISOString()
+  const waitingTask = {
+    id: 'waiting-agent-task',
+    user_id: 'demo-user',
+    title: 'Wait for partner brief',
+    raw_input: 'Wait for partner brief',
+    description: null,
+    status: 'waiting',
+    priority: 'high',
+    due_date: null,
+    due_time: null,
+    context: 'External agent marked this as waiting on a partner response.',
+    source: 'agent',
+    action_type: 'manual',
+    estimated_minutes: 10,
+    energy_level: 'quick',
+    people: ['Partner Team'],
+    tags: ['agent-review'],
+    parent_task_id: null,
+    related_task_ids: null,
+    agent_output: null,
+    completed_at: null,
+    created_at: now,
+    updated_at: now,
+    source_agent_id: 'agent-beta',
+    external_ref: 'wait-41',
+    ingestion_intent: 'update',
+    agent_metadata: { reason: 'blocked' },
+  }
+  const cancelledTask = {
+    id: 'cancelled-agent-task',
+    user_id: 'demo-user',
+    title: 'Review cancelled agent handoff',
+    raw_input: 'Review cancelled agent handoff',
+    description: null,
+    status: 'cancelled',
+    priority: 'medium',
+    due_date: null,
+    due_time: null,
+    context: 'An external agent cancelled this task and the human still needs visibility.',
+    source: 'agent',
+    action_type: 'manual',
+    estimated_minutes: 15,
+    energy_level: 'light',
+    people: null,
+    tags: ['agent-review'],
+    parent_task_id: null,
+    related_task_ids: null,
+    agent_output: null,
+    completed_at: null,
+    created_at: now,
+    updated_at: now,
+    source_agent_id: 'agent-alpha',
+    external_ref: 'cancel-42',
+    ingestion_intent: 'update',
+    agent_metadata: { reason: 'duplicate' },
+  }
+  const humanTask = {
+    id: 'human-origin-task',
+    user_id: 'demo-user',
+    title: 'Human-owned launch follow-up',
+    raw_input: 'Human-owned launch follow-up',
+    description: null,
+    status: 'todo',
+    priority: 'medium',
+    due_date: null,
+    due_time: null,
+    context: 'Created directly by the user.',
+    source: 'manual',
+    action_type: 'manual',
+    estimated_minutes: 20,
+    energy_level: 'light',
+    people: null,
+    tags: ['launch'],
+    parent_task_id: null,
+    related_task_ids: null,
+    agent_output: null,
+    completed_at: null,
+    created_at: now,
+    updated_at: now,
+    source_agent_id: null,
+    external_ref: null,
+    ingestion_intent: null,
+    agent_metadata: null,
+  }
+
+  await page.addInitScript((tasks: unknown[]) => {
+    window.localStorage.setItem('nexdo_demo_tasks', JSON.stringify(tasks))
+  }, [waitingTask, cancelledTask, humanTask])
+
+  await page.goto('/all')
+
+  await expect(page.getByRole('heading', { name: 'All Tasks' })).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Wait for partner brief' })
+  ).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Human-owned launch follow-up' })
+  ).toBeVisible()
+  await expect(page.getByText('waiting', { exact: true })).toBeVisible()
+
+  await page
+    .getByRole('button', { name: 'Open task menu for "Wait for partner brief"' })
+    .click()
+  await page.getByRole('button', { name: 'Start' }).click()
+  await expect(page.getByText('in progress', { exact: true })).toBeVisible()
+  await expect(page.getByText('waiting', { exact: true })).toHaveCount(0)
+
+  await page
+    .getByRole('button', { name: 'Open task menu for "Wait for partner brief"' })
+    .click()
+  await page.getByRole('button', { name: 'Mark waiting' }).click()
+  await expect(page.getByText('waiting', { exact: true })).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Review cancelled agent handoff' })
+  ).toHaveCount(0)
+
+  await page.getByRole('button', { name: 'Filters' }).click()
+  const originFilter = page.getByRole('group', { name: 'Origin filter' })
+  await originFilter.getByRole('button', { name: 'Agent' }).click()
+  await expect(
+    page.getByRole('heading', { name: 'Wait for partner brief' })
+  ).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Human-owned launch follow-up' })
+  ).toHaveCount(0)
+
+  await originFilter.getByRole('button', { name: 'Human' }).click()
+  await expect(
+    page.getByRole('heading', { name: 'Human-owned launch follow-up' })
+  ).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Wait for partner brief' })
+  ).toHaveCount(0)
+
+  await originFilter.getByRole('button', { name: 'All' }).click()
+  await expect(page).toHaveURL(/\/all$/)
+  const statusFilter = page.getByRole('group', { name: 'Status filter' })
+  await statusFilter.getByRole('button', { name: 'cancelled' }).click()
+  await expect(
+    page.getByRole('heading', { name: 'Review cancelled agent handoff' })
+  ).toBeVisible()
+  await expect(page.getByText('cancelled', { exact: true }).first()).toBeVisible()
+
+  await page
+    .getByRole('heading', { name: 'Review cancelled agent handoff' })
+    .click()
+  await expect(page.getByRole('heading', { name: 'Agent trace' })).toBeVisible()
+  const taskStatus = page.getByRole('group', { name: 'Task status' })
+  await expect(taskStatus.getByRole('button', { name: 'cancelled' })).toHaveClass(
+    /bg-accent/
+  )
+
+  await taskStatus.getByRole('button', { name: 'todo' }).click()
+  await statusFilter.getByRole('button', { name: 'All' }).click()
+  await expect(
+    page.getByRole('main').getByRole('heading', {
+      name: 'Review cancelled agent handoff',
+    })
+  ).toBeVisible()
+})
+
+test('all tasks filters the agent review queue', async ({ page }) => {
+  const now = new Date().toISOString()
+  const draftOutput = (status: 'unreviewed' | 'verified' | 'needs_revision') => ({
+    schema_version: 1,
+    current: {
+      draft: `Draft marked ${status}.`,
+      tone: 'clear',
+      suggested_subject: 'Launch follow-up',
+      word_count: 4,
+    },
+    history: [
+      {
+        id: `run-${status}`,
+        action_type: 'draft',
+        output: {
+          draft: `Draft marked ${status}.`,
+          tone: 'clear',
+          suggested_subject: 'Launch follow-up',
+          word_count: 4,
+        },
+        created_at: now,
+      },
+    ],
+    review: {
+      status,
+      note: status === 'verified' ? 'Checked.' : null,
+      updated_at: status === 'unreviewed' ? null : now,
+    },
+  })
+  const baseTask = {
+    user_id: 'demo-user',
+    raw_input: '',
+    description: null,
+    status: 'todo',
+    priority: 'medium',
+    due_date: null,
+    due_time: null,
+    context: null,
+    source: 'manual',
+    action_type: 'draft',
+    estimated_minutes: 20,
+    energy_level: 'light',
+    people: null,
+    tags: ['agent-output'],
+    parent_task_id: null,
+    related_task_ids: null,
+    completed_at: null,
+    created_at: now,
+    updated_at: now,
+    source_agent_id: null,
+    external_ref: null,
+    ingestion_intent: null,
+    agent_metadata: null,
+  }
+  const tasks = [
+    {
+      ...baseTask,
+      id: 'unreviewed-agent-output',
+      title: 'Review unreviewed agent draft',
+      agent_output: draftOutput('unreviewed'),
+    },
+    {
+      ...baseTask,
+      id: 'needs-revision-agent-output',
+      title: 'Revise agent draft',
+      agent_output: draftOutput('needs_revision'),
+    },
+    {
+      ...baseTask,
+      id: 'verified-agent-output',
+      title: 'Verified agent draft',
+      agent_output: draftOutput('verified'),
+    },
+    {
+      ...baseTask,
+      id: 'agent-traced-waiting-task',
+      title: 'Review agent-updated waiting task',
+      status: 'waiting',
+      source: 'agent',
+      action_type: 'manual',
+      agent_output: null,
+      source_agent_id: 'agent-reviewer',
+      external_ref: 'waiting-1',
+      ingestion_intent: 'update',
+      agent_metadata: { queue: 'agent_review' },
+    },
+    {
+      ...baseTask,
+      id: 'agent-traced-cancelled-task',
+      title: 'Review agent-cancelled task',
+      status: 'cancelled',
+      source: 'agent',
+      action_type: 'manual',
+      agent_output: null,
+      source_agent_id: 'agent-reviewer',
+      external_ref: 'cancelled-1',
+      ingestion_intent: 'update',
+      agent_metadata: { queue: 'agent_review' },
+    },
+    {
+      ...baseTask,
+      id: 'plain-human-task',
+      title: 'Plain human task',
+      action_type: 'manual',
+      agent_output: null,
+    },
+  ]
+
+  await page.addInitScript((seedTasks: unknown[]) => {
+    window.localStorage.setItem('nexdo_demo_tasks', JSON.stringify(seedTasks))
+  }, tasks)
+
+  await page.goto('/all')
+  await expect(page.getByRole('heading', { name: 'All Tasks' })).toBeVisible()
+  await expect(page.getByText('unreviewed output', { exact: true })).toBeVisible()
+  await expect(page.getByText('needs revision', { exact: true })).toBeVisible()
+  await expect(page.getByText('verified output', { exact: true })).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Review agent-updated waiting task' })
+  ).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Review agent-cancelled task' })
+  ).toHaveCount(0)
+
+  await page.getByRole('link', { name: 'Today' }).click()
+  await page.getByRole('link', { name: /Agent Review/ }).click()
+  await expect(page).toHaveURL(/\/all\?review=needs_review/)
+  await expect(
+    page.getByRole('heading', { name: 'Review unreviewed agent draft' })
+  ).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Revise agent draft' })
+  ).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Verified agent draft' })
+  ).toHaveCount(0)
+  await expect(
+    page.getByRole('heading', { name: 'Review agent-updated waiting task' })
+  ).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Review agent-cancelled task' })
+  ).toBeVisible()
+
+  const reviewFilter = page.getByRole('group', {
+    name: 'Agent review filter',
+  })
+  await expect(reviewFilter.getByRole('button', { name: 'Needs review' })).toHaveClass(
+    /bg-accent/
+  )
+  await reviewFilter.getByRole('button', { name: 'Needs review' }).click()
+  await expect(
+    page.getByRole('heading', { name: 'Review unreviewed agent draft' })
+  ).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Revise agent draft' })
+  ).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Verified agent draft' })
+  ).toHaveCount(0)
+  await expect(
+    page.getByRole('heading', { name: 'Plain human task' })
+  ).toHaveCount(0)
+  await expect(
+    page.getByRole('heading', { name: 'Review agent-updated waiting task' })
+  ).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Review agent-cancelled task' })
+  ).toBeVisible()
+
+  await reviewFilter.getByRole('button', { name: 'Verified' }).click()
+  await expect(
+    page.getByRole('heading', { name: 'Verified agent draft' })
+  ).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Review unreviewed agent draft' })
+  ).toHaveCount(0)
+  await expect(
+    page.getByRole('heading', { name: 'Review agent-updated waiting task' })
+  ).toHaveCount(0)
+})
+
+test('demo settings does not allow free-plan API key generation', async ({ page }) => {
+  await page.goto('/settings')
+  await page.getByRole('button', { name: 'API' }).click()
+
+  await expect(
+    page.getByText('API access requires a Power plan or higher.')
+  ).toBeVisible()
+  await expect(page.getByRole('button', { name: /Regenerate/ })).toBeDisabled()
+})
+
+test('settings tab query opens billing tab', async ({ page }) => {
+  const source = readFileSync('app/(app)/settings/page.tsx', 'utf8')
+
+  expect(source).toContain("const activeTab = isSettingsTab(requestedTab) ? requestedTab : 'profile'")
+  expect(source).toContain("'data'")
+  expect(source).toContain('params.set(\'tab\', activeTab)')
+  expect(source).toContain("router.replace(`/settings?${params.toString()}`, { scroll: false })")
+
+  await page.goto('/settings?tab=billing')
+
+  await expect(page.getByRole('heading', { name: 'Current Plan' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Billing' })).toHaveClass(/bg-accent/)
+  await expect(page.getByRole('button', { name: 'Notifications' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Sign out' })).toHaveCount(0)
+
+  await page.getByRole('button', { name: 'API' }).click()
+  await expect(page).toHaveURL(/\/settings\?tab=api/)
+  await expect(page.getByRole('heading', { name: 'API Key' })).toBeVisible()
+
+  await page.getByRole('button', { name: 'Upgrade now' }).click()
+  await expect(page).toHaveURL(/\/settings\?tab=billing/)
+  await expect(page.getByRole('heading', { name: 'Current Plan' })).toBeVisible()
+})
+
+test('settings data tab exports loaded demo tasks', async ({ page }) => {
+  await page.goto('/settings?tab=data')
+
+  await expect(page.getByRole('heading', { name: 'Data Export' })).toBeVisible()
+  await expect(page.getByText(/Loaded tasks: [1-9]/)).toBeVisible()
+
+  const [jsonDownload] = await Promise.all([
+    page.waitForEvent('download'),
+    page.getByRole('button', { name: /Export JSON/ }).click(),
+  ])
+  expect(jsonDownload.suggestedFilename()).toMatch(
+    /^nexdo-tasks-\d{4}-\d{2}-\d{2}\.json$/
+  )
+  const jsonPath = await jsonDownload.path()
+  expect(jsonPath).toBeTruthy()
+  const payload = JSON.parse(readFileSync(jsonPath || '', 'utf8'))
+  expect(payload.version).toBe(1)
+  expect(payload.task_count).toBeGreaterThan(0)
+  expect(payload.tasks[0].title).toBeTruthy()
+
+  const [csvDownload] = await Promise.all([
+    page.waitForEvent('download'),
+    page.getByRole('button', { name: /Export CSV/ }).click(),
+  ])
+  expect(csvDownload.suggestedFilename()).toMatch(
+    /^nexdo-tasks-\d{4}-\d{2}-\d{2}\.csv$/
+  )
+  const csvPath = await csvDownload.path()
+  expect(csvPath).toBeTruthy()
+  const csv = readFileSync(csvPath || '', 'utf8')
+  expect(csv).toContain('title,raw_input,description,status,priority,due_date,due_time')
+})
+
+test('appearance settings apply and persist theme locally', async ({ page }) => {
+  await page.goto('/settings?tab=appearance')
+
+  await expect(page.getByRole('heading', { name: 'Appearance' })).toBeVisible()
+  await expect(page.getByRole('radio', { name: /Dark/ })).toHaveAttribute(
+    'aria-checked',
+    'true'
+  )
+
+  await page.getByRole('radio', { name: /Light/ }).click()
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light')
+  await expect(page.locator('body')).toHaveClass(/light/)
+  await expect(page.getByRole('radio', { name: /Light/ })).toHaveAttribute(
+    'aria-checked',
+    'true'
+  )
+  await expect.poll(
+    async () => page.evaluate(() => window.localStorage.getItem('nexdo_theme'))
+  ).toBe('light')
+
+  await page.reload()
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light')
+  await expect(page.getByRole('radio', { name: /Light/ })).toHaveAttribute(
+    'aria-checked',
+    'true'
+  )
+
+  await page.getByRole('radio', { name: /Dark/ }).click()
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
+  await expect(page.locator('body')).toHaveClass(/dark/)
+})
+
+test('notification settings request permission and deliver due-task reminders', async ({
+  page,
+}) => {
+  const now = new Date().toISOString()
+  const today = getLocalDateKey()
+  const reminderTasks = [
+    {
+      id: 'late-reminder-task',
+      user_id: 'demo-user',
+      title: 'Timed afternoon reminder',
+      raw_input: 'Timed afternoon reminder',
+      description: null,
+      status: 'todo',
+      priority: 'urgent',
+      due_date: today,
+      due_time: '15:00',
+      context: null,
+      source: 'manual',
+      action_type: 'manual',
+      estimated_minutes: null,
+      energy_level: null,
+      people: null,
+      tags: null,
+      parent_task_id: null,
+      related_task_ids: null,
+      agent_output: null,
+      completed_at: null,
+      created_at: now,
+      updated_at: now,
+      source_agent_id: null,
+      external_ref: null,
+      ingestion_intent: null,
+      agent_metadata: null,
+    },
+    {
+      id: 'early-reminder-task',
+      user_id: 'demo-user',
+      title: 'Timed morning reminder',
+      raw_input: 'Timed morning reminder',
+      description: null,
+      status: 'todo',
+      priority: 'low',
+      due_date: today,
+      due_time: '09:00',
+      context: null,
+      source: 'manual',
+      action_type: 'manual',
+      estimated_minutes: null,
+      energy_level: null,
+      people: null,
+      tags: null,
+      parent_task_id: null,
+      related_task_ids: null,
+      agent_output: null,
+      completed_at: null,
+      created_at: now,
+      updated_at: now,
+      source_agent_id: null,
+      external_ref: null,
+      ingestion_intent: null,
+      agent_metadata: null,
+    },
+  ]
+
+  await page.addInitScript(() => {
+    const deliveredNotifications: Array<{
+      title: string
+      options?: NotificationOptions
+    }> = []
+
+    class MockNotification {
+      static permission: NotificationPermission =
+        (window.localStorage.getItem('__mock_notification_permission') as NotificationPermission | null) ||
+        'default'
+
+      onclick: (() => void) | null = null
+
+      constructor(title: string, options?: NotificationOptions) {
+        deliveredNotifications.push({ title, options })
+      }
+
+      static async requestPermission() {
+        MockNotification.permission = 'granted'
+        window.localStorage.setItem('__mock_notification_permission', 'granted')
+        return MockNotification.permission
+      }
+    }
+
+    Object.defineProperty(window, 'Notification', {
+      value: MockNotification,
+      configurable: true,
+    })
+    ;(window as typeof window & {
+      __nexdoNotifications: typeof deliveredNotifications
+    }).__nexdoNotifications = deliveredNotifications
+  })
+  await page.addInitScript((tasks: unknown[]) => {
+    window.localStorage.setItem('nexdo_demo_tasks', JSON.stringify(tasks))
+  }, reminderTasks)
+
+  await page.goto('/settings?tab=notifications')
+
+  await expect(page.getByRole('heading', { name: 'Notifications' })).toBeVisible()
+  await expect(page.getByText('Permission: default')).toBeVisible()
+
+  await page
+    .getByRole('checkbox', { name: 'Browser due-task reminders' })
+    .check({ force: true })
+
+  await expect(page.getByText('Browser reminders enabled.')).toBeVisible()
+  await expect(page.getByText('Permission: granted')).toBeVisible()
+  await expect.poll(
+    async () =>
+      page.evaluate(() =>
+        window.localStorage.getItem('nexdo_browser_notifications_enabled')
+      )
+  ).toBe('true')
+
+  await expect.poll(
+    async () =>
+      page.evaluate(
+        () =>
+          (window as typeof window & {
+            __nexdoNotifications: Array<{ title: string }>
+          }).__nexdoNotifications.length
+      )
+  ).toBeGreaterThan(0)
+
+  const delivered = await page.evaluate(
+    () =>
+      (window as typeof window & {
+        __nexdoNotifications: Array<{
+          title: string
+          options?: NotificationOptions
+        }>
+      }).__nexdoNotifications
+  )
+  expect(delivered[0].title).toBe('Nexdo: Timed morning reminder')
+  expect(delivered[0].options?.body).toContain('Due today at 09:00')
+
+  await page.reload()
+  await expect(page.getByText('Permission: granted')).toBeVisible()
+  await expect(page.getByRole('checkbox', { name: 'Browser due-task reminders' })).toBeChecked()
+  await expect.poll(
+    async () =>
+      page.evaluate(
+        () =>
+          (window as typeof window & {
+            __nexdoNotifications: Array<{ title: string }>
+          }).__nexdoNotifications.length
+      )
+  ).toBe(0)
+})
+
+test('demo profile settings save locally across reloads', async ({ page }) => {
+  await page.goto('/settings')
+
+  await page.getByLabel('Full Name').fill('Casey Demo')
+  await page.getByLabel('Timezone').selectOption('America/Los_Angeles')
+  await page.getByRole('button', { name: 'Save Changes' }).click()
+
+  await expect(page.getByText('Saved!')).toBeVisible()
+
+  await page.reload()
+  await expect(page.getByLabel('Full Name')).toHaveValue('Casey Demo')
+  await expect(page.getByLabel('Timezone')).toHaveValue('America/Los_Angeles')
+})
+
+test('login exposes demo mode when auth env is not configured', async ({ page }) => {
+  await page.goto('/auth/login')
+
+  await expect(page.getByRole('button', { name: /Try demo mode/ })).toBeVisible()
+})
+
+test('signup page exposes a direct demo path', async ({ page }) => {
+  await page.goto('/auth/signup')
+
+  await page.getByRole('button', { name: /Try demo mode/ }).click()
+  await expect(page.getByRole('heading', { name: 'Today', exact: true })).toBeVisible()
+})
+
+test('connect ai page reflects the paid API access gate', async ({ page }) => {
+  await page.goto('/settings/mcp')
+
+  await expect(page.getByRole('heading', { name: 'Connect AI Tools' })).toBeVisible()
+  await expect(
+    page.getByText('API access requires a Power plan or higher.')
+  ).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Open billing' })).toHaveAttribute(
+    'href',
+    '/settings?tab=billing'
+  )
+  await expect(
+    page.getByRole('heading', { name: 'Agent operating brief' })
+  ).toBeVisible()
+  await expect(
+    page.getByText(
+      'Use list_tasks, search_tasks, get_task, and get_briefing before changing task state.'
+    )
+  ).toBeVisible()
+  await expect(
+    page.getByText(/include source_agent_id and external_ref/)
+  ).toBeVisible()
+  await expect(
+    page.getByRole('button', { name: 'Copy agent operating brief' })
+  ).toBeVisible()
+  await expect(page.getByText('Upgrade to Power or Team before connecting external AI tools.')).toBeVisible()
+  await expect(page.getByLabel('Full API key')).toBeDisabled()
+  await expect(page.getByRole('button', { name: 'Test Connection' })).toBeDisabled()
+})
+
+test('connect ai page treats paid API access as the usable-key gate', () => {
+  const source = readFileSync('app/(app)/settings/mcp/page.tsx', 'utf8')
+
+  expect(source).toContain('const hasUsableApiKey = hasApiAccess && hasApiKey')
+  expect(source).toContain('const canTestConnection = hasUsableApiKey')
+  expect(source).toContain('if (!hasUsableApiKey) return')
+  expect(source).toContain('Existing API keys are disabled until API access is active again.')
+  expect(source).toContain('const isEnabled = hasUsableApiKey && apiKeyScopes.includes(requiredScope)')
+  expect(source).toContain("method: 'tools/list'")
+  expect(source).toContain('mcpToolCount(toolsData)')
+  expect(source).toContain('available tool')
+})
+
+test('API settings hands usable keys off to Connect AI setup', () => {
+  const source = readFileSync('app/(app)/settings/page.tsx', 'utf8')
+
+  expect(source).toContain('hasApiAccess && hasApiKey')
+  expect(source).toContain('Ready to connect AI tools')
+  expect(source).toContain('Keep the full one-time key available')
+  expect(source).toContain('href="/settings/mcp"')
+  expect(source).toContain('Open Connect AI setup')
+})
+
+test('connect ai page normalizes MCP setup error messages', () => {
+  const source = readFileSync('app/(app)/settings/mcp/page.tsx', 'utf8')
+  const eventsRouteSource = readFileSync('app/api/mcp/events/route.ts', 'utf8')
+
+  expect(source).toContain('function apiErrorMessage')
+  expect(source).toContain('function formatEventIntent')
+  expect(source).toContain('function eventArgumentKeys')
+  expect(source).toContain('agent metadata included')
+  expect(source).toContain("setEventsError(apiErrorMessage(data, 'Unable to load agent activity'))")
+  expect(source).toContain("setTestMessage(apiErrorMessage(initializeData, 'Connection failed'))")
+  expect(source).toContain(
+    "setTestMessage(apiErrorMessage(toolsData, 'Connected, but tool discovery failed.'))"
+  )
+  expect(source).toContain("'message' in data.error")
+  expect(eventsRouteSource).toContain('ingestion_intent, metadata, success')
+})
+
+test('demo tasks persist across reloads', async ({ page }) => {
+  await page.goto('/today')
+  await page
+    .getByPlaceholder('What needs to get done? Be specific...')
+    .fill('Draft demo persistence note today')
+  await page.keyboard.press('Enter')
+
+  await expect(page.getByRole('heading', { name: /Draft demo persistence note/ })).toBeVisible()
+
+  await page.reload()
+  await expect(page.getByRole('heading', { name: /Draft demo persistence note/ })).toBeVisible()
+
+  await page
+    .getByPlaceholder('What needs to get done? Be specific...')
+    .fill('Create second persisted demo task')
+  await page.keyboard.press('Enter')
+
+  await expect(
+    page.getByRole('heading', { name: /Create second persisted demo task/ })
+  ).toBeVisible()
+
+  const persistedIds = await page.evaluate(() => {
+    const raw = window.localStorage.getItem('nexdo_demo_tasks')
+    const tasks = raw ? JSON.parse(raw) : []
+    return tasks.map((task: { id: string }) => task.id)
+  })
+  expect(new Set(persistedIds).size).toBe(persistedIds.length)
+})

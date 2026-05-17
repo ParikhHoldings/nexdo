@@ -1,7 +1,15 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
+import {
+  API_ACCESS_REQUIRED_MESSAGE,
+  canUseApiAccess,
+  normalizeApiKeyScopes,
+} from '@/lib/agent-scopes'
+import { consumeRateLimit, RATE_LIMITS, rateLimitResponseHeaders } from '@/lib/rate-limit'
+import { generateApiKey } from '@/lib/api-keys'
+import { persistApiKeyRotation } from '@/lib/api-key-rotation'
 
-export async function POST() {
+export async function POST(request: Request) {
   const supabase = await createClient()
 
   if (!supabase) {
@@ -20,29 +28,77 @@ export async function POST() {
     )
   }
 
+  const { data: profile, error: profileError } = await (supabase as any)
+    .from('profiles')
+    .select('subscription_tier')
+    .eq('id', user.id)
+    .maybeSingle()
+
+  if (profileError) {
+    console.error('Error loading profile for API key generation:', profileError)
+    return NextResponse.json(
+      { error: 'Failed to load profile' },
+      { status: 500 }
+    )
+  }
+
+  if (!profile) {
+    return NextResponse.json(
+      { error: 'Profile not found' },
+      { status: 404 }
+    )
+  }
+
+  if (!canUseApiAccess(profile.subscription_tier)) {
+    return NextResponse.json(
+      {
+        error: API_ACCESS_REQUIRED_MESSAGE,
+        upgrade_url: '/settings?tab=billing',
+      },
+      { status: 402 }
+    )
+  }
+
+  const gate = await consumeRateLimit(user.id, RATE_LIMITS.apiKeyRotate)
+  if (!gate.allowed) {
+    return NextResponse.json(
+      {
+        error: 'Rate limit exceeded',
+        message: 'Too many API key rotations. Please try again later.',
+        reset_at: gate.resetAt?.toISOString() ?? null,
+      },
+      {
+        status: 429,
+        headers: rateLimitResponseHeaders(gate, RATE_LIMITS.apiKeyRotate.limit),
+      }
+    )
+  }
+
   try {
-    // Generate new API key with "nxd_" prefix
-    const newKey = 'nxd_' + crypto.randomUUID().replace(/-/g, '')
+    const body = await request.json().catch(() => ({}))
+    const scopes = normalizeApiKeyScopes(body?.scopes)
+    const newKey = generateApiKey()
+    const service = await createServiceClient()
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = supabase as any
-    const { error } = await db
-      .from('profiles')
-      .update({
-        api_key: newKey,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', user.id)
-
-    if (error) {
-      console.error('Error generating API key:', error)
+    if (!service) {
       return NextResponse.json(
-        { error: 'Failed to generate API key' },
-        { status: 500 }
+        { error: 'Database not configured' },
+        { status: 503 }
       )
     }
 
-    return NextResponse.json({ api_key: newKey })
+    const db = service as any
+    const { hint: newKeyHint } = await persistApiKeyRotation(
+      db,
+      user.id,
+      newKey,
+      scopes
+    )
+
+    return NextResponse.json(
+      { api_key: newKey, api_key_hint: newKeyHint, api_key_scopes: scopes },
+      { headers: rateLimitResponseHeaders(gate, RATE_LIMITS.apiKeyRotate.limit) }
+    )
   } catch (error) {
     console.error('Error generating API key:', error)
     return NextResponse.json(

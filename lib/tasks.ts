@@ -1,4 +1,7 @@
 import type { Task, TaskInsert, TaskUpdate, TaskStatus } from './database.types'
+import { addLocalDays, getLocalDateKey } from './dates'
+
+const DEMO_TASKS_STORAGE_KEY = 'nexdo_demo_tasks'
 
 // Mock tasks for development when Supabase is not connected
 const mockTasks: Task[] = [
@@ -10,7 +13,7 @@ const mockTasks: Task[] = [
     description: null,
     status: 'todo',
     priority: 'high',
-    due_date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+    due_date: getLocalDateKey(addLocalDays(new Date(), 1)),
     due_time: null,
     context: 'Sarah needs feedback before the exec meeting on Friday',
     source: 'manual',
@@ -38,7 +41,7 @@ const mockTasks: Task[] = [
     description: null,
     status: 'todo',
     priority: 'medium',
-    due_date: new Date(Date.now() + 86400000 * 3).toISOString().split('T')[0],
+    due_date: getLocalDateKey(addLocalDays(new Date(), 3)),
     due_time: null,
     context: 'For the pricing committee meeting next week',
     source: 'manual',
@@ -66,7 +69,7 @@ const mockTasks: Task[] = [
     description: null,
     status: 'todo',
     priority: 'medium',
-    due_date: new Date().toISOString().split('T')[0],
+    due_date: getLocalDateKey(),
     due_time: null,
     context: 'Include sprint progress and blockers',
     source: 'manual',
@@ -94,7 +97,7 @@ const mockTasks: Task[] = [
     description: null,
     status: 'todo',
     priority: 'urgent',
-    due_date: new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0],
+    due_date: getLocalDateKey(addLocalDays(new Date(), 2)),
     due_time: null,
     context: 'Series A follow-up discussion',
     source: 'manual',
@@ -122,7 +125,7 @@ const mockTasks: Task[] = [
     description: null,
     status: 'todo',
     priority: 'high',
-    due_date: new Date().toISOString().split('T')[0],
+    due_date: getLocalDateKey(),
     due_time: null,
     context: 'They loved the new features but had some UX concerns',
     source: 'email',
@@ -148,8 +151,64 @@ const mockTasks: Task[] = [
 let demoTasks = [...mockTasks]
 let taskIdCounter = 6
 
+function canUseLocalStorage(): boolean {
+  if (typeof window === 'undefined') return false
+
+  try {
+    return Boolean(window.localStorage)
+  } catch {
+    return false
+  }
+}
+
+function isTask(value: unknown): value is Task {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false
+  const task = value as Partial<Task>
+  return typeof task.id === 'string' && typeof task.title === 'string'
+}
+
+function getStoredDemoTasks(): Task[] | null {
+  if (!canUseLocalStorage()) return null
+
+  try {
+    const raw = window.localStorage.getItem(DEMO_TASKS_STORAGE_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    if (!Array.isArray(parsed)) return null
+    const tasks = parsed.filter(isTask)
+    return tasks
+  } catch {
+    return null
+  }
+}
+
+export function persistDemoTasks(tasks: Task[]): void {
+  demoTasks = tasks
+  taskIdCounter = getNextDemoTaskId(tasks)
+  if (!canUseLocalStorage()) return
+
+  try {
+    window.localStorage.setItem(DEMO_TASKS_STORAGE_KEY, JSON.stringify(tasks))
+  } catch {
+    // Demo persistence is best-effort; local task state still works in memory.
+  }
+}
+
 export function getDemoTasks(): Task[] {
+  const storedTasks = getStoredDemoTasks()
+  if (storedTasks) {
+    persistDemoTasks(storedTasks)
+  }
   return demoTasks
+}
+
+function getNextDemoTaskId(tasks: Task[]): number {
+  const maxNumericId = tasks.reduce((max, task) => {
+    const numericId = Number(task.id)
+    return Number.isFinite(numericId) ? Math.max(max, numericId) : max
+  }, 0)
+
+  return Math.max(maxNumericId + 1, mockTasks.length + 1)
 }
 
 export function getDemoTask(id: string): Task | undefined {
@@ -185,31 +244,35 @@ export function addDemoTask(task: Omit<TaskInsert, 'id' | 'user_id'>): Task {
     ingestion_intent: task.ingestion_intent || null,
     agent_metadata: task.agent_metadata || null,
   }
-  demoTasks = [newTask, ...demoTasks]
+  persistDemoTasks([newTask, ...demoTasks])
   return newTask
 }
 
 export function updateDemoTask(id: string, updates: TaskUpdate): Task | undefined {
   const index = demoTasks.findIndex((t) => t.id === id)
   if (index === -1) return undefined
+  const task = demoTasks[index]
+  const updatedAt = new Date().toISOString()
 
   const updatedTask: Task = {
-    ...demoTasks[index],
+    ...task,
     ...updates,
-    updated_at: new Date().toISOString(),
+    updated_at: updatedAt,
     completed_at:
-      updates.status === 'done' && !demoTasks[index].completed_at
-        ? new Date().toISOString()
-        : updates.status !== 'done'
+      updates.completed_at !== undefined
+        ? updates.completed_at
+        : updates.status === 'done' && !task.completed_at
+          ? updatedAt
+          : updates.status !== undefined && updates.status !== 'done'
           ? null
-          : demoTasks[index].completed_at,
+          : task.completed_at,
   }
 
-  demoTasks = [
+  persistDemoTasks([
     ...demoTasks.slice(0, index),
     updatedTask,
     ...demoTasks.slice(index + 1),
-  ]
+  ])
 
   return updatedTask
 }
@@ -217,7 +280,7 @@ export function updateDemoTask(id: string, updates: TaskUpdate): Task | undefine
 export function deleteDemoTask(id: string): boolean {
   const index = demoTasks.findIndex((t) => t.id === id)
   if (index === -1) return false
-  demoTasks = [...demoTasks.slice(0, index), ...demoTasks.slice(index + 1)]
+  persistDemoTasks([...demoTasks.slice(0, index), ...demoTasks.slice(index + 1)])
   return true
 }
 
@@ -234,17 +297,15 @@ export function filterDemoTasks(filter: {
   }
 
   if (filter.dueToday) {
-    const today = new Date().toISOString().split('T')[0]
+    const today = getLocalDateKey()
     filtered = filtered.filter((t) => t.due_date === today)
   }
 
   if (filter.upcoming) {
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
+    const today = getLocalDateKey()
     filtered = filtered.filter((t) => {
       if (!t.due_date) return false
-      const dueDate = new Date(t.due_date)
-      return dueDate > today
+      return t.due_date > today
     })
   }
 
@@ -252,6 +313,6 @@ export function filterDemoTasks(filter: {
 }
 
 export function resetDemoTasks(): void {
-  demoTasks = [...mockTasks]
+  persistDemoTasks([...mockTasks])
   taskIdCounter = 6
 }

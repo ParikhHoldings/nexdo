@@ -1,4 +1,5 @@
 import type { TaskInsert, TaskPriority, TaskStatus, TaskSource } from './database.types'
+import { getLocalDateKey, normalizeLocalDateKey, normalizeLocalTime } from './dates'
 
 // Types for import operations
 export interface ImportedTaskData {
@@ -23,22 +24,27 @@ export interface ImportResult {
 // Helper to parse various date formats to YYYY-MM-DD
 export function parseDate(dateStr: string | null | undefined): string | null {
   if (!dateStr) return null
+  const value = dateStr.trim()
+  if (!value) return null
 
   try {
-    // Handle ISO formats
-    if (dateStr.includes('T')) {
-      return dateStr.split('T')[0]
-    }
+    const datePart = value.includes('T') ? value.split('T')[0] : value
 
-    // Handle YYYYMMDD format (ICS)
-    if (/^\d{8}$/.test(dateStr)) {
-      return `${dateStr.slice(0, 4)}-${dateStr.slice(4, 6)}-${dateStr.slice(6, 8)}`
+    // Handle ISO YYYY-MM-DD and compact ICS YYYYMMDD formats without
+    // allowing invalid calendar dates to fall through Date parsing.
+    if (/^\d{4}-\d{2}-\d{2}$/.test(datePart)) {
+      return normalizeLocalDateKey(datePart)
+    }
+    if (/^\d{8}$/.test(datePart)) {
+      return normalizeLocalDateKey(
+        `${datePart.slice(0, 4)}-${datePart.slice(4, 6)}-${datePart.slice(6, 8)}`
+      )
     }
 
     // Handle various date formats
-    const date = new Date(dateStr)
+    const date = new Date(value)
     if (!isNaN(date.getTime())) {
-      return date.toISOString().split('T')[0]
+      return getLocalDateKey(date)
     }
 
     return null
@@ -50,23 +56,35 @@ export function parseDate(dateStr: string | null | undefined): string | null {
 // Helper to parse time from various formats to HH:MM
 export function parseTime(timeStr: string | null | undefined): string | null {
   if (!timeStr) return null
+  const value = timeStr.trim()
+  if (!value) return null
 
   try {
-    // Handle HHMMSS format (ICS)
-    if (/^\d{6}$/.test(timeStr)) {
-      return `${timeStr.slice(0, 2)}:${timeStr.slice(2, 4)}`
+    const compactMatch = value.match(/^(?:\d{8}T)?(\d{2})([0-5]\d)([0-5]\d)(?:Z)?$/)
+    if (compactMatch) {
+      const time = normalizeLocalTime(
+        `${compactMatch[1]}:${compactMatch[2]}:${compactMatch[3]}`
+      )
+      return time ? time.slice(0, 5) : null
+    }
+
+    const isoMatch = value.match(/T(\d{1,2}:[0-5]\d(?::[0-5]\d)?)(?:Z|[+-]\d{2}:?\d{2})?$/)
+    if (isoMatch) {
+      const time = normalizeLocalTime(isoMatch[1])
+      return time ? time.slice(0, 5) : null
     }
 
     // Handle HH:MM:SS or HH:MM
-    const match = timeStr.match(/(\d{1,2}):(\d{2})/)
-    if (match) {
-      return `${match[1].padStart(2, '0')}:${match[2]}`
-    }
-
-    return null
+    const time = normalizeLocalTime(value)
+    return time ? time.slice(0, 5) : null
   } catch {
     return null
   }
+}
+
+function parseNonMidnightDateTime(value: string): string | null {
+  const time = parseTime(value)
+  return time === '00:00' ? null : time
 }
 
 // Map various priority representations to Nexdo priority
@@ -274,11 +292,7 @@ export function parseTodoistTask(task: Record<string, unknown>, userId: string):
     if (due.datetime) {
       const dt = String(due.datetime)
       normalized.due_date = parseDate(dt)
-      // Extract time from datetime
-      const match = dt.match(/T(\d{2}:\d{2})/)
-      if (match) {
-        normalized.due_time = match[1]
-      }
+      normalized.due_time = parseTime(dt)
     }
   }
 
@@ -336,6 +350,7 @@ export function parseMicrosoftTask(task: Record<string, unknown>, userId: string
     const dd = task.dueDateTime as Record<string, unknown>
     if (dd.dateTime) {
       normalized.due_date = parseDate(String(dd.dateTime))
+      normalized.due_time = parseNonMidnightDateTime(String(dd.dateTime))
     }
   }
 
@@ -366,7 +381,9 @@ export function parseGoogleTask(task: Record<string, unknown>, userId: string): 
 
   // Google due date (RFC 3339)
   if (task.due) {
-    normalized.due_date = parseDate(String(task.due))
+    const due = String(task.due)
+    normalized.due_date = parseDate(due)
+    normalized.due_time = parseNonMidnightDateTime(due)
   }
 
   return normalized
@@ -460,18 +477,8 @@ function parseICSTask(icsTask: Record<string, string>, userId: string): TaskInse
   // Due date (YYYYMMDD or YYYYMMDDTHHMMSS or YYYYMMDDTHHMMSSZ)
   const dueStr = icsTask.DUE || icsTask.DTSTART
   if (dueStr) {
-    // Extract date portion
-    const dateMatch = dueStr.match(/^(\d{8})/)
-    if (dateMatch) {
-      const d = dateMatch[1]
-      task.due_date = `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}`
-    }
-
-    // Extract time portion
-    const timeMatch = dueStr.match(/T(\d{2})(\d{2})/)
-    if (timeMatch) {
-      task.due_time = `${timeMatch[1]}:${timeMatch[2]}`
-    }
+    task.due_date = parseDate(dueStr)
+    task.due_time = parseTime(dueStr)
   }
 
   // Categories as tags
@@ -763,9 +770,9 @@ function parseAsanaExport(data: unknown, userId: string): TaskInsert[] {
     if (item.notes) task.context = String(item.notes)
     if (item.due_on) task.due_date = parseDate(String(item.due_on))
     if (item.due_at) {
-      task.due_date = parseDate(String(item.due_at))
-      const match = String(item.due_at).match(/T(\d{2}:\d{2})/)
-      if (match) task.due_time = match[1]
+      const dueAt = String(item.due_at)
+      task.due_date = parseDate(dueAt)
+      task.due_time = parseTime(dueAt)
     }
     if (item.gid) task.external_ref = String(item.gid)
 
@@ -859,8 +866,10 @@ export async function saveImportedTasks(
           console.error('Error inserting tasks:', error)
           result.failed += chunk.length
         } else {
-          result.imported += (data?.length || 0)
-          result.tasks.push(...chunk)
+          const insertedTasks = Array.isArray(data) ? (data as TaskInsert[]) : []
+          result.imported += insertedTasks.length
+          result.failed += chunk.length - insertedTasks.length
+          result.tasks.push(...insertedTasks)
         }
       } catch (err) {
         console.error('Error inserting tasks:', err)

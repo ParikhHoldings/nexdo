@@ -1,7 +1,8 @@
 'use client'
 
+import { useEffect } from 'react'
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import {
   Sun,
   Calendar,
@@ -9,38 +10,53 @@ import {
   CheckCircle2,
   Settings,
   LogOut,
-  Moon,
   Menu,
   X,
   Sparkles,
   Download,
   Plug,
+  Bot,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useUIStore, useUserStore, useTaskStore } from '@/lib/store'
 import { createClient } from '@/lib/supabase/client'
 import { Badge } from '@/components/ui/badge'
+import { taskNeedsAgentReview } from '@/lib/agent-review'
+import { isTodayFocusTask } from '@/lib/task-filters'
+import { getLocalDateKey } from '@/lib/dates'
 
 const navigation = [
   { name: 'Today', href: '/today', icon: Sun },
   { name: 'Upcoming', href: '/upcoming', icon: Calendar },
   { name: 'All Tasks', href: '/all', icon: Inbox },
+  { name: 'Agent Review', href: '/all?review=needs_review', icon: Bot },
   { name: 'Done', href: '/done', icon: CheckCircle2 },
   { name: 'Import', href: '/import', icon: Download },
 ]
 
 export function Sidebar() {
   const pathname = usePathname()
+  const searchParams = useSearchParams()
   const router = useRouter()
-  const { theme, toggleTheme, sidebarCollapsed, toggleSidebar, setSidebarCollapsed } = useUIStore()
+  const { sidebarCollapsed, toggleSidebar, setSidebarCollapsed } = useUIStore()
   const { profile, isAuthenticated } = useUserStore()
-  const { tasks } = useTaskStore()
+  const { tasks, isDetailOpen } = useTaskStore()
 
   // Count today's tasks
-  const today = new Date().toISOString().split('T')[0]
-  const todayCount = tasks.filter(
-    (t) => t.status !== 'done' && t.status !== 'cancelled' && t.due_date === today
-  ).length
+  const today = getLocalDateKey()
+  const todayCount = tasks.filter((task) => isTodayFocusTask(task, today)).length
+  const reviewQueueCount = tasks.filter(taskNeedsAgentReview).length
+
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 1023px)')
+    const syncSidebarForViewport = () => {
+      setSidebarCollapsed(media.matches)
+    }
+
+    syncSidebarForViewport()
+    media.addEventListener('change', syncSidebarForViewport)
+    return () => media.removeEventListener('change', syncSidebarForViewport)
+  }, [setSidebarCollapsed])
 
   const handleLogout = async () => {
     const supabase = createClient()
@@ -98,9 +114,20 @@ export function Sidebar() {
         {/* Navigation */}
         <nav className="flex-1 p-4 space-y-1">
           {navigation.map((item) => {
-            const isActive = pathname === item.href
+            const isReviewQueue = item.href === '/all?review=needs_review'
+            const isActive = isReviewQueue
+              ? pathname === '/all' && searchParams.get('review') === 'needs_review'
+              : item.href === '/all'
+                ? pathname === '/all' &&
+                  searchParams.get('review') !== 'needs_review'
+                : pathname === item.href
             const Icon = item.icon
-            const showBadge = item.name === 'Today' && todayCount > 0
+            const badgeCount =
+              item.name === 'Today'
+                ? todayCount
+                : item.name === 'Agent Review'
+                  ? reviewQueueCount
+                  : 0
 
             return (
               <Link
@@ -118,9 +145,9 @@ export function Sidebar() {
                 {!sidebarCollapsed && (
                   <>
                     <span className="flex-1 font-medium">{item.name}</span>
-                    {showBadge && (
+                    {badgeCount > 0 && (
                       <Badge variant="default" className="bg-accent/20 text-accent">
-                        {todayCount}
+                        {badgeCount}
                       </Badge>
                     )}
                   </>
@@ -160,21 +187,6 @@ export function Sidebar() {
             {!sidebarCollapsed && <span className="font-medium">Settings</span>}
           </Link>
 
-          <button
-            onClick={toggleTheme}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg w-full text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
-          >
-            {theme === 'dark' ? (
-              <Sun className="h-5 w-5" />
-            ) : (
-              <Moon className="h-5 w-5" />
-            )}
-            {!sidebarCollapsed && (
-              <span className="font-medium">
-                {theme === 'dark' ? 'Light mode' : 'Dark mode'}
-              </span>
-            )}
-          </button>
         </div>
 
         {/* User */}
@@ -225,12 +237,15 @@ export function Sidebar() {
       </aside>
 
       {/* Mobile menu button */}
-      <button
-        onClick={toggleSidebar}
-        className="fixed bottom-4 left-4 z-40 p-3 bg-accent rounded-full shadow-lg lg:hidden"
-      >
-        <Menu className="h-6 w-6 text-white" />
-      </button>
+      {!isDetailOpen && (
+        <button
+          onClick={toggleSidebar}
+          aria-label="Open navigation"
+          className="fixed right-4 top-4 z-40 p-3 bg-accent rounded-full shadow-lg lg:hidden"
+        >
+          <Menu className="h-6 w-6 text-white" />
+        </button>
+      )}
     </>
   )
 }

@@ -1,16 +1,59 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useMemo, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { AnimatePresence } from 'framer-motion'
 import { Inbox, Search, Filter, SortAsc } from 'lucide-react'
 import { TaskInput } from '@/components/task-input'
 import { TaskCard } from '@/components/task-card'
 import { TaskListSkeleton } from '@/components/ui/skeleton'
 import { useTaskStore } from '@/lib/store'
+import { taskMatchesSearch } from '@/lib/task-search'
+import { hasAgentTrace } from '@/lib/agent-trace'
+import { compareTasksByDueDateTime } from '@/lib/task-filters'
+import {
+  taskHasVerifiedAgentOutput,
+  taskNeedsAgentReview,
+} from '@/lib/agent-review'
 import { cn } from '@/lib/utils'
 import type { TaskPriority, TaskStatus } from '@/lib/database.types'
 
 type SortOption = 'created' | 'due_date' | 'priority' | 'title'
+type OriginFilter = 'all' | 'human' | 'agent'
+type ReviewFilter = 'all' | 'needs_review' | 'verified'
+
+const activeStatuses: TaskStatus[] = ['todo', 'in_progress', 'waiting']
+const statusFilters: Array<TaskStatus | 'all'> = [
+  'all',
+  'todo',
+  'in_progress',
+  'waiting',
+  'done',
+  'cancelled',
+]
+const originFilters: Array<{ key: OriginFilter; label: string }> = [
+  { key: 'all', label: 'All' },
+  { key: 'human', label: 'Human' },
+  { key: 'agent', label: 'Agent' },
+]
+const reviewFilters: Array<{ key: ReviewFilter; label: string }> = [
+  { key: 'all', label: 'All' },
+  { key: 'needs_review', label: 'Needs review' },
+  { key: 'verified', label: 'Verified' },
+]
+const priorityFilters: Array<TaskPriority | 'all'> = [
+  'all',
+  'urgent',
+  'high',
+  'medium',
+  'low',
+]
+const sortOptions: Array<{ key: SortOption; label: string }> = [
+  { key: 'created', label: 'Created' },
+  { key: 'due_date', label: 'Due date' },
+  { key: 'priority', label: 'Priority' },
+  { key: 'title', label: 'Title' },
+]
 
 const priorityOrder: Record<TaskPriority, number> = {
   urgent: 0,
@@ -19,32 +62,87 @@ const priorityOrder: Record<TaskPriority, number> = {
   low: 3,
 }
 
+function includesValue<T extends string>(
+  values: readonly T[],
+  value: string | null
+): value is T {
+  return value !== null && values.includes(value as T)
+}
+
 export default function AllTasksPage() {
   const { tasks, isLoading } = useTaskStore()
-  const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState<TaskStatus | 'all'>('all')
-  const [priorityFilter, setPriorityFilter] = useState<TaskPriority | 'all'>('all')
-  const [sortBy, setSortBy] = useState<SortOption>('created')
-  const [showFilters, setShowFilters] = useState(false)
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const queryString = searchParams.toString()
+  const search = searchParams.get('q') ?? ''
+  const statusParam = searchParams.get('status')
+  const priorityParam = searchParams.get('priority')
+  const originParam = searchParams.get('origin')
+  const reviewParam = searchParams.get('review')
+  const sortParam = searchParams.get('sort')
+  const statusFilter: TaskStatus | 'all' = includesValue(
+    statusFilters,
+    statusParam
+  )
+    ? statusParam
+    : 'all'
+  const priorityFilter: TaskPriority | 'all' = includesValue(
+    priorityFilters,
+    priorityParam
+  )
+    ? priorityParam
+    : 'all'
+  const originFilter: OriginFilter = includesValue(
+    originFilters.map((origin) => origin.key),
+    originParam
+  )
+    ? originParam
+    : 'all'
+  const reviewFilter: ReviewFilter = includesValue(
+    reviewFilters.map((filter) => filter.key),
+    reviewParam
+  )
+    ? reviewParam
+    : 'all'
+  const sortBy: SortOption = includesValue(
+    sortOptions.map((option) => option.key),
+    sortParam
+  )
+    ? sortParam
+    : 'created'
+  const hasQueryFilters = Boolean(
+    statusParam || priorityParam || originParam || reviewParam || sortParam
+  )
+  const [showFilters, setShowFilters] = useState(hasQueryFilters)
+  const showFilterPanel = showFilters || hasQueryFilters
+
+  const updateQuery = (updates: Record<string, string | null>) => {
+    const params = new URLSearchParams(queryString)
+
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value) {
+        params.set(key, value)
+      } else {
+        params.delete(key)
+      }
+    })
+
+    const nextQuery = params.toString()
+    router.replace(nextQuery ? `/all?${nextQuery}` : '/all', { scroll: false })
+  }
 
   // Filter and sort tasks
   const filteredTasks = useMemo(() => {
-    let result = tasks.filter((t) => t.status !== 'done' && t.status !== 'cancelled')
+    let result =
+      statusFilter === 'all'
+        ? reviewFilter === 'all'
+          ? tasks.filter((t) => activeStatuses.includes(t.status))
+          : tasks
+        : tasks.filter((t) => t.status === statusFilter)
 
     // Search filter
     if (search) {
-      const searchLower = search.toLowerCase()
-      result = result.filter(
-        (t) =>
-          t.title.toLowerCase().includes(searchLower) ||
-          t.context?.toLowerCase().includes(searchLower) ||
-          t.tags?.some((tag) => tag.toLowerCase().includes(searchLower))
-      )
-    }
-
-    // Status filter
-    if (statusFilter !== 'all') {
-      result = result.filter((t) => t.status === statusFilter)
+      result = result.filter((task) => taskMatchesSearch(task, search))
     }
 
     // Priority filter
@@ -52,14 +150,25 @@ export default function AllTasksPage() {
       result = result.filter((t) => t.priority === priorityFilter)
     }
 
+    if (originFilter !== 'all') {
+      result = result.filter((task) => {
+        const isAgentOrigin = hasAgentTrace(task)
+        return originFilter === 'agent' ? isAgentOrigin : !isAgentOrigin
+      })
+    }
+
+    if (reviewFilter !== 'all') {
+      result = result.filter((task) => {
+        if (reviewFilter === 'verified') return taskHasVerifiedAgentOutput(task)
+        return taskNeedsAgentReview(task)
+      })
+    }
+
     // Sort
     result.sort((a, b) => {
       switch (sortBy) {
         case 'due_date':
-          if (!a.due_date && !b.due_date) return 0
-          if (!a.due_date) return 1
-          if (!b.due_date) return -1
-          return new Date(a.due_date).getTime() - new Date(b.due_date).getTime()
+          return compareTasksByDueDateTime(a, b)
         case 'priority':
           return priorityOrder[a.priority] - priorityOrder[b.priority]
         case 'title':
@@ -71,7 +180,23 @@ export default function AllTasksPage() {
     })
 
     return result
-  }, [tasks, search, statusFilter, priorityFilter, sortBy])
+  }, [
+    tasks,
+    search,
+    statusFilter,
+    priorityFilter,
+    originFilter,
+    reviewFilter,
+    sortBy,
+  ])
+
+  const activeTaskCount = tasks.filter((t) => activeStatuses.includes(t.status)).length
+  const baseResultCount =
+    statusFilter === 'all'
+      ? reviewFilter === 'all'
+        ? activeTaskCount
+        : tasks.length
+      : tasks.filter((t) => t.status === statusFilter).length
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
@@ -82,7 +207,7 @@ export default function AllTasksPage() {
           <h1 className="text-2xl font-bold text-zinc-100">All Tasks</h1>
         </div>
         <p className="text-zinc-500 mt-1">
-          {tasks.filter((t) => t.status !== 'done').length} active tasks
+          {activeTaskCount} active task{activeTaskCount !== 1 && 's'}
         </p>
       </header>
 
@@ -100,7 +225,7 @@ export default function AllTasksPage() {
             type="text"
             placeholder="Search tasks..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => updateQuery({ q: e.target.value || null })}
             className="w-full bg-zinc-900 border border-zinc-800 rounded-lg pl-10 pr-4 py-2.5 text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent"
           />
         </div>
@@ -111,7 +236,7 @@ export default function AllTasksPage() {
             onClick={() => setShowFilters(!showFilters)}
             className={cn(
               'flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors',
-              showFilters
+              showFilterPanel
                 ? 'bg-accent/10 text-accent'
                 : 'bg-zinc-800 text-zinc-400 hover:text-zinc-100'
             )}
@@ -130,16 +255,22 @@ export default function AllTasksPage() {
         </div>
 
         {/* Expanded filters */}
-        {showFilters && (
+        {showFilterPanel && (
           <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4 space-y-4">
             {/* Status filter */}
             <div>
               <label className="text-sm text-zinc-400 block mb-2">Status</label>
-              <div className="flex flex-wrap gap-2">
-                {['all', 'todo', 'in_progress', 'waiting'].map((status) => (
+              <div
+                className="flex flex-wrap gap-2"
+                role="group"
+                aria-label="Status filter"
+              >
+                {statusFilters.map((status) => (
                   <button
                     key={status}
-                    onClick={() => setStatusFilter(status as TaskStatus | 'all')}
+                    onClick={() =>
+                      updateQuery({ status: status === 'all' ? null : status })
+                    }
                     className={cn(
                       'px-3 py-1.5 text-sm rounded-lg transition-colors',
                       statusFilter === status
@@ -157,10 +288,14 @@ export default function AllTasksPage() {
             <div>
               <label className="text-sm text-zinc-400 block mb-2">Priority</label>
               <div className="flex flex-wrap gap-2">
-                {['all', 'urgent', 'high', 'medium', 'low'].map((priority) => (
+                {priorityFilters.map((priority) => (
                   <button
                     key={priority}
-                    onClick={() => setPriorityFilter(priority as TaskPriority | 'all')}
+                    onClick={() =>
+                      updateQuery({
+                        priority: priority === 'all' ? null : priority,
+                      })
+                    }
                     className={cn(
                       'px-3 py-1.5 text-sm rounded-lg transition-colors',
                       priorityFilter === priority
@@ -174,19 +309,78 @@ export default function AllTasksPage() {
               </div>
             </div>
 
+            {/* Origin filter */}
+            <div>
+              <label className="text-sm text-zinc-400 block mb-2">Origin</label>
+              <div
+                className="flex flex-wrap gap-2"
+                role="group"
+                aria-label="Origin filter"
+              >
+                {originFilters.map((origin) => (
+                  <button
+                    key={origin.key}
+                    onClick={() =>
+                      updateQuery({
+                        origin: origin.key === 'all' ? null : origin.key,
+                      })
+                    }
+                    className={cn(
+                      'px-3 py-1.5 text-sm rounded-lg transition-colors',
+                      originFilter === origin.key
+                        ? 'bg-accent text-white'
+                        : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
+                    )}
+                  >
+                    {origin.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Review filter */}
+            <div>
+              <label className="text-sm text-zinc-400 block mb-2">
+                Agent review
+              </label>
+              <div
+                className="flex flex-wrap gap-2"
+                role="group"
+                aria-label="Agent review filter"
+              >
+                {reviewFilters.map((filter) => (
+                  <button
+                    key={filter.key}
+                    onClick={() =>
+                      updateQuery({
+                        review: filter.key === 'all' ? null : filter.key,
+                      })
+                    }
+                    className={cn(
+                      'px-3 py-1.5 text-sm rounded-lg transition-colors',
+                      reviewFilter === filter.key
+                        ? 'bg-accent text-white'
+                        : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
+                    )}
+                  >
+                    {filter.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Sort options */}
             <div>
               <label className="text-sm text-zinc-400 block mb-2">Sort by</label>
               <div className="flex flex-wrap gap-2">
-                {[
-                  { key: 'created', label: 'Created' },
-                  { key: 'due_date', label: 'Due date' },
-                  { key: 'priority', label: 'Priority' },
-                  { key: 'title', label: 'Title' },
-                ].map((option) => (
+                {sortOptions.map((option) => (
                   <button
                     key={option.key}
-                    onClick={() => setSortBy(option.key as SortOption)}
+                    onClick={() =>
+                      updateQuery({
+                        sort: option.key === 'created' ? null : option.key,
+                      })
+                    }
                     className={cn(
                       'px-3 py-1.5 text-sm rounded-lg transition-colors',
                       sortBy === option.key
@@ -213,12 +407,20 @@ export default function AllTasksPage() {
               <Inbox className="h-8 w-8 text-zinc-600" />
             </div>
             <h3 className="text-lg font-medium text-zinc-300 mb-2">
-              {search || statusFilter !== 'all' || priorityFilter !== 'all'
+              {search ||
+              statusFilter !== 'all' ||
+              priorityFilter !== 'all' ||
+              originFilter !== 'all' ||
+              reviewFilter !== 'all'
                 ? 'No matching tasks'
                 : 'No tasks yet'}
             </h3>
             <p className="text-zinc-500 max-w-sm mx-auto">
-              {search || statusFilter !== 'all' || priorityFilter !== 'all'
+              {search ||
+              statusFilter !== 'all' ||
+              priorityFilter !== 'all' ||
+              originFilter !== 'all' ||
+              reviewFilter !== 'all'
                 ? 'Try adjusting your filters'
                 : 'Add your first task above'}
             </p>
@@ -236,8 +438,12 @@ export default function AllTasksPage() {
       {filteredTasks.length > 0 && (
         <p className="text-center text-sm text-zinc-500 mt-6">
           Showing {filteredTasks.length} task{filteredTasks.length !== 1 && 's'}
-          {(search || statusFilter !== 'all' || priorityFilter !== 'all') &&
-            ` (filtered from ${tasks.filter((t) => t.status !== 'done').length})`}
+          {(search ||
+            statusFilter !== 'all' ||
+            priorityFilter !== 'all' ||
+            originFilter !== 'all' ||
+            reviewFilter !== 'all') &&
+            ` (filtered from ${baseResultCount})`}
         </p>
       )}
     </div>

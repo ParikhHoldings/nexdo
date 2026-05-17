@@ -1,29 +1,39 @@
 'use client'
 
-import { Suspense } from 'react'
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Mail, Lock, ArrowRight, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { createClient } from '@/lib/supabase/client'
+import { isUsableEnv } from '@/lib/env'
+import { authErrorMessage, safeLoginRedirect } from '@/lib/auth-redirect'
 
 function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const redirect = searchParams.get('redirect') || '/today'
-  const isDemoModeAvailable = !process.env.NEXT_PUBLIC_SUPABASE_URL
+  const redirect = safeLoginRedirect(searchParams.get('redirect'))
+  const isDemoModeAvailable =
+    !isUsableEnv(process.env.NEXT_PUBLIC_SUPABASE_URL) ||
+    !isUsableEnv(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(() =>
+    authErrorMessage(searchParams.get('error'))
+  )
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setError(null)
+
+    const normalizedEmail = email.trim()
+    if (normalizedEmail !== email) {
+      setEmail(normalizedEmail)
+    }
 
     const supabase = createClient()
 
@@ -35,7 +45,7 @@ function LoginForm() {
 
     try {
       const { error: authError } = await supabase.auth.signInWithPassword({
-        email,
+        email: normalizedEmail,
         password,
       })
 
@@ -171,8 +181,8 @@ function LoginForm() {
             Your to-do list just learned to think.
           </h2>
           <p className="text-xl text-zinc-400">
-            Nexdo understands context, prioritizes intelligently, and actually
-            does your tasks. Welcome to AI-native productivity.
+            Nexdo keeps task context visible, prioritizes intelligently, and
+            helps with bounded research, drafting, and prep work.
           </p>
           <div className="flex items-center gap-4 pt-4">
             <div className="flex -space-x-2">
@@ -184,7 +194,7 @@ function LoginForm() {
               ))}
             </div>
             <p className="text-sm text-zinc-400">
-              Join 2,000+ power users
+              Built for founders, operators, and AI power users
             </p>
           </div>
         </div>

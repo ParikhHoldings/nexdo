@@ -1,5 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { MCP_TOOLS, executeTool, validateApiKey } from '@/lib/mcp-tools'
+import {
+  MCP_TOOLS,
+  canUseTool,
+  executeTool,
+  extractBearerTokenHeader,
+  isToolArgumentRecord,
+  missingScopeMessage,
+  validateApiKey,
+} from '@/lib/mcp-tools'
 
 // MCP Protocol version
 const PROTOCOL_VERSION = '2024-11-05'
@@ -7,9 +15,9 @@ const PROTOCOL_VERSION = '2024-11-05'
 // JSON-RPC types
 interface JsonRpcRequest {
   jsonrpc: '2.0'
-  id: string | number
+  id?: string | number | null
   method: string
-  params?: Record<string, unknown>
+  params?: unknown
 }
 
 interface JsonRpcResponse {
@@ -43,7 +51,10 @@ function jsonRpcError(
   }
 }
 
-function jsonRpcSuccess(id: string | number, result: unknown): JsonRpcResponse {
+function jsonRpcSuccess(
+  id: string | number | null,
+  result: unknown
+): JsonRpcResponse {
   return {
     jsonrpc: '2.0',
     id,
@@ -51,11 +62,13 @@ function jsonRpcSuccess(id: string | number, result: unknown): JsonRpcResponse {
   }
 }
 
+function isJsonRpcId(value: unknown): value is string | number | null {
+  return typeof value === 'string' || typeof value === 'number' || value === null
+}
+
 // Extract Bearer token from Authorization header
 function extractBearerToken(request: NextRequest): string | null {
-  const auth = request.headers.get('authorization')
-  if (!auth || !auth.startsWith('Bearer ')) return null
-  return auth.slice(7)
+  return extractBearerTokenHeader(request.headers.get('authorization'))
 }
 
 // GET /api/mcp — SSE stream for MCP protocol
@@ -131,7 +144,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Parse request body
-  let body: JsonRpcRequest
+  let body: unknown
   try {
     body = await request.json()
   } catch {
@@ -141,22 +154,41 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  // Validate JSON-RPC format
-  if (body.jsonrpc !== '2.0' || !body.method || body.id === undefined) {
+  // Validate JSON-RPC format. MCP clients may send initialized as a
+  // notification, which intentionally omits id and expects no response.
+  if (
+    !isToolArgumentRecord(body) ||
+    body.jsonrpc !== '2.0' ||
+    typeof body.method !== 'string' ||
+    !body.method.trim() ||
+    (body.id !== undefined && !isJsonRpcId(body.id))
+  ) {
+    const errorId =
+      isToolArgumentRecord(body) && isJsonRpcId(body.id) ? body.id : null
+
     return NextResponse.json(
-      jsonRpcError(body?.id ?? null, INVALID_REQUEST, 'Invalid JSON-RPC request'),
+      jsonRpcError(errorId, INVALID_REQUEST, 'Invalid JSON-RPC request'),
       { status: 400 }
     )
   }
 
-  const { id, method, params } = body
+  const bodyJsonRpc = body as unknown as JsonRpcRequest
+  const { id, method, params } = bodyJsonRpc
+  const isNotification = id === undefined
 
   // Route to appropriate handler
   try {
+    if (isNotification && method !== 'notifications/initialized') {
+      return NextResponse.json(
+        jsonRpcError(null, INVALID_REQUEST, 'JSON-RPC id is required for this method'),
+        { status: 400 }
+      )
+    }
+
     switch (method) {
       case 'initialize':
         return NextResponse.json(
-          jsonRpcSuccess(id, {
+          jsonRpcSuccess(id ?? null, {
             protocolVersion: PROTOCOL_VERSION,
             capabilities: {
               tools: {},
@@ -170,55 +202,84 @@ export async function POST(request: NextRequest) {
 
       case 'tools/list':
         return NextResponse.json(
-          jsonRpcSuccess(id, {
-            tools: MCP_TOOLS,
+          jsonRpcSuccess(id ?? null, {
+            tools: MCP_TOOLS.filter((tool) => canUseTool(auth.scopes, tool.name)),
           })
         )
 
       case 'tools/call': {
-        const toolName = params?.name as string
-        const toolArgs = (params?.arguments || {}) as Record<string, unknown>
-
-        if (!toolName) {
+        if (!isToolArgumentRecord(params)) {
           return NextResponse.json(
-            jsonRpcError(id, INVALID_PARAMS, 'Tool name is required')
+            jsonRpcError(id ?? null, INVALID_PARAMS, 'Tool call params must be an object'),
+            { status: 400 }
           )
         }
+
+        const toolName = params.name
+
+        if (typeof toolName !== 'string' || !toolName.trim()) {
+          return NextResponse.json(
+            jsonRpcError(id ?? null, INVALID_PARAMS, 'Tool name is required')
+          )
+        }
+
+        if (
+          params.arguments !== undefined &&
+          !isToolArgumentRecord(params.arguments)
+        ) {
+          return NextResponse.json(
+            jsonRpcError(id ?? null, INVALID_PARAMS, 'Tool arguments must be a JSON object'),
+            { status: 400 }
+          )
+        }
+
+        const toolArgs = params.arguments ?? {}
 
         const tool = MCP_TOOLS.find((t) => t.name === toolName)
         if (!tool) {
           return NextResponse.json(
-            jsonRpcError(id, METHOD_NOT_FOUND, `Unknown tool: ${toolName}`)
+            jsonRpcError(id ?? null, METHOD_NOT_FOUND, `Unknown tool: ${toolName}`)
+          )
+        }
+
+        if (!canUseTool(auth.scopes, toolName)) {
+          return NextResponse.json(
+            jsonRpcError(id ?? null, INVALID_REQUEST, missingScopeMessage(toolName)),
+            { status: 403 }
           )
         }
 
         const result = await executeTool(toolName, toolArgs, auth.userId)
-        return NextResponse.json(jsonRpcSuccess(id, result))
+        return NextResponse.json(jsonRpcSuccess(id ?? null, result))
       }
 
       case 'resources/list':
         return NextResponse.json(
-          jsonRpcSuccess(id, { resources: [] })
+          jsonRpcSuccess(id ?? null, { resources: [] })
         )
 
       case 'prompts/list':
         return NextResponse.json(
-          jsonRpcSuccess(id, { prompts: [] })
+          jsonRpcSuccess(id ?? null, { prompts: [] })
         )
 
       case 'notifications/initialized':
-        // Client notification that initialization is complete
-        return NextResponse.json(jsonRpcSuccess(id, {}))
+        // Client notification that initialization is complete.
+        if (isNotification) {
+          return new NextResponse(null, { status: 204 })
+        }
+
+        return NextResponse.json(jsonRpcSuccess(id ?? null, {}))
 
       default:
         return NextResponse.json(
-          jsonRpcError(id, METHOD_NOT_FOUND, `Unknown method: ${method}`)
+          jsonRpcError(id ?? null, METHOD_NOT_FOUND, `Unknown method: ${method}`)
         )
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error'
     return NextResponse.json(
-      jsonRpcError(id, INTERNAL_ERROR, message),
+      jsonRpcError(id ?? null, INTERNAL_ERROR, message),
       { status: 500 }
     )
   }

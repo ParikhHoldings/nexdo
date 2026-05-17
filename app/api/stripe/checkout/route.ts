@@ -1,17 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createCheckoutSession, createCustomer, PRICE_IDS } from '@/lib/stripe'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { isUsableEnv } from '@/lib/env'
+
+const BILLABLE_PLANS = ['pro', 'power'] as const
+type BillablePlan = (typeof BILLABLE_PLANS)[number]
+
+function isBillablePlan(plan: unknown): plan is BillablePlan {
+  return typeof plan === 'string' && BILLABLE_PLANS.includes(plan as BillablePlan)
+}
 
 export async function POST(request: NextRequest) {
   try {
-    const { priceId, plan } = await request.json()
+    const body = (await request.json().catch(() => ({}))) as { plan?: unknown }
+    const plan = body.plan
+
+    if (!isBillablePlan(plan)) {
+      return NextResponse.json(
+        { error: 'Invalid plan. Choose pro or power.' },
+        { status: 400 }
+      )
+    }
 
     // Get the authenticated user
     const supabase = await createClient()
     if (!supabase) {
       return NextResponse.json(
         { error: 'Database not configured' },
-        { status: 500 }
+        { status: 503 }
       )
     }
 
@@ -23,13 +39,28 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get the user's profile
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: profileData } = await (supabase as any)
+    const service = await createServiceClient()
+    if (!service) {
+      return NextResponse.json(
+        { error: 'Billing persistence is not configured yet.' },
+        { status: 503 }
+      )
+    }
+
+    // Get billing identifiers through the server trust boundary.
+    const { data: profileData, error: profileError } = await (service as any)
       .from('profiles')
       .select('stripe_customer_id')
       .eq('id', user.id)
-      .single()
+      .maybeSingle()
+
+    if (profileError || !profileData) {
+      console.error('Error loading billing profile:', profileError)
+      return NextResponse.json(
+        { error: 'Billing profile is not available yet.' },
+        { status: 500 }
+      )
+    }
 
     const profile = profileData as { stripe_customer_id: string | null } | null
     let customerId = profile?.stripe_customer_id
@@ -47,19 +78,29 @@ export async function POST(request: NextRequest) {
       customerId = customer.id
 
       // Save the customer ID to the profile
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (supabase as any)
+      const { data: updatedProfile, error: updateError } = await (service as any)
         .from('profiles')
         .update({ stripe_customer_id: customerId })
         .eq('id', user.id)
+        .select('id')
+        .maybeSingle()
+
+      if (updateError || !updatedProfile) {
+        console.error('Error saving Stripe customer ID:', updateError)
+        return NextResponse.json(
+          { error: 'Failed to save billing account.' },
+          { status: 500 }
+        )
+      }
     }
 
-    // Get the correct price ID
-    const actualPriceId = priceId || (plan === 'pro' ? PRICE_IDS.pro : PRICE_IDS.power)
+    // Derive the Stripe price from server configuration only. Clients choose
+    // a product plan; they never get to supply the chargeable price id.
+    const actualPriceId = PRICE_IDS[plan]
 
     // Guard against running with placeholder env. Failing fast here is far
     // better than sending the user to Stripe with an invalid price id.
-    if (!actualPriceId || actualPriceId.includes('placeholder')) {
+    if (!isUsableEnv(actualPriceId)) {
       console.error('Stripe price id not configured for plan:', plan)
       return NextResponse.json(
         {
@@ -74,8 +115,8 @@ export async function POST(request: NextRequest) {
     const session = await createCheckoutSession(
       customerId,
       actualPriceId,
-      `${appUrl}/settings?checkout=success`,
-      `${appUrl}/settings?checkout=cancelled`
+      `${appUrl}/settings?tab=billing&checkout=success`,
+      `${appUrl}/settings?tab=billing&checkout=cancelled`
     )
 
     if (!session) {

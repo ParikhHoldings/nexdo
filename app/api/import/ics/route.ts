@@ -1,9 +1,25 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { parseICSContent, saveImportedTasks } from '@/lib/importers'
+import { checkImportQuota, recordImportQuota } from '@/lib/import-quota'
 
 export async function POST(request: Request) {
   try {
+    const supabase = await createClient()
+    if (!supabase) {
+      return NextResponse.json({ error: 'Supabase not configured' }, { status: 503 })
+    }
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    const userId = user.id
+    const service = await createServiceClient()
+    if (!service) {
+      return NextResponse.json({ error: 'Database not configured' }, { status: 503 })
+    }
+    const dbClient = service as any
+
     const contentType = request.headers.get('content-type') || ''
     let content: string
 
@@ -41,18 +57,6 @@ export async function POST(request: Request) {
       )
     }
 
-    const supabase = await createClient()
-    if (!supabase) {
-      return NextResponse.json({ error: 'Supabase not configured' }, { status: 503 })
-    }
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-    const userId = user.id
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const dbClient = supabase as any
-
     // Parse ICS content
     const tasks = parseICSContent(content, userId)
 
@@ -63,8 +67,18 @@ export async function POST(request: Request) {
       )
     }
 
+    const quotaResponse = await checkImportQuota(userId, tasks.length)
+    if (quotaResponse) return quotaResponse
+
     // Save tasks
     const result = await saveImportedTasks(tasks, dbClient)
+    const quotaRecordResponse = await recordImportQuota(
+      userId,
+      result.imported,
+      result.tasks,
+      dbClient
+    )
+    if (quotaRecordResponse) return quotaRecordResponse
 
     return NextResponse.json({
       imported: result.imported,

@@ -2,11 +2,12 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, Sparkles, Loader2, Command } from 'lucide-react'
+import { ArrowUp, Plus, Sparkles, Loader2, Command } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useTaskStore } from '@/lib/store'
 import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/components/ui/toast'
+import { parseTaskHeuristic } from '@/lib/task-intelligence'
 import type { Task, ParsedTask } from '@/lib/database.types'
 
 interface TaskInputProps {
@@ -18,13 +19,13 @@ export function TaskInput({ onTaskCreated }: TaskInputProps) {
   const [isProcessing, setIsProcessing] = useState(false)
   const [isFocused, setIsFocused] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
-  const { addTask } = useTaskStore()
+  const { addTask, isAuthenticated } = useTaskStore()
   const toast = useToast()
 
-  // Global keyboard shortcut: Cmd+K to focus
+  // Global keyboard shortcut: Cmd/Ctrl+K to focus capture.
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault()
         inputRef.current?.focus()
       }
@@ -44,16 +45,27 @@ export function TaskInput({ onTaskCreated }: TaskInputProps) {
 
     try {
       // Check for quick mode: /quick prefix
-      const isQuickMode = rawInput.startsWith('/quick ')
-      const taskInput = isQuickMode ? rawInput.slice(7) : rawInput
+      const quickModeMatch = /^\/quick(?:\s+|$)/i.exec(rawInput)
+      const isQuickMode = Boolean(quickModeMatch)
+      const taskInput = isQuickMode
+        ? rawInput.slice(quickModeMatch![0].length).trim()
+        : rawInput
+      const supabase = createClient()
 
       let parsedTask: ParsedTask
 
       if (isQuickMode) {
+        if (!taskInput) {
+          setInput('/quick ')
+          toast.info('Add a task after /quick', 'Quick mode skips AI parsing.')
+          return
+        }
+
         // Quick mode: skip AI parsing
         parsedTask = {
           title: taskInput,
           due_date: null,
+          due_time: null,
           priority: 'medium',
           context: null,
           people: [],
@@ -62,6 +74,8 @@ export function TaskInput({ onTaskCreated }: TaskInputProps) {
           estimated_minutes: null,
           energy_level: null,
         }
+      } else if (!supabase) {
+        parsedTask = parseTaskHeuristic(taskInput)
       } else {
         // AI parsing
         const response = await fetch('/api/tasks/parse', {
@@ -82,24 +96,13 @@ export function TaskInput({ onTaskCreated }: TaskInputProps) {
           } else if (response.status !== 401) {
             toast.info('AI parsing unavailable', payload?.message || 'Saved your task as-is.')
           }
-          parsedTask = {
-            title: taskInput.slice(0, 120),
-            due_date: null,
-            priority: 'medium',
-            context: null,
-            people: [],
-            tags: [],
-            action_type: 'manual',
-            estimated_minutes: null,
-            energy_level: null,
-          }
+          parsedTask = parseTaskHeuristic(taskInput)
         } else {
           parsedTask = await response.json()
         }
       }
 
       // Check if user is authenticated and save to Supabase
-      const supabase = createClient()
       let savedTask: Task | null = null
 
       if (supabase) {
@@ -116,6 +119,7 @@ export function TaskInput({ onTaskCreated }: TaskInputProps) {
                 raw_input: rawInput,
                 priority: parsedTask.priority,
                 due_date: parsedTask.due_date,
+                due_time: parsedTask.due_time,
                 context: parsedTask.context,
                 source: 'manual',
                 action_type: parsedTask.action_type,
@@ -131,26 +135,49 @@ export function TaskInput({ onTaskCreated }: TaskInputProps) {
             } else if (saveResponse.status === 402) {
               // Quota exhausted — surface an actionable upgrade prompt.
               const payload = await saveResponse.json().catch(() => ({}))
+              setInput(rawInput)
               toast.push({
                 kind: 'error',
                 title: 'Monthly limit reached',
                 message: payload?.message || 'Upgrade to create more tasks.',
-                action: { label: 'Upgrade plan', href: '/settings' },
+                action: { label: 'Upgrade plan', href: '/settings?tab=billing' },
               })
               return
             } else if (saveResponse.status === 400) {
               const payload = await saveResponse.json().catch(() => ({}))
+              setInput(rawInput)
               toast.error(
                 'Could not save task',
                 payload?.errors?.[0]?.message || payload?.error || 'Validation failed.'
               )
               return
-            } else if (saveResponse.status !== 401) {
-              toast.error('Could not save task', 'Please try again.')
+            } else if (saveResponse.status === 401) {
+              setInput(rawInput)
+              toast.error('Session expired', 'Please sign in again before creating tasks.')
+              return
+            } else {
+              const payload = await saveResponse.json().catch(() => ({}))
+              setInput(rawInput)
+              toast.error(
+                'Could not save task',
+                payload?.message ||
+                  payload?.error ||
+                  'Your task was not saved. Please try again.'
+              )
+              return
             }
+          } else if (isAuthenticated) {
+            setInput(rawInput)
+            toast.error('Session expired', 'Please sign in again before creating tasks.')
+            return
           }
         } catch (error) {
           console.error('Error saving to Supabase:', error)
+          if (isAuthenticated) {
+            setInput(rawInput)
+            toast.error('Could not save task', 'Your task was not saved. Please try again.')
+            return
+          }
           toast.error('Could not save task', 'Check your connection and try again.')
           // Fall through to local creation for demo users.
         }
@@ -166,7 +193,7 @@ export function TaskInput({ onTaskCreated }: TaskInputProps) {
         status: 'todo',
         priority: parsedTask.priority,
         due_date: parsedTask.due_date,
-        due_time: null,
+        due_time: parsedTask.due_time,
         context: parsedTask.context,
         source: 'manual',
         action_type: parsedTask.action_type,
@@ -190,24 +217,30 @@ export function TaskInput({ onTaskCreated }: TaskInputProps) {
       onTaskCreated?.(newTask)
     } catch (error) {
       console.error('Error creating task:', error)
-      // Create a basic task on error
+      if (isAuthenticated) {
+        setInput(rawInput)
+        toast.error('Could not create task', 'Your task was not saved. Please try again.')
+        return
+      }
+      // Create a locally parsed task on error so capture still works offline.
+      const parsedTask = parseTaskHeuristic(rawInput)
       const fallbackTask: Task = {
         id: crypto.randomUUID(),
         user_id: 'demo-user',
-        title: rawInput.slice(0, 80),
+        title: parsedTask.title,
         raw_input: rawInput,
         description: null,
         status: 'todo',
-        priority: 'medium',
-        due_date: null,
-        due_time: null,
-        context: null,
+        priority: parsedTask.priority,
+        due_date: parsedTask.due_date,
+        due_time: parsedTask.due_time,
+        context: parsedTask.context,
         source: 'manual',
-        action_type: 'manual',
-        estimated_minutes: null,
-        energy_level: null,
-        people: null,
-        tags: null,
+        action_type: parsedTask.action_type,
+        estimated_minutes: parsedTask.estimated_minutes,
+        energy_level: parsedTask.energy_level,
+        people: parsedTask.people,
+        tags: parsedTask.tags,
         parent_task_id: null,
         related_task_ids: null,
         agent_output: null,
@@ -224,6 +257,10 @@ export function TaskInput({ onTaskCreated }: TaskInputProps) {
       setIsProcessing(false)
     }
   }
+
+  const trimmedInput = input.trim()
+  const showAiBadge = Boolean(trimmedInput && !/^\/quick(?:\s|$)/i.test(trimmedInput))
+  const canSubmit = Boolean(trimmedInput && !isProcessing)
 
   return (
     <form onSubmit={handleSubmit} className="relative">
@@ -267,7 +304,7 @@ export function TaskInput({ onTaskCreated }: TaskInputProps) {
           placeholder="What needs to get done? Be specific..."
           className={cn(
             'w-full bg-zinc-900 border border-zinc-800 rounded-xl',
-            'pl-12 pr-24 py-4',
+            'pl-12 pr-24 sm:pr-44 py-4',
             'text-zinc-100 placeholder:text-zinc-500',
             'focus:outline-none transition-colors',
             'disabled:opacity-50 disabled:cursor-not-allowed'
@@ -285,7 +322,7 @@ export function TaskInput({ onTaskCreated }: TaskInputProps) {
           </div>
 
           {/* AI badge */}
-          {input.trim() && !input.startsWith('/quick') && (
+          {showAiBadge && (
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -295,6 +332,21 @@ export function TaskInput({ onTaskCreated }: TaskInputProps) {
               <span className="text-xs text-accent">AI</span>
             </motion.div>
           )}
+
+          <button
+            type="submit"
+            aria-label="Add task"
+            title="Add task"
+            disabled={!canSubmit}
+            className={cn(
+              'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border transition-colors',
+              canSubmit
+                ? 'border-accent bg-accent text-white hover:bg-accent/90 focus:outline-none focus:ring-2 focus:ring-accent/50'
+                : 'border-zinc-800 bg-zinc-900 text-zinc-600 cursor-not-allowed'
+            )}
+          >
+            <ArrowUp className="h-4 w-4" />
+          </button>
         </div>
       </div>
 

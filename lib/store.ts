@@ -2,6 +2,27 @@
 
 import { create } from 'zustand'
 import type { Task, Profile, BriefingContent, TaskUpdate } from './database.types'
+import {
+  getBrowserNotificationPermission,
+  getStoredBrowserNotificationsEnabled,
+  persistBrowserNotificationsEnabled,
+  type BrowserNotificationPermission,
+} from './browser-notifications'
+import { persistDemoTasks } from './tasks'
+
+export type Theme = 'dark' | 'light'
+const THEME_STORAGE_KEY = 'nexdo_theme'
+
+function getInitialTheme(): Theme {
+  if (typeof window === 'undefined') return 'dark'
+  const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY)
+  return storedTheme === 'light' || storedTheme === 'dark' ? storedTheme : 'dark'
+}
+
+function persistTheme(theme: Theme) {
+  if (typeof window === 'undefined') return
+  window.localStorage.setItem(THEME_STORAGE_KEY, theme)
+}
 
 interface TaskState {
   tasks: Task[]
@@ -14,7 +35,7 @@ interface TaskState {
   // Actions
   setTasks: (tasks: Task[]) => void
   addTask: (task: Task) => void
-  updateTask: (id: string, updates: TaskUpdate) => void
+  updateTask: (id: string, updates: TaskUpdate, options?: { persist?: boolean }) => void
   deleteTask: (id: string) => void
   selectTask: (task: Task | null) => void
   openDetail: () => void
@@ -34,58 +55,153 @@ export const useTaskStore = create<TaskState>((set, get) => ({
 
   setTasks: (tasks) => set({ tasks }),
 
-  addTask: (task) =>
-    set((state) => ({
-      tasks: [task, ...state.tasks],
-    })),
+  addTask: (task) => {
+    const { tasks, isAuthenticated } = get()
+    const nextTasks = [task, ...tasks]
+    set({ tasks: nextTasks })
+    if (!isAuthenticated) persistDemoTasks(nextTasks)
+  },
 
-  updateTask: (id, updates) => {
+  updateTask: (id, updates, options) => {
+    const state = get()
+    const originalTask = state.tasks.find((task) => task.id === id)
+    if (!originalTask) {
+      set({ error: 'Task not found.' })
+      return
+    }
+
+    const updatedAt = new Date().toISOString()
+    const applyUpdates = (task: Task): Task => ({
+      ...task,
+      ...updates,
+      updated_at: updatedAt,
+      completed_at:
+        updates.completed_at !== undefined
+          ? updates.completed_at
+          : updates.status === 'done' && !task.completed_at
+            ? updatedAt
+            : updates.status !== undefined && updates.status !== 'done'
+              ? null
+              : task.completed_at,
+    })
+
+    const nextTasks = state.tasks.map((t) => (t.id === id ? applyUpdates(t) : t))
+    const nextSelectedTask =
+      state.selectedTask?.id === id
+        ? applyUpdates(state.selectedTask)
+        : state.selectedTask
+
     // Optimistic update
-    set((state) => ({
-      tasks: state.tasks.map((t) =>
-        t.id === id
-          ? {
-              ...t,
-              ...updates,
-              updated_at: new Date().toISOString(),
-              completed_at:
-                updates.status === 'done' && !t.completed_at
-                  ? new Date().toISOString()
-                  : updates.status !== 'done'
-                    ? null
-                    : t.completed_at,
-            }
-          : t
-      ),
-      selectedTask:
-        state.selectedTask?.id === id
-          ? { ...state.selectedTask, ...updates }
-          : state.selectedTask,
-    }))
+    set({
+      tasks: nextTasks,
+      selectedTask: nextSelectedTask,
+    })
 
     // Persist to Supabase if authenticated
-    const { isAuthenticated } = get()
-    if (isAuthenticated) {
+    const { isAuthenticated } = state
+    if (!isAuthenticated) {
+      persistDemoTasks(nextTasks)
+    } else if (options?.persist !== false) {
       fetch(`/api/tasks/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates),
-      }).catch(console.error)
+      })
+        .then(async (response) => {
+          if (!response.ok) {
+            const payload = await response.json().catch(() => ({}))
+            throw new Error(
+              payload?.message ||
+                payload?.error ||
+                'Task update failed'
+            )
+          }
+
+          const savedTask = (await response.json()) as Task
+          set((current) => ({
+            tasks: current.tasks.map((task) =>
+              task.id === id ? savedTask : task
+            ),
+            selectedTask:
+              current.selectedTask?.id === id ? savedTask : current.selectedTask,
+          }))
+        })
+        .catch((error) => {
+          console.error('Error updating task:', error)
+          const message =
+            error instanceof Error && error.message
+              ? `Could not save task changes: ${error.message}`
+              : 'Could not save task changes'
+          set((current) => ({
+            tasks: current.tasks.map((task) =>
+              task.id === id ? originalTask : task
+            ),
+            selectedTask:
+              current.selectedTask?.id === id
+                ? originalTask
+                : current.selectedTask,
+            error: `${message}. The previous task state was restored.`,
+          }))
+        })
     }
   },
 
   deleteTask: (id) => {
+    const state = get()
+    const originalIndex = state.tasks.findIndex((t) => t.id === id)
+    const originalTask = state.tasks[originalIndex]
+    if (!originalTask) {
+      set({ error: 'Task not found.' })
+      return
+    }
+
+    const nextTasks = state.tasks.filter((t) => t.id !== id)
+
     // Optimistic update
-    set((state) => ({
-      tasks: state.tasks.filter((t) => t.id !== id),
+    set({
+      tasks: nextTasks,
       selectedTask: state.selectedTask?.id === id ? null : state.selectedTask,
       isDetailOpen: state.selectedTask?.id === id ? false : state.isDetailOpen,
-    }))
+    })
 
     // Persist to Supabase if authenticated
-    const { isAuthenticated } = get()
-    if (isAuthenticated) {
-      fetch(`/api/tasks/${id}`, { method: 'DELETE' }).catch(console.error)
+    const { isAuthenticated } = state
+    if (!isAuthenticated) {
+      persistDemoTasks(nextTasks)
+    } else {
+      fetch(`/api/tasks/${id}`, { method: 'DELETE' })
+        .then(async (response) => {
+          if (!response.ok) {
+            const payload = await response.json().catch(() => ({}))
+            throw new Error(
+              payload?.message ||
+                payload?.error ||
+                'Task delete failed'
+            )
+          }
+        })
+        .catch((error) => {
+          console.error('Error deleting task:', error)
+          const message =
+            error instanceof Error && error.message
+              ? `Could not delete task: ${error.message}`
+              : 'Could not delete task'
+          set((current) => {
+            const taskExists = current.tasks.some((task) => task.id === id)
+            const restoredTasks = taskExists
+              ? current.tasks
+              : [
+                  ...current.tasks.slice(0, originalIndex),
+                  originalTask,
+                  ...current.tasks.slice(originalIndex),
+                ]
+
+            return {
+              tasks: restoredTasks,
+              error: `${message}. The task was restored.`,
+            }
+          })
+        })
     }
   },
 
@@ -119,7 +235,8 @@ export const useUserStore = create<UserState>((set) => ({
   isAuthenticated: false,
   isLoading: true,
 
-  setProfile: (profile) => set({ profile, isAuthenticated: !!profile }),
+  setProfile: (profile) =>
+    set({ profile, isAuthenticated: !!profile && profile.id !== 'demo-user' }),
 
   setAuthenticated: (auth) => set({ isAuthenticated: auth }),
 
@@ -155,13 +272,17 @@ export const useBriefingStore = create<BriefingState>((set) => ({
 }))
 
 interface UIState {
-  theme: 'dark' | 'light'
+  theme: Theme
+  browserNotificationsEnabled: boolean
+  notificationPermission: BrowserNotificationPermission
   sidebarCollapsed: boolean
   commandBarOpen: boolean
 
   // Actions
   toggleTheme: () => void
-  setTheme: (theme: 'dark' | 'light') => void
+  setTheme: (theme: Theme) => void
+  setBrowserNotificationsEnabled: (enabled: boolean) => void
+  setNotificationPermission: (permission: BrowserNotificationPermission) => void
   toggleSidebar: () => void
   setSidebarCollapsed: (collapsed: boolean) => void
   openCommandBar: () => void
@@ -169,16 +290,30 @@ interface UIState {
 }
 
 export const useUIStore = create<UIState>((set) => ({
-  theme: 'dark',
-  sidebarCollapsed: false,
+  theme: getInitialTheme(),
+  browserNotificationsEnabled: getStoredBrowserNotificationsEnabled(),
+  notificationPermission: getBrowserNotificationPermission(),
+  sidebarCollapsed: true,
   commandBarOpen: false,
 
   toggleTheme: () =>
-    set((state) => ({
-      theme: state.theme === 'dark' ? 'light' : 'dark',
-    })),
+    set((state) => {
+      const theme = state.theme === 'dark' ? 'light' : 'dark'
+      persistTheme(theme)
+      return { theme }
+    }),
 
-  setTheme: (theme) => set({ theme }),
+  setTheme: (theme) => {
+    persistTheme(theme)
+    set({ theme })
+  },
+
+  setBrowserNotificationsEnabled: (enabled) => {
+    persistBrowserNotificationsEnabled(enabled)
+    set({ browserNotificationsEnabled: enabled })
+  },
+
+  setNotificationPermission: (permission) => set({ notificationPermission: permission }),
 
   toggleSidebar: () =>
     set((state) => ({

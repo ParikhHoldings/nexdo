@@ -1,64 +1,88 @@
 'use client'
 
-import { Suspense } from 'react'
-import { useState } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { Suspense, useState } from 'react'
+import Link from 'next/link'
+import { useRouter, useSearchParams } from 'next/navigation'
 import {
+  Bell,
   User,
   CreditCard,
   Key,
-  Bell,
-  Moon,
-  Globe,
   Copy,
   Check,
   ExternalLink,
   RefreshCw,
+  Palette,
+  Moon,
+  Sun,
+  Download,
+  FileJson,
+  FileSpreadsheet,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { PricingTable } from '@/components/pricing-table'
-import { useUserStore, useUIStore } from '@/lib/store'
-import { cn, generateApiKey } from '@/lib/utils'
+import { useTaskStore, useUIStore, useUserStore, type Theme } from '@/lib/store'
+import { persistDemoProfile } from '@/lib/demo-profile'
+import { cn } from '@/lib/utils'
+import { tasksToCsv, tasksToJsonString } from '@/lib/task-export'
+import {
+  API_KEY_SCOPE_LABELS,
+  API_KEY_SCOPES,
+  API_ACCESS_REQUIRED_MESSAGE,
+  canUseApiAccess,
+  normalizeApiKeyScopes,
+  type ApiKeyScope,
+} from '@/lib/agent-scopes'
 
-type Tab = 'profile' | 'billing' | 'api' | 'notifications'
+const SETTINGS_TABS = ['profile', 'appearance', 'notifications', 'data', 'billing', 'api'] as const
+type Tab = (typeof SETTINGS_TABS)[number]
+
+function isSettingsTab(value: string | null): value is Tab {
+  return SETTINGS_TABS.includes(value as Tab)
+}
+
+function formatApiKeyHint(apiKey: string) {
+  return `${apiKey.slice(0, 8)}...${apiKey.slice(-4)}`
+}
 
 function SettingsContent() {
+  const router = useRouter()
   const searchParams = useSearchParams()
   const checkoutStatus = searchParams.get('checkout')
+  const requestedTab = searchParams.get('tab')
+  const activeTab = isSettingsTab(requestedTab) ? requestedTab : 'profile'
 
-  const { profile } = useUserStore()
-  const { theme, toggleTheme } = useUIStore()
+  const { profile, isAuthenticated, setProfile } = useUserStore()
+  const { tasks } = useTaskStore()
+  const {
+    theme,
+    setTheme,
+    browserNotificationsEnabled,
+    notificationPermission,
+    setBrowserNotificationsEnabled,
+    setNotificationPermission,
+  } = useUIStore()
 
-  const [activeTab, setActiveTab] = useState<Tab>('profile')
-  const [copied, setCopied] = useState(false)
-  const [apiKey, setApiKey] = useState(profile?.api_key || '')
-
-  // Notification preferences state
-  const defaultNotifications = [
-    { id: 'daily_briefing', title: 'Daily Briefing', description: 'Receive your morning briefing via email', enabled: true },
-    { id: 'task_reminders', title: 'Task Reminders', description: 'Get notified about upcoming due dates', enabled: true },
-    { id: 'agent_completions', title: 'Agent Completions', description: 'Notification when an agent finishes a task', enabled: false },
-    { id: 'weekly_summary', title: 'Weekly Summary', description: 'Weekly productivity report', enabled: true },
-  ]
-
-  const [notifications, setNotifications] = useState(() => {
-    if (typeof window === 'undefined') return defaultNotifications
-    try {
-      const saved = localStorage.getItem('nexdo_notifications')
-      return saved ? JSON.parse(saved) : defaultNotifications
-    } catch {
-      return defaultNotifications
-    }
-  })
-
-  const toggleNotification = (id: string) => {
-    const updated = notifications.map((n: typeof defaultNotifications[0]) =>
-      n.id === id ? { ...n, enabled: !n.enabled } : n
-    )
-    setNotifications(updated)
-    localStorage.setItem('nexdo_notifications', JSON.stringify(updated))
+  const setActiveTab = (activeTab: Tab) => {
+    const params = new URLSearchParams(searchParams.toString())
+    params.set('tab', activeTab)
+    router.replace(`/settings?${params.toString()}`, { scroll: false })
   }
+
+  const [copied, setCopied] = useState(false)
+  const [generatedApiKey, setGeneratedApiKey] = useState('')
+  const [generatedApiKeyHint, setGeneratedApiKeyHint] = useState('')
+  const [apiKeyScopesDraft, setApiKeyScopesDraft] = useState<ApiKeyScope[] | null>(null)
+  const copyableApiKey = generatedApiKey
+  const apiKeyHint =
+    generatedApiKeyHint ||
+    profile?.api_key_hint ||
+    ''
+  const hasApiKey = Boolean(copyableApiKey || apiKeyHint)
+  const apiKeyScopes = apiKeyScopesDraft ?? normalizeApiKeyScopes(profile?.api_key_scopes)
+  const hasApiAccess = canUseApiAccess(profile?.subscription_tier)
 
   // Profile form state
   const [fullName, setFullName] = useState(profile?.full_name || '')
@@ -67,41 +91,103 @@ function SettingsContent() {
   const [saveSuccess, setSaveSuccess] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [apiKeySuccess, setApiKeySuccess] = useState(false)
+  const [apiKeyError, setApiKeyError] = useState<string | null>(null)
   const [billingError, setBillingError] = useState<string | null>(null)
   const [isManagingBilling, setIsManagingBilling] = useState(false)
+  const [notificationMessage, setNotificationMessage] = useState<string | null>(null)
+  const [notificationError, setNotificationError] = useState<string | null>(null)
+  const [exportMessage, setExportMessage] = useState<string | null>(null)
+  const [exportError, setExportError] = useState<string | null>(null)
 
   const handleCopyApiKey = () => {
-    if (apiKey) {
-      navigator.clipboard.writeText(apiKey)
+    if (copyableApiKey) {
+      navigator.clipboard.writeText(copyableApiKey)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     }
   }
 
   const handleGenerateApiKey = async () => {
+    if (!hasApiAccess) return
+
     setApiKeySuccess(false)
+    setApiKeyError(null)
     try {
       const response = await fetch('/api/profile/api-key', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ scopes: apiKeyScopes }),
       })
 
       if (response.ok) {
         const result = await response.json()
-        setApiKey(result.api_key)
+        const nextScopes = normalizeApiKeyScopes(result.api_key_scopes)
+        const nextHint = result.api_key_hint || formatApiKeyHint(result.api_key)
+
+        setGeneratedApiKey(result.api_key)
+        setGeneratedApiKeyHint(nextHint)
+        if (result.api_key_scopes) {
+          setApiKeyScopesDraft(nextScopes)
+        }
+        if (profile) {
+          setProfile({
+            ...profile,
+            api_key: null,
+            api_key_hash: null,
+            api_key_hint: nextHint,
+            api_key_scopes: nextScopes,
+            api_key_last_used_at: null,
+            updated_at: new Date().toISOString(),
+          })
+        }
         setApiKeySuccess(true)
         setTimeout(() => setApiKeySuccess(false), 3000)
       } else {
-        console.error('Failed to generate API key')
+        const payload = await response.json().catch(() => ({}))
+        setApiKeyError(
+          payload?.message ||
+            payload?.error ||
+            'Unable to generate an API key right now.'
+        )
       }
     } catch (error) {
       console.error('Error generating API key:', error)
+      setApiKeyError('Unable to generate an API key right now.')
     }
+  }
+
+  const toggleApiKeyScope = (scope: ApiKeyScope) => {
+    setApiKeyScopesDraft((currentDraft) => {
+      const current = currentDraft ?? apiKeyScopes
+      if (current.includes(scope)) {
+        const next = current.filter((item) => item !== scope)
+        return next.length > 0 ? next : current
+      }
+      return [...current, scope]
+    })
   }
 
   const handleSaveProfile = async () => {
     setIsSaving(true)
     setSaveSuccess(false)
     setSaveError(null)
+
+    if (!isAuthenticated && profile) {
+      const nextProfile = {
+        ...profile,
+        full_name: fullName.trim() || null,
+        timezone,
+        work_type: 'other' as const,
+        updated_at: new Date().toISOString(),
+      }
+
+      setProfile(nextProfile)
+      persistDemoProfile(nextProfile)
+      setSaveSuccess(true)
+      setTimeout(() => setSaveSuccess(false), 3000)
+      setIsSaving(false)
+      return
+    }
 
     try {
       const response = await fetch('/api/profile', {
@@ -115,10 +201,20 @@ function SettingsContent() {
       })
 
       if (response.ok) {
+        const nextProfile = await response.json()
+        setProfile(nextProfile)
+        setFullName(nextProfile.full_name || '')
+        setTimezone(nextProfile.timezone || timezone)
         setSaveSuccess(true)
         setTimeout(() => setSaveSuccess(false), 3000)
       } else {
-        setSaveError('Failed to save profile')
+        const payload = await response.json().catch(() => ({}))
+        const validationMessage = payload?.errors?.[0]?.message
+        setSaveError(
+          validationMessage ||
+            payload?.error ||
+            'Failed to save profile'
+        )
       }
     } catch (error) {
       console.error('Error saving profile:', error)
@@ -146,7 +242,11 @@ function SettingsContent() {
       const result = await response.json()
 
       if (!response.ok || !result.url) {
-        throw new Error(result.error || 'Unable to start checkout right now.')
+        throw new Error(
+          result.message ||
+            result.error ||
+            'Unable to start checkout right now.'
+        )
       }
 
       window.location.href = result.url
@@ -170,7 +270,11 @@ function SettingsContent() {
       const result = await response.json()
 
       if (!response.ok || !result.url) {
-        throw new Error(result.error || 'Unable to open billing portal right now.')
+        throw new Error(
+          result.message ||
+            result.error ||
+            'Unable to open billing portal right now.'
+        )
       }
 
       window.location.href = result.url
@@ -184,11 +288,86 @@ function SettingsContent() {
     }
   }
 
+  const handleBrowserNotificationsChange = async (enabled: boolean) => {
+    setNotificationMessage(null)
+    setNotificationError(null)
+
+    if (!enabled) {
+      setBrowserNotificationsEnabled(false)
+      setNotificationMessage('Browser reminders disabled.')
+      return
+    }
+
+    if (typeof window === 'undefined' || !('Notification' in window)) {
+      setNotificationPermission('unsupported')
+      setBrowserNotificationsEnabled(false)
+      setNotificationError('This browser does not support notifications.')
+      return
+    }
+
+    let permission = window.Notification.permission
+    if (permission === 'default') {
+      permission = await window.Notification.requestPermission()
+    }
+
+    setNotificationPermission(permission)
+    if (permission === 'granted') {
+      setBrowserNotificationsEnabled(true)
+      setNotificationMessage('Browser reminders enabled. Nexdo will notify once per due task each day.')
+    } else {
+      setBrowserNotificationsEnabled(false)
+      setNotificationError('Notification permission was not granted.')
+    }
+  }
+
+  const handleExportTasks = (format: 'json' | 'csv') => {
+    setExportMessage(null)
+    setExportError(null)
+
+    if (tasks.length === 0) {
+      setExportError('No tasks are loaded to export.')
+      return
+    }
+
+    const exportedAt = new Date()
+    const content =
+      format === 'json'
+        ? tasksToJsonString(tasks, exportedAt)
+        : tasksToCsv(tasks)
+    const blob = new Blob([content], {
+      type:
+        format === 'json'
+          ? 'application/json;charset=utf-8'
+          : 'text/csv;charset=utf-8',
+    })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `nexdo-tasks-${exportedAt.toISOString().slice(0, 10)}.${format}`
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    window.setTimeout(() => URL.revokeObjectURL(url), 0)
+    setExportMessage(
+      `Exported ${tasks.length} task${tasks.length === 1 ? '' : 's'} as ${format.toUpperCase()}.`
+    )
+  }
+
   const tabs = [
     { key: 'profile' as Tab, label: 'Profile', icon: User },
+    { key: 'appearance' as Tab, label: 'Appearance', icon: Palette },
+    { key: 'notifications' as Tab, label: 'Notifications', icon: Bell },
+    { key: 'data' as Tab, label: 'Data', icon: Download },
     { key: 'billing' as Tab, label: 'Billing', icon: CreditCard },
     { key: 'api' as Tab, label: 'API', icon: Key },
-    { key: 'notifications' as Tab, label: 'Notifications', icon: Bell },
+  ]
+  const themeOptions: Array<{
+    value: Theme
+    label: string
+    icon: typeof Moon
+  }> = [
+    { value: 'dark', label: 'Dark', icon: Moon },
+    { value: 'light', label: 'Light', icon: Sun },
   ]
 
   return (
@@ -261,6 +440,7 @@ function SettingsContent() {
                     Timezone
                   </label>
                   <select
+                    aria-label="Timezone"
                     value={timezone}
                     onChange={(e) => setTimezone(e.target.value)}
                     className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2.5 text-zinc-100 focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent"
@@ -286,39 +466,181 @@ function SettingsContent() {
                 )}
               </div>
             </div>
+          </div>
+        )}
 
-            <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 space-y-4">
-              <h2 className="text-lg font-semibold text-zinc-100">
-                Appearance
-              </h2>
+        {/* Appearance Tab */}
+        {activeTab === 'appearance' && (
+          <div className="space-y-6">
+            <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 space-y-5">
+              <div>
+                <h2 className="text-lg font-semibold text-zinc-100">
+                  Appearance
+                </h2>
+                <p className="mt-1 text-sm text-zinc-500">
+                  Choose how Nexdo looks on this device.
+                </p>
+              </div>
 
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Moon className="h-5 w-5 text-zinc-400" />
-                  <div>
-                    <p className="text-sm font-medium text-zinc-200">
-                      Dark Mode
+              <div
+                role="radiogroup"
+                aria-label="Theme"
+                className="grid gap-3 sm:grid-cols-2"
+              >
+                {themeOptions.map((option) => {
+                  const Icon = option.icon
+                  const isSelected = theme === option.value
+
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      role="radio"
+                      aria-checked={isSelected}
+                      onClick={() => setTheme(option.value)}
+                      className={cn(
+                        'flex items-center gap-3 rounded-lg border p-4 text-left transition-colors',
+                        isSelected
+                          ? 'border-accent/60 bg-accent/10 text-zinc-100'
+                          : 'border-zinc-800 bg-zinc-900 text-zinc-400 hover:border-zinc-700 hover:text-zinc-100'
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          'flex h-10 w-10 items-center justify-center rounded-lg border',
+                          isSelected
+                            ? 'border-accent bg-accent/15 text-accent'
+                            : 'border-zinc-800 bg-zinc-800/50 text-zinc-400'
+                        )}
+                      >
+                        <Icon className="h-5 w-5" />
+                      </span>
+                      <span>
+                        <span className="block font-medium">
+                          {option.label}
+                        </span>
+                        <span className="text-sm text-zinc-500">
+                          {option.value === 'dark'
+                            ? 'Low-glare workspace'
+                            : 'Bright workspace'}
+                        </span>
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Notifications Tab */}
+        {activeTab === 'notifications' && (
+          <div className="space-y-6">
+            <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 space-y-5">
+              <div>
+                <h2 className="text-lg font-semibold text-zinc-100">
+                  Notifications
+                </h2>
+                <p className="mt-1 text-sm text-zinc-500">
+                  Get browser reminders for active tasks due today or overdue.
+                </p>
+              </div>
+
+              <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-4 space-y-3">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="space-y-1">
+                    <h3 className="text-sm font-medium text-zinc-100">
+                      Browser due-task reminders
+                    </h3>
+                    <p className="text-sm text-zinc-500">
+                      Nexdo sends one local browser notification per due task each day while the app is open.
                     </p>
                     <p className="text-xs text-zinc-500">
-                      Use dark theme for the interface
+                      Permission: {notificationPermission}
                     </p>
                   </div>
-                </div>
-                <button
-                  onClick={toggleTheme}
-                  className={cn(
-                    'relative w-12 h-6 rounded-full transition-colors',
-                    theme === 'dark' ? 'bg-accent' : 'bg-zinc-700'
-                  )}
-                >
-                  <span
-                    className={cn(
-                      'absolute top-1 w-4 h-4 bg-white rounded-full transition-transform',
-                      theme === 'dark' ? 'left-7' : 'left-1'
-                    )}
+                  <Checkbox
+                    aria-label="Browser due-task reminders"
+                    checked={browserNotificationsEnabled}
+                    disabled={notificationPermission === 'unsupported'}
+                    onChange={(event) =>
+                      handleBrowserNotificationsChange(event.currentTarget.checked)
+                    }
                   />
+                </div>
+
+                {notificationMessage && (
+                  <p className="text-sm text-emerald-400">{notificationMessage}</p>
+                )}
+                {notificationError && (
+                  <p className="text-sm text-red-400">{notificationError}</p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Data Tab */}
+        {activeTab === 'data' && (
+          <div className="space-y-6">
+            <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 space-y-5">
+              <div>
+                <h2 className="text-lg font-semibold text-zinc-100">
+                  Data Export
+                </h2>
+                <p className="mt-1 text-sm text-zinc-500">
+                  Download the tasks currently loaded in this workspace.
+                </p>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => handleExportTasks('json')}
+                  className="flex items-start gap-3 rounded-lg border border-zinc-800 bg-zinc-900 p-4 text-left transition-colors hover:border-zinc-700"
+                >
+                  <span className="flex h-10 w-10 items-center justify-center rounded-lg border border-zinc-800 bg-zinc-800/50 text-zinc-300">
+                    <FileJson className="h-5 w-5" />
+                  </span>
+                  <span>
+                    <span className="block font-medium text-zinc-100">
+                      Export JSON
+                    </span>
+                    <span className="text-sm text-zinc-500">
+                      Structured task data for backup or agent handoff.
+                    </span>
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleExportTasks('csv')}
+                  className="flex items-start gap-3 rounded-lg border border-zinc-800 bg-zinc-900 p-4 text-left transition-colors hover:border-zinc-700"
+                >
+                  <span className="flex h-10 w-10 items-center justify-center rounded-lg border border-zinc-800 bg-zinc-800/50 text-zinc-300">
+                    <FileSpreadsheet className="h-5 w-5" />
+                  </span>
+                  <span>
+                    <span className="block font-medium text-zinc-100">
+                      Export CSV
+                    </span>
+                    <span className="text-sm text-zinc-500">
+                      Spreadsheet-ready task list with planning metadata.
+                    </span>
+                  </span>
                 </button>
               </div>
+
+              <p className="text-xs text-zinc-500">
+                Loaded tasks: {tasks.length}. Authenticated exports use the tasks
+                currently loaded in the app.
+              </p>
+              {exportMessage && (
+                <p className="text-sm text-emerald-400">{exportMessage}</p>
+              )}
+              {exportError && (
+                <p className="text-sm text-red-400">{exportError}</p>
+              )}
             </div>
           </div>
         )}
@@ -373,31 +695,47 @@ function SettingsContent() {
                 <h2 className="text-lg font-semibold text-zinc-100">
                   API Key
                 </h2>
-                <Button variant="ghost" size="sm" onClick={handleGenerateApiKey}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleGenerateApiKey}
+                  disabled={!hasApiAccess}
+                >
                   <RefreshCw className="h-4 w-4 mr-2" />
                   Regenerate
                 </Button>
               </div>
 
               <p className="text-sm text-zinc-500">
-                Use this key to authenticate API requests. Keep it secret!
+                Use this key to authenticate AI tools and API requests. New keys are shown once.
               </p>
 
               {apiKeySuccess && (
-                <p className="text-sm text-emerald-400">New key generated</p>
+                <p className="text-sm text-emerald-400">
+                  New key generated. Copy it now; it will not be shown again.
+                </p>
+              )}
+
+              {apiKeyError && (
+                <p className="text-sm text-red-400">
+                  {apiKeyError}
+                </p>
               )}
 
               <div className="flex gap-2">
                 <Input
-                  type="password"
-                  value={apiKey || 'No API key generated'}
+                  type={copyableApiKey ? 'password' : 'text'}
+                  value={
+                    copyableApiKey ||
+                    (apiKeyHint ? `Stored key ${apiKeyHint}` : 'No API key generated')
+                  }
                   readOnly
                   className="font-mono"
                 />
                 <Button
                   variant="secondary"
                   onClick={handleCopyApiKey}
-                  disabled={!apiKey}
+                  disabled={!copyableApiKey}
                 >
                   {copied ? (
                     <Check className="h-4 w-4" />
@@ -407,10 +745,85 @@ function SettingsContent() {
                 </Button>
               </div>
 
-              {profile?.subscription_tier === 'free' && (
+              {hasApiKey && !copyableApiKey && (
+                <p className="text-xs text-zinc-500">
+                  Existing keys cannot be revealed. Regenerate to copy a new key.
+                </p>
+              )}
+
+              {hasApiAccess && hasApiKey && (
+                <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-4 sm:flex sm:items-center sm:justify-between sm:gap-4">
+                  <div>
+                    <h3 className="text-sm font-medium text-emerald-300">
+                      Ready to connect AI tools
+                    </h3>
+                    <p className="mt-1 text-xs text-emerald-100/70">
+                      Keep the full one-time key available, then open the guided MCP and ChatGPT Actions setup.
+                    </p>
+                  </div>
+                  <Link
+                    href="/settings/mcp"
+                    className="mt-3 inline-flex items-center justify-center rounded-md bg-emerald-500 px-3 py-1.5 text-sm font-medium text-zinc-950 transition-colors hover:bg-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 focus:ring-offset-zinc-950 sm:mt-0"
+                  >
+                    <ExternalLink className="mr-2 h-4 w-4" />
+                    Open Connect AI setup
+                  </Link>
+                </div>
+              )}
+
+              <div className="space-y-3">
+                <div>
+                  <h3 className="text-sm font-medium text-zinc-300">
+                    Key scopes
+                  </h3>
+                  <p className="text-xs text-zinc-500 mt-1">
+                    Choose the permissions included next time you generate this key.
+                  </p>
+                </div>
+                <div className="grid gap-2 sm:grid-cols-3">
+                  {API_KEY_SCOPES.map((scope) => (
+                    <button
+                      key={scope}
+                      type="button"
+                      onClick={() => toggleApiKeyScope(scope)}
+                      disabled={!hasApiAccess}
+                      className={cn(
+                        'flex items-start gap-2 rounded-lg border p-3 text-left transition-colors',
+                        apiKeyScopes.includes(scope)
+                          ? 'border-accent/50 bg-accent/10 text-zinc-100'
+                          : 'border-zinc-800 bg-zinc-900 text-zinc-400 hover:border-zinc-700',
+                        !hasApiAccess && 'cursor-not-allowed opacity-60'
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          'mt-0.5 flex h-4 w-4 items-center justify-center rounded border',
+                          apiKeyScopes.includes(scope)
+                            ? 'border-accent bg-accent'
+                            : 'border-zinc-600'
+                        )}
+                      >
+                        {apiKeyScopes.includes(scope) && (
+                          <Check className="h-3 w-3 text-white" />
+                        )}
+                      </span>
+                      <span>
+                        <span className="block text-sm font-medium">
+                          {API_KEY_SCOPE_LABELS[scope]}
+                        </span>
+                        <code className="mt-1 block text-xs text-zinc-500">
+                          {scope}
+                        </code>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {!hasApiAccess && (
                 <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg">
                   <p className="text-sm text-amber-400">
-                    API access requires a Power plan or higher.{' '}
+                    {API_ACCESS_REQUIRED_MESSAGE}{' '}
                     <button
                       onClick={() => setActiveTab('billing')}
                       className="underline"
@@ -441,47 +854,6 @@ function SettingsContent() {
                   <p className="text-sm text-zinc-500 mt-1">Agent Executions</p>
                 </div>
               </div>
-            </div>
-          </div>
-        )}
-
-        {/* Notifications Tab */}
-        {activeTab === 'notifications' && (
-          <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 space-y-6">
-            <h2 className="text-lg font-semibold text-zinc-100">
-              Notification Preferences
-            </h2>
-
-            <div className="space-y-4">
-              {notifications.map((notification: typeof defaultNotifications[0]) => (
-                <div
-                  key={notification.id}
-                  className="flex items-center justify-between py-3 border-b border-zinc-800 last:border-0"
-                >
-                  <div>
-                    <p className="text-sm font-medium text-zinc-200">
-                      {notification.title}
-                    </p>
-                    <p className="text-xs text-zinc-500">
-                      {notification.description}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => toggleNotification(notification.id)}
-                    className={cn(
-                      'relative w-10 h-5 rounded-full transition-colors',
-                      notification.enabled ? 'bg-accent' : 'bg-zinc-700'
-                    )}
-                  >
-                    <span
-                      className={cn(
-                        'absolute top-0.5 w-4 h-4 bg-white rounded-full transition-transform',
-                        notification.enabled ? 'left-5' : 'left-0.5'
-                      )}
-                    />
-                  </button>
-                </div>
-              ))}
             </div>
           </div>
         )}

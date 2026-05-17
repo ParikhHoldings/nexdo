@@ -6,6 +6,7 @@ export const TASK_PARSE_PROMPT = `You are a task parsing assistant. Extract stru
 Return a JSON object with these fields:
 - title: string (concise task title, max 80 chars)
 - due_date: string | null (ISO date YYYY-MM-DD, or null if not mentioned)
+- due_time: string | null (local time HH:MM, or null if not mentioned)
 - priority: "urgent" | "high" | "medium" | "low" (infer from context and urgency words)
 - context: string | null (why this matters, who's waiting, what's at stake)
 - people: string[] (people mentioned)
@@ -81,7 +82,7 @@ Be practical and actionable. Focus on preparation that will make the meeting/eve
 export const AGENT_SYSTEM_PROMPT = `You are Nexdo, an AI-native task management assistant. You help users:
 1. Understand and organize their tasks
 2. Prioritize based on context and urgency
-3. Execute tasks that can be automated (research, drafting, preparation)
+3. Generate bounded, reviewable outputs for research, drafting, and preparation tasks
 
 Always be concise, actionable, and focused on outcomes.
-When you can't complete a task automatically, explain clearly what the user needs to do manually.`
+When a task needs external side effects or judgment, explain what the user should review and do manually.`

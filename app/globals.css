@@ -2,37 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Cabinet Grotesk font - loaded via local files or Fontsource */
-@font-face {
-  font-family: 'Cabinet Grotesk';
-  src: url('/fonts/CabinetGrotesk-Variable.woff2') format('woff2');
-  font-weight: 100 900;
-  font-display: swap;
-  font-style: normal;
-}
-
-/* Fallback if variable font isn't available */
-@font-face {
-  font-family: 'Cabinet Grotesk';
-  src: local('Cabinet Grotesk'), local('CabinetGrotesk-Regular');
-  font-weight: 400;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Cabinet Grotesk';
-  src: local('Cabinet Grotesk Bold'), local('CabinetGrotesk-Bold');
-  font-weight: 700;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Cabinet Grotesk';
-  src: local('Cabinet Grotesk Medium'), local('CabinetGrotesk-Medium');
-  font-weight: 500;
-  font-display: swap;
-}
-
 @layer base {
   :root {
     --background: 250 250 250;
@@ -67,13 +36,23 @@
 
   body {
     @apply bg-zinc-950 text-zinc-50 antialiased;
-    font-family: 'Cabinet Grotesk', system-ui, -apple-system, sans-serif;
+    font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     font-feature-settings: 'cv01', 'cv02', 'cv03', 'cv04', 'cv11';
+    color-scheme: dark;
   }
 
   /* Light mode */
   body.light {
     @apply bg-zinc-50 text-zinc-900;
+    color-scheme: light;
+  }
+
+  html.light {
+    color-scheme: light;
+  }
+
+  html.dark {
+    color-scheme: dark;
   }
 
   /* Scrollbar styling */
@@ -97,6 +76,79 @@
   /* Selection */
   ::selection {
     @apply bg-accent/30;
+  }
+}
+
+@layer utilities {
+  body.light .text-zinc-50,
+  body.light .text-zinc-100 {
+    color: rgb(24 24 27);
+  }
+
+  body.light .text-zinc-300 {
+    color: rgb(63 63 70);
+  }
+
+  body.light .text-zinc-400 {
+    color: rgb(82 82 91);
+  }
+
+  body.light .text-zinc-500 {
+    color: rgb(113 113 122);
+  }
+
+  body.light .placeholder\:text-zinc-500::placeholder {
+    color: rgb(113 113 122);
+  }
+
+  body.light .bg-zinc-950 {
+    background-color: rgb(250 250 250);
+  }
+
+  body.light .bg-zinc-900,
+  body.light [class~="bg-zinc-900/50"],
+  body.light [class~="bg-zinc-900/80"] {
+    background-color: rgb(255 255 255);
+  }
+
+  body.light .bg-zinc-800,
+  body.light [class~="bg-zinc-800/50"],
+  body.light [class~="bg-zinc-800/30"] {
+    background-color: rgb(244 244 245);
+  }
+
+  body.light .bg-zinc-700 {
+    background-color: rgb(228 228 231);
+  }
+
+  body.light .border-zinc-800,
+  body.light [class~="border-zinc-800/50"] {
+    border-color: rgb(228 228 231);
+  }
+
+  body.light .border-zinc-700 {
+    border-color: rgb(212 212 216);
+  }
+
+  body.light .border-zinc-600 {
+    border-color: rgb(161 161 170);
+  }
+
+  body.light .hover\:bg-zinc-800:hover,
+  body.light [class~="hover:bg-zinc-800/50"]:hover {
+    background-color: rgb(244 244 245);
+  }
+
+  body.light .hover\:bg-zinc-700:hover {
+    background-color: rgb(228 228 231);
+  }
+
+  body.light .hover\:text-zinc-100:hover {
+    color: rgb(24 24 27);
+  }
+
+  body.light .ring-offset-zinc-950 {
+    --tw-ring-offset-color: rgb(250 250 250);
   }
 }
 

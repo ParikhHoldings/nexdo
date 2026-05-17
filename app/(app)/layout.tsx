@@ -4,10 +4,19 @@ import { useEffect } from 'react'
 import { Sidebar } from '@/components/sidebar'
 import { TaskDetail } from '@/components/task-detail'
 import { ToastProvider } from '@/components/ui'
+import { useToast } from '@/components/ui/toast'
 import { SidebarSkeleton, TaskListSkeleton } from '@/components/ui/skeleton'
+import { ThemeController } from '@/components/theme-controller'
+import { TaskNotificationController } from '@/components/task-notification-controller'
 import { useTaskStore, useUserStore } from '@/lib/store'
 import { getDemoTasks } from '@/lib/tasks'
+import { getDemoProfile } from '@/lib/demo-profile'
 import { createClient } from '@/lib/supabase/client'
+import {
+  CLIENT_PROFILE_SELECT,
+  createClientProfileFallback,
+  toClientProfile,
+} from '@/lib/profile'
 
 /**
  * Detects the user's local IANA timezone so demo tasks and briefings
@@ -21,13 +30,35 @@ function detectTimezone(): string {
   }
 }
 
+function TaskStoreErrorToast() {
+  const { error, setError } = useTaskStore()
+  const toast = useToast()
+
+  useEffect(() => {
+    if (!error) return
+    toast.error(error)
+    setError(null)
+  }, [error, setError, toast])
+
+  return null
+}
+
 export default function AppLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const { setTasks, setAuthenticated } = useTaskStore()
-  const { setProfile, setLoading, isLoading } = useUserStore()
+  const {
+    setTasks,
+    setAuthenticated: setTasksAuthenticated,
+    setError,
+  } = useTaskStore()
+  const {
+    setProfile,
+    setLoading,
+    isLoading,
+    setAuthenticated: setUserAuthenticated,
+  } = useUserStore()
 
   useEffect(() => {
     const loadData = async () => {
@@ -39,19 +70,30 @@ export default function AppLayout({
           const { data: { user } } = await supabase.auth.getUser()
 
           if (user) {
-            setAuthenticated(true)
+            setTasksAuthenticated(true)
+            setUserAuthenticated(true)
 
-            const { data: profile } = await supabase
+            const { data: profile, error: profileError } = await supabase
               .from('profiles')
-              .select('*')
+              .select(CLIENT_PROFILE_SELECT)
               .eq('id', user.id)
-              .single()
+              .maybeSingle()
 
             if (profile) {
-              setProfile(profile)
+              setProfile(toClientProfile(profile))
+            } else {
+              if (profileError) {
+                console.error('Error loading profile:', profileError)
+              }
+              setProfile(createClientProfileFallback(user, timezone))
+              setError(
+                profileError
+                  ? 'Could not load your profile settings. Some account features may be temporarily unavailable.'
+                  : 'Your profile is still being set up. Some account features may be temporarily unavailable.'
+              )
             }
 
-            const { data: tasks } = await supabase
+            const { data: tasks, error: tasksError } = await supabase
               .from('tasks')
               .select('*')
               .eq('user_id', user.id)
@@ -59,56 +101,50 @@ export default function AppLayout({
 
             if (tasks) {
               setTasks(tasks)
+            } else if (tasksError) {
+              console.error('Error loading tasks:', tasksError)
+              setTasks([])
+              setError('Could not load your tasks. Refresh or try again shortly.')
             }
           } else {
             // Logged-out visitors see demo data so they can explore the app.
-            setAuthenticated(false)
+            setTasksAuthenticated(false)
+            setUserAuthenticated(false)
             setTasks(getDemoTasks())
-            setProfile({
-              id: 'demo-user',
-              full_name: 'Demo User',
-              timezone,
-              work_type: null,
-              subscription_tier: 'free',
-              stripe_customer_id: null,
-              api_key: null,
-              task_count_this_month: 0,
-              agent_executions_this_month: 0,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-            })
+            setProfile(getDemoProfile(timezone))
           }
         } catch (error) {
           console.error('Error loading data:', error)
-          setAuthenticated(false)
+          setTasksAuthenticated(false)
+          setUserAuthenticated(false)
           setTasks(getDemoTasks())
+          setProfile(getDemoProfile(timezone))
         }
       } else {
-        setAuthenticated(false)
+        setTasksAuthenticated(false)
+        setUserAuthenticated(false)
         setTasks(getDemoTasks())
-        setProfile({
-          id: 'demo-user',
-          full_name: 'Demo User',
-          timezone,
-          work_type: null,
-          subscription_tier: 'free',
-          stripe_customer_id: null,
-          api_key: null,
-          task_count_this_month: 0,
-          agent_executions_this_month: 0,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        })
+        setProfile(getDemoProfile(timezone))
       }
 
       setLoading(false)
     }
 
     loadData()
-  }, [setTasks, setProfile, setLoading, setAuthenticated])
+  }, [
+    setTasks,
+    setProfile,
+    setLoading,
+    setTasksAuthenticated,
+    setUserAuthenticated,
+    setError,
+  ])
 
   return (
     <ToastProvider>
+      <ThemeController />
+      <TaskNotificationController />
+      <TaskStoreErrorToast />
       <div className="flex h-screen bg-zinc-950">
         {isLoading ? <SidebarSkeleton /> : <Sidebar />}
         <main className="flex-1 overflow-hidden">

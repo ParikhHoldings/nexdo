@@ -1,12 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prioritizeTasks } from '@/lib/openai'
-import type { Task } from '@/lib/database.types'
 import { requireUser } from '@/lib/api-auth'
 import { consumeRateLimit, RATE_LIMITS, rateLimitResponseHeaders } from '@/lib/rate-limit'
+import { sanitizeAiTasks } from '@/lib/ai-task-input'
 
 export async function POST(request: NextRequest) {
   const auth = await requireUser()
   if (!auth.ok) return auth.response
+
+  let body: { tasks?: unknown }
+  try {
+    body = await request.json()
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+  }
+
+  const { tasks } = body
+
+  const sanitized = sanitizeAiTasks(tasks, 100)
+  if (!sanitized.ok) {
+    return NextResponse.json({ error: sanitized.error }, { status: 400 })
+  }
 
   const gate = await consumeRateLimit(auth.userId, RATE_LIMITS.aiPrioritize)
   if (!gate.allowed) {
@@ -21,21 +35,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { tasks } = await request.json()
-
-    if (!tasks || !Array.isArray(tasks)) {
-      return NextResponse.json({ error: 'Invalid tasks array' }, { status: 400 })
-    }
-
-    // Upper bound on batch size to protect the OpenAI budget.
-    if (tasks.length > 100) {
-      return NextResponse.json(
-        { error: 'Too many tasks (max 100 per request)' },
-        { status: 400 }
-      )
-    }
-
-    const prioritized = await prioritizeTasks(tasks as Task[])
+    const prioritized = await prioritizeTasks(sanitized.tasks)
 
     if (!prioritized) {
       return NextResponse.json({ error: 'Failed to prioritize tasks' }, { status: 500 })

@@ -18,6 +18,11 @@ export default function ResetPasswordPage() {
     setError(null)
     setLoading(true)
 
+    const normalizedEmail = email.trim()
+    if (normalizedEmail !== email) {
+      setEmail(normalizedEmail)
+    }
+
     const supabase = createClient()
     if (!supabase) {
       setError('Authentication is not configured for this deployment.')
@@ -28,11 +33,15 @@ export default function ResetPasswordPage() {
     // Supabase sends a magic-link style recovery email. The callback
     // route exchanges the code and drops the user on /auth/update-password.
     const origin =
+      (typeof window !== 'undefined' ? window.location.origin : '') ||
       process.env.NEXT_PUBLIC_APP_URL ||
-      (typeof window !== 'undefined' ? window.location.origin : '')
-    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${origin}/auth/callback?next=/auth/update-password`,
-    })
+      ''
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(
+      normalizedEmail,
+      {
+        redirectTo: `${origin}/auth/callback?next=/auth/update-password`,
+      }
+    )
 
     if (resetError) {
       setError(resetError.message)

@@ -1,21 +1,289 @@
 # Backlog
 
+## Completed 2026-05-17
+- moved human task-create and task-patch validation into `lib/task-validation.ts`
+- made generic task create/update routes reject protected or server-managed fields such as `user_id`, `completed_at`, `source_agent_id`, and `agent_output` instead of silently accepting them
+- added focused helper coverage for task creation normalization and task patch allowlisting
+- tightened the landing page draft toward the verified demo path, bounded AI assistance, and less overbroad productivity/security/agent wording
+- tightened landing/signup copy further around bounded AI outputs, scoped Power-plan API access, reviewable agent changes, and non-absolute people/security wording
+- added Playwright coverage so the landing page primary CTA routes to the working `/today` demo
+- added a direct signup-page demo path so preview visitors are not forced through account creation before trying the product
+- deep-linked Connect AI no-key guidance to `/settings?tab=api` so paid users land on API-key generation instead of the profile settings tab
+- restored failed authenticated Done-page bulk deletes back into local state immediately instead of making users refresh to see failed deletions
+- moved authenticated human task creation to quota pre-check plus post-insert usage accounting, with best-effort task cleanup if accounting fails
+- moved MCP `create_task` to quota pre-check plus post-insert usage accounting, with inserted-task cleanup if accounting fails
+- moved authenticated imports to quota pre-check plus post-save usage accounting for successfully inserted rows, with inserted-task cleanup if accounting fails
+- hardened billing profile writes so checkout fails if the Stripe customer ID cannot be saved and webhook entitlement updates fail for retry if no profile row is written
+- hardened API-key rotation persistence so one-time keys are returned only after the hashed key and scopes are written to the profile
+- made owned task PATCH misses return `404 Task not found` instead of surfacing Supabase no-row errors as generic failures
+- made agent-execution quota pre-check failures use the shared quota status helper so service/profile failures return 500 instead of a misleading upgrade-required status
+- made profile update misses return `404 Profile not found` instead of treating missing profile rows as generic update failures
+- made MCP `get_task`, `update_task`, and `complete_task` return stable `Task not found` errors for missing or unowned task IDs
+- kept authenticated app boot internally signed in when profile rows are missing or delayed by using a safe client fallback profile and visible profile/task load errors
+- surfaced authenticated task-capture server messages so profile/quota/save failures are visible instead of a generic save error
+- surfaced authenticated task edit/delete server messages while still rolling back optimistic local changes
+- surfaced authenticated import server messages before generic import errors so quota/profile failures remain actionable
+- hydrated authenticated import results into the visible task workspace so successful server-side imports do not require a reload before imported tasks appear
+- surfaced authenticated Done-page bulk-delete server messages while restoring failed deletes locally
+- made Google Tasks and Microsoft To Do imports fail closed when a nested provider task-list fetch fails instead of silently importing partial data
+- exposed Google Tasks and Microsoft To Do as honest manual access-token imports while keeping full OAuth marked as post-launch
+- surfaced authenticated agent-execution and agent-review server messages in task detail instead of masking quota/rate-limit/save failures
+- added due-time and energy-level editing/display to task detail so the MVP task structure is editable from the core workspace
+- carried parsed due times from natural-language capture through demo tasks, authenticated task creation, MCP-created tasks, validators, and OpenAI smoke expectations
+- ordered All Tasks due-date sorting and Upcoming date groups by same-day due time so timed work scans before untimed work
+- verified PR #3 due-time scan-ordering head `1d12864044597dc7202ab068bc423f9ba25cf667` passed GitHub Web rails and Vercel preview deployment; protected-preview route smoke remains blocked by Vercel Deployment Protection without `VERCEL_AUTOMATION_BYPASS_SECRET` or an unprotected URL
+- tightened shared task date/time validation so human routes, AI task sanitization/output validation, and MCP updates reject impossible calendar dates and out-of-range local times
+- moved deterministic fallback task parsing onto the shared due-date normalizer for explicit dates
+- moved import date/time parsing onto the shared schedule normalizers and preserved Google/Microsoft due times from imported datetime fields
+- removed UTC date parsing from demo upcoming filtering, All Tasks due-date sorting, and OpenAI provider smoke date fixtures
+- refreshed `AGENTS.md` with the shared date/time validation contract and current PR #3 verification state
+- made prioritization and briefing context due-time-aware, with deterministic ranking for same-day timed tasks
+- refreshed daily briefings when structured planning metadata changes and treated past due times today as overdue
+- fixed date-only task labels so local calendar due dates render as Today/Tomorrow instead of shifting through UTC parsing
+- surfaced authenticated AI briefing and prioritization fallback notices when provider/rate-limit failures force local heuristics
+- surfaced billing checkout and portal server messages before generic settings errors
+- made authenticated task parsing reject blank-after-trim input and send trimmed prompt text through length checks and provider/fallback parsing
+- verified PR #3 head `74f3b79623c2c0fa26bb166c91d05d7e930a9e3f` passed GitHub Web rails after the task-parse input hardening change; Vercel remained rate-limited on that head
+- trimmed submitted login emails before Supabase sign-in so pasted whitespace does not break otherwise valid account access
+- tightened auth redirect helpers so callback recovery can still land on update-password while normal login redirects reject auth-page loops, control characters, backslash paths, and encoded authority-like prefixes
+- added shared auth redirect guardrails so protected-route login redirects preserve path and query, login/callback redirects stay on same-origin app paths, and callback errors show a visible login message
+- kept Settings tab clicks and `?tab=` deep links synchronized with the URL so billing/API/appearance links continue to land on the intended tab after users click around
+- kept Connect AI setup, activity, and available-tool indicators bound to active paid API access instead of treating old key hints as usable
+- normalized Connect AI test-connection and agent-activity errors across plain, message, and JSON-RPC error payloads
+- expanded Connect AI agent activity rows with mutation intent, safe argument-key summaries, and agent-metadata presence
+- expanded `npm run smoke:mcp` to verify OpenAPI availability, ChatGPT Actions `list_tasks` response shape, and required real `agent_action_events` audit writes with `--write --audit`
+- expanded `npm run smoke:mcp` across search, briefing, get-task, update, complete, and ChatGPT Actions search/list checks
+- expanded MCP `update_task`, OpenAPI, local handler coverage, and the provider smoke path so agents can update due time, action type, estimate, energy, people, and tags
+- expanded MCP `update_task`, OpenAPI, local handler coverage, and the provider smoke path so agents can update owned parent/related task links through the same ownership-checked relationship validation used by human task detail
+- verified PR #3 Web rails on inspected relationship-update heads; Vercel preview evidence remained per-head with both successful previews and known account build-rate-limit failures, and protected-preview route smoke remains blocked by Vercel Deployment Protection without `VERCEL_AUTOMATION_BYPASS_SECRET` or an unprotected URL
+- hardened MCP JSON-RPC and ChatGPT Action wrappers so non-object tool arguments are rejected before tool execution
+- centralized MCP/ChatGPT Actions Bearer parsing so real agent clients can use case-insensitive schemes and harmless extra spacing without failing auth
+- hardened the MCP JSON-RPC route so malformed non-object request bodies fail with a JSON-RPC validation error before field access
+- expanded `npm run smoke:mcp` so real-key verification now checks malformed MCP JSON-RPC bodies, malformed `tools/call` params/arguments, and malformed ChatGPT Action bodies fail cleanly before tool execution
+- verified PR #3 head `3f0e288489fcff03eeadbd71ed83ca437db721f8` passed GitHub Web rails and Vercel preview deployment after the MCP/ChatGPT Actions argument validation change
+- expanded `npm run smoke:mcp` to verify the authenticated MCP SSE endpoint advertises the JSON-RPC endpoint before tool execution
+- made the MCP JSON-RPC endpoint accept the standard initialized notification without an `id`, with real-key smoke coverage for the handshake
+- added MCP smoke `--provision` mode to create disposable full/read-only Power-plan API keys for scoped real endpoint verification
+- added `npm run smoke:launch` to load a real env file, run local rails, run Supabase/OpenAI/Stripe/MCP provider smokes in order, and keep manual launch approval gates explicit
+- hardened `npm run smoke:launch` so provider smokes require an explicit remote HTTPS app URL unless `--allow-local-url` is intentionally used for local debugging
+- aligned `npm run smoke:launch -- --url=...` with env preflight so the explicit smoke target is validated as `NEXT_PUBLIC_APP_URL` instead of a stale app URL from the env file
+- refreshed current verification summaries for PR #3 head `a9eabf66edc12cee1382d725407c4f591bcb6275`, 105-test local Playwright coverage, passing GitHub Web rails, passing Vercel preview deployment, and protected-preview route-smoke blocker state
+- corrected the README import summary so it describes file uploads from external task exports instead of implying Nexdo already has task export functionality
+- added Settings data export so users can download currently loaded tasks as JSON or CSV for backup, review, or agent handoff
+- added task-detail parent/related links with demo persistence and an authenticated ownership-checked relationship route
+- made landing-page pricing CTAs functional without implying verified production checkout: Free opens the demo, Pro/Power open signup, and Team opens the sales email path
+- narrowed pricing feature bullets away from unverified SSO, admin controls, team collaboration, and custom integration promises
+- tightened site metadata and agent system prompt language around early-access, bounded, reviewable AI assistance instead of broad automation claims
+- added the public sitemap route advertised by `robots.txt` and tightened manifest/privacy/terms wording around bounded assistance and provider-backed safeguards
+- surfaced agent-origin trace metadata on task cards and task detail so humans can identify tasks created or updated by external agents
+- removed the dead import-card OAuth/coming-soon branch so new import cards must use a wired token or file path
+- added optional trace metadata to MCP `complete_task` so completion calls can be audited with source agent and external reference context
+- expanded `npm run smoke:stripe -- --write --webhook` to post signed subscription events, verify unknown-price fail-closed behavior, verify paid/free tier transitions, and verify duplicate webhook idempotency against disposable Supabase/Stripe test data
+- expanded `npm run smoke:stripe -- --write --webhook` to verify free/pro/power quota plan-state boundaries after signed webhook tier changes
+- expanded `npm run smoke:stripe -- --write --webhook` to sign in the disposable Supabase user and verify authenticated `POST /api/tasks` quota behavior under free/pro/power entitlement states
+- expanded `npm run smoke:openai` to reject placeholder keys and verify research, draft, and prep execution output shapes instead of only prep
+- added `npm run smoke:openai -- --app` to verify authenticated app parse, prioritize, briefing, and research/draft/prep execution routes with disposable Supabase data
+- added migration `007_task_column_grants.sql` to keep agent output, source-agent metadata, ingestion intent, and completion timestamps server-managed for direct browser Supabase writes
+- moved authenticated import persistence to service-role writes after auth/quota checks so imported completion timestamps and external source refs survive the new browser task column grants
+- expanded `npm run smoke:supabase -- --write` to verify browser clients cannot write task server-managed columns, cannot insert agent audit events, public clients cannot read audit events, and duplicate agent external refs are rejected
+- added focused Playwright regression coverage that checks task column grants exclude server-managed fields and task/import server routes use service-role write paths after auth/quota checks
+- added migration `008_task_note_column_grants.sql` to keep task-note type and creation time server-managed, enforce bounded note content for direct inserts, move authenticated note metadata writes through the service-role route, and expand Supabase smoke/source coverage for note metadata and length denials
+- added migration `009_task_source_grants.sql` to keep the broad task `source` flag server-mediated, moved authenticated task creation through the service-role route after validation/quota checks, and expanded Supabase smoke/source coverage for direct `source: agent` spoof denial
+- added migration `010_task_content_constraints.sql` so direct browser task inserts/updates cannot bypass core task content bounds for blank titles, oversized text, impossible estimates, or unbounded people/tag arrays
+- added migration `016_task_relationship_grants.sql` so direct browser task inserts/updates cannot set `parent_task_id` or `related_task_ids` until a real ownership-aware linking feature exists
+- moved authenticated agent execution service-role output persistence preflight ahead of rate-limit, quota, and provider work so runs do not spend work when output cannot be saved
+- updated the GitHub Actions verify workflow to `actions/checkout@v5` and `actions/setup-node@v5` so the CI rail no longer depends on deprecated Node 20 action runtimes
+- refreshed README, launch plan, and roadmap verification summaries so repo-facing docs matched the then-current local rail and PR check state
+- added mobile sidebar open/close and post-navigation collapse coverage to the rendered demo smoke path
+- tightened the Microsoft To Do import token placeholder so the rendered import card does not clip the input text
+- tightened deterministic fallback task parsing so captured task titles stay concise while schedule, priority, and estimate phrases become structured metadata
+- hardened `/quick` capture so empty quick-mode submissions are rejected and extra spacing is trimmed before task creation
+- moved All Tasks and MCP `search_tasks` onto shared metadata search so people and descriptions are searchable alongside title, context, and tags
+- aligned MCP tool schemas and ChatGPT Actions OpenAPI with handler support for the `cancelled` task status
+- made cancelled tasks human-reviewable from All Tasks and restorable from task detail so agent-side cancellation is not hidden from users
+- surfaced non-default task statuses on task cards so agent-updated waiting/in-progress/cancelled work is visible while scanning the workspace
+- added task-card quick status actions for starting work, marking work waiting, moving work back to to-do, and restoring done/cancelled work from scan views; card actions are visible on mobile/touch
+- added a task-detail Agent handoff brief that copies task metadata, context, recent notes, and bounded agent instructions for external-agent work
+- added `/import` paste restore for copied Nexdo task handoff briefs, including structured task metadata, trace notes, and recent notes
+- verified PR #3 handoff-import feature head `2f01936ed736ba82c921ccc4f90e3a23f8968a54` passed GitHub Web rails and Vercel preview deployment; remote route smoke remains blocked by Vercel Deployment Protection without `VERCEL_AUTOMATION_BYPASS_SECRET` or an unprotected URL
+- added an All Tasks origin filter so humans can isolate agent-originated work from human-created work during review
+- added an All Tasks agent-output review filter so unreviewed/needs-revision outputs can be queued separately from verified outputs
+- expanded the Agent Review queue so traceable agent-created or agent-updated tasks without output also appear for human review
+- verified PR #3 agent-review feature head `fa6aa2ad5fc5b3fb66af0adf6e59ad8e2e9cf374` passed GitHub Web rails and Vercel preview deployment; protected-preview route smoke remains blocked by Vercel Deployment Protection without `VERCEL_AUTOMATION_BYPASS_SECRET` or an unprotected URL
+- verified PR #3 docs-refresh head `4a06840023b93aa5431785480e0451f1135edfc4` passed GitHub Web rails; Vercel was blocked by account build-rate limiting, so that head has no fresh preview-deploy evidence
+- surfaced agent-output review badges on task cards so review state is visible from scan views before opening detail
+- added sidebar Agent Review navigation that deep-links to `/all?review=needs_review` with a live review-queue count
+- added a copyable Agent operating brief to Connect AI setup so external clients get bounded-write, trace-metadata, note-first, and no-side-effect instructions alongside the MCP/OpenAPI config
+- verified PR #3 inspected product head `5f26355ff496388096cf65a0cfd710718995fb33` passed GitHub Web rails and Vercel preview deployment at `https://ph-nexdo-git-codex-launch-rea-42bdec-nathan-happywpcos-projects.vercel.app`; remote route smoke remained blocked by Vercel Deployment Protection without `VERCEL_AUTOMATION_BYPASS_SECRET` or an unprotected URL
+- aligned the Today sidebar badge with the Today focus list so undated active tasks count the same way they appear in the daily workspace
+- aligned daily briefing, provider briefing inputs, local heuristic briefings, and due-task reminders on the same active-task definition so cancelled work does not inflate focus counts
+- verified PR #3 Web rails and a Vercel preview deployment after the route-smoke rail; later PR heads can still be Vercel rate-limited
+- added `npm run smoke:routes` and wired it into the launch smoke so preview/production route rendering is checked at desktop and mobile widths
+- expanded route smoke coverage to include password-reset auth routes, not only login/signup
+- kept password-reset recovery links bound to the serving origin before falling back to configured app URL, and trimmed submitted reset emails before provider calls
+- moved import preview cap warnings into a shared helper with local coverage for demo caps and Free-plan near-limit warning copy
+- centralized executable AI action types in `lib/task-actions.ts` so task cards, task detail, authenticated execution, and agent-output history share the same research/draft/prep contract
+- added regression coverage that `manual` and `remind` tasks stay non-executable and that reminder tasks do not expose AI-agent controls in the rendered workspace
+- refreshed README, launch plan, roadmap, and completion audit verification summaries for the then-current 89-test local rail
+- added task-detail notes backed by demo localStorage and authenticated owned-task note routes for human decisions, links, and future agent handoff context
+- added regression coverage for demo task note save/reload behavior and task-note route validation/ownership rails
+- refreshed repo-facing verification summaries for the then-current 91-test local rail
+- added MCP/ChatGPT Actions `add_task_note` so external agents can append bounded, human-reviewable notes to owned tasks without changing task status
+- allowed MCP/ChatGPT Actions `add_task_note` to mark bounded external-agent findings as `agent_result` notes while keeping browser note metadata service-owned
+- made MCP `get_task` return recent task notes for agent context and expanded local handler/OpenAPI/action coverage for note append/readback behavior
+- expanded `npm run smoke:mcp -- --write` to verify JSON-RPC and ChatGPT Actions task-note appends plus note audit rows when `--audit` is enabled
+- refreshed repo-facing verification summaries for the then-current 92-test local rail
+- added `npm run smoke:app` to verify authenticated app-cookie task list/create/update/delete and task-note validation/create/readback with disposable Supabase data
+- wired `npm run smoke:app` into the launch smoke between Supabase and OpenAI provider checks
+- refreshed repo-facing verification summaries for the then-current 95-test local rail
+- added dependency audit to the GitHub Actions Web rails and source coverage so CI matches the documented launch/deploy checklist
+- verified PR #3 Web rails and Vercel preview deployment on recent checked heads; later heads still need fresh PR-check evidence
+- added a paid-key handoff from Settings > API to the Connect AI setup page so generated API keys lead directly into MCP/ChatGPT Actions setup
+- added `.env.production.local.example` so preview/production launch smokes have a concrete env template separate from no-provider local development
+- added demo smoke coverage for the Cmd/Ctrl+K task-capture shortcut and made the shortcut case-insensitive so Playwright `Control+K` focuses capture reliably
+- persisted MCP `complete_task` source-agent trace metadata onto the completed task row so agent-completed work remains visible in human task surfaces
+- added rendered Done-page coverage that agent-completed demo tasks expose trace metadata on cards and in task detail
+- tightened `npm run smoke:mcp -- --write` so real endpoint verification checks `complete_task` returns persisted source-agent trace fields
+- added a labeled task-capture submit button and demo smoke coverage for click-submit behavior
+- fixed deterministic fallback parsing so relative-date phrases such as `by tomorrow` and `due today` do not leave dangling connector words in task titles
+- refreshed repo-facing verification summaries for the latest 101-test local rail
+- strengthened Connect AI connection testing so pasted full keys must initialize MCP and return available tools through `tools/list`
+- expanded `npm run smoke:app` so real app-session verification covers seeded agent-review validation and save behavior
+- expanded `npm run smoke:stripe -- --write --webhook` so protected-preview runs use Vercel bypass headers and verify authenticated checkout/portal app routes
+- expanded OpenAI app-route and MCP provider smokes so protected-preview launch checks use Vercel bypass headers when configured
+- hardened Stripe `invoice.payment_failed` handling so failed payments downgrade entitlements to Free and the webhook smoke verifies the downgrade
+- normalized Stripe webhook customer IDs across string and expanded-object event shapes before entitlement updates
+- hardened Stripe webhook idempotency so failed event-record inserts return an error for Stripe retry, and checkout completion handles expanded subscription objects
+- aligned MCP `update_task`, ChatGPT Actions OpenAPI, and local handler coverage so nullable due-date/context clears are advertised and `external_ref` requires `source_agent_id` for traceable updates
+- hardened MCP execution so agent action audit rows are created before tool handlers run, blocking unaudited task mutations when `agent_action_events` cannot be written
+
+## Completed 2026-05-16
+- read and updated the repo-level agent context and all existing Markdown/text operating files
+- added a project README and Monday launch plan
+- documented the minimum MVP path for human users and AI-agent users in `docs/MVP.md`
+- added `docs/COMPLETION_AUDIT.md` to map the active goal to evidence and remaining gaps
+- added deployment rails and an environment preflight verifier
+- aligned the env verifier with runtime placeholder-risk checks and documented smoke-only MCP API-key variables
+- centralized runtime placeholder-risk checks for Supabase, OpenAI, Stripe, login demo-mode detection, and checkout price validation
+- made Supabase client, server, middleware, and login demo-mode checks reject placeholder anon/service keys, not only placeholder URLs
+- added a Supabase provider smoke script for schema, auth/profile trigger, RLS task CRUD, public isolation, agent audit verification, quota increments, quota no-op behavior, and rate-limit allow/block behavior
+- added an OpenAI provider smoke script for JSON-mode parse, prioritization, briefing, and prep execution checks
+- aligned app OpenAI helpers with the `OPENAI_MODEL` smoke/env contract and placeholder-key fallback behavior
+- added a Stripe provider smoke script for account, price, Checkout, and Customer Portal configuration checks
+- added an authenticated MCP smoke script for real API-key verification
+- expanded MCP smoke coverage to verify read-only scoped API keys hide and deny write tools when `NEXDO_READONLY_API_KEY` is provided
+- exposed MCP create/update metadata for agent-created task traceability
+- added bounded MCP tool input validation and made MCP `create_task` consume task-create quota
+- aligned MCP `search_tasks` with its advertised contract by searching task metadata
+- added scoped API key permissions, MCP scope filtering/enforcement, and an `agent_action_events` audit trail migration
+- gated API-key generation and MCP API-key validation to Power/team profiles so API access matches pricing truth
+- wired settings tab query parameters so upgrade links such as `/settings?tab=billing` open the intended billing tab
+- pointed Stripe checkout and portal return URLs at the billing settings tab
+- rate-limited API key rotation for scoped MCP/API keys
+- moved generated MCP/API keys to hashed storage with one-time reveal, key hints, and legacy raw-key migration fallback
+- narrowed browser-visible profile columns and direct profile self-updates so authenticated clients cannot read key hashes/Stripe IDs or self-change billing, quota, Stripe, or API-key state
+- added profile content constraints so direct browser profile updates cannot bypass name and timezone bounds, and trimmed/validated signup names before profile creation
+- revoked direct browser profile inserts so missing profile rows cannot be self-created with spoofed entitlement, API-key, Stripe, or quota state
+- kept Stripe webhook idempotency records service-owned so browser clients cannot read or spoof processed billing events
+- kept usage-event mutations and rate-limit buckets service-owned so browser clients cannot spoof quota history or inspect/reset rate gates
+- kept cached daily briefing writes service-owned so browser clients cannot spoof provider-generated briefing cache rows
+- made the MCP settings tool list reflect the current API key scopes
+- made the MCP settings setup flow prerequisite-aware so free/no-key profiles cannot test a connection and users are told to use the full one-time key, not the stored key hint
+- added an MCP settings activity list backed by `/api/mcp/events`
+- explicitly filtered `/api/mcp/events` by the authenticated user in addition to RLS
+- added agent write idempotency for `create_task` through `source_agent_id` plus `external_ref`
+- aligned ChatGPT Actions response formatting with a shared helper and OpenAPI error schemas for tool validation and service-unavailable responses
+- opened PR #3 and verified GitHub Actions Web rails plus Vercel preview deployment
+- enabled strict lint/typecheck behavior in production builds
+- hardened profile updates with allowlisted timezone/work-type values and name length normalization
+- added deterministic local task intelligence fallbacks for demo/provider-missing flows
+- added focused regression coverage for deterministic local task parsing, prioritization, briefing, and bounded execution fallbacks
+- refreshed logged-out daily briefings from local demo task state after task capture/import
+- refreshed authenticated daily briefings when task state or user name changes instead of keeping the first briefing stale
+- persisted logged-out demo task changes to localStorage so added/imported/edited/completed/deleted demo tasks survive reloads
+- aligned the exported demo task updater with the main store so non-status edits do not clear completion timestamps
+- persisted logged-out demo profile changes to localStorage so no-auth settings saves do not hit authenticated profile APIs
+- kept demo profiles out of authenticated UI state so no-auth demo mode does not expose sign-out or authenticated profile-save behavior
+- added client-side demo file import parsing for CSV, JSON, and ICS so logged-out visitors can exercise imports without weakening authenticated API import guards
+- added file-import previews with sample task titles and plan/cap warnings before tasks are added
+- aligned due-today task filters, demo seed dates, notification delivery, MCP due-today filtering, and imported calendar dates on local calendar keys instead of UTC day strings
+- added reviewable agent output history with verification status and notes for bounded research/draft/prep task execution
+- added representative import parser coverage for Todoist, CSV, ICS, Trello JSON, Things-style JSON, and invalid JSON exports
+- prevented authenticated task-capture save failures from creating local-only demo tasks; failed saves now restore the input and surface an error
+- prevented stale authenticated sessions from falling through to local demo task creation when Supabase returns no active user during capture
+- moved AI route body validation before rate-limit consumption for parse, prioritize, and briefing requests
+- sanitized prioritization and briefing task arrays before rate-limit consumption and AI provider/fallback execution
+- validated and bounded OpenAI JSON responses before parsed tasks, prioritization, briefings, or agent outputs are returned or saved
+- hardened task mutation routes with allowlisted PATCH fields and owned-delete 404 handling
+- made Done-page bulk deletion restore failed authenticated deletes locally and show a visible error
+- made task detail editing functional for title, context, due date, priority, action type, estimate, people, and tags
+- rolled back failed authenticated task edits/deletes and surfaced visible task-store error notifications instead of console-only failures
+- added focused helper coverage for AI task input validation, API-key scope mapping, quota response payloads, and rate-limit response headers
+- kept launch controls backed by real behavior by making appearance/notification settings functional and removing unbacked pricing controls until provider configuration exists
+- aligned the Connect AI setup page with the Power-plan API access gate
+- surfaced settings profile/API-key failures in the UI and refreshed local profile state after authenticated saves
+- hardened authenticated agent execution so the server runs only owned executable task records and persists output
+- hardened agent execution quota ordering so output is not saved or returned if usage recording fails
+- fixed optimistic task updates so agent-output edits do not accidentally clear `completed_at`
+- enforced monthly task quotas across CSV, JSON, ICS, Todoist, Google Tasks, and Microsoft To Do imports
+- moved CSV, JSON, and ICS import auth/config checks before file or body parsing
+- made `agent_output` server-managed so generic task PATCH requests cannot spoof agent results
+- added a quota cleanup migration so usage read probes do not write zero-quantity audit events
+- removed the unbacked annual pricing toggle until annual Stripe prices exist
+- hardened Stripe checkout so clients can only request server-known `pro` or `power` plans and cannot override price IDs
+- hardened Stripe webhooks so unknown price IDs do not grant paid-tier access by default
+- added Stripe price-entitlement regression coverage so missing, placeholder, or unknown price IDs cannot map to paid tiers
+- added Playwright smoke coverage for the logged-out core product path
+- added Playwright smoke coverage for All Tasks search/filtering, Upcoming grouping, and Done clear/reload lifecycle in demo mode
+- added Playwright smoke coverage for OpenAPI action schema, MCP/action auth failures, and action CORS headers
+- added focused DB-backed MCP tool handler and API-key validation coverage for owned reads, search, briefing, create idempotency, quota ordering, mutations, audit logging, hashed-key lookup, legacy-key migration, and paid-plan gating
+- made the ChatGPT Actions OpenAPI spec emit the serving request origin when `NEXT_PUBLIC_APP_URL` is not configured
+- added GitHub Actions verification for install, lint, typecheck, build, and Playwright smoke testing
+- documented local development and production setup sequences in `docs/DEPLOYMENT.md`
+- hardened authenticated task creation with explicit validation/normalization before quota consumption
+- upgraded to Next.js 16 and ESLint 9 flat config
+- remediated the dependency audit to 0 vulnerabilities with a PostCSS override
+- moved the framework request hook from `middleware.ts` to the Next 16 `proxy.ts` convention
+- fixed mobile app startup so the navigation drawer no longer covers the main task screen by default
+- added real persisted dark/light appearance support before reintroducing theme controls
+- added real local browser due-task reminders before reintroducing notification controls
+- made local browser due-task reminders order due-today work by due time before priority and show due time in today's reminder body
+- clarified the first revenue wedge around founder/operator AI power users, with agent interoperability as the differentiating Power-user layer instead of the only front-door promise
+- aligned the landing-page draft with the founder/operator AI-power-user wedge while keeping the demo CTA and bounded-AI guardrails
+- tightened MCP and ChatGPT Actions descriptions around bounded, human-reviewable task access, due-time parsing, and recent task-note context
+- tightened launch-facing copy away from open-ended autonomy, unverified traction, and unverified enterprise-security claims
+- verified `npm ci`, `npm run lint`, `npm run typecheck`, `npm run build`, and `npm run test:e2e` locally
+
 ## High priority
-- verify Nexdo repo, branch, and deploy truth against the portfolio standard
-- document the minimum real MVP path for active execution
-- create a clean product framing that distinguishes Nexdo from generic AI task apps
-- map the first meaningful execution tasks once repo/deploy truth is verified
+- configure and verify the real production deploy target
+- provide `VERCEL_AUTOMATION_BYPASS_SECRET` locally or use an unprotected preview URL so remote route smoke can verify the latest Vercel preview instead of stopping at Vercel Deployment Protection
+- run `npm run smoke:supabase -- --write` against a real Supabase project after applying migrations, including hashed API-key columns, profile column read/update grants, profile insert/content-bound denials, direct task/task-relationship/task-note column-grant denials, audit-event privacy, Stripe event record privacy/write denial, usage-event mutation denial, rate-limit bucket privacy, daily briefing cache write denial, and agent external-ref uniqueness
+- run `npm run smoke:app` with real Supabase env and the target app URL to verify authenticated app task CRUD, task-note routes, and agent-review persistence
+- run `npm run smoke:openai -- --app` with real OpenAI, Supabase, and target app env
+- run `npm run smoke:stripe -- --write --webhook` with Stripe test-mode keys and target Supabase/app env to verify authenticated checkout, portal, webhook events, quota plan-state boundaries, authenticated task-create quota behavior, and idempotency
+- run `npm run smoke:launch -- --env=.env.production.local --url=<preview-url> --technical-only` once real provider env is available
+- smoke test auth, profile creation, task CRUD, demo-mode fallback, and app navigation
+- smoke test OpenAI task parse, prioritization, daily briefing, and agent execution with real env
+- smoke test authenticated agent execution against an owned Supabase task after provider env is configured
+- smoke test Stripe checkout, portal, webhook idempotency, and plan/quota updates in test mode
+- smoke test MCP JSON-RPC and ChatGPT Actions OpenAPI/API-key flow
+- smoke test authenticated MCP tool execution against real task data
+- smoke test MCP `create_task` idempotency replay against real task data
+- smoke test MCP `add_task_note` and `get_task` note readback against real task data
+- smoke test scoped MCP key behavior and `agent_action_events` writes against a real Supabase project with `npm run smoke:mcp -- --provision --write --audit`
+- complete Quill/founder review of `app/(marketing)/page.tsx` before public launch
 
 ## Medium priority
-- identify the fastest revenue angle for an AI-native task manager in this portfolio context
-- tighten landing/waitlist language around the clearest user promise
-- clarify whether Nexdo should lead with founder/operator use case or broader team use case
+- validate the founder/operator AI-power-user wedge with 5 to 10 design partners
+- tighten landing/waitlist language around the founder/operator execution promise after Quill/founder review
+- verify import quota behavior against a real Supabase profile near the monthly task limit
 
 ## Low priority
 - explore broader feature sets before MVP truth is nailed down
 - add polish/theory work that does not move execution closer
+- expand unsupported OAuth imports before core import and task flows are verified
 
 ## Research / open questions
-- what is the strongest differentiated workflow for Nexdo?
-- what exact user segment should feel the first pull?
-- what minimum product behavior would make Nexdo clearly better than a standard task manager?
+- which founder/operator subsegment feels the first pull strongest?
+- which bounded execution output creates the strongest early value moment?
+- what proof is needed before MCP/ChatGPT Actions should become a front-door marketing claim?

@@ -12,6 +12,17 @@ export interface QuotaResult {
   reason?: string
 }
 
+const QUOTA_SERVICE_FAILURE_REASONS = new Set([
+  'Failed to record usage',
+  'Service unavailable',
+  'No profile',
+])
+
+function normalizeQuantity(quantity: number): number {
+  if (!Number.isFinite(quantity)) return 1
+  return Math.max(1, Math.ceil(quantity))
+}
+
 /**
  * Look up the current usage for the user, performing a lazy monthly reset
  * on the profile if we've crossed a billing-period boundary.
@@ -26,7 +37,6 @@ export async function getUsage(userId: string): Promise<{
 
   // Use rpc to reset-then-read atomically; increment_usage with quantity=0
   // performs the month-boundary reset without consuming budget.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any).rpc('increment_usage', {
     p_user_id: userId,
     p_event_type: 'task_create', // type is required but quantity=0 is a no-op counter-wise
@@ -35,7 +45,6 @@ export async function getUsage(userId: string): Promise<{
 
   if (error || !data || !data[0]) {
     // Fall back to a direct read if RPC isn't available (dev/migration race).
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: profile } = await (supabase as any)
       .from('profiles')
       .select('subscription_tier, task_count_this_month, agent_executions_this_month')
@@ -48,8 +57,6 @@ export async function getUsage(userId: string): Promise<{
       agent_executions_this_month: profile.agent_executions_this_month ?? 0,
     }
   }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: profile } = await (supabase as any)
     .from('profiles')
     .select('subscription_tier')
@@ -69,13 +76,15 @@ export async function getUsage(userId: string): Promise<{
  */
 export async function checkQuota(
   userId: string,
-  kind: QuotaKind
+  kind: QuotaKind,
+  quantity = 1
 ): Promise<QuotaResult> {
   const usage = await getUsage(userId)
   if (!usage) {
     return { allowed: false, limit: 0, used: 0, tier: 'free', reason: 'No profile' }
   }
 
+  const requested = normalizeQuantity(quantity)
   const plan = PLAN_LIMITS[usage.tier]
   const limit =
     kind === 'task_create' ? plan.tasks_per_month : (plan as { agent_executions_per_month: number }).agent_executions_per_month
@@ -85,7 +94,8 @@ export async function checkQuota(
   // -1 means unlimited (Pro/Power/Team).
   if (limit === -1) return { allowed: true, limit: -1, used, tier: usage.tier }
 
-  if (used >= limit) {
+  if (used + requested > limit) {
+    const remaining = Math.max(limit - used, 0)
     return {
       allowed: false,
       limit,
@@ -93,7 +103,9 @@ export async function checkQuota(
       tier: usage.tier,
       reason:
         kind === 'task_create'
-          ? `You've reached your ${limit}-task monthly limit on the ${usage.tier} plan.`
+          ? requested === 1
+            ? `You've reached your ${limit}-task monthly limit on the ${usage.tier} plan.`
+            : `This import has ${requested} tasks, but you only have ${remaining} task slots left this month on the ${usage.tier} plan.`
           : `You've used all ${limit} agent executions this month on the ${usage.tier} plan.`,
     }
   }
@@ -108,21 +120,21 @@ export async function checkQuota(
  */
 export async function consumeQuota(
   userId: string,
-  kind: QuotaKind
+  kind: QuotaKind,
+  quantity = 1
 ): Promise<QuotaResult> {
-  const pre = await checkQuota(userId, kind)
+  const requested = normalizeQuantity(quantity)
+  const pre = await checkQuota(userId, kind, requested)
   if (!pre.allowed) return pre
 
   const supabase = await createServiceClient()
   if (!supabase) {
     return { ...pre, allowed: false, reason: 'Service unavailable' }
   }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await (supabase as any).rpc('increment_usage', {
     p_user_id: userId,
     p_event_type: kind,
-    p_quantity: 1,
+    p_quantity: requested,
   })
 
   if (error) {
@@ -130,7 +142,7 @@ export async function consumeQuota(
     return { ...pre, allowed: false, reason: 'Failed to record usage' }
   }
 
-  return { ...pre, used: pre.used + 1 }
+  return { ...pre, used: pre.used + requested }
 }
 
 /** Shape quota responses sent to clients. */
@@ -143,4 +155,11 @@ export function quotaExceededResponse(result: QuotaResult) {
     tier: result.tier,
     upgrade_url: '/settings?tab=billing',
   }
+}
+
+/** Map quota denials to a client-facing status code. */
+export function quotaFailureStatus(result: QuotaResult): 402 | 500 {
+  return result.reason && QUOTA_SERVICE_FAILURE_REASONS.has(result.reason)
+    ? 500
+    : 402
 }

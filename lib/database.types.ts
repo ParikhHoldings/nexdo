@@ -28,6 +28,10 @@ export interface Database {
           subscription_tier: SubscriptionTier
           stripe_customer_id: string | null
           api_key: string | null
+          api_key_hash: string | null
+          api_key_hint: string | null
+          api_key_scopes: string[]
+          api_key_last_used_at: string | null
           task_count_this_month: number
           agent_executions_this_month: number
           created_at: string
@@ -41,6 +45,10 @@ export interface Database {
           subscription_tier?: SubscriptionTier
           stripe_customer_id?: string | null
           api_key?: string | null
+          api_key_hash?: string | null
+          api_key_hint?: string | null
+          api_key_scopes?: string[]
+          api_key_last_used_at?: string | null
           task_count_this_month?: number
           agent_executions_this_month?: number
           created_at?: string
@@ -54,6 +62,10 @@ export interface Database {
           subscription_tier?: SubscriptionTier
           stripe_customer_id?: string | null
           api_key?: string | null
+          api_key_hash?: string | null
+          api_key_hint?: string | null
+          api_key_scopes?: string[]
+          api_key_last_used_at?: string | null
           task_count_this_month?: number
           agent_executions_this_month?: number
           created_at?: string
@@ -193,6 +205,47 @@ export interface Database {
           created_at?: string
         }
       }
+      agent_action_events: {
+        Row: {
+          id: string
+          user_id: string
+          tool_name: string
+          source_agent_id: string | null
+          external_ref: string | null
+          ingestion_intent: IngestionIntent | null
+          metadata: Json | null
+          success: boolean
+          error: string | null
+          duration_ms: number | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          tool_name: string
+          source_agent_id?: string | null
+          external_ref?: string | null
+          ingestion_intent?: IngestionIntent | null
+          metadata?: Json | null
+          success?: boolean
+          error?: string | null
+          duration_ms?: number | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          tool_name?: string
+          source_agent_id?: string | null
+          external_ref?: string | null
+          ingestion_intent?: IngestionIntent | null
+          metadata?: Json | null
+          success?: boolean
+          error?: string | null
+          duration_ms?: number | null
+          created_at?: string
+        }
+      }
     }
   }
 }
@@ -204,11 +257,13 @@ export type TaskInsert = Database['public']['Tables']['tasks']['Insert']
 export type TaskUpdate = Database['public']['Tables']['tasks']['Update']
 export type TaskNote = Database['public']['Tables']['task_notes']['Row']
 export type DailyBriefing = Database['public']['Tables']['daily_briefings']['Row']
+export type AgentActionEvent = Database['public']['Tables']['agent_action_events']['Row']
 
 // AI Response types
 export interface ParsedTask {
   title: string
   due_date: string | null
+  due_time: string | null
   priority: TaskPriority
   context: string | null
   people: string[]

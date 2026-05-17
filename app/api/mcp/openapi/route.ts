@@ -1,21 +1,46 @@
 import { NextResponse } from 'next/server'
+import { isUsableEnv } from '@/lib/env'
 
-// Resolved at request time so preview deploys and prod share one spec.
-const SERVER_URL = (
-  process.env.NEXT_PUBLIC_APP_URL || 'https://nexdo.ai'
-).replace(/\/$/, '')
+function resolveServerUrl(request: Request): string {
+  const configuredUrl = process.env.NEXT_PUBLIC_APP_URL
+  if (isUsableEnv(configuredUrl)) {
+    return configuredUrl.replace(/\/$/, '')
+  }
+
+  return new URL(request.url).origin
+}
+
+function errorResponse(description: string) {
+  return {
+    description,
+    content: {
+      'application/json': {
+        schema: { $ref: '#/components/schemas/ErrorResponse' },
+      },
+    },
+  }
+}
+
+const actionErrorResponses = {
+  '400': errorResponse('Tool validation or execution error'),
+  '401': errorResponse('Unauthorized'),
+  '403': errorResponse('API key missing the required scope'),
+  '500': errorResponse('Server error'),
+  '503': errorResponse('Service unavailable'),
+}
 
 // OpenAPI 3.0 spec for ChatGPT Actions
 const openApiSpec = {
   openapi: '3.0.0',
   info: {
     title: 'Nexdo API',
-    description: 'AI-powered task management. Create, update, complete, and search tasks using natural language.',
+    description:
+      'Bounded, human-reviewable task access for Nexdo. Create, update, complete, note, brief, and search structured tasks with scoped API keys.',
     version: '1.0.0',
   },
   servers: [
     {
-      url: SERVER_URL,
+      url: 'https://nexdo.ai',
       description: 'Nexdo API',
     },
   ],
@@ -34,7 +59,7 @@ const openApiSpec = {
                 properties: {
                   status: {
                     type: 'string',
-                    enum: ['todo', 'in_progress', 'waiting', 'done'],
+                    enum: ['todo', 'in_progress', 'waiting', 'done', 'cancelled'],
                     description: 'Filter by task status',
                   },
                   due_today: {
@@ -69,8 +94,7 @@ const openApiSpec = {
               },
             },
           },
-          '401': { description: 'Unauthorized' },
-          '500': { description: 'Server error' },
+          ...actionErrorResponses,
         },
         security: [{ BearerAuth: [] }],
       },
@@ -79,7 +103,8 @@ const openApiSpec = {
       post: {
         operationId: 'createTask',
         summary: 'Create a new task',
-        description: 'Create a new task using natural language. The input will be parsed to extract title, due date, priority, context, people, and tags automatically.',
+        description:
+          'Create a new task using natural language. The input will be parsed to extract title, due date, due time, priority, context, people, and tags automatically.',
         requestBody: {
           required: true,
           content: {
@@ -90,7 +115,24 @@ const openApiSpec = {
                 properties: {
                   input: {
                     type: 'string',
+                    maxLength: 2000,
                     description: 'Natural language task description (e.g., "Call John about the project tomorrow at 2pm - high priority")',
+                  },
+                  source_agent_id: {
+                    type: 'string',
+                    maxLength: 160,
+                    description: 'Optional stable identifier for the agent creating the task',
+                  },
+                  external_ref: {
+                    type: 'string',
+                    maxLength: 160,
+                    description:
+                      'Optional idempotency/reference id from the calling agent system. Requires source_agent_id; replays with the same source_agent_id and external_ref return the existing task.',
+                  },
+                  agent_metadata: {
+                    type: 'object',
+                    additionalProperties: true,
+                    description: 'Optional structured metadata from the calling agent',
                   },
                 },
               },
@@ -111,8 +153,7 @@ const openApiSpec = {
               },
             },
           },
-          '401': { description: 'Unauthorized' },
-          '500': { description: 'Server error' },
+          ...actionErrorResponses,
         },
         security: [{ BearerAuth: [] }],
       },
@@ -134,6 +175,27 @@ const openApiSpec = {
                     type: 'string',
                     description: 'The ID of the task to complete',
                   },
+                  source_agent_id: {
+                    type: 'string',
+                    maxLength: 160,
+                    description: 'Optional stable identifier for the agent completing the task',
+                  },
+                  external_ref: {
+                    type: 'string',
+                    maxLength: 160,
+                    description:
+                      'Optional reference id from the calling agent system for audit traceability. Requires source_agent_id.',
+                  },
+                  ingestion_intent: {
+                    type: 'string',
+                    enum: ['create', 'update', 'complete', 'auto'],
+                    description: 'How the agent intended this task mutation to be interpreted',
+                  },
+                  agent_metadata: {
+                    type: 'object',
+                    additionalProperties: true,
+                    description: 'Optional structured metadata from the calling agent',
+                  },
                 },
               },
             },
@@ -153,8 +215,7 @@ const openApiSpec = {
               },
             },
           },
-          '401': { description: 'Unauthorized' },
-          '500': { description: 'Server error' },
+          ...actionErrorResponses,
         },
         security: [{ BearerAuth: [] }],
       },
@@ -178,6 +239,7 @@ const openApiSpec = {
                   },
                   title: {
                     type: 'string',
+                    maxLength: 500,
                     description: 'New title for the task',
                   },
                   priority: {
@@ -188,16 +250,89 @@ const openApiSpec = {
                   due_date: {
                     type: 'string',
                     format: 'date',
-                    description: 'New due date in YYYY-MM-DD format',
+                    nullable: true,
+                    description: 'New due date in YYYY-MM-DD format, or null to clear it',
+                  },
+                  due_time: {
+                    type: 'string',
+                    nullable: true,
+                    description: 'New due time in HH:MM or HH:MM:SS format, or null to clear it',
                   },
                   status: {
                     type: 'string',
-                    enum: ['todo', 'in_progress', 'waiting', 'done'],
+                    enum: ['todo', 'in_progress', 'waiting', 'done', 'cancelled'],
                     description: 'New status',
                   },
                   context: {
                     type: 'string',
-                    description: 'Additional context or notes about the task',
+                    maxLength: 4000,
+                    nullable: true,
+                    description: 'Additional context or notes about the task, or null to clear it',
+                  },
+                  action_type: {
+                    type: 'string',
+                    enum: ['manual', 'research', 'draft', 'prep', 'remind'],
+                    description: 'Kind of work this task needs',
+                  },
+                  estimated_minutes: {
+                    type: 'integer',
+                    minimum: 0,
+                    maximum: 10080,
+                    nullable: true,
+                    description: 'Estimated effort in minutes, or null to clear it',
+                  },
+                  energy_level: {
+                    type: 'string',
+                    enum: ['deep', 'light', 'quick'],
+                    nullable: true,
+                    description: 'Energy level needed for the task, or null to clear it',
+                  },
+                  people: {
+                    type: 'array',
+                    items: { type: 'string', maxLength: 120 },
+                    maxItems: 50,
+                    nullable: true,
+                    description: 'People connected to this task, or null to clear the list',
+                  },
+                  tags: {
+                    type: 'array',
+                    items: { type: 'string', maxLength: 120 },
+                    maxItems: 50,
+                    nullable: true,
+                    description: 'Tags for this task, or null to clear the list',
+                  },
+                  parent_task_id: {
+                    type: 'string',
+                    nullable: true,
+                    description: 'Owned parent task id, or null to clear it',
+                  },
+                  related_task_ids: {
+                    type: 'array',
+                    items: { type: 'string' },
+                    maxItems: 20,
+                    nullable: true,
+                    description: 'Owned related task ids, or null to clear the list',
+                  },
+                  source_agent_id: {
+                    type: 'string',
+                    maxLength: 160,
+                    description: 'Optional stable identifier for the agent updating the task',
+                  },
+                  external_ref: {
+                    type: 'string',
+                    maxLength: 160,
+                    description:
+                      'Optional reference id from the calling agent system for audit traceability. Requires source_agent_id.',
+                  },
+                  ingestion_intent: {
+                    type: 'string',
+                    enum: ['create', 'update', 'complete', 'auto'],
+                    description: 'How the agent intended this task mutation to be interpreted',
+                  },
+                  agent_metadata: {
+                    type: 'object',
+                    additionalProperties: true,
+                    description: 'Optional structured metadata from the calling agent',
                   },
                 },
               },
@@ -218,8 +353,82 @@ const openApiSpec = {
               },
             },
           },
-          '401': { description: 'Unauthorized' },
-          '500': { description: 'Server error' },
+          ...actionErrorResponses,
+        },
+        security: [{ BearerAuth: [] }],
+      },
+    },
+    '/api/mcp/actions/add_task_note': {
+      post: {
+        operationId: 'addTaskNote',
+        summary: 'Add a task note',
+        description:
+          'Append a bounded, human-reviewable note to an owned Nexdo task for decisions, links, handoff context, or agent findings.',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['task_id', 'content'],
+                properties: {
+                  task_id: {
+                    type: 'string',
+                    description: 'The ID of the task to add a note to',
+                  },
+                  content: {
+                    type: 'string',
+                    maxLength: 2000,
+                    description: 'Note content to append to the task',
+                  },
+                  note_type: {
+                    type: 'string',
+                    enum: ['note', 'agent_result'],
+                    description:
+                      'Use note for general handoff context or agent_result for a bounded result produced by the calling agent',
+                  },
+                  source_agent_id: {
+                    type: 'string',
+                    maxLength: 160,
+                    description: 'Optional stable identifier for the agent adding the note',
+                  },
+                  external_ref: {
+                    type: 'string',
+                    maxLength: 160,
+                    description:
+                      'Optional reference id from the calling agent system for audit traceability. Requires source_agent_id.',
+                  },
+                  ingestion_intent: {
+                    type: 'string',
+                    enum: ['create', 'update', 'complete', 'auto'],
+                    description: 'How the agent intended this task note to be interpreted',
+                  },
+                  agent_metadata: {
+                    type: 'object',
+                    additionalProperties: true,
+                    description: 'Optional structured metadata from the calling agent',
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          '200': {
+            description: 'Created task note',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    note: { $ref: '#/components/schemas/TaskNote' },
+                    task: { $ref: '#/components/schemas/Task' },
+                  },
+                },
+              },
+            },
+          },
+          ...actionErrorResponses,
         },
         security: [{ BearerAuth: [] }],
       },
@@ -228,7 +437,8 @@ const openApiSpec = {
       post: {
         operationId: 'getBriefing',
         summary: 'Get daily briefing',
-        description: "Get today's AI-generated briefing including top priorities, overdue tasks, quick wins, and tasks where someone is waiting.",
+        description:
+          "Get today's Nexdo briefing including top priorities, overdue tasks, quick wins, and tasks where someone is waiting.",
         requestBody: {
           required: false,
           content: {
@@ -249,8 +459,7 @@ const openApiSpec = {
               },
             },
           },
-          '401': { description: 'Unauthorized' },
-          '500': { description: 'Server error' },
+          ...actionErrorResponses,
         },
         security: [{ BearerAuth: [] }],
       },
@@ -259,7 +468,8 @@ const openApiSpec = {
       post: {
         operationId: 'searchTasks',
         summary: 'Search tasks',
-        description: 'Search tasks by keyword. Searches in title, context, and tags.',
+        description:
+          'Search tasks by keyword. Searches in title, context, description, people, and tags.',
         requestBody: {
           required: true,
           content: {
@@ -270,6 +480,7 @@ const openApiSpec = {
                 properties: {
                   query: {
                     type: 'string',
+                    maxLength: 200,
                     description: 'Search query',
                   },
                   limit: {
@@ -300,8 +511,7 @@ const openApiSpec = {
               },
             },
           },
-          '401': { description: 'Unauthorized' },
-          '500': { description: 'Server error' },
+          ...actionErrorResponses,
         },
         security: [{ BearerAuth: [] }],
       },
@@ -310,7 +520,8 @@ const openApiSpec = {
       post: {
         operationId: 'getTask',
         summary: 'Get task details',
-        description: 'Get full details of a specific task including agent output.',
+        description:
+          'Get full details of a specific task including agent output and recent task notes.',
         requestBody: {
           required: true,
           content: {
@@ -342,8 +553,7 @@ const openApiSpec = {
               },
             },
           },
-          '401': { description: 'Unauthorized' },
-          '500': { description: 'Server error' },
+          ...actionErrorResponses,
         },
         security: [{ BearerAuth: [] }],
       },
@@ -358,22 +568,37 @@ const openApiSpec = {
       },
     },
     schemas: {
+      ErrorResponse: {
+        type: 'object',
+        required: ['error'],
+        properties: {
+          error: { type: 'string' },
+        },
+      },
       Task: {
         type: 'object',
         properties: {
           id: { type: 'string' },
           title: { type: 'string' },
+          source: {
+            type: 'string',
+            enum: ['manual', 'email', 'voice', 'api', 'agent'],
+          },
           priority: {
             type: 'string',
             enum: ['urgent', 'high', 'medium', 'low'],
           },
           status: {
             type: 'string',
-            enum: ['todo', 'in_progress', 'waiting', 'done'],
+            enum: ['todo', 'in_progress', 'waiting', 'done', 'cancelled'],
           },
           due_date: { type: 'string', format: 'date', nullable: true },
           due_time: { type: 'string', nullable: true },
           context: { type: 'string', nullable: true },
+          action_type: {
+            type: 'string',
+            enum: ['manual', 'research', 'draft', 'prep', 'remind'],
+          },
           tags: {
             type: 'array',
             items: { type: 'string' },
@@ -384,7 +609,26 @@ const openApiSpec = {
             items: { type: 'string' },
             nullable: true,
           },
+          parent_task_id: { type: 'string', nullable: true },
+          related_task_ids: {
+            type: 'array',
+            items: { type: 'string' },
+            nullable: true,
+          },
           estimated_minutes: { type: 'integer', nullable: true },
+          energy_level: {
+            type: 'string',
+            enum: ['deep', 'light', 'quick'],
+            nullable: true,
+          },
+          source_agent_id: { type: 'string', nullable: true },
+          external_ref: { type: 'string', nullable: true },
+          idempotent_replay: { type: 'boolean' },
+          ingestion_intent: {
+            type: 'string',
+            enum: ['create', 'update', 'complete', 'auto'],
+            nullable: true,
+          },
         },
       },
       TaskDetails: {
@@ -395,22 +639,35 @@ const openApiSpec = {
             properties: {
               description: { type: 'string', nullable: true },
               raw_input: { type: 'string', nullable: true },
-              action_type: {
-                type: 'string',
-                enum: ['manual', 'research', 'draft', 'prep', 'remind'],
-              },
               energy_level: {
                 type: 'string',
                 enum: ['deep', 'light', 'quick'],
                 nullable: true,
               },
               agent_output: { type: 'object', nullable: true },
+              notes: {
+                type: 'array',
+                items: { $ref: '#/components/schemas/TaskNote' },
+              },
               completed_at: { type: 'string', format: 'date-time', nullable: true },
               created_at: { type: 'string', format: 'date-time' },
               updated_at: { type: 'string', format: 'date-time' },
             },
           },
         ],
+      },
+      TaskNote: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          task_id: { type: 'string' },
+          content: { type: 'string' },
+          note_type: {
+            type: 'string',
+            enum: ['note', 'agent_result', 'link', 'file'],
+          },
+          created_at: { type: 'string', format: 'date-time' },
+        },
       },
       Briefing: {
         type: 'object',
@@ -470,8 +727,16 @@ const openApiSpec = {
 // ChatGPT fetches the OpenAPI spec from a browser context, so CORS must
 // permit the request. We keep this public (the spec is not sensitive),
 // but tighten CORS on the action endpoints themselves separately.
-export async function GET() {
-  return NextResponse.json(openApiSpec, {
+export async function GET(request: Request) {
+  return NextResponse.json({
+    ...openApiSpec,
+    servers: [
+      {
+        url: resolveServerUrl(request),
+        description: 'Nexdo API',
+      },
+    ],
+  }, {
     headers: {
       'Content-Type': 'application/json',
       'Access-Control-Allow-Origin': '*',

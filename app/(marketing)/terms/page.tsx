@@ -11,7 +11,7 @@ const sections = [
   },
   {
     title: 'Billing',
-    body: 'Paid plans renew automatically unless cancelled. Billing is processed by Stripe. If a payment fails, paid features may be limited until billing is resolved.',
+    body: 'If you start a paid plan, it renews automatically unless cancelled. Billing is processed by Stripe. If a payment fails, paid features may be limited until billing is resolved.',
   },
   {
     title: 'AI-generated output',

@@ -16,35 +16,48 @@ import type {
   PrepOutput,
   Task,
 } from './database.types'
+import {
+  executeDraftHeuristic,
+  executePrepHeuristic,
+  executeResearchHeuristic,
+  generateBriefingHeuristic,
+  parseTaskHeuristic,
+  prioritizeTasksHeuristic,
+} from './task-intelligence'
+import {
+  parseJsonResponse,
+  validateBriefingContent,
+  validateDraftOutput,
+  validateParsedTask,
+  validatePrepOutput,
+  validatePrioritizedTasks,
+  validateResearchOutput,
+} from './ai-response-validation'
+import { isUsableEnv } from './env'
+import { getLocalDateKey } from './dates'
+import { isActiveTask } from './task-filters'
 
 function getOpenAIClient(): OpenAI | null {
   const apiKey = process.env.OPENAI_API_KEY
-  if (!apiKey || apiKey === '') {
+  if (!isUsableEnv(apiKey)) {
     return null
   }
   return new OpenAI({ apiKey })
 }
 
+function getOpenAIModel(): string {
+  return process.env.OPENAI_MODEL || 'gpt-4o'
+}
+
 export async function parseTaskInput(rawInput: string): Promise<ParsedTask | null> {
   const openai = getOpenAIClient()
   if (!openai) {
-    // Return a simple parsed task when OpenAI is not configured
-    return {
-      title: rawInput.slice(0, 80),
-      due_date: null,
-      priority: 'medium',
-      context: null,
-      people: [],
-      tags: [],
-      action_type: 'manual',
-      estimated_minutes: null,
-      energy_level: null,
-    }
+    return parseTaskHeuristic(rawInput)
   }
 
   try {
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o',
+      model: getOpenAIModel(),
       messages: [
         { role: 'system', content: TASK_PARSE_PROMPT },
         { role: 'user', content: rawInput },
@@ -54,25 +67,20 @@ export async function parseTaskInput(rawInput: string): Promise<ParsedTask | nul
     })
 
     const content = completion.choices[0]?.message?.content
-    if (!content) return null
+    if (!content) return parseTaskHeuristic(rawInput)
 
-    return JSON.parse(content) as ParsedTask
+    const parsed = validateParsedTask(parseJsonResponse(content))
+    return parsed ?? parseTaskHeuristic(rawInput)
   } catch (error) {
     console.error('Error parsing task:', error)
-    return null
+    return parseTaskHeuristic(rawInput)
   }
 }
 
 export async function prioritizeTasks(tasks: Task[]): Promise<PrioritizedTask[] | null> {
   const openai = getOpenAIClient()
   if (!openai) {
-    // Return tasks in their current order with default time blocks
-    return tasks.map((task, index) => ({
-      task_id: task.id,
-      rank: index + 1,
-      reasoning: 'AI prioritization unavailable',
-      time_block: 'morning_deep' as const,
-    }))
+    return prioritizeTasksHeuristic(tasks)
   }
 
   try {
@@ -81,14 +89,17 @@ export async function prioritizeTasks(tasks: Task[]): Promise<PrioritizedTask[] 
       title: t.title,
       priority: t.priority,
       due_date: t.due_date,
+      due_time: t.due_time,
       context: t.context,
       people: t.people,
+      action_type: t.action_type,
       estimated_minutes: t.estimated_minutes,
       energy_level: t.energy_level,
+      tags: t.tags,
     }))
 
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o',
+      model: getOpenAIModel(),
       messages: [
         { role: 'system', content: PRIORITIZE_PROMPT },
         { role: 'user', content: JSON.stringify(tasksSummary) },
@@ -98,14 +109,13 @@ export async function prioritizeTasks(tasks: Task[]): Promise<PrioritizedTask[] 
     })
 
     const content = completion.choices[0]?.message?.content
-    if (!content) return null
+    if (!content) return prioritizeTasksHeuristic(tasks)
 
-    const result = JSON.parse(content)
-    // Handle both array and object with tasks array
-    return Array.isArray(result) ? result : result.tasks || []
+    return validatePrioritizedTasks(parseJsonResponse(content), tasks) ??
+      prioritizeTasksHeuristic(tasks)
   } catch (error) {
     console.error('Error prioritizing tasks:', error)
-    return null
+    return prioritizeTasksHeuristic(tasks)
   }
 }
 
@@ -113,57 +123,35 @@ export async function generateBriefing(
   tasks: Task[],
   userName: string
 ): Promise<BriefingContent | null> {
+  const activeTasks = tasks.filter((task) => isActiveTask(task))
+  if (activeTasks.length === 0) {
+    return generateBriefingHeuristic(activeTasks, userName)
+  }
+
   const openai = getOpenAIClient()
   if (!openai) {
-    // Return a simple briefing when OpenAI is not configured
-    const today = new Date()
-    const hour = today.getHours()
-    const greeting =
-      hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
-
-    return {
-      greeting: `${greeting}, ${userName || 'there'}!`,
-      top_priorities: tasks.slice(0, 3).map((t) => ({
-        task_id: t.id,
-        title: t.title,
-        reasoning: 'Based on task order',
-      })),
-      overdue: [],
-      quick_wins: tasks
-        .filter((t) => t.estimated_minutes && t.estimated_minutes <= 15)
-        .slice(0, 3)
-        .map((t) => ({
-          task_id: t.id,
-          title: t.title,
-          estimated_minutes: t.estimated_minutes || 15,
-        })),
-      someone_waiting: tasks
-        .filter((t) => t.people && t.people.length > 0)
-        .slice(0, 3)
-        .map((t) => ({
-          task_id: t.id,
-          title: t.title,
-          person: t.people?.[0] || '',
-        })),
-      summary: `You have ${tasks.length} tasks to focus on today.`,
-    }
+    return generateBriefingHeuristic(activeTasks, userName)
   }
 
   try {
-    const today = new Date().toISOString().split('T')[0]
-    const tasksSummary = tasks.map((t) => ({
+    const today = getLocalDateKey()
+    const tasksSummary = activeTasks.map((t) => ({
       id: t.id,
       title: t.title,
       priority: t.priority,
       due_date: t.due_date,
+      due_time: t.due_time,
       context: t.context,
       people: t.people,
+      action_type: t.action_type,
       estimated_minutes: t.estimated_minutes,
+      energy_level: t.energy_level,
+      tags: t.tags,
       status: t.status,
     }))
 
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o',
+      model: getOpenAIModel(),
       messages: [
         { role: 'system', content: BRIEFING_PROMPT },
         {
@@ -176,12 +164,13 @@ export async function generateBriefing(
     })
 
     const content = completion.choices[0]?.message?.content
-    if (!content) return null
+    if (!content) return generateBriefingHeuristic(activeTasks, userName)
 
-    return JSON.parse(content) as BriefingContent
+    return validateBriefingContent(parseJsonResponse(content), activeTasks) ??
+      generateBriefingHeuristic(activeTasks, userName)
   } catch (error) {
     console.error('Error generating briefing:', error)
-    return null
+    return generateBriefingHeuristic(activeTasks, userName)
   }
 }
 
@@ -189,11 +178,11 @@ export async function executeResearch(
   task: Task
 ): Promise<ResearchOutput | null> {
   const openai = getOpenAIClient()
-  if (!openai) return null
+  if (!openai) return executeResearchHeuristic(task)
 
   try {
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o',
+      model: getOpenAIModel(),
       messages: [
         { role: 'system', content: RESEARCH_PROMPT },
         {
@@ -206,22 +195,22 @@ export async function executeResearch(
     })
 
     const content = completion.choices[0]?.message?.content
-    if (!content) return null
+    if (!content) return executeResearchHeuristic(task)
 
-    return JSON.parse(content) as ResearchOutput
+    return validateResearchOutput(parseJsonResponse(content)) ?? executeResearchHeuristic(task)
   } catch (error) {
     console.error('Error executing research:', error)
-    return null
+    return executeResearchHeuristic(task)
   }
 }
 
 export async function executeDraft(task: Task): Promise<DraftOutput | null> {
   const openai = getOpenAIClient()
-  if (!openai) return null
+  if (!openai) return executeDraftHeuristic(task)
 
   try {
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o',
+      model: getOpenAIModel(),
       messages: [
         { role: 'system', content: DRAFT_PROMPT },
         {
@@ -234,22 +223,22 @@ export async function executeDraft(task: Task): Promise<DraftOutput | null> {
     })
 
     const content = completion.choices[0]?.message?.content
-    if (!content) return null
+    if (!content) return executeDraftHeuristic(task)
 
-    return JSON.parse(content) as DraftOutput
+    return validateDraftOutput(parseJsonResponse(content)) ?? executeDraftHeuristic(task)
   } catch (error) {
     console.error('Error executing draft:', error)
-    return null
+    return executeDraftHeuristic(task)
   }
 }
 
 export async function executePrep(task: Task): Promise<PrepOutput | null> {
   const openai = getOpenAIClient()
-  if (!openai) return null
+  if (!openai) return executePrepHeuristic(task)
 
   try {
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o',
+      model: getOpenAIModel(),
       messages: [
         { role: 'system', content: PREP_PROMPT },
         {
@@ -262,11 +251,11 @@ export async function executePrep(task: Task): Promise<PrepOutput | null> {
     })
 
     const content = completion.choices[0]?.message?.content
-    if (!content) return null
+    if (!content) return executePrepHeuristic(task)
 
-    return JSON.parse(content) as PrepOutput
+    return validatePrepOutput(parseJsonResponse(content)) ?? executePrepHeuristic(task)
   } catch (error) {
     console.error('Error executing prep:', error)
-    return null
+    return executePrepHeuristic(task)
   }
 }

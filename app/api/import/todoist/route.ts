@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { parseTodoistTask, saveImportedTasks } from '@/lib/importers'
+import { checkImportQuota, recordImportQuota } from '@/lib/import-quota'
 import type { TaskInsert } from '@/lib/database.types'
 
 export async function POST(request: Request) {
@@ -15,8 +16,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
     const userId = user.id
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const dbClient = supabase as any
+    const service = await createServiceClient()
+    if (!service) {
+      return NextResponse.json({ error: 'Database not configured' }, { status: 503 })
+    }
+    const dbClient = service as any
 
     const body = await request.json()
     const { token } = body
@@ -58,8 +62,18 @@ export async function POST(request: Request) {
       parseTodoistTask(task, userId)
     )
 
+    const quotaResponse = await checkImportQuota(userId, tasks.length)
+    if (quotaResponse) return quotaResponse
+
     // Save tasks
     const result = await saveImportedTasks(tasks, dbClient)
+    const quotaRecordResponse = await recordImportQuota(
+      userId,
+      result.imported,
+      result.tasks,
+      dbClient
+    )
+    if (quotaRecordResponse) return quotaRecordResponse
 
     return NextResponse.json({
       imported: result.imported,

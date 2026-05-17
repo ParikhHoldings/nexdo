@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import Link from 'next/link'
 import { Check, Sparkles, Zap, Building2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -10,6 +10,8 @@ interface PricingTableProps {
   currentPlan?: string
   onSelectPlan?: (plan: string) => void
   showCurrentPlan?: boolean
+  planLinks?: Partial<Record<string, string>>
+  planCtaLabels?: Partial<Record<string, string>>
 }
 
 const plans = [
@@ -57,9 +59,9 @@ export function PricingTable({
   currentPlan,
   onSelectPlan,
   showCurrentPlan = true,
+  planLinks = {},
+  planCtaLabels = {},
 }: PricingTableProps) {
-  const [isAnnual, setIsAnnual] = useState(false)
-
   const handleSelect = (planKey: string) => {
     if (onSelectPlan) {
       onSelectPlan(planKey)
@@ -68,52 +70,23 @@ export function PricingTable({
 
   return (
     <div className="w-full max-w-6xl mx-auto">
-      {/* Billing toggle */}
-      <div className="flex items-center justify-center gap-4 mb-8">
-        <span
-          className={cn(
-            'text-sm font-medium transition-colors',
-            !isAnnual ? 'text-zinc-100' : 'text-zinc-500'
-          )}
-        >
-          Monthly
-        </span>
-        <button
-          onClick={() => setIsAnnual(!isAnnual)}
-          className={cn(
-            'relative w-12 h-6 rounded-full transition-colors',
-            isAnnual ? 'bg-accent' : 'bg-zinc-700'
-          )}
-        >
-          <span
-            className={cn(
-              'absolute top-1 w-4 h-4 bg-white rounded-full transition-transform',
-              isAnnual ? 'left-7' : 'left-1'
-            )}
-          />
-        </button>
-        <span
-          className={cn(
-            'text-sm font-medium transition-colors',
-            isAnnual ? 'text-zinc-100' : 'text-zinc-500'
-          )}
-        >
-          Annual
-          <span className="ml-1.5 text-xs text-emerald-400">Save 20%</span>
-        </span>
-      </div>
-
       {/* Plans grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {plans.map((plan) => {
           const Icon = plan.icon
           const isCurrentPlan = showCurrentPlan && currentPlan === plan.key
-          const displayPrice =
-            typeof plan.price === 'number'
-              ? isAnnual && plan.price > 0
-                ? Math.round(plan.price * 0.8)
-                : plan.price
-              : null
+          const displayPrice = typeof plan.price === 'number' ? plan.price : null
+          const ctaLabel = isCurrentPlan
+            ? 'Current Plan'
+            : planCtaLabels[plan.key] || plan.cta || (plan.price === 0 ? 'Get Started' : 'Upgrade')
+          const ctaHref = planLinks[plan.key]
+          const ctaClassName = cn(
+            'inline-flex w-full items-center justify-center rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-zinc-950',
+            plan.popular
+              ? 'bg-accent text-white hover:bg-accent/90 focus:ring-accent'
+              : 'bg-zinc-800 text-zinc-100 hover:bg-zinc-700 focus:ring-zinc-600'
+          )
+          const isExternalHref = ctaHref?.startsWith('mailto:')
 
           return (
             <div
@@ -181,16 +154,26 @@ export function PricingTable({
               </ul>
 
               {/* CTA */}
-              <Button
-                variant={plan.popular ? 'primary' : 'secondary'}
-                className="w-full"
-                onClick={() => handleSelect(plan.key)}
-                disabled={isCurrentPlan}
-              >
-                {isCurrentPlan
-                  ? 'Current Plan'
-                  : plan.cta || (plan.price === 0 ? 'Get Started' : 'Upgrade')}
-              </Button>
+              {ctaHref && !isCurrentPlan ? (
+                isExternalHref ? (
+                  <a href={ctaHref} className={ctaClassName}>
+                    {ctaLabel}
+                  </a>
+                ) : (
+                  <Link href={ctaHref} className={ctaClassName}>
+                    {ctaLabel}
+                  </Link>
+                )
+              ) : (
+                <Button
+                  variant={plan.popular ? 'primary' : 'secondary'}
+                  className="w-full"
+                  onClick={() => handleSelect(plan.key)}
+                  disabled={isCurrentPlan || !onSelectPlan}
+                >
+                  {ctaLabel}
+                </Button>
+              )}
             </div>
           )
         })}

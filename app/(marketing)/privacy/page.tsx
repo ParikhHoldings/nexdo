@@ -7,11 +7,11 @@ const sections = [
   },
   {
     title: 'How we use it',
-    body: 'We use your data to authenticate you, sync your tasks, generate briefings, prioritize work, run requested AI actions, process billing, and improve reliability and security. We do not sell your personal data.',
+    body: 'We use your data to authenticate you, sync your tasks, generate briefings, prioritize work, provide requested bounded AI assistance, process billing, and improve reliability. We do not sell your personal data.',
   },
   {
     title: 'Third-party services',
-    body: 'Nexdo relies on trusted vendors such as Supabase for authentication and database infrastructure, Stripe for billing, and AI model providers for task parsing and agent-style features. Those providers process only what is needed to deliver the requested functionality.',
+    body: 'Nexdo relies on providers such as Supabase for authentication and database infrastructure, Stripe for billing, and AI model providers for task parsing and bounded assistance. Those providers process only what is needed to deliver the requested functionality.',
   },
   {
     title: 'Data retention',
@@ -19,7 +19,7 @@ const sections = [
   },
   {
     title: 'Security',
-    body: 'We use industry-standard safeguards for data in transit and at rest. No system is perfect, but protecting user data is a core operating requirement, not an afterthought.',
+    body: 'We use provider-backed safeguards such as transport security, access controls, and row-level data boundaries where configured. No system is perfect, but protecting user data is a core operating requirement.',
   },
   {
     title: 'Contact',

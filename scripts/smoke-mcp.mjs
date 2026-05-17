@@ -1,0 +1,881 @@
+#!/usr/bin/env node
+
+import { createHash, randomBytes } from 'node:crypto'
+import { createClient } from '@supabase/supabase-js'
+
+const args = new Set(process.argv.slice(2))
+const baseUrlArg = process.argv.find((arg) => arg.startsWith('--url='))
+const baseUrl = (
+  baseUrlArg?.slice('--url='.length) ||
+  process.env.NEXT_PUBLIC_APP_URL ||
+  'http://127.0.0.1:3000'
+).replace(/\/$/, '')
+let apiKey = process.env.NEXDO_API_KEY || process.env.NEXDO_MCP_API_KEY
+let readOnlyApiKey =
+  process.env.NEXDO_READONLY_API_KEY || process.env.NEXDO_MCP_READONLY_API_KEY
+const allowWrite = args.has('--write')
+const requireAudit = args.has('--audit') || process.env.NEXDO_MCP_REQUIRE_AUDIT === '1'
+const provisionKeys = args.has('--provision')
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+const vercelProtectionBypass = process.env.VERCEL_AUTOMATION_BYPASS_SECRET
+
+const requiredReadTools = [
+  'list_tasks',
+  'search_tasks',
+  'get_task',
+  'get_briefing',
+]
+const requiredWriteTools = ['create_task', 'complete_task', 'update_task', 'add_task_note']
+
+if (!apiKey && !provisionKeys) {
+  console.error('Missing NEXDO_API_KEY or NEXDO_MCP_API_KEY.')
+  process.exit(1)
+}
+
+if (provisionKeys && (!supabaseUrl || !supabaseServiceRoleKey)) {
+  console.error('Provisioned MCP smoke requires NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.')
+  process.exit(1)
+}
+
+if (requireAudit && !allowWrite) {
+  console.error('Audit smoke requires --write so there is a disposable agent write to verify.')
+  process.exit(1)
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+function hashApiKey(value) {
+  return createHash('sha256').update(value, 'utf8').digest('hex')
+}
+
+function generateApiKey() {
+  return `nxd_${randomBytes(24).toString('hex')}`
+}
+
+function apiKeyHint(value) {
+  return `${value.slice(0, 8)}...${value.slice(-4)}`
+}
+
+function appHeaders(headers = {}) {
+  const nextHeaders = { ...headers }
+  if (vercelProtectionBypass) {
+    nextHeaders['x-vercel-protection-bypass'] = vercelProtectionBypass
+    nextHeaders['x-vercel-set-bypass-cookie'] = 'true'
+  }
+  return nextHeaders
+}
+
+async function requestJson(path, body, key = apiKey) {
+  const response = await fetch(`${baseUrl}${path}`, {
+    method: 'POST',
+    headers: appHeaders({
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${key}`,
+    }),
+    body: JSON.stringify(body),
+  })
+
+  const text = await response.text()
+  let data = null
+  try {
+    data = text ? JSON.parse(text) : null
+  } catch {
+    data = { raw: text }
+  }
+
+  return { response, data }
+}
+
+async function getJson(path) {
+  const response = await fetch(`${baseUrl}${path}`, {
+    headers: appHeaders(),
+  })
+  const text = await response.text()
+  let data = null
+  try {
+    data = text ? JSON.parse(text) : null
+  } catch {
+    data = { raw: text }
+  }
+
+  if (!response.ok) {
+    throw new Error(`${path} failed with ${response.status}: ${JSON.stringify(data)}`)
+  }
+
+  return data
+}
+
+async function postJson(path, body, key = apiKey) {
+  const { response, data } = await requestJson(path, body, key)
+
+  if (!response.ok) {
+    throw new Error(`${path} failed with ${response.status}: ${JSON.stringify(data)}`)
+  }
+
+  return data
+}
+
+async function assertMcpSseEndpoint(key = apiKey) {
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 5000)
+  const expectedEndpoint = `${new URL(baseUrl).origin}/api/mcp`
+  let reader = null
+
+  try {
+    const response = await fetch(`${baseUrl}/api/mcp`, {
+      headers: appHeaders({
+        Authorization: `Bearer ${key}`,
+      }),
+      signal: controller.signal,
+    })
+
+    if (!response.ok) {
+      const text = await response.text()
+      throw new Error(`/api/mcp SSE failed with ${response.status}: ${text}`)
+    }
+
+    const contentType = response.headers.get('content-type') || ''
+    if (!contentType.includes('text/event-stream')) {
+      throw new Error(`/api/mcp SSE returned ${contentType || 'no content type'}`)
+    }
+
+    reader = response.body?.getReader()
+    if (!reader) {
+      throw new Error('/api/mcp SSE returned no readable stream')
+    }
+
+    const { value } = await reader.read()
+    const text = new TextDecoder().decode(value)
+    if (!text.includes('event: endpoint') || !text.includes(`data: ${expectedEndpoint}`)) {
+      throw new Error(`/api/mcp SSE endpoint event did not advertise ${expectedEndpoint}: ${text}`)
+    }
+
+    console.log('ok mcp sse endpoint')
+  } finally {
+    clearTimeout(timeout)
+    await reader?.cancel().catch(() => {})
+    controller.abort()
+  }
+}
+
+function assertJsonRpcError(result, label, expectedStatus, expectedMessage) {
+  if (result.response.status !== expectedStatus) {
+    throw new Error(
+      `${label} returned ${result.response.status}, expected ${expectedStatus}: ${JSON.stringify(result.data)}`
+    )
+  }
+
+  if (result.data?.error?.message !== expectedMessage) {
+    throw new Error(
+      `${label} did not report ${expectedMessage}: ${JSON.stringify(result.data)}`
+    )
+  }
+}
+
+function assertActionError(result, label, expectedStatus, expectedMessage) {
+  if (result.response.status !== expectedStatus) {
+    throw new Error(
+      `${label} returned ${result.response.status}, expected ${expectedStatus}: ${JSON.stringify(result.data)}`
+    )
+  }
+
+  if (result.data?.error !== expectedMessage) {
+    throw new Error(
+      `${label} did not report ${expectedMessage}: ${JSON.stringify(result.data)}`
+    )
+  }
+}
+
+async function assertMalformedPayloadGuards(key = apiKey) {
+  assertJsonRpcError(
+    await requestJson('/api/mcp', null, key),
+    'Malformed JSON-RPC body',
+    400,
+    'Invalid JSON-RPC request'
+  )
+
+  assertJsonRpcError(
+    await requestJson(
+      '/api/mcp',
+      {
+        jsonrpc: '2.0',
+        id: 'bad-params',
+        method: 'tools/call',
+        params: null,
+      },
+      key
+    ),
+    'Malformed JSON-RPC tools/call params',
+    400,
+    'Tool call params must be an object'
+  )
+
+  assertJsonRpcError(
+    await requestJson(
+      '/api/mcp',
+      {
+        jsonrpc: '2.0',
+        id: 'bad-arguments',
+        method: 'tools/call',
+        params: {
+          name: 'list_tasks',
+          arguments: [],
+        },
+      },
+      key
+    ),
+    'Malformed JSON-RPC tool arguments',
+    400,
+    'Tool arguments must be a JSON object'
+  )
+
+  assertActionError(
+    await requestJson('/api/mcp/actions/list_tasks', [], key),
+    'Malformed ChatGPT Action body',
+    400,
+    'Request body must be a JSON object'
+  )
+
+  console.log('ok malformed payload guards')
+}
+
+async function rpc(method, params, key = apiKey) {
+  const data = await postJson('/api/mcp', {
+    jsonrpc: '2.0',
+    id: Date.now(),
+    method,
+    params,
+  }, key)
+
+  if (data.error) {
+    throw new Error(`${method} returned JSON-RPC error: ${JSON.stringify(data.error)}`)
+  }
+
+  return data.result
+}
+
+async function rpcNotification(method, params, key = apiKey) {
+  const body = {
+    jsonrpc: '2.0',
+    method,
+  }
+
+  if (params !== undefined) body.params = params
+
+  const { response, data } = await requestJson('/api/mcp', body, key)
+
+  if (response.status !== 204) {
+    throw new Error(
+      `${method} notification returned ${response.status}, expected 204: ${JSON.stringify(data)}`
+    )
+  }
+
+  console.log(`ok ${method} notification`)
+}
+
+function parseToolContent(result) {
+  const text = result?.content?.[0]?.text
+  if (!text) return null
+  return JSON.parse(text)
+}
+
+function createSupabaseAdminClient() {
+  if (!supabaseUrl || !supabaseServiceRoleKey) {
+    throw new Error(
+      'MCP smoke requires NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.'
+    )
+  }
+
+  return createClient(supabaseUrl, supabaseServiceRoleKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  })
+}
+
+function createAuditClient() {
+  if (!requireAudit) return null
+  return createSupabaseAdminClient()
+}
+
+async function createProvisionedProfile(supabase, label, scopes) {
+  const key = generateApiKey()
+  const suffix = `${Date.now()}-${randomBytes(8).toString('hex')}`
+  const email = `nexdo-mcp-${label}-smoke-${suffix}@example.com`
+
+  const { data, error } = await supabase.auth.admin.createUser({
+    email,
+    email_confirm: true,
+    password: randomBytes(24).toString('base64url'),
+    user_metadata: {
+      full_name: `Nexdo MCP ${label} Smoke`,
+    },
+  })
+
+  if (error || !data.user?.id) {
+    throw new Error(`Failed to create MCP ${label} smoke user: ${error?.message ?? 'unknown error'}`)
+  }
+
+  const userId = data.user.id
+
+  try {
+    for (let attempt = 0; attempt < 10; attempt += 1) {
+      const { data: profile, error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          full_name: `Nexdo MCP ${label} Smoke`,
+          subscription_tier: 'power',
+          api_key: null,
+          api_key_hash: hashApiKey(key),
+          api_key_hint: apiKeyHint(key),
+          api_key_scopes: scopes,
+          api_key_last_used_at: null,
+          task_count_this_month: 0,
+          agent_executions_this_month: 0,
+        })
+        .eq('id', userId)
+        .select('id')
+        .maybeSingle()
+
+      if (updateError) {
+        throw new Error(`Failed to prepare MCP ${label} smoke profile: ${updateError.message}`)
+      }
+
+      if (profile?.id) return { userId, key }
+      await sleep(500)
+    }
+
+    throw new Error(`MCP ${label} smoke profile trigger did not create a profile in time`)
+  } catch (error) {
+    await cleanupProvisionedUser(supabase, userId)
+    throw error
+  }
+}
+
+async function provisionSmokeKeys() {
+  if (!provisionKeys) return { supabase: null, users: [] }
+
+  const supabase = createSupabaseAdminClient()
+  const users = []
+
+  try {
+    if (!apiKey) {
+      const full = await createProvisionedProfile(supabase, 'full', [
+        'tasks:read',
+        'tasks:write',
+        'briefing:read',
+      ])
+      apiKey = full.key
+      users.push(full.userId)
+      console.log('ok provision full-access MCP key')
+    }
+
+    if (!readOnlyApiKey) {
+      const readOnly = await createProvisionedProfile(supabase, 'readonly', [
+        'tasks:read',
+        'briefing:read',
+      ])
+      readOnlyApiKey = readOnly.key
+      users.push(readOnly.userId)
+      console.log('ok provision read-only MCP key')
+    }
+
+    return { supabase, users }
+  } catch (error) {
+    await cleanupProvisionedUsers(supabase, users)
+    throw error
+  }
+}
+
+async function cleanupProvisionedUsers(supabase, users) {
+  if (!supabase || users.length === 0) return
+
+  for (const userId of users) {
+    await cleanupProvisionedUser(supabase, userId)
+  }
+}
+
+async function cleanupProvisionedUser(supabase, userId) {
+  const { error: profileError } = await supabase
+    .from('profiles')
+    .delete()
+    .eq('id', userId)
+
+  if (profileError) {
+    console.error(`warning: failed to delete provisioned MCP smoke profile ${userId}`, profileError)
+  }
+
+  const { error: userError } = await supabase.auth.admin.deleteUser(userId)
+  if (userError) {
+    console.error(`warning: failed to delete provisioned MCP smoke auth user ${userId}`, userError)
+  }
+}
+
+async function resolveAuditUserId(supabase) {
+  const apiKeyHash = hashApiKey(apiKey)
+  let { data: profile, error } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('api_key_hash', apiKeyHash)
+    .maybeSingle()
+
+  const missingHashColumn =
+    error?.message?.includes('api_key_hash') &&
+    (error.message.includes('does not exist') || error.message.includes('schema cache'))
+
+  if (missingHashColumn || !profile) {
+    const legacyResult = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('api_key', apiKey)
+      .maybeSingle()
+
+    profile = legacyResult.data
+    error = legacyResult.error
+  }
+
+  if (error) {
+    throw new Error(`Failed to resolve MCP API-key profile for audit smoke: ${error.message}`)
+  }
+  if (!profile?.id) {
+    throw new Error('Could not find a profile for NEXDO_API_KEY while checking audit events.')
+  }
+
+  return profile.id
+}
+
+async function assertAuditEvent(supabase, userId, label, predicate) {
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const { data: events, error } = await supabase
+      .from('agent_action_events')
+      .select('tool_name, source_agent_id, external_ref, success, error, created_at')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(50)
+
+    if (error) {
+      throw new Error(`Failed to load agent_action_events for audit smoke: ${error.message}`)
+    }
+
+    if ((events || []).some(predicate)) {
+      console.log(`ok audit event (${label})`)
+      return
+    }
+
+    await sleep(500)
+  }
+
+  throw new Error(`Missing agent_action_events audit row for ${label}.`)
+}
+
+async function assertReadOnlyKeyScope() {
+  if (!readOnlyApiKey) {
+    console.log('skip read-only scope checks; set NEXDO_READONLY_API_KEY to verify')
+    return
+  }
+
+  await rpc('initialize', undefined, readOnlyApiKey)
+  const readOnlyToolList = await rpc('tools/list', undefined, readOnlyApiKey)
+  const readOnlyToolNames = new Set((readOnlyToolList.tools || []).map((tool) => tool.name))
+
+  for (const tool of requiredReadTools) {
+    if (!readOnlyToolNames.has(tool)) {
+      throw new Error(`Read-only key missing readable tool: ${tool}`)
+    }
+  }
+
+  for (const tool of requiredWriteTools) {
+    if (readOnlyToolNames.has(tool)) {
+      throw new Error(`Read-only key unexpectedly listed write tool: ${tool}`)
+    }
+  }
+
+  const forbiddenRpc = await requestJson(
+    '/api/mcp',
+    {
+      jsonrpc: '2.0',
+      id: 'readonly-write-check',
+      method: 'tools/call',
+      params: {
+        name: 'create_task',
+        arguments: { input: 'Read-only smoke should not create this task' },
+      },
+    },
+    readOnlyApiKey
+  )
+
+  if (forbiddenRpc.response.status !== 403) {
+    throw new Error(`Read-only JSON-RPC write returned ${forbiddenRpc.response.status}, expected 403`)
+  }
+  if (!forbiddenRpc.data?.error?.message?.includes('tasks:write')) {
+    throw new Error('Read-only JSON-RPC write did not report missing tasks:write scope')
+  }
+
+  const forbiddenAction = await requestJson(
+    '/api/mcp/actions/create_task',
+    { input: 'Read-only action smoke should not create this task' },
+    readOnlyApiKey
+  )
+
+  if (forbiddenAction.response.status !== 403) {
+    throw new Error(`Read-only action write returned ${forbiddenAction.response.status}, expected 403`)
+  }
+  if (!forbiddenAction.data?.error?.includes('tasks:write')) {
+    throw new Error('Read-only action write did not report missing tasks:write scope')
+  }
+
+  console.log('ok read-only scoped API key denies writes')
+}
+
+async function main() {
+  console.log(`Smoking MCP at ${baseUrl}`)
+  const provisioned = await provisionSmokeKeys()
+
+  try {
+    const openApi = await getJson('/api/mcp/openapi')
+    if (!openApi.paths?.['/api/mcp/actions/list_tasks']) {
+      throw new Error('OpenAPI spec missing list_tasks action path.')
+    }
+    if (!openApi.paths?.['/api/mcp/actions/add_task_note']) {
+      throw new Error('OpenAPI spec missing add_task_note action path.')
+    }
+    console.log('ok openapi')
+
+    const auditClient = createAuditClient()
+    const auditUserId = auditClient ? await resolveAuditUserId(auditClient) : null
+
+    const initialize = await rpc('initialize')
+    if (initialize.serverInfo?.name !== 'nexdo') {
+      throw new Error('Unexpected MCP server name.')
+    }
+    console.log('ok initialize')
+
+    await rpcNotification('notifications/initialized')
+    await assertMcpSseEndpoint()
+    await assertMalformedPayloadGuards()
+
+    const toolList = await rpc('tools/list')
+    const toolNames = new Set((toolList.tools || []).map((tool) => tool.name))
+    for (const tool of requiredReadTools) {
+      if (!toolNames.has(tool)) throw new Error(`Missing MCP tool: ${tool}`)
+    }
+    if (allowWrite) {
+      for (const tool of requiredWriteTools) {
+        if (!toolNames.has(tool)) throw new Error(`Missing MCP write tool: ${tool}`)
+      }
+    }
+    console.log('ok tools/list')
+
+    const listResult = await rpc('tools/call', {
+      name: 'list_tasks',
+      arguments: { limit: 5 },
+    })
+    const tasks = parseToolContent(listResult)
+    if (!Array.isArray(tasks)) throw new Error('list_tasks did not return an array.')
+    console.log(`ok list_tasks (${tasks.length} returned)`)
+
+    const actionList = await postJson('/api/mcp/actions/list_tasks', { limit: 5 })
+    if (!Array.isArray(actionList.tasks)) {
+      throw new Error('ChatGPT Actions list_tasks did not return a { tasks } array.')
+    }
+    console.log(`ok actions/list_tasks (${actionList.tasks.length} returned)`)
+
+    const searchResult = await rpc('tools/call', {
+      name: 'search_tasks',
+      arguments: { query: 'smoke', limit: 5 },
+    })
+    const searchedTasks = parseToolContent(searchResult)
+    if (!Array.isArray(searchedTasks)) throw new Error('search_tasks did not return an array.')
+    console.log(`ok search_tasks (${searchedTasks.length} returned)`)
+
+    const actionSearch = await postJson('/api/mcp/actions/search_tasks', {
+      query: 'smoke',
+      limit: 5,
+    })
+    if (!Array.isArray(actionSearch.tasks)) {
+      throw new Error('ChatGPT Actions search_tasks did not return a { tasks } array.')
+    }
+    console.log(`ok actions/search_tasks (${actionSearch.tasks.length} returned)`)
+
+    const briefingResult = await rpc('tools/call', {
+      name: 'get_briefing',
+      arguments: {},
+    })
+    const briefing = parseToolContent(briefingResult)
+    if (!briefing || typeof briefing !== 'object' || typeof briefing.summary !== 'string') {
+      throw new Error('get_briefing did not return a briefing object with a summary.')
+    }
+    console.log('ok get_briefing')
+
+    const taskForReadCheck = tasks[0] || searchedTasks[0] || actionList.tasks?.[0]
+    if (taskForReadCheck?.id) {
+      const taskResult = await rpc('tools/call', {
+        name: 'get_task',
+        arguments: { task_id: taskForReadCheck.id },
+      })
+      const task = parseToolContent(taskResult)
+      if (task?.id !== taskForReadCheck.id) {
+        throw new Error('get_task did not return the requested task.')
+      }
+      console.log('ok get_task')
+    } else {
+      console.log('skip get_task read check; no existing task returned')
+    }
+
+    await assertReadOnlyKeyScope()
+
+    if (allowWrite) {
+      const writeStartedAt = Date.now()
+      const title = `MCP smoke test ${new Date().toISOString()}`
+      const sourceAgentId = 'nexdo-smoke'
+      const externalRef = `mcp-smoke-${Date.now()}`
+      const createdResult = await rpc('tools/call', {
+        name: 'create_task',
+        arguments: {
+          input: `${title} today high priority`,
+          source_agent_id: sourceAgentId,
+          external_ref: externalRef,
+        },
+      })
+      const created = parseToolContent(createdResult)
+      if (!created?.id) throw new Error('create_task did not return a task id.')
+      console.log('ok create_task')
+
+      const replayResult = await rpc('tools/call', {
+        name: 'create_task',
+        arguments: {
+          input: `${title} today high priority`,
+          source_agent_id: sourceAgentId,
+          external_ref: externalRef,
+        },
+      })
+      const replayed = parseToolContent(replayResult)
+      if (replayed?.id !== created.id || replayed?.idempotent_replay !== true) {
+        throw new Error('create_task idempotency replay did not return the original task.')
+      }
+      console.log('ok create_task idempotency')
+
+      const createdTaskResult = await rpc('tools/call', {
+        name: 'get_task',
+        arguments: { task_id: created.id },
+      })
+      const createdTask = parseToolContent(createdTaskResult)
+      if (createdTask?.id !== created.id) {
+        throw new Error('get_task did not return the created smoke task.')
+      }
+      console.log('ok get_task smoke task')
+
+      const parentRef = `${externalRef}-parent`
+      const parentResult = await rpc('tools/call', {
+        name: 'create_task',
+        arguments: {
+          input: `${title} parent task today medium priority`,
+          source_agent_id: sourceAgentId,
+          external_ref: parentRef,
+        },
+      })
+      const parentTask = parseToolContent(parentResult)
+      if (!parentTask?.id) {
+        throw new Error('create_task did not return a parent task id for relationship smoke.')
+      }
+      console.log('ok create_task relationship parent')
+
+      const relatedRef = `${externalRef}-related`
+      const relatedResult = await rpc('tools/call', {
+        name: 'create_task',
+        arguments: {
+          input: `${title} related task today medium priority`,
+          source_agent_id: sourceAgentId,
+          external_ref: relatedRef,
+        },
+      })
+      const relatedTask = parseToolContent(relatedResult)
+      if (!relatedTask?.id) {
+        throw new Error('create_task did not return a related task id for relationship smoke.')
+      }
+      console.log('ok create_task relationship related')
+
+      const updateRef = `${externalRef}-update`
+      const updatedResult = await rpc('tools/call', {
+        name: 'update_task',
+        arguments: {
+          task_id: created.id,
+          status: 'in_progress',
+          context: 'Updated by MCP smoke before completion.',
+          due_time: '14:30',
+          action_type: 'prep',
+          estimated_minutes: 45,
+          energy_level: 'deep',
+          people: ['MCP Smoke'],
+          tags: ['smoke', 'agent'],
+          parent_task_id: parentTask.id,
+          related_task_ids: [relatedTask.id],
+          source_agent_id: sourceAgentId,
+          external_ref: updateRef,
+          ingestion_intent: 'update',
+          agent_metadata: { smoke: true },
+        },
+      })
+      const updated = parseToolContent(updatedResult)
+      if (
+        updated?.id !== created.id ||
+        updated?.status !== 'in_progress' ||
+        updated?.due_time !== '14:30' ||
+        updated?.action_type !== 'prep' ||
+        updated?.estimated_minutes !== 45 ||
+        updated?.energy_level !== 'deep' ||
+        !updated?.people?.includes('MCP Smoke') ||
+        !updated?.tags?.includes('agent') ||
+        updated?.parent_task_id !== parentTask.id ||
+        !updated?.related_task_ids?.includes(relatedTask.id)
+      ) {
+        throw new Error('update_task did not update the smoke task structure.')
+      }
+      console.log('ok update_task')
+
+      const noteRef = `${externalRef}-note`
+      const noteContent = 'MCP smoke note: preserve this handoff context.'
+      const noteResult = await rpc('tools/call', {
+        name: 'add_task_note',
+        arguments: {
+          task_id: created.id,
+          content: noteContent,
+          note_type: 'agent_result',
+          source_agent_id: sourceAgentId,
+          external_ref: noteRef,
+          ingestion_intent: 'update',
+          agent_metadata: { smoke: true },
+        },
+      })
+      const noted = parseToolContent(noteResult)
+      if (
+        noted?.note?.task_id !== created.id ||
+        noted?.note?.content !== noteContent ||
+        noted?.note?.note_type !== 'agent_result' ||
+        noted?.task?.id !== created.id
+      ) {
+        throw new Error('add_task_note did not return the created note and task.')
+      }
+      console.log('ok add_task_note')
+
+      const taskWithNoteResult = await rpc('tools/call', {
+        name: 'get_task',
+        arguments: { task_id: created.id },
+      })
+      const taskWithNote = parseToolContent(taskWithNoteResult)
+      if (!taskWithNote?.notes?.some((note) => note.content === noteContent)) {
+        throw new Error('get_task did not return the smoke task note.')
+      }
+      console.log('ok get_task notes')
+
+      const actionNoteRef = `${externalRef}-action-note`
+      const actionNoteContent = 'ChatGPT Action smoke note.'
+      const actionNote = await postJson('/api/mcp/actions/add_task_note', {
+        task_id: created.id,
+        content: actionNoteContent,
+        source_agent_id: sourceAgentId,
+        external_ref: actionNoteRef,
+        ingestion_intent: 'update',
+        agent_metadata: { smoke: true },
+      })
+      if (
+        actionNote?.note?.task_id !== created.id ||
+        actionNote?.note?.content !== actionNoteContent ||
+        actionNote?.task?.id !== created.id
+      ) {
+        throw new Error('ChatGPT Actions add_task_note did not return the created note and task.')
+      }
+      console.log('ok actions/add_task_note')
+
+      const completeRef = `${externalRef}-complete`
+      const completedResult = await rpc('tools/call', {
+        name: 'complete_task',
+        arguments: {
+          task_id: created.id,
+          source_agent_id: sourceAgentId,
+          external_ref: completeRef,
+          ingestion_intent: 'complete',
+          agent_metadata: { smoke: true },
+        },
+      })
+      const completed = parseToolContent(completedResult)
+      if (
+        completed?.id !== created.id ||
+        completed?.status !== 'done' ||
+        completed?.source !== 'agent' ||
+        completed?.source_agent_id !== sourceAgentId ||
+        completed?.external_ref !== completeRef ||
+        completed?.ingestion_intent !== 'complete'
+      ) {
+        throw new Error('complete_task did not return the completed smoke task with agent trace metadata.')
+      }
+      console.log('ok complete_task')
+
+      if (auditClient && auditUserId) {
+        await assertAuditEvent(
+          auditClient,
+          auditUserId,
+          'create_task write',
+          (event) =>
+            event.tool_name === 'create_task' &&
+            event.source_agent_id === sourceAgentId &&
+            event.external_ref === externalRef &&
+            event.success === true
+        )
+        await assertAuditEvent(
+          auditClient,
+          auditUserId,
+          'update_task write',
+          (event) =>
+            event.tool_name === 'update_task' &&
+            event.source_agent_id === sourceAgentId &&
+            event.external_ref === updateRef &&
+            event.success === true
+        )
+        await assertAuditEvent(
+          auditClient,
+          auditUserId,
+          'add_task_note write',
+          (event) =>
+            event.tool_name === 'add_task_note' &&
+            event.source_agent_id === sourceAgentId &&
+            event.external_ref === noteRef &&
+            event.success === true
+        )
+        await assertAuditEvent(
+          auditClient,
+          auditUserId,
+          'complete_task write',
+          (event) =>
+            event.tool_name === 'complete_task' &&
+            event.source_agent_id === sourceAgentId &&
+            event.external_ref === completeRef &&
+            event.success === true &&
+            new Date(event.created_at).getTime() >= writeStartedAt - 5000
+        )
+      } else if (requireAudit) {
+        throw new Error('Audit smoke was requested but no Supabase audit client is available.')
+      } else {
+        console.log('skip audit checks; pass --write --audit with Supabase service env')
+      }
+    } else if (requireAudit) {
+      throw new Error('Audit smoke requires --write so there is a disposable agent write to verify.')
+    } else {
+      console.log('skip write tools; pass --write to create and complete a smoke task')
+      console.log('skip audit checks; pass --write --audit to verify agent_action_events')
+    }
+
+    console.log('MCP smoke passed.')
+  } finally {
+    await cleanupProvisionedUsers(provisioned.supabase, provisioned.users)
+  }
+}
+
+main().catch((error) => {
+  console.error(error instanceof Error ? error.message : error)
+  process.exit(1)
+})

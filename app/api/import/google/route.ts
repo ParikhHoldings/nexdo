@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { parseGoogleTask, saveImportedTasks } from '@/lib/importers'
+import { checkImportQuota, recordImportQuota } from '@/lib/import-quota'
 import type { TaskInsert } from '@/lib/database.types'
 
 export async function POST(request: Request) {
@@ -14,11 +15,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
     const userId = user.id
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const dbClient = supabase as any
+    const service = await createServiceClient()
+    if (!service) {
+      return NextResponse.json({ error: 'Database not configured' }, { status: 503 })
+    }
+    const dbClient = service as any
 
     const body = await request.json()
-    const { access_token } = body
+    const access_token = body.access_token || body.token
 
     if (!access_token) {
       return NextResponse.json(
@@ -44,14 +48,16 @@ export async function POST(request: Request) {
     }
 
     const listsData = await listsResponse.json()
-    const lists = listsData.items || []
+    const lists = Array.isArray(listsData.items) ? listsData.items : []
 
     // Fetch tasks from each list
     const allTasks: TaskInsert[] = []
 
-    for (const list of lists as Array<{ id: string }>) {
+    for (const list of lists as Array<{ id?: string }>) {
+      if (!list.id) continue
+
       const tasksResponse = await fetch(
-        `https://www.googleapis.com/tasks/v1/lists/${list.id}/tasks`,
+        `https://www.googleapis.com/tasks/v1/lists/${encodeURIComponent(list.id)}/tasks`,
         {
           headers: {
             'Authorization': `Bearer ${access_token}`,
@@ -59,21 +65,38 @@ export async function POST(request: Request) {
         }
       )
 
-      if (tasksResponse.ok) {
-        const tasksData = await tasksResponse.json()
-        const tasks = tasksData.items || []
+      if (!tasksResponse.ok) {
+        const errorText = await tasksResponse.text()
+        console.error('Google Tasks list API error:', errorText)
+        return NextResponse.json(
+          { error: 'Failed to fetch tasks from a Google Tasks list. Please reconnect Google Tasks and try again.' },
+          { status: 400 }
+        )
+      }
 
-        for (const task of tasks as Array<Record<string, unknown>>) {
-          // Skip tasks without titles (deleted or empty)
-          if (task.title) {
-            allTasks.push(parseGoogleTask(task, userId))
-          }
+      const tasksData = await tasksResponse.json()
+      const tasks = Array.isArray(tasksData.items) ? tasksData.items : []
+
+      for (const task of tasks as Array<Record<string, unknown>>) {
+        // Skip tasks without titles (deleted or empty)
+        if (task.title) {
+          allTasks.push(parseGoogleTask(task, userId))
         }
       }
     }
 
+    const quotaResponse = await checkImportQuota(userId, allTasks.length)
+    if (quotaResponse) return quotaResponse
+
     // Save tasks
     const result = await saveImportedTasks(allTasks, dbClient)
+    const quotaRecordResponse = await recordImportQuota(
+      userId,
+      result.imported,
+      result.tasks,
+      dbClient
+    )
+    if (quotaRecordResponse) return quotaRecordResponse
 
     return NextResponse.json({
       imported: result.imported,

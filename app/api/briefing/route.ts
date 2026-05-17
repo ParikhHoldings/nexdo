@@ -1,12 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { generateBriefing } from '@/lib/openai'
-import type { Task } from '@/lib/database.types'
 import { requireUser } from '@/lib/api-auth'
 import { consumeRateLimit, RATE_LIMITS, rateLimitResponseHeaders } from '@/lib/rate-limit'
+import { sanitizeAiTasks, sanitizeUserName } from '@/lib/ai-task-input'
 
 export async function POST(request: NextRequest) {
   const auth = await requireUser()
   if (!auth.ok) return auth.response
+
+  let body: { tasks?: unknown; userName?: unknown }
+  try {
+    body = await request.json()
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+  }
+
+  const { tasks, userName } = body
+
+  const sanitized = sanitizeAiTasks(tasks, 200)
+  if (!sanitized.ok) {
+    return NextResponse.json({ error: sanitized.error }, { status: 400 })
+  }
 
   const gate = await consumeRateLimit(auth.userId, RATE_LIMITS.aiBriefing)
   if (!gate.allowed) {
@@ -21,20 +35,10 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { tasks, userName } = await request.json()
-
-    if (!tasks || !Array.isArray(tasks)) {
-      return NextResponse.json({ error: 'Invalid tasks array' }, { status: 400 })
-    }
-
-    if (tasks.length > 200) {
-      return NextResponse.json(
-        { error: 'Too many tasks (max 200 per briefing)' },
-        { status: 400 }
-      )
-    }
-
-    const briefing = await generateBriefing(tasks as Task[], userName || 'there')
+    const briefing = await generateBriefing(
+      sanitized.tasks,
+      sanitizeUserName(userName)
+    )
 
     if (!briefing) {
       return NextResponse.json({ error: 'Failed to generate briefing' }, { status: 500 })

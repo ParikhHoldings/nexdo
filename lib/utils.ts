@@ -8,7 +8,17 @@ export function cn(...inputs: ClassValue[]) {
 export function formatRelativeDate(date: Date | string | null): string {
   if (!date) return ''
 
-  const d = typeof date === 'string' ? new Date(date) : date
+  const dateOnlyMatch =
+    typeof date === 'string' ? /^(\d{4})-(\d{2})-(\d{2})$/.exec(date) : null
+  const d = dateOnlyMatch
+    ? new Date(
+        Number(dateOnlyMatch[1]),
+        Number(dateOnlyMatch[2]) - 1,
+        Number(dateOnlyMatch[3])
+      )
+    : typeof date === 'string'
+      ? new Date(date)
+      : date
   const now = new Date()
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
   const targetDate = new Date(d.getFullYear(), d.getMonth(), d.getDate())
@@ -29,6 +39,11 @@ export function formatRelativeDate(date: Date | string | null): string {
   if (diffDays < 14) return 'Next week'
 
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+}
+
+export function formatDueTime(time: string | null): string {
+  if (!time) return ''
+  return time.slice(0, 5)
 }
 
 export function getPriorityColor(priority: string): string {

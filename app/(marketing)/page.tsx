@@ -8,9 +8,7 @@ import {
   Users,
   Clock,
   CheckCircle2,
-  Star,
   ChevronDown,
-  Play,
 } from 'lucide-react'
 import { PricingTable } from '@/components/pricing-table'
 
@@ -44,10 +42,10 @@ export default function LandingPage() {
                 Sign in
               </Link>
               <Link
-                href="/auth/signup"
+                href="/today"
                 className="bg-accent hover:bg-accent/90 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
               >
-                Get Started Free
+                Try demo
               </Link>
             </div>
           </div>
@@ -60,49 +58,45 @@ export default function LandingPage() {
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 border border-accent/20 mb-8">
             <Sparkles className="h-4 w-4 text-accent" />
-            <span className="text-sm text-accent">AI-Native Task Management</span>
+            <span className="text-sm text-accent">For founder/operator AI power users</span>
           </div>
 
           {/* Headline */}
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-zinc-100 mb-6">
-            Your to-do list just{' '}
+            Move tasks from capture to{' '}
             <span className="bg-gradient-to-r from-accent to-blue-400 bg-clip-text text-transparent">
-              learned to think
+              forward motion
             </span>
           </h1>
 
           {/* Subhead */}
           <p className="text-xl text-zinc-400 max-w-2xl mx-auto mb-10">
-            Nexdo is the AI-native task manager that understands context,
-            prioritizes intelligently, and actually does your tasks.
+            Nexdo helps founders and operators turn messy task capture into
+            structured priorities, daily briefings, and reviewable AI
+            assistance for bounded work.
           </p>
 
           {/* CTAs */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
-              href="/auth/signup"
+              href="/today"
               className="w-full sm:w-auto bg-accent hover:bg-accent/90 text-white font-medium px-8 py-3 rounded-lg transition-colors flex items-center justify-center gap-2"
             >
-              Get Started Free
+              Try the demo
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
-              href="/auth/login"
+              href="/auth/signup"
               className="w-full sm:w-auto bg-zinc-800 hover:bg-zinc-700 text-zinc-100 font-medium px-8 py-3 rounded-lg transition-colors flex items-center justify-center gap-2"
             >
-              <Play className="h-4 w-4" />
-              Sign in to your workspace
+              Create account
             </Link>
           </div>
 
           {/* Product trust */}
           <div className="mt-12 inline-flex items-center gap-3 rounded-full border border-zinc-800 bg-zinc-900/60 px-4 py-2 text-sm text-zinc-400">
-            <div className="flex items-center gap-1 text-amber-400">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <Star key={i} className="h-4 w-4 fill-amber-400" />
-              ))}
-            </div>
-            <span>Built for founders, operators, and AI-native teams.</span>
+            <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+            <span>Demo path: capture real work, prioritize the day, and review bounded AI output.</span>
           </div>
         </div>
 
@@ -122,11 +116,12 @@ export default function LandingPage() {
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl sm:text-4xl font-bold text-zinc-100 mb-4">
-              Traditional to-do apps are broken
+              Founder/operator task lists lose the context
             </h2>
             <p className="text-lg text-zinc-400 max-w-2xl mx-auto">
               They strip the &quot;why&quot; from your tasks, leaving you with a lifeless
-              list that doesn&apos;t understand context, urgency, or who&apos;s waiting.
+              list that doesn&apos;t understand urgency, who&apos;s waiting, or which
+              next step will actually move the business.
             </p>
           </div>
 
@@ -135,17 +130,17 @@ export default function LandingPage() {
               {
                 title: 'No context',
                 description:
-                  'Tasks become generic items disconnected from their real-world importance.',
+                  'Investor follow-ups, customer requests, and internal priorities flatten into generic checklist items.',
               },
               {
                 title: 'Manual prioritization',
                 description:
-                  "You waste mental energy deciding what to do next instead of just doing it.",
+                  'You burn focus deciding what matters before you can start the work itself.',
               },
               {
-                title: 'Zero execution',
+                title: 'Little execution support',
                 description:
-                  'The app shows tasks but does nothing to help complete them.',
+                  'The app stores the task but rarely helps prepare the next message, brief, or research pass.',
               },
             ].map((problem) => (
               <div
@@ -170,7 +165,7 @@ export default function LandingPage() {
               How Nexdo works
             </h2>
             <p className="text-lg text-zinc-400">
-              Three steps to AI-powered productivity
+              Three steps from capture to reviewable output
             </p>
           </div>
 
@@ -180,21 +175,21 @@ export default function LandingPage() {
                 step: '01',
                 title: 'Capture naturally',
                 description:
-                  'Dump your thoughts in natural language. Tell us the context, the people involved, and why it matters.',
+                  'Drop the messy task in plain language, including the people, timing, and context that make it matter.',
                 icon: Brain,
               },
               {
                 step: '02',
-                title: 'AI organizes',
+                title: 'Nexdo structures',
                 description:
-                  'Our AI parses your input, extracts key information, sets smart priorities, and builds your daily plan.',
+                  'Nexdo extracts key information, ranks tasks by due dates, priority, and context, and builds your daily plan.',
                 icon: Target,
               },
               {
                 step: '03',
-                title: 'Agent executes',
+                title: 'Agent assists',
                 description:
-                  'For research, drafting, and prep tasks — our agents do the work and deliver results right in the app.',
+                  'For research, drafting, and prep tasks, Nexdo can generate a useful starting point for human review.',
                 icon: Zap,
               },
             ].map((item) => {
@@ -230,10 +225,10 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold text-zinc-100 mb-4">
-              Everything you need to get things done
+              The core workflow Nexdo is proving first
             </h2>
             <p className="text-lg text-zinc-400">
-              Features designed for modern productivity
+              Launch-focused capabilities in the current product
             </p>
           </div>
 
@@ -249,32 +244,31 @@ export default function LandingPage() {
                 icon: Target,
                 title: 'Smart Prioritization',
                 description:
-                  'AI analyzes urgency, dependencies, and context to rank your tasks.',
+                  'Nexdo uses due dates, priority, and task context to rank your day.',
               },
               {
                 icon: Clock,
                 title: 'Daily Briefings',
                 description:
-                  'Start each day with an AI-generated summary of what matters most.',
+                  'Start each day with a summary of priorities, quick wins, overdue work, and people waiting.',
               },
               {
                 icon: Zap,
-                title: 'Agent Execution',
+                title: 'Bounded AI Outputs',
                 description:
-                  'Research, draft, and prep tasks completed automatically.',
+                  'Research, draft, and prep tasks can get reviewable AI-generated starting points.',
               },
               {
                 icon: Users,
                 title: 'People Context',
                 description:
-                  "Track who's waiting on what and never drop the ball.",
+                  'See who is involved, waiting, or relevant to the next step.',
               },
               {
                 icon: CheckCircle2,
-                title: 'Agent Integrations',
+                title: 'Agent-Ready Access',
                 description:
-                  'Connect Claude, ChatGPT, and other AI agents to your task layer.',
-                comingSoon: true,
+                  'Scoped API-key task access for MCP-style and ChatGPT Actions workflows.',
               },
             ].map((feature) => {
               const Icon = feature.icon
@@ -288,11 +282,6 @@ export default function LandingPage() {
                   </div>
                   <h3 className="text-lg font-semibold text-zinc-100 mb-2 flex items-center gap-2">
                     {feature.title}
-                    {feature.comingSoon && (
-                      <span className="text-xs bg-zinc-700 text-zinc-400 px-2 py-0.5 rounded-full">
-                        Soon
-                      </span>
-                    )}
                   </h3>
                   <p className="text-sm text-zinc-400">{feature.description}</p>
                 </div>
@@ -307,7 +296,7 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold text-zinc-100 mb-4">
-              Built for two kinds of people
+              Built for operators now and agent workflows next
             </h2>
           </div>
 
@@ -318,18 +307,18 @@ export default function LandingPage() {
                 <Users className="h-6 w-6 text-emerald-400" />
               </div>
               <h3 className="text-2xl font-bold text-zinc-100 mb-4">
-                Everyday Users
+                Founder/Operator Workflow
               </h3>
               <p className="text-zinc-400 mb-6">
-                A beautiful app that feels like magic. Dump your thoughts, and
-                watch them transform into an organized, prioritized action plan.
+                Capture customer, fundraising, hiring, product, and operating
+                work in plain language, then turn it into a prioritized plan.
               </p>
               <ul className="space-y-3">
                 {[
                   'Natural language task input',
-                  'AI-powered daily briefings',
+                  'Contextual daily briefings',
                   'Smart prioritization',
-                  'Beautiful, minimal design',
+                  'Reviewable research, draft, and prep output',
                 ].map((item) => (
                   <li key={item} className="flex items-center gap-3 text-sm text-zinc-300">
                     <CheckCircle2 className="h-4 w-4 text-emerald-400 flex-shrink-0" />
@@ -345,18 +334,20 @@ export default function LandingPage() {
                 <Zap className="h-6 w-6 text-accent" />
               </div>
               <h3 className="text-2xl font-bold text-zinc-100 mb-4">
-                AI Power Users
+                Agent Workflows
               </h3>
               <p className="text-zinc-400 mb-6">
-                A unified task layer that all your AI agents can write to.
-                Claude, OpenClaw, ChatGPT — they all connect here.
+                A Power-user task layer for external AI tools to inspect and
+                update through scoped, reviewable access.
               </p>
               <ul className="space-y-3">
                 {[
-                  'API access for agents',
-                  'MCP protocol support (coming)',
-                  'Agent execution pipeline',
-                  'Cross-platform sync',
+                  'Power-plan API access',
+                  'MCP-style tool definitions',
+                  'ChatGPT Actions schema',
+                  'Human-readable task state',
+                  'Reviewable task changes',
+                  'Scoped key permissions',
                 ].map((item) => (
                   <li key={item} className="flex items-center gap-3 text-sm text-zinc-300">
                     <CheckCircle2 className="h-4 w-4 text-accent flex-shrink-0" />
@@ -381,7 +372,20 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <PricingTable showCurrentPlan={false} />
+          <PricingTable
+            showCurrentPlan={false}
+            planLinks={{
+              free: '/today',
+              pro: '/auth/signup',
+              power: '/auth/signup',
+              team: 'mailto:sales@nexdo.ai?subject=Team Plan Inquiry',
+            }}
+            planCtaLabels={{
+              free: 'Try demo',
+              pro: 'Create account',
+              power: 'Create account',
+            }}
+          />
         </div>
       </section>
 
@@ -396,23 +400,23 @@ export default function LandingPage() {
             {[
               {
                 q: 'How is Nexdo different from other to-do apps?',
-                a: 'Nexdo is AI-native from the ground up. Traditional apps just store tasks — we understand them. Our AI parses context, prioritizes intelligently, and can actually execute certain task types like research and drafting.',
+                a: 'Nexdo is built around structured task context for founders and operators. It parses natural-language capture, helps prioritize the day, and can generate bounded outputs for research, drafting, and prep tasks.',
               },
               {
                 q: 'What are "agent executions"?',
-                a: 'When you mark a task as research, draft, or prep, our AI agents can automatically complete the work. For example, a research task might result in a summary with key findings, sources, and recommended actions.',
+                a: 'When a task is marked as research, draft, or prep, Nexdo can generate a working output such as a summary, email draft, or meeting prep brief. Users should still review and verify important results.',
               },
               {
                 q: 'Can I connect my own AI agents?',
-                a: "We're building MCP (Model Context Protocol) support that will let you connect any compatible AI agent — Claude, ChatGPT, and others — directly to your Nexdo task layer.",
+                a: 'Nexdo includes Power-plan API-key access, MCP-style tools, and a ChatGPT Actions OpenAPI surface for task access. External-agent use should start with scoped keys and reviewed task changes.',
               },
               {
                 q: 'Is my data secure?',
-                a: 'Absolutely. We use Supabase for database and auth, which provides enterprise-grade security. Your data is encrypted at rest and in transit. We never share or sell your data.',
+                a: 'Nexdo is designed around Supabase auth, row-level security, and server-side API checks. Production security should still be verified before relying on it for sensitive workloads.',
               },
               {
                 q: 'Can I use Nexdo offline?',
-                a: "We're working on PWA support with offline sync. For now, Nexdo requires an internet connection to sync tasks and run AI features.",
+                a: 'Not yet. Nexdo currently requires an internet connection to sync tasks and run AI features.',
               },
             ].map((item) => (
               <div
@@ -434,21 +438,21 @@ export default function LandingPage() {
         <div className="max-w-4xl mx-auto text-center">
           <div className="bg-gradient-to-br from-accent/20 to-blue-500/10 border border-accent/20 rounded-2xl p-12">
             <h2 className="text-3xl sm:text-4xl font-bold text-zinc-100 mb-4">
-              Ready to actually get things done?
+              Ready to turn operating work into forward motion?
             </h2>
             <p className="text-lg text-zinc-400 mb-8 max-w-2xl mx-auto">
-              Join thousands of users who&apos;ve upgraded their productivity with
-              AI-native task management.
+              Try a founder/operator task workspace built around context,
+              prioritization, and bounded AI assistance.
             </p>
             <Link
-              href="/auth/signup"
+              href="/today"
               className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-white font-medium px-8 py-3 rounded-lg transition-colors"
             >
-              Get Started Free
+              Try the demo
               <ArrowRight className="h-4 w-4" />
             </Link>
             <p className="text-sm text-zinc-500 mt-4">
-              No credit card required • Free tier forever
+              Demo available without a credit card.
             </p>
           </div>
         </div>

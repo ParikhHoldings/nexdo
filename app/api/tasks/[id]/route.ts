@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { validateTaskPatch } from '@/lib/task-validation'
 
 export async function PATCH(
   request: Request,
@@ -25,7 +26,16 @@ export async function PATCH(
 
   try {
     const { id } = await params
-    const updates = await request.json()
+    const body = await request.json()
+    const { updates, errors } = validateTaskPatch(body)
+
+    if (errors.length > 0) {
+      return NextResponse.json({ error: 'Validation failed', errors }, { status: 400 })
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return NextResponse.json({ error: 'No valid updates provided' }, { status: 400 })
+    }
 
     // Set updated_at timestamp
     updates.updated_at = new Date().toISOString()
@@ -36,16 +46,22 @@ export async function PATCH(
     } else if (updates.status && updates.status !== 'done') {
       updates.completed_at = null
     }
+    const service = await createServiceClient()
+    if (!service) {
+      return NextResponse.json(
+        { error: 'Database not configured' },
+        { status: 503 }
+      )
+    }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = supabase as any
+    const db = service as any
     const { data: task, error } = await db
       .from('tasks')
       .update(updates)
       .eq('id', id)
       .eq('user_id', user.id)
       .select()
-      .single()
+      .maybeSingle()
 
     if (error) {
       console.error('Error updating task:', error)
@@ -96,20 +112,27 @@ export async function DELETE(
 
   try {
     const { id } = await params
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any
-    const { error } = await db
+    const { data: task, error } = await db
       .from('tasks')
       .delete()
       .eq('id', id)
       .eq('user_id', user.id)
+      .select('id')
+      .maybeSingle()
 
     if (error) {
       console.error('Error deleting task:', error)
       return NextResponse.json(
         { error: 'Failed to delete task' },
         { status: 500 }
+      )
+    }
+
+    if (!task) {
+      return NextResponse.json(
+        { error: 'Task not found' },
+        { status: 404 }
       )
     }
 

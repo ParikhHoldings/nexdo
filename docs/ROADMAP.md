@@ -1,22 +1,82 @@
 # Roadmap
 
+## Current verified shape
+- Active Next.js 16 app code exists.
+- Supabase schema/migrations and auth/data helpers exist.
+- AI parsing, prioritization, briefings, and bounded agent execution code exists.
+- Natural-language task parsing now carries due times through capture, authenticated task creation, and MCP-created tasks, and local fallback parsing keeps common schedule, priority, and estimate phrases out of task titles.
+- Prioritization and briefing context now preserve due times, and deterministic ranking orders same-day timed tasks by due time.
+- All Tasks due-date sorting and Upcoming date groups now order same-day tasks by due time, keeping timed work ahead of untimed work in scan views.
+- Daily briefings refresh on structured planning metadata changes and surface past due times today as overdue.
+- Local deterministic fallbacks now support demo-mode parsing, prioritization, briefing, and bounded agent outputs when provider env is missing.
+- The app workspace now has a real persisted dark/light appearance preference.
+- The app workspace now has permission-gated local browser reminders for active tasks due today or overdue, ordered by due time and priority.
+- Strict build rails are restored so lint and TypeScript errors block production builds.
+- A Playwright smoke test covers the core logged-out demo path.
+- Playwright now covers demo workspace navigation across mobile sidebar open/close, All Tasks search/filtering, Upcoming grouping, and Done task lifecycle.
+- Playwright smoke tests cover OpenAPI action schema availability, MCP/action auth failures, and action CORS headers.
+- `npm run smoke:routes` now verifies launch-facing routes at desktop and mobile widths against a supplied app URL.
+- `npm run smoke:app` now verifies authenticated app-cookie task CRUD, task-note routes, and seeded agent-review save behavior against a supplied app URL and real Supabase env.
+- Playwright tests cover DB-backed MCP tool handler and API-key validation behavior through an in-memory Supabase double, including owned reads, search, briefing, create idempotency, quota ordering, mutations, agent task-note append/readback, audit logging, hashed-key lookup, legacy-key migration, and paid-plan gating.
+- GitHub Actions verification exists for pull requests and pushes to `main`/`staging`, covering install, lint, typecheck, build, dependency audit, and Playwright smoke testing.
+- PR #3 Web rails and Vercel preview evidence are per-head; inspect current PR checks before treating the branch as green because both successful preview deployments and account build-rate-limited heads have been observed.
+- The latest checked Vercel branch preview URL was `https://ph-nexdo-git-codex-launch-rea-42bdec-nathan-happywpcos-projects.vercel.app`.
+- Direct remote route smoke against that protected preview failed at desktop `/` because Vercel Deployment Protection is active until an automation bypass secret or unprotected preview URL is available.
+- Dependency audit is clean after the Next.js 16, ESLint 9, and PostCSS remediation.
+- `npm ci`, `npm run lint`, `npm run typecheck`, `npm run build`, `npm run test:e2e` with 112 tests, dependency audit, and the technical launch smoke partial passed locally on 2026-05-17.
+- `docs/MVP.md` now defines the smallest trustworthy MVP path around capture, structure, prioritize, brief, bounded execution, and scoped agent task-layer access.
+- Import, billing/quota, MCP, and ChatGPT Actions surfaces exist.
+- File imports now preview task count, sample titles, and plan/cap warnings before tasks are added.
+- Settings now exposes JSON and CSV export for the tasks currently loaded in the workspace, giving users a portable backup/review handoff path.
+- Google Tasks and Microsoft To Do are usable through manual access-token imports; full OAuth is still a post-launch integration path.
+- Due-today task filters, Today/sidebar/briefing focus counts, browser reminders, MCP filtering, date-only imports, and relative labels now use local calendar dates instead of UTC day strings.
+- Task detail now exposes human task notes backed by demo localStorage, a copyable task handoff brief, `/import` paste restore for copied Nexdo handoffs, and authenticated owned-task note routes; external agents can append bounded task notes and agent-result notes through MCP/ChatGPT Actions.
+- Task detail now supports parent and related task links through an owned relationship route while direct browser relationship column grants remain closed.
+- Task cards now expose quick status actions for starting work, marking waiting, moving back to to-do, and restoring done/cancelled work from scan views, with mobile-visible controls.
+- All Tasks now includes an Origin filter so agent-traced tasks can be isolated from human-created tasks for review.
+- All Tasks now includes an agent review filter so unreviewed/needs-revision outputs and traceable agent-created or agent-updated tasks can be queued separately from verified outputs.
+- Task cards now show agent-output review badges so unreviewed, needs-revision, and verified outputs are visible while scanning.
+- Sidebar navigation now includes an Agent Review queue count for reviewable outputs and traceable agent task mutations that opens `/all?review=needs_review`.
+- Bounded agent outputs now keep execution history plus verification status and notes in the task detail panel.
+- The bounded executable action contract is centralized in `lib/task-actions.ts` so UI surfaces, authenticated execution, and agent-output history agree that only research, draft, and prep tasks can run AI execution.
+- Agent `update_task` can now maintain the core planning fields humans can edit, including due time, action type, estimate, energy level, people, tags, and owned parent/related task links; `add_task_note` lets agents append reviewable handoff context or bounded result notes without changing task status.
+- Connect AI setup now includes a copyable bounded agent operating brief so external clients get the same least-privilege, traceable-write expectations as the MCP tool contract.
+- Human task-create and task-patch routes now share `lib/task-validation.ts` so protected/server-managed fields are rejected before quota or database mutation.
+- Direct browser task writes are now column-limited and database-bounded so the broad task source flag, agent output, source-agent metadata, ingestion intent, completion timestamps, task relationship metadata, blank titles, oversized text, impossible estimates, and unbounded people/tag arrays stay controlled; direct browser task-note writes are column-limited so note type and creation time stay server-managed; server task-create, import, and note routes persist server-managed fields through service-role paths after auth/quota checks.
+- The landing/signup draft now routes demo CTAs to the verified demo path and avoids treating unverified agent flows as a broad launch claim.
+- Connect AI setup guidance now routes paid users without a copied key directly to the API settings tab.
+- Done-page bulk delete now restores failed authenticated deletes immediately instead of hiding failed tasks until refresh.
+- Production deploy state, environment completeness, and end-to-end flow status are still unverified in the operating layer.
+
 ## Current themes
 1. repo and deploy verification
-2. MVP clarification
-3. execution-forward product shaping
+2. MVP hardening around task capture, prioritization, briefing, and bounded execution
+3. public-copy truth audit
+4. agent/API interoperability verification
 
 ## Near-term priorities
-- verify the actual Nexdo repo/build/deploy state
-- document the MVP path and active-product requirements
-- tighten the product framing into something clearly buildable and sellable
+- verify install, lint, build, and local dev rails
+- keep `npm run lint`, `npm run typecheck`, `npm run build`, and `npm run test:e2e` passing
+- verify Supabase migrations, RLS, auth, demo-mode fallback, profile insert/read/update grants and content bounds, task/task-note column grants and content bounds, task relationship write denial, Stripe event record privacy/write denial, usage-event mutation denial, rate-limit bucket privacy, daily briefing cache write denial, audit privacy, and profile/task flows
+- verify authenticated app API task CRUD and task-note routes with real Supabase env
+- verify OpenAI parse/prioritize/briefing/agent execution behavior with real env
+- verify Stripe checkout/portal/webhook behavior in test mode before any pricing commitment
+- verify MCP and ChatGPT Actions against the real API key flow
+- audit marketing page claims and route public copy through Quill before external use
+- keep `docs/MVP.md` aligned with verified product truth as core behavior changes
 
 ## Next major milestones
 - repo state verified against portfolio standard
-- deploy target and branch rails documented
-- MVP build sequence documented
-- next real execution sprint identified
+- deploy target, branch rails, env requirements, and rollback notes documented
+- Supabase migration and seed/demo expectations documented
+- MVP build sequence documented around capture -> structure -> prioritize -> brief -> execute bounded work
+- first real execution sprint identified with smoke tests and launch blockers
 
 ## Risks / dependencies
 - vague positioning could outrun implementation clarity
-- unverified repo/deploy state keeps Nexdo less real than it sounds
+- unverified repo/deploy state could hide production blockers
+- public marketing copy currently risks overclaiming if not reviewed against product truth
+- AI and agent features depend on environment, rate limits, quotas, and prompt quality
+- Stripe and Supabase production behavior must be verified before paid-user promises
+- future framework upgrades need focused verification because Next.js 16 changed lint and proxy conventions
 - too much abstraction can slow revenue-oriented execution

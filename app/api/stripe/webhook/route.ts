@@ -2,16 +2,21 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { stripe } from '@/lib/stripe'
 import { createServiceClient } from '@/lib/supabase/server'
+import { tierForStripePriceId } from '@/lib/stripe-entitlements'
+import { updateCustomerSubscriptionTier } from '@/lib/stripe-webhook'
 
-/**
- * Map a Stripe price id to the Nexdo subscription tier. Unknown price
- * ids default to 'pro' (most conservative billable tier) and are logged.
- */
-function tierForPriceId(priceId: string | undefined): 'pro' | 'power' {
-  if (priceId === process.env.STRIPE_POWER_PRICE_ID) return 'power'
-  if (priceId === process.env.STRIPE_PRO_PRICE_ID) return 'pro'
-  console.warn('Stripe webhook: unrecognized priceId, defaulting to pro:', priceId)
-  return 'pro'
+function stripeCustomerId(
+  customer: string | Stripe.Customer | Stripe.DeletedCustomer | null | undefined
+) {
+  if (typeof customer === 'string') return customer
+  return customer?.id ?? null
+}
+
+function stripeSubscriptionId(
+  subscription: string | Stripe.Subscription | null | undefined
+) {
+  if (typeof subscription === 'string') return subscription
+  return subscription?.id ?? null
 }
 
 export async function POST(request: NextRequest) {
@@ -43,7 +48,6 @@ export async function POST(request: NextRequest) {
   }
 
   const supabaseRaw = await createServiceClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase = supabaseRaw as any
   if (!supabaseRaw) {
     return NextResponse.json({ error: 'Database not configured' }, { status: 500 })
@@ -65,9 +69,9 @@ export async function POST(request: NextRequest) {
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session
-        const customerId = session.customer as string
-        const subscriptionId = session.subscription as string | null
-        if (!subscriptionId) break
+        const customerId = stripeCustomerId(session.customer)
+        const subscriptionId = stripeSubscriptionId(session.subscription)
+        if (!customerId || !subscriptionId) break
 
         const subscription = await stripe.subscriptions.retrieve(subscriptionId)
         // Only activate the plan if Stripe reports an active/trialing sub.
@@ -79,65 +83,73 @@ export async function POST(request: NextRequest) {
         }
 
         const priceId = subscription.items.data[0]?.price.id
-        const tier = tierForPriceId(priceId)
+        const tier = tierForStripePriceId(priceId)
+        if (!tier) {
+          console.warn('Stripe webhook: unrecognized priceId, skipping tier update:', priceId)
+          break
+        }
 
-        await supabase
-          .from('profiles')
-          .update({ subscription_tier: tier })
-          .eq('stripe_customer_id', customerId)
+        await updateCustomerSubscriptionTier(supabase, customerId, tier)
         break
       }
 
       case 'customer.subscription.updated': {
         const subscription = event.data.object as Stripe.Subscription
-        const customerId = subscription.customer as string
+        const customerId = stripeCustomerId(subscription.customer)
         const priceId = subscription.items.data[0]?.price.id
+        if (!customerId) break
 
         // Past-due / unpaid / canceled subs should not retain paid tier.
         if (
           subscription.status !== 'active' &&
           subscription.status !== 'trialing'
         ) {
-          await supabase
-            .from('profiles')
-            .update({ subscription_tier: 'free' })
-            .eq('stripe_customer_id', customerId)
+          await updateCustomerSubscriptionTier(supabase, customerId, 'free')
           break
         }
 
-        const tier = tierForPriceId(priceId)
-        await supabase
-          .from('profiles')
-          .update({ subscription_tier: tier })
-          .eq('stripe_customer_id', customerId)
+        const tier = tierForStripePriceId(priceId)
+        if (!tier) {
+          console.warn('Stripe webhook: unrecognized priceId, skipping tier update:', priceId)
+          break
+        }
+
+        await updateCustomerSubscriptionTier(supabase, customerId, tier)
         break
       }
 
       case 'customer.subscription.deleted': {
         const subscription = event.data.object as Stripe.Subscription
-        const customerId = subscription.customer as string
+        const customerId = stripeCustomerId(subscription.customer)
+        if (!customerId) break
 
-        await supabase
-          .from('profiles')
-          .update({ subscription_tier: 'free' })
-          .eq('stripe_customer_id', customerId)
+        await updateCustomerSubscriptionTier(supabase, customerId, 'free')
         break
       }
 
       case 'invoice.payment_failed': {
         const invoice = event.data.object as Stripe.Invoice
-        const customerId = invoice.customer as string
-        console.log('Payment failed for customer:', customerId)
-        // TODO(post-launch): send dunning email; Stripe will retry the invoice.
+        const customerId = stripeCustomerId(invoice.customer)
+
+        if (!customerId) {
+          console.warn('Stripe webhook: invoice.payment_failed missing customer id')
+          break
+        }
+
+        await updateCustomerSubscriptionTier(supabase, customerId, 'free')
         break
       }
     }
 
     // Record the event AFTER successful processing. If we crashed above,
     // Stripe will retry and we'll try again.
-    await supabase
+    const { error: eventInsertError } = await supabase
       .from('stripe_events')
       .insert({ id: event.id, type: event.type })
+
+    if (eventInsertError) {
+      throw new Error(`Failed to record Stripe event ${event.id}: ${eventInsertError.message}`)
+    }
 
     return NextResponse.json({ received: true })
   } catch (error) {
