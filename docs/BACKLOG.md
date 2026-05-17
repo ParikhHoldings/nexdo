@@ -31,6 +31,7 @@
 - normalized Connect AI test-connection and agent-activity errors across plain, message, and JSON-RPC error payloads
 - expanded `npm run smoke:mcp` to verify OpenAPI availability, ChatGPT Actions `list_tasks` response shape, and required real `agent_action_events` audit writes with `--write --audit`
 - expanded `npm run smoke:mcp` across search, briefing, get-task, update, complete, and ChatGPT Actions search/list checks
+- expanded `npm run smoke:mcp` to verify the authenticated MCP SSE endpoint advertises the JSON-RPC endpoint before tool execution
 - added MCP smoke `--provision` mode to create disposable full/read-only Power-plan API keys for scoped real endpoint verification
 - added `npm run smoke:launch` to load a real env file, run local rails, run Supabase/OpenAI/Stripe/MCP provider smokes in order, and keep manual launch approval gates explicit
 - added optional trace metadata to MCP `complete_task` so completion calls can be audited with source agent and external reference context

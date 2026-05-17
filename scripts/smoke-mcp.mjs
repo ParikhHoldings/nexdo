@@ -106,6 +106,49 @@ async function postJson(path, body, key = apiKey) {
   return data
 }
 
+async function assertMcpSseEndpoint(key = apiKey) {
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 5000)
+  const expectedEndpoint = `${new URL(baseUrl).origin}/api/mcp`
+  let reader = null
+
+  try {
+    const response = await fetch(`${baseUrl}/api/mcp`, {
+      headers: {
+        Authorization: `Bearer ${key}`,
+      },
+      signal: controller.signal,
+    })
+
+    if (!response.ok) {
+      const text = await response.text()
+      throw new Error(`/api/mcp SSE failed with ${response.status}: ${text}`)
+    }
+
+    const contentType = response.headers.get('content-type') || ''
+    if (!contentType.includes('text/event-stream')) {
+      throw new Error(`/api/mcp SSE returned ${contentType || 'no content type'}`)
+    }
+
+    reader = response.body?.getReader()
+    if (!reader) {
+      throw new Error('/api/mcp SSE returned no readable stream')
+    }
+
+    const { value } = await reader.read()
+    const text = new TextDecoder().decode(value)
+    if (!text.includes('event: endpoint') || !text.includes(`data: ${expectedEndpoint}`)) {
+      throw new Error(`/api/mcp SSE endpoint event did not advertise ${expectedEndpoint}: ${text}`)
+    }
+
+    console.log('ok mcp sse endpoint')
+  } finally {
+    clearTimeout(timeout)
+    await reader?.cancel().catch(() => {})
+    controller.abort()
+  }
+}
+
 async function rpc(method, params, key = apiKey) {
   const data = await postJson('/api/mcp', {
     jsonrpc: '2.0',
@@ -395,6 +438,8 @@ async function main() {
       throw new Error('Unexpected MCP server name.')
     }
     console.log('ok initialize')
+
+    await assertMcpSseEndpoint()
 
     const toolList = await rpc('tools/list')
     const toolNames = new Set((toolList.tools || []).map((tool) => tool.name))

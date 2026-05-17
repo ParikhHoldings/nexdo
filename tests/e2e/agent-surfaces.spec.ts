@@ -295,6 +295,10 @@ test('MCP smoke can provision disposable scoped API keys', () => {
   const source = readFileSync('scripts/smoke-mcp.mjs', 'utf8')
 
   expect(source).toContain("const provisionKeys = args.has('--provision')")
+  expect(source).toContain('async function assertMcpSseEndpoint')
+  expect(source).toContain("contentType.includes('text/event-stream')")
+  expect(source).toContain("text.includes('event: endpoint')")
+  expect(source).toContain('await assertMcpSseEndpoint()')
   expect(source).toContain('async function provisionSmokeKeys()')
   expect(source).toContain('async function createProvisionedProfile(')
   expect(source).toContain("subscription_tier: 'power'")
