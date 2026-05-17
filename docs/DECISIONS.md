@@ -1,5 +1,15 @@
 # Decisions
 
+## 2026-05-17 - Human task routes share validation
+### Decision
+Human task creation and patch routes use `lib/task-validation.ts` for normalization, allowlisting, and protected-field rejection.
+
+### Why
+Task data is the core product object and the future agent interop boundary. Validation embedded separately in routes was harder for future agents to inspect and could drift between create and update behavior.
+
+### Impact
+Future task fields should be added to the shared validation helper first, then exposed through UI/API routes deliberately. Server-managed fields such as agent outputs, ownership, source-agent metadata, and completion timestamps should stay out of generic human task mutations unless a dedicated route owns that behavior.
+
 ## 2026-05-16 - Define the MVP as capture to bounded execution
 ### Decision
 Nexdo's first launchable MVP is the concrete path documented in `docs/MVP.md`: capture plain-language tasks, structure them into useful metadata, prioritize the day, brief the user, execute bounded research/draft/prep work, and expose scoped task-layer access for external agents.

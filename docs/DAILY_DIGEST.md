@@ -1,5 +1,23 @@
 # Daily Digest
 
+## 2026-05-17
+### Shipped
+- Moved human task-create and task-patch validation into shared `lib/task-validation.ts`.
+- Made generic task create/update routes reject protected or server-managed fields before quota or database mutation.
+- Added focused coverage for task creation normalization and task patch allowlisting.
+
+### In progress
+- Provider-backed Supabase, OpenAI, Stripe, and MCP smokes remain the main launch-readiness gap.
+
+### Blocked
+- `npm run verify:env` still cannot pass until `.env.local` is created with real provider values.
+
+### Approvals needed
+- Public launch copy, pricing changes, production deploys, and customer-facing commitments still require approval.
+
+### Recommended next focus
+- Configure the real provider environment and run the Supabase/OpenAI/Stripe/MCP smoke sequence.
+
 ## 2026-05-16
 ### Shipped
 - Read all existing Markdown and text files in the repo, including `.github/pull_request_template.md`, `AGENTS.md`, the operating docs, and `public/robots.txt`.

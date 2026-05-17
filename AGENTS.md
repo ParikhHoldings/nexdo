@@ -7,7 +7,7 @@ The operating mission is to make Nexdo credible as a real product: keep the prom
 
 ## Product Truth Snapshot
 Last repo-context pass: 2026-05-16.
-Last local verification: 2026-05-16.
+Last local verification: 2026-05-17.
 
 Nexdo is not only a concept. The repo already contains a Next.js product shell with:
 - marketing, auth, app, settings, import, and MCP setup routes under `app/`
@@ -31,18 +31,19 @@ The product promise should be grounded in what the code actually supports:
 - hashed API-key storage with one-time key reveal, short key hints in settings, and legacy raw-key migration/fallback
 - narrowed browser-visible profile columns and direct profile self-updates so clients can read/edit needed preferences without direct access to Stripe IDs, raw/hash API-key material, quota internals, or billing mutation fields
 - bounded OpenAI response validation for task parsing, prioritization, briefing, and research/draft/prep output before provider content is returned or persisted
+- shared task-create and task-patch validation in `lib/task-validation.ts`, so human task routes reject protected/server-managed fields before quota consumption or database mutation
 - a recent agent activity surface under `/settings/mcp`
 - idempotent agent task creation when callers provide `source_agent_id` plus `external_ref`
 - Stripe-backed plan surfaces, quotas, and rate-limit scaffolding, with checkout price IDs derived from server configuration and unknown webhook prices skipped instead of granting paid access
 
 Do not claim verified production readiness until build, lint, environment, database migrations, auth, Stripe, OpenAI, MCP, and deployment target have been checked in the current environment.
 
-Current local verification from 2026-05-16:
+Current local verification from 2026-05-17:
 - `npm ci` passed from the lockfile
 - `npm run lint` passed
 - `npm run typecheck` passed
 - `npm run build` passed with strict TypeScript and ESLint checks enabled
-- `npm run test:e2e` passed for logged-out demo workflows, task workspace lifecycle, local-date due-today behavior, file-import preview/confirm flow, agent output history/review notes, persistent appearance and browser reminder settings, task/agent auth guards, MCP/OpenAPI/action auth smoke tests, DB-backed MCP handler and API-key validation coverage, billing guardrails, deterministic task-intelligence coverage, import parser coverage, Stripe entitlement mapping, and local validation helper contracts
+- `npm run test:e2e` passed for logged-out demo workflows, task workspace lifecycle, local-date due-today behavior, file-import preview/confirm flow, agent output history/review notes, persistent appearance and browser reminder settings, task/agent auth guards, MCP/OpenAPI/action auth smoke tests, DB-backed MCP handler and API-key validation coverage, billing guardrails, deterministic task-intelligence coverage, import parser coverage, Stripe entitlement mapping, task route validation, and local validation helper contracts
 - `npm audit --audit-level=moderate` passed with 0 vulnerabilities after the Next.js 16 / ESLint 9 upgrade
 - `npm run verify:env` failed because `.env.local` is absent; only `.env.local.example` exists in this workspace
 

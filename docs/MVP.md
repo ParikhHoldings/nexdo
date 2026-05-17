@@ -28,7 +28,7 @@ Acceptance gate:
 Current evidence:
 - `TaskInput` supports capture.
 - `npm run test:e2e` covers logged-out task creation and reload persistence.
-- `POST /api/tasks` validates normalized task input before quota and insert.
+- `POST /api/tasks` uses `lib/task-validation.ts` to validate normalized task input and reject protected fields before quota and insert.
 - Authenticated task-capture save failures or stale sessions restore the input and show an error instead of adding a local demo task.
 
 ### 2. Structure
@@ -57,7 +57,7 @@ Current evidence:
 - `TaskDetail` edit mode supports the MVP task fields.
 - The task store rolls back failed authenticated edit/delete mutations and surfaces visible app notifications.
 - `lib/ai-response-validation.ts` bounds OpenAI output.
-- `PATCH /api/tasks/[id]` allowlists user-editable fields and rejects `agent_output`.
+- `PATCH /api/tasks/[id]` uses `lib/task-validation.ts` to allowlist user-editable fields and reject protected/server-managed fields such as `user_id`, `completed_at`, `source_agent_id`, and `agent_output`.
 
 ### 3. Prioritize
 The product should make the daily list more useful than a static checklist.

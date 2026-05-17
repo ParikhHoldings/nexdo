@@ -13,6 +13,7 @@ import {
 } from '../../lib/agent-output'
 import { quotaExceededResponse } from '../../lib/quota'
 import { rateLimitResponseHeaders } from '../../lib/rate-limit'
+import { validateTaskInput, validateTaskPatch } from '../../lib/task-validation'
 
 test('AI task input sanitizer trims, bounds, and defaults task fields', () => {
   const result = sanitizeAiTasks(
@@ -185,4 +186,98 @@ test('agent output helper preserves run history and verification notes', () => {
   )
   expect(legacy?.history).toHaveLength(1)
   expect(legacy?.review.status).toBe('unreviewed')
+})
+
+test('task validation normalizes safe create inputs and rejects protected fields', () => {
+  const valid = validateTaskInput({
+    title: '  Draft launch note  ',
+    raw_input: ' Draft launch note tomorrow ',
+    priority: 'high',
+    due_date: '2026-05-18',
+    due_time: '09:30',
+    context: '  Align with verified product truth.  ',
+    source: 'manual',
+    action_type: 'draft',
+    estimated_minutes: '25.6',
+    energy_level: 'light',
+    people: [' Nathan ', '', 'Quill'],
+    tags: [' launch ', 'copy'],
+  })
+
+  expect(valid.errors).toEqual([])
+  expect(valid.task).toMatchObject({
+    title: 'Draft launch note',
+    raw_input: 'Draft launch note tomorrow',
+    priority: 'high',
+    due_date: '2026-05-18',
+    due_time: '09:30',
+    context: 'Align with verified product truth.',
+    source: 'manual',
+    action_type: 'draft',
+    estimated_minutes: 26,
+    energy_level: 'light',
+    people: ['Nathan', 'Quill'],
+    tags: ['launch', 'copy'],
+  })
+
+  const invalid = validateTaskInput({
+    title: 'Agent-created spoof',
+    source: 'agent',
+    user_id: 'other-user',
+    source_agent_id: 'agent-1',
+    agent_output: { draft: 'spoofed' },
+  })
+
+  expect(invalid.task).toBeNull()
+  expect(invalid.errors.map((error) => error.field)).toEqual(
+    expect.arrayContaining(['source', 'user_id', 'source_agent_id', 'agent_output'])
+  )
+})
+
+test('task patch validation allowlists human-editable fields only', () => {
+  const valid = validateTaskPatch({
+    title: '  Review launch blockers  ',
+    status: 'done',
+    priority: 'urgent',
+    due_date: null,
+    due_time: '14:00:00',
+    context: '  Check provider smoke status.  ',
+    estimated_minutes: 12.4,
+    people: [' Nathan ', 'Founder'],
+    tags: [' launch ', ' verification '],
+  })
+
+  expect(valid.errors).toEqual([])
+  expect(valid.updates).toMatchObject({
+    title: 'Review launch blockers',
+    status: 'done',
+    priority: 'urgent',
+    due_date: null,
+    due_time: '14:00:00',
+    context: 'Check provider smoke status.',
+    estimated_minutes: 12,
+    people: ['Nathan', 'Founder'],
+    tags: ['launch', 'verification'],
+  })
+
+  const invalid = validateTaskPatch({
+    title: '',
+    user_id: 'other-user',
+    completed_at: '2026-05-18T12:00:00.000Z',
+    source_agent_id: 'agent-1',
+    agent_output: { draft: 'spoofed' },
+    people: ['x'.repeat(121)],
+  })
+
+  expect(invalid.updates).toEqual({})
+  expect(invalid.errors.map((error) => error.field)).toEqual(
+    expect.arrayContaining([
+      'title',
+      'user_id',
+      'completed_at',
+      'source_agent_id',
+      'agent_output',
+      'people',
+    ])
+  )
 })
