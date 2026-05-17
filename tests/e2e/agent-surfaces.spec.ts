@@ -307,6 +307,8 @@ test('agent endpoints reject non-object tool arguments before execution', () => 
   const rpcRoute = readFileSync('app/api/mcp/route.ts', 'utf8')
   const actionRoute = readFileSync('app/api/mcp/actions/[tool]/route.ts', 'utf8')
 
+  expect(rpcRoute).toContain('!isToolArgumentRecord(body)')
+  expect(rpcRoute).toContain('jsonRpcError(errorId, INVALID_REQUEST,')
   expect(rpcRoute).toContain('Tool call params must be an object')
   expect(rpcRoute).toContain('Tool arguments must be a JSON object')
   expect(rpcRoute).toContain('!isToolArgumentRecord(params.arguments)')

@@ -17,7 +17,7 @@ interface JsonRpcRequest {
   jsonrpc: '2.0'
   id?: string | number | null
   method: string
-  params?: Record<string, unknown>
+  params?: unknown
 }
 
 interface JsonRpcResponse {
@@ -144,7 +144,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Parse request body
-  let body: JsonRpcRequest
+  let body: unknown
   try {
     body = await request.json()
   } catch {
@@ -157,18 +157,23 @@ export async function POST(request: NextRequest) {
   // Validate JSON-RPC format. MCP clients may send initialized as a
   // notification, which intentionally omits id and expects no response.
   if (
+    !isToolArgumentRecord(body) ||
     body.jsonrpc !== '2.0' ||
     typeof body.method !== 'string' ||
     !body.method.trim() ||
     (body.id !== undefined && !isJsonRpcId(body.id))
   ) {
+    const errorId =
+      isToolArgumentRecord(body) && isJsonRpcId(body.id) ? body.id : null
+
     return NextResponse.json(
-      jsonRpcError(body?.id ?? null, INVALID_REQUEST, 'Invalid JSON-RPC request'),
+      jsonRpcError(errorId, INVALID_REQUEST, 'Invalid JSON-RPC request'),
       { status: 400 }
     )
   }
 
-  const { id, method, params } = body
+  const bodyJsonRpc = body as unknown as JsonRpcRequest
+  const { id, method, params } = bodyJsonRpc
   const isNotification = id === undefined
 
   // Route to appropriate handler
