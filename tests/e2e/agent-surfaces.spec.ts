@@ -333,6 +333,10 @@ test('server-managed task fields stay on service-role write paths', () => {
     'supabase/migrations/009_task_source_grants.sql',
     'utf8'
   )
+  const contentMigration = readFileSync(
+    'supabase/migrations/010_task_content_constraints.sql',
+    'utf8'
+  )
   const noteMigration = readFileSync(
     'supabase/migrations/008_task_note_column_grants.sql',
     'utf8'
@@ -355,6 +359,15 @@ test('server-managed task fields stay on service-role write paths', () => {
   expect(updateGrant).toBeTruthy()
   expect(sourceMigration).toContain('revoke insert on table tasks from authenticated')
   expect(sourceMigration).toContain('revoke update on table tasks from authenticated')
+  expect(contentMigration).toContain('tasks_title_length')
+  expect(contentMigration).toContain('char_length(btrim(title)) between 1 and 500')
+  expect(contentMigration).toContain('tasks_context_length')
+  expect(contentMigration).toContain('char_length(context) <= 4000')
+  expect(contentMigration).toContain('tasks_estimated_minutes_bounds')
+  expect(contentMigration).toContain('estimated_minutes between 0 and 10080')
+  expect(contentMigration).toContain('tasks_people_bounds')
+  expect(contentMigration).toContain('tasks_tags_bounds')
+  expect(contentMigration).toContain('text_array_within_bounds')
 
   for (const grant of [metadataInsertGrant, metadataUpdateGrant, insertGrant, updateGrant]) {
     expect(grant).not.toContain('agent_output')
@@ -418,6 +431,8 @@ test('server-managed task fields stay on service-role write paths', () => {
   expect(supabaseSmoke).toContain('task_notes schema')
   expect(supabaseSmoke).toContain('direct task insert cannot spoof task source')
   expect(supabaseSmoke).toContain('direct task update cannot spoof task source')
+  expect(supabaseSmoke).toContain('direct task insert enforces task content bounds')
+  expect(supabaseSmoke).toContain('direct task update enforces task content bounds')
   expect(supabaseSmoke).toContain('direct task note insert cannot write metadata columns')
   expect(supabaseSmoke).toContain('ok RLS task note insert')
   expect(supabaseSmoke).toContain('direct task note insert enforces content length')

@@ -59,6 +59,7 @@ Acceptance gate:
 - AI/provider output is validated before becoming task data.
 - Generic user edits cannot spoof server-managed agent output.
 - Direct browser Supabase writes cannot spoof server-managed agent output, the broad task source flag, source-agent metadata, ingestion intent, or completion timestamps.
+- Direct browser Supabase writes cannot bypass core task content bounds for blank titles, oversized text, impossible estimates, or unbounded people/tag arrays.
 - Direct browser Supabase writes cannot spoof task-note metadata such as note type or creation time.
 - Direct browser Supabase writes cannot bypass the bounded task-note content contract.
 
@@ -70,7 +71,7 @@ Current evidence:
 - The task store rolls back failed authenticated edit/delete mutations and surfaces visible app notifications.
 - `lib/ai-response-validation.ts` bounds OpenAI output.
 - `PATCH /api/tasks/[id]` uses `lib/task-validation.ts` to allowlist user-editable fields and reject protected/server-managed fields such as `user_id`, `completed_at`, `source_agent_id`, and `agent_output`.
-- Migrations `007_task_column_grants.sql` and `009_task_source_grants.sql` limit direct authenticated task inserts/updates to user-editable columns that exclude the broad task source flag, while human task creation, task completion, agent output, trace metadata, and imported completion/external refs are written through server/service-role paths.
+- Migrations `007_task_column_grants.sql`, `009_task_source_grants.sql`, and `010_task_content_constraints.sql` limit direct authenticated task inserts/updates to user-editable columns that exclude the broad task source flag and still enforce the core task content bounds, while human task creation, task completion, agent output, trace metadata, and imported completion/external refs are written through server/service-role paths.
 - Migration `008_task_note_column_grants.sql` limits direct authenticated task-note inserts to `task_id` and `content`, while also enforcing non-empty note content up to 2,000 characters; authenticated note routes write server-managed note metadata through the service-role path after ownership checks.
 
 ### 3. Prioritize

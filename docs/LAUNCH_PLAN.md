@@ -24,9 +24,9 @@ The goal is not a broad public launch. The credible Monday target is a verified 
 - Authenticated app smoke can now verify deployed app-cookie auth, task list/create/update/delete, and task-note validation/create/readback against a real Supabase-backed app session.
 - The MCP settings page now exposes recent agent activity from the audit table when a user is authenticated.
 - Agent task creation now has local idempotency handling through `source_agent_id` plus `external_ref`; real Supabase/API-key replay verification is still required.
-- PR #3 Web rails passed on 2026-05-17 after the Stripe failed-payment entitlement hardening commit (`ce3bdcf`).
+- PR #3 Web rails passed on recent launch-readiness heads; inspect current checks after each push before treating the newest head as current-green.
 - GitHub Actions Web rails include install, lint, typecheck, build, dependency audit, and Playwright smoke testing so CI matches the documented launch/deploy checklist.
-- Vercel preview deployment and Vercel Preview Comments passed on the same checked head, but later pushes can hit Vercel account build-rate limits.
+- Vercel preview deployment passed on a recent checked code head, but later pushes can hit Vercel account build-rate limits.
 - Remote route smoke against protected previews needs `VERCEL_AUTOMATION_BYPASS_SECRET` or an unprotected preview URL because those previews are behind Vercel Deployment Protection.
 - Strict build rails: TypeScript and lint failures block `npm run build`. Verified locally on 2026-05-17.
 - OpenAI provider verification now has a repeatable smoke script, `npm run smoke:openai`; it rejects placeholder keys and verifies parse, prioritization, briefing, research, draft, and prep output shapes. With `--app`, it also creates a disposable Supabase user and verifies authenticated app parse, prioritize, briefing, and research/draft/prep execution routes, using Vercel protection bypass headers when configured. It still needs to be run with real OpenAI, Supabase, and target app env.
@@ -38,7 +38,7 @@ The goal is not a broad public launch. The credible Monday target is a verified 
 - MCP provider verification now uses Vercel protection bypass headers when configured, covering OpenAPI, JSON-RPC, SSE, ChatGPT Actions, scoped-key denial, write, and audit checks against protected previews.
 - Authenticated app-route verification now has a repeatable smoke script, `npm run smoke:app`, including task CRUD, task notes, and agent-review save behavior; it still needs to be run with real Supabase credentials against the target app URL.
 - Supabase migrations now include quota cleanup so usage read probes reset monthly counters without writing zero-quantity audit events.
-- Supabase migrations now column-limit direct browser task inserts/updates so the broad task source flag, agent output, source-agent metadata, ingestion intent, and completion timestamps stay server-managed; direct browser task-note inserts cannot spoof note type or creation time; authenticated task creation, imports, and note routes use service-role persistence after auth/quota/ownership checks to preserve server-managed fields.
+- Supabase migrations now column-limit and content-bound direct browser task inserts/updates so the broad task source flag, agent output, source-agent metadata, ingestion intent, completion timestamps, blank titles, oversized text, impossible estimates, and unbounded people/tag arrays stay controlled; direct browser task-note inserts cannot spoof note type or creation time; authenticated task creation, imports, and note routes use service-role persistence after auth/quota/ownership checks to preserve server-managed fields.
 - Truthful public copy that describes bounded AI assistance instead of open-ended autonomous task completion. Draft tightened on 2026-05-16; still needs Quill/founder approval before external use.
 - Updated docs that tell future agents what exists, what is verified, and what is still blocked.
 

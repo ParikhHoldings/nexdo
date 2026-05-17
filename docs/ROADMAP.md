@@ -18,8 +18,8 @@
 - `npm run smoke:app` now verifies authenticated app-cookie task CRUD, task-note routes, and seeded agent-review save behavior against a supplied app URL and real Supabase env.
 - Playwright tests cover DB-backed MCP tool handler and API-key validation behavior through an in-memory Supabase double, including owned reads, search, briefing, create idempotency, quota ordering, mutations, agent task-note append/readback, audit logging, hashed-key lookup, legacy-key migration, and paid-plan gating.
 - GitHub Actions verification exists for install, lint, typecheck, build, dependency audit, and Playwright smoke testing.
-- PR #3 Web rails passed on 2026-05-17 after the Stripe failed-payment entitlement hardening commit (`ce3bdcf`).
-- Vercel preview deployment and Vercel Preview Comments passed on the same checked head, but later pushes can hit Vercel account build-rate limits.
+- PR #3 Web rails passed on recent launch-readiness heads; inspect current checks after each push before treating the newest head as current-green.
+- Vercel preview deployment passed on a recent checked code head, but later pushes can hit Vercel account build-rate limits.
 - Direct remote route smoke against protected previews is blocked by Vercel Deployment Protection until an automation bypass secret or unprotected preview URL is available.
 - Dependency audit is clean after the Next.js 16, ESLint 9, and PostCSS remediation.
 - `npm ci`, `npm run lint`, `npm run typecheck`, `npm run build`, `npm run test:e2e` with 97 tests, dependency audit, and the technical launch smoke partial passed locally on 2026-05-17.
@@ -33,7 +33,7 @@
 - The bounded executable action contract is centralized in `lib/task-actions.ts` so UI surfaces, authenticated execution, and agent-output history agree that only research, draft, and prep tasks can run AI execution.
 - Agent `update_task` can now maintain the core planning fields humans can edit, including due time, action type, estimate, energy level, people, and tags; `add_task_note` lets agents append reviewable handoff context without changing task status.
 - Human task-create and task-patch routes now share `lib/task-validation.ts` so protected/server-managed fields are rejected before quota or database mutation.
-- Direct browser task writes are now column-limited so the broad task source flag, agent output, source-agent metadata, ingestion intent, and completion timestamps stay server-managed; direct browser task-note writes are column-limited so note type and creation time stay server-managed; server task-create, import, and note routes persist server-managed fields through service-role paths after auth/quota checks.
+- Direct browser task writes are now column-limited and database-bounded so the broad task source flag, agent output, source-agent metadata, ingestion intent, completion timestamps, blank titles, oversized text, impossible estimates, and unbounded people/tag arrays stay controlled; direct browser task-note writes are column-limited so note type and creation time stay server-managed; server task-create, import, and note routes persist server-managed fields through service-role paths after auth/quota checks.
 - The landing/signup draft now routes demo CTAs to the verified demo path and avoids treating unverified agent flows as a broad launch claim.
 - Connect AI setup guidance now routes paid users without a copied key directly to the API settings tab.
 - Done-page bulk delete now restores failed authenticated deletes immediately instead of hiding failed tasks until refresh.

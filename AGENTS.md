@@ -31,7 +31,7 @@ The product promise should be grounded in what the code actually supports:
 - Connect AI setup and settings UI should keep API access clearly gated to Power/team plans until pricing or entitlement truth changes
 - hashed API-key storage with one-time key reveal, short key hints in settings, and legacy raw-key migration/fallback
 - narrowed browser-visible profile columns and direct profile self-updates so clients can read/edit needed preferences without direct access to Stripe IDs, raw/hash API-key material, quota internals, or billing mutation fields
-- narrowed direct browser task insert/update columns so agent output, the broad task source flag, source-agent metadata, ingestion intent, and completion timestamps remain server-managed
+- narrowed direct browser task insert/update columns so agent output, the broad task source flag, source-agent metadata, ingestion intent, and completion timestamps remain server-managed, with database bounds on user-editable task content
 - narrowed direct browser task-note insert/update columns so note type and creation time remain server-managed while bounded note content stays user-editable
 - authenticated import routes persist imported task rows through the service-role path after auth/quota checks so imported completion timestamps and external source references can be kept without reopening those columns to direct browser writes
 - bounded OpenAI response validation for task parsing, prioritization, briefing, and research/draft/prep output before provider content is returned or persisted
@@ -145,7 +145,7 @@ present.
 
 `npm run smoke:supabase -- --write` should verify real migrations, profile
 column grants, direct task and task-note column-grant denials for
-server-managed fields and task-source spoofing, agent external-ref uniqueness, private audit-event
+server-managed fields, task-source spoofing, and task content bounds, agent external-ref uniqueness, private audit-event
 reads, browser audit-event insert denial, quota increments/no-ops, and
 rate-limit allow/block behavior.
 

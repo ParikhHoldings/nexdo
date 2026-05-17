@@ -60,6 +60,16 @@ RLS ownership alone does not stop a signed-in user from spoofing agent output, t
 ### Impact
 Authenticated task creation and imports now save through the service-role path after auth/quota checks so validated task source values, imported completion timestamps, and external source references still persist. Real Supabase smoke must verify direct browser source-spoof denial, server-managed column denial, agent external-ref uniqueness, audit-event privacy, and normal task CRUD before launch readiness is claimed.
 
+## 2026-05-17 - Browser task content is database-bounded
+### Decision
+Direct authenticated browser Supabase inserts and updates on `tasks` must satisfy database constraints for non-empty bounded titles, bounded raw input/description/context text, bounded estimated minutes, and bounded non-empty people/tag arrays.
+
+### Why
+Route validation protects app API writes, but direct browser Supabase writes can still target user-editable task columns. A signed-in user should not be able to bypass the task content contract with blank titles, oversized text, impossible estimates, or unbounded arrays that would make human and agent task surfaces unreliable.
+
+### Impact
+Future task field limits should be updated in both `lib/task-validation.ts` and the database constraint layer. Real Supabase smoke must verify direct browser denial for invalid task content as well as server-managed metadata columns.
+
 ## 2026-05-17 - Browser task-note metadata is column-limited
 ### Decision
 Direct authenticated browser Supabase inserts on `task_notes` are limited to `task_id` and `content`, while note metadata such as `note_type` and `created_at` stays server-managed. New task-note rows must also satisfy the same non-empty, 2,000-character content bound used by the app route. Authenticated task-note API routes should write note metadata through service-role paths after checking task ownership.

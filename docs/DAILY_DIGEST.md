@@ -68,6 +68,7 @@
 - Added regression coverage for the task column-grant/service-role write boundary across task mutation, agent execution/review, and import routes.
 - Added task-note column grants and content-length checks so direct browser Supabase writes cannot spoof note type/creation time or bypass bounded note content, moved authenticated note metadata writes through the service-role route, and expanded Supabase smoke/source coverage for note metadata and length denials.
 - Added task-source column grants so direct browser Supabase writes cannot spoof `source: agent`, moved authenticated task creation through the service-role route after validation/quota checks, and expanded Supabase smoke/source coverage for source-spoof denial.
+- Added task content constraints so direct browser Supabase writes cannot bypass blank-title, oversized-text, out-of-range-estimate, or oversized people/tag array bounds.
 - Moved agent execution service-role output persistence preflight ahead of rate-limit, quota, and provider work.
 - Updated the GitHub Actions verify workflow to Node-24-runtime action releases while keeping the app test runtime on Node 22.
 - Verified PR #3 Web rails and Vercel preview deployment after the local-date task surface rail; documented that later PR heads can still hit the Vercel account build-rate limit.
@@ -113,7 +114,7 @@
 - Strengthened Connect AI connection testing so pasted full keys must initialize MCP and return available tools through `tools/list`.
 - Expanded `npm run smoke:app` so real app-session verification covers seeded agent-review validation and save behavior.
 - Expanded `npm run smoke:stripe -- --write --webhook` so protected-preview runs use Vercel bypass headers and verify authenticated checkout/portal app routes.
-- Verified PR #3 Web rails and Vercel preview deployment on the Stripe failed-payment entitlement hardening head (`ce3bdcf`).
+- Verified PR #3 Web rails and Vercel preview deployment on a checked launch-readiness head; later pushes still require fresh PR-check inspection.
 - Expanded OpenAI app-route and MCP provider smokes so protected-preview launch checks use Vercel bypass headers when configured.
 - Hardened Stripe failed-payment handling so `invoice.payment_failed` downgrades entitlements to Free and the webhook smoke verifies it.
 - Normalized Stripe webhook customer IDs across string and expanded-object event shapes before entitlement updates.

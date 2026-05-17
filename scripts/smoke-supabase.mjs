@@ -279,6 +279,46 @@ async function writeSmoke() {
     }
     console.log('ok direct task insert cannot spoof task source')
 
+    const invalidTaskInserts = [
+      {
+        label: 'blank task title',
+        payload: {
+          user_id: userId,
+          title: '   ',
+        },
+      },
+      {
+        label: 'oversized task context',
+        payload: {
+          user_id: userId,
+          title: 'Nexdo invalid context smoke task',
+          context: 'x'.repeat(4001),
+        },
+      },
+      {
+        label: 'out-of-range task estimate',
+        payload: {
+          user_id: userId,
+          title: 'Nexdo invalid estimate smoke task',
+          estimated_minutes: 10081,
+        },
+      },
+      {
+        label: 'oversized task tag array',
+        payload: {
+          user_id: userId,
+          title: 'Nexdo invalid tags smoke task',
+          tags: Array.from({ length: 51 }, (_, index) => `tag-${index}`),
+        },
+      },
+    ]
+
+    for (const { label, payload } of invalidTaskInserts) {
+      const { error } = await userClient.from('tasks').insert(payload)
+      if (!error) fail(`direct task insert accepted ${label}`)
+    }
+    console.log('ok direct task insert enforces task content bounds')
+
     const { data: insertedTask, error: insertError } = await userClient
       .from('tasks')
       .insert({
@@ -355,6 +395,15 @@ async function writeSmoke() {
       fail('direct task update could spoof agent source')
     }
     console.log('ok direct task update cannot spoof task source')
+
+    const { error: contentBoundUpdateError } = await userClient
+      .from('tasks')
+      .update({ title: '   ' })
+      .eq('id', insertedTask.id)
+    if (!contentBoundUpdateError) {
+      fail('direct task update could bypass task content bounds')
+    }
+    console.log('ok direct task update enforces task content bounds')
 
     const { error: protectedTaskUpdateError } = await userClient
       .from('tasks')
