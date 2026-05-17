@@ -17,7 +17,7 @@ Nexdo is an AI-native task manager built to move tasks from capture into priorit
 - agent workflows need a reliable task layer that humans can inspect and control
 
 ## Product-truth guardrails
-- Safe to say as draft/internal truth: Nexdo supports structured task capture, task-detail notes, AI parsing, prioritization, daily briefing, bounded research/draft/prep execution for executable task types, imports, and API-key based agent interop including reviewable task-note appends in the codebase.
+- Safe to say as draft/internal truth: Nexdo supports structured task capture, task-detail notes, AI parsing, prioritization, daily briefing, bounded research/draft/prep execution for executable task types, imports, Settings task export, and API-key based agent interop including reviewable task-note appends in the codebase.
 - Do not externally claim production reliability, broad autonomous execution, large user traction, enterprise security, or fully verified integrations until checked end to end.
 - Public-facing copy must go through Quill before launch or outreach.
 - Prefer "helps prioritize and prepare execution" over "does all your tasks" unless the specific task type and limitation are clear.

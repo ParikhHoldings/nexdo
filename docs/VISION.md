@@ -22,6 +22,7 @@ Nexdo helps users organize, prioritize, and execute meaningful work by turning p
 - MCP and ChatGPT Actions surfaces exist for external agents to interact with tasks through an API key.
 - OpenAPI action schema, MCP/action unauthenticated guardrails, and action CORS headers are smoke-tested locally.
 - Demo mode exists so the app can be explored without a configured Supabase session.
+- Settings can export the currently loaded workspace tasks as JSON or CSV for backup, review, and agent handoff.
 - Local clean install, lint, typecheck, build, dependency audit, full Playwright checks, and the technical launch smoke partial passed on 2026-05-17.
 
 ## Current constraints

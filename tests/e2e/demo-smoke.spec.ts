@@ -912,6 +912,7 @@ test('settings tab query opens billing tab', async ({ page }) => {
   const source = readFileSync('app/(app)/settings/page.tsx', 'utf8')
 
   expect(source).toContain("const activeTab = isSettingsTab(requestedTab) ? requestedTab : 'profile'")
+  expect(source).toContain("'data'")
   expect(source).toContain('params.set(\'tab\', activeTab)')
   expect(source).toContain("router.replace(`/settings?${params.toString()}`, { scroll: false })")
 
@@ -929,6 +930,39 @@ test('settings tab query opens billing tab', async ({ page }) => {
   await page.getByRole('button', { name: 'Upgrade now' }).click()
   await expect(page).toHaveURL(/\/settings\?tab=billing/)
   await expect(page.getByRole('heading', { name: 'Current Plan' })).toBeVisible()
+})
+
+test('settings data tab exports loaded demo tasks', async ({ page }) => {
+  await page.goto('/settings?tab=data')
+
+  await expect(page.getByRole('heading', { name: 'Data Export' })).toBeVisible()
+  await expect(page.getByText(/Loaded tasks: [1-9]/)).toBeVisible()
+
+  const [jsonDownload] = await Promise.all([
+    page.waitForEvent('download'),
+    page.getByRole('button', { name: /Export JSON/ }).click(),
+  ])
+  expect(jsonDownload.suggestedFilename()).toMatch(
+    /^nexdo-tasks-\d{4}-\d{2}-\d{2}\.json$/
+  )
+  const jsonPath = await jsonDownload.path()
+  expect(jsonPath).toBeTruthy()
+  const payload = JSON.parse(readFileSync(jsonPath || '', 'utf8'))
+  expect(payload.version).toBe(1)
+  expect(payload.task_count).toBeGreaterThan(0)
+  expect(payload.tasks[0].title).toBeTruthy()
+
+  const [csvDownload] = await Promise.all([
+    page.waitForEvent('download'),
+    page.getByRole('button', { name: /Export CSV/ }).click(),
+  ])
+  expect(csvDownload.suggestedFilename()).toMatch(
+    /^nexdo-tasks-\d{4}-\d{2}-\d{2}\.csv$/
+  )
+  const csvPath = await csvDownload.path()
+  expect(csvPath).toBeTruthy()
+  const csv = readFileSync(csvPath || '', 'utf8')
+  expect(csv).toContain('title,raw_input,description,status,priority,due_date,due_time')
 })
 
 test('appearance settings apply and persist theme locally', async ({ page }) => {

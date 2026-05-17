@@ -15,14 +15,18 @@ import {
   Palette,
   Moon,
   Sun,
+  Download,
+  FileJson,
+  FileSpreadsheet,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { PricingTable } from '@/components/pricing-table'
-import { useUIStore, useUserStore, type Theme } from '@/lib/store'
+import { useTaskStore, useUIStore, useUserStore, type Theme } from '@/lib/store'
 import { persistDemoProfile } from '@/lib/demo-profile'
 import { cn } from '@/lib/utils'
+import { tasksToCsv, tasksToJsonString } from '@/lib/task-export'
 import {
   API_KEY_SCOPE_LABELS,
   API_KEY_SCOPES,
@@ -32,7 +36,7 @@ import {
   type ApiKeyScope,
 } from '@/lib/agent-scopes'
 
-const SETTINGS_TABS = ['profile', 'appearance', 'notifications', 'billing', 'api'] as const
+const SETTINGS_TABS = ['profile', 'appearance', 'notifications', 'data', 'billing', 'api'] as const
 type Tab = (typeof SETTINGS_TABS)[number]
 
 function isSettingsTab(value: string | null): value is Tab {
@@ -51,6 +55,7 @@ function SettingsContent() {
   const activeTab = isSettingsTab(requestedTab) ? requestedTab : 'profile'
 
   const { profile, isAuthenticated, setProfile } = useUserStore()
+  const { tasks } = useTaskStore()
   const {
     theme,
     setTheme,
@@ -91,6 +96,8 @@ function SettingsContent() {
   const [isManagingBilling, setIsManagingBilling] = useState(false)
   const [notificationMessage, setNotificationMessage] = useState<string | null>(null)
   const [notificationError, setNotificationError] = useState<string | null>(null)
+  const [exportMessage, setExportMessage] = useState<string | null>(null)
+  const [exportError, setExportError] = useState<string | null>(null)
 
   const handleCopyApiKey = () => {
     if (copyableApiKey) {
@@ -313,10 +320,44 @@ function SettingsContent() {
     }
   }
 
+  const handleExportTasks = (format: 'json' | 'csv') => {
+    setExportMessage(null)
+    setExportError(null)
+
+    if (tasks.length === 0) {
+      setExportError('No tasks are loaded to export.')
+      return
+    }
+
+    const exportedAt = new Date()
+    const content =
+      format === 'json'
+        ? tasksToJsonString(tasks, exportedAt)
+        : tasksToCsv(tasks)
+    const blob = new Blob([content], {
+      type:
+        format === 'json'
+          ? 'application/json;charset=utf-8'
+          : 'text/csv;charset=utf-8',
+    })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `nexdo-tasks-${exportedAt.toISOString().slice(0, 10)}.${format}`
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    window.setTimeout(() => URL.revokeObjectURL(url), 0)
+    setExportMessage(
+      `Exported ${tasks.length} task${tasks.length === 1 ? '' : 's'} as ${format.toUpperCase()}.`
+    )
+  }
+
   const tabs = [
     { key: 'profile' as Tab, label: 'Profile', icon: User },
     { key: 'appearance' as Tab, label: 'Appearance', icon: Palette },
     { key: 'notifications' as Tab, label: 'Notifications', icon: Bell },
+    { key: 'data' as Tab, label: 'Data', icon: Download },
     { key: 'billing' as Tab, label: 'Billing', icon: CreditCard },
     { key: 'api' as Tab, label: 'API', icon: Key },
   ]
@@ -535,6 +576,71 @@ function SettingsContent() {
                   <p className="text-sm text-red-400">{notificationError}</p>
                 )}
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Data Tab */}
+        {activeTab === 'data' && (
+          <div className="space-y-6">
+            <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 space-y-5">
+              <div>
+                <h2 className="text-lg font-semibold text-zinc-100">
+                  Data Export
+                </h2>
+                <p className="mt-1 text-sm text-zinc-500">
+                  Download the tasks currently loaded in this workspace.
+                </p>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => handleExportTasks('json')}
+                  className="flex items-start gap-3 rounded-lg border border-zinc-800 bg-zinc-900 p-4 text-left transition-colors hover:border-zinc-700"
+                >
+                  <span className="flex h-10 w-10 items-center justify-center rounded-lg border border-zinc-800 bg-zinc-800/50 text-zinc-300">
+                    <FileJson className="h-5 w-5" />
+                  </span>
+                  <span>
+                    <span className="block font-medium text-zinc-100">
+                      Export JSON
+                    </span>
+                    <span className="text-sm text-zinc-500">
+                      Structured task data for backup or agent handoff.
+                    </span>
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleExportTasks('csv')}
+                  className="flex items-start gap-3 rounded-lg border border-zinc-800 bg-zinc-900 p-4 text-left transition-colors hover:border-zinc-700"
+                >
+                  <span className="flex h-10 w-10 items-center justify-center rounded-lg border border-zinc-800 bg-zinc-800/50 text-zinc-300">
+                    <FileSpreadsheet className="h-5 w-5" />
+                  </span>
+                  <span>
+                    <span className="block font-medium text-zinc-100">
+                      Export CSV
+                    </span>
+                    <span className="text-sm text-zinc-500">
+                      Spreadsheet-ready task list with planning metadata.
+                    </span>
+                  </span>
+                </button>
+              </div>
+
+              <p className="text-xs text-zinc-500">
+                Loaded tasks: {tasks.length}. Authenticated exports use the tasks
+                currently loaded in the app.
+              </p>
+              {exportMessage && (
+                <p className="text-sm text-emerald-400">{exportMessage}</p>
+              )}
+              {exportError && (
+                <p className="text-sm text-red-400">{exportError}</p>
+              )}
             </div>
           </div>
         )}

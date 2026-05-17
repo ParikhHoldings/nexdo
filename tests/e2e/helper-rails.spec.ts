@@ -34,6 +34,11 @@ import {
   isExecutableActionType,
 } from '../../lib/task-actions'
 import { MAX_TASK_NOTE_LENGTH, validateTaskNoteContent } from '../../lib/task-notes'
+import {
+  tasksToCsv,
+  tasksToExportPayload,
+  tasksToJsonString,
+} from '../../lib/task-export'
 import { formatRelativeDate } from '../../lib/utils'
 import type { Task } from '../../lib/database.types'
 
@@ -679,6 +684,62 @@ test('active task helpers include active work and exclude closed work', () => {
       '2026-05-17'
     ).map((task) => task.id)
   ).toEqual(['active-due'])
+})
+
+test('task export helpers preserve portable task metadata', () => {
+  const task: Task = {
+    id: 'task-1',
+    user_id: 'user-1',
+    title: 'Export "launch", review',
+    raw_input: 'Export launch review',
+    description: null,
+    status: 'in_progress',
+    priority: 'high',
+    due_date: '2026-05-18',
+    due_time: '09:30',
+    context: 'Include CSV escaping.',
+    source: 'manual',
+    action_type: 'prep',
+    estimated_minutes: 30,
+    energy_level: 'deep',
+    people: ['Casey', 'Jordan'],
+    tags: ['launch', 'backup'],
+    parent_task_id: null,
+    related_task_ids: null,
+    agent_output: null,
+    completed_at: null,
+    created_at: '2026-05-17T12:00:00.000Z',
+    updated_at: '2026-05-17T12:30:00.000Z',
+    source_agent_id: 'codex',
+    external_ref: 'handoff-1',
+    ingestion_intent: 'update',
+    agent_metadata: { reviewed: true },
+  }
+
+  const exportedAt = new Date('2026-05-17T13:00:00.000Z')
+  expect(tasksToExportPayload([task], exportedAt)).toMatchObject({
+    version: 1,
+    exported_at: '2026-05-17T13:00:00.000Z',
+    task_count: 1,
+    tasks: [
+      {
+        title: task.title,
+        raw_input: 'Export launch review',
+        agent_metadata: { reviewed: true },
+        due_time: '09:30',
+        people: ['Casey', 'Jordan'],
+        source_agent_id: 'codex',
+        external_ref: 'handoff-1',
+      },
+    ],
+  })
+
+  expect(JSON.parse(tasksToJsonString([task], exportedAt)).task_count).toBe(1)
+  const csv = tasksToCsv([task])
+  expect(csv).toContain('title,raw_input,description,status,priority,due_date,due_time')
+  expect(csv).toContain('"Export ""launch"", review"')
+  expect(csv).toContain('"Casey; Jordan"')
+  expect(csv).toContain('"{""reviewed"":true}"')
 })
 
 test('executable action helpers keep agent execution bounded to owned work types', () => {

@@ -56,6 +56,7 @@ Acceptance gate:
 - Users can save bounded profile preferences that keep account personalization valid.
 - Users can explicitly review and restore cancelled tasks so agent-side cancellation does not hide work from the human owner.
 - Non-default task statuses are visible on task cards so human owners can spot work that is in progress, waiting, done, or cancelled.
+- Users can download a portable copy of currently loaded tasks for backup, review, or agent handoff.
 - Failed authenticated edits/deletes do not leave stale optimistic UI without warning.
 - AI/provider output is validated before becoming task data.
 - Generic user edits cannot spoof server-managed agent output.
@@ -70,6 +71,7 @@ Current evidence:
 - `TaskDetail` supports task notes, with demo localStorage persistence and authenticated owned-task API routes.
 - All Tasks defaults to active work but can filter into `done` and `cancelled`; task detail includes `cancelled` in the human status selector.
 - Task cards show status badges for `in_progress`, `waiting`, `done`, and `cancelled`.
+- Settings > Data exports the tasks currently loaded in the workspace as JSON or CSV through `lib/task-export.ts`.
 - The task store rolls back failed authenticated edit/delete mutations and surfaces visible app notifications.
 - `lib/ai-response-validation.ts` bounds OpenAI output.
 - `PATCH /api/tasks/[id]` uses `lib/task-validation.ts` to allowlist user-editable fields and reject protected/server-managed fields such as `user_id`, `completed_at`, `source_agent_id`, and `agent_output`.
