@@ -38,6 +38,7 @@
 - added `npm run smoke:launch` to load a real env file, run local rails, run Supabase/OpenAI/Stripe/MCP provider smokes in order, and keep manual launch approval gates explicit
 - made landing-page pricing CTAs functional without implying verified production checkout: Free opens the demo, Pro/Power open signup, and Team opens the sales email path
 - narrowed pricing feature bullets away from unverified SSO, admin controls, team collaboration, and custom integration promises
+- tightened site metadata and agent system prompt language around early-access, bounded, reviewable AI assistance instead of broad automation claims
 - added optional trace metadata to MCP `complete_task` so completion calls can be audited with source agent and external reference context
 - expanded `npm run smoke:stripe -- --write --webhook` to post signed subscription events, verify unknown-price fail-closed behavior, verify paid/free tier transitions, and verify duplicate webhook idempotency against disposable Supabase/Stripe test data
 - expanded `npm run smoke:stripe -- --write --webhook` to verify free/pro/power quota plan-state boundaries after signed webhook tier changes

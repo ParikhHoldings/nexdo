@@ -4,18 +4,18 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: {
-    default: 'Nexdo - The AI-Native Task Manager',
+    default: 'Nexdo - Early-Access Task Workspace',
     template: '%s | Nexdo',
   },
   description:
-    'AI-native task management for humans and AI agents. Capture tasks, preserve context, prioritize work, and run bounded AI execution.',
+    'Task management for humans and AI agents. Capture tasks, preserve context, prioritize work, and review bounded AI assistance.',
   keywords: [
     'task manager',
     'AI',
     'productivity',
     'todo',
     'ai agents',
-    'automation',
+    'task planning',
   ],
   authors: [{ name: 'Nexdo' }],
   creator: 'Nexdo',
@@ -23,16 +23,16 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_US',
     url: 'https://nexdo.ai',
-    title: 'Nexdo - The AI-Native Task Manager',
+    title: 'Nexdo - Early-Access Task Workspace',
     description:
-      'Capture tasks, preserve context, prioritize work, and run bounded AI execution.',
+      'Capture tasks, preserve context, prioritize work, and review bounded AI assistance.',
     siteName: 'Nexdo',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Nexdo - The AI-Native Task Manager',
+    title: 'Nexdo - Early-Access Task Workspace',
     description:
-      'Capture tasks, preserve context, prioritize work, and run bounded AI execution.',
+      'Capture tasks, preserve context, prioritize work, and review bounded AI assistance.',
   },
   robots: {
     index: true,

@@ -6,6 +6,7 @@ test('landing page routes the primary CTA to the working demo path', async ({
 }) => {
   await page.goto('/')
 
+  await expect(page).toHaveTitle('Nexdo - Early-Access Task Workspace')
   await expect(
     page.getByRole('heading', { name: /Move tasks from capture to/i })
   ).toBeVisible()
@@ -40,6 +41,25 @@ test('landing page routes the primary CTA to the working demo path', async ({
   await expect(
     page.getByRole('heading', { name: 'Today', exact: true })
   ).toBeVisible({ timeout: 10000 })
+})
+
+test('public metadata and prompts stay below autonomous claims', () => {
+  const layoutSource = readFileSync('app/layout.tsx', 'utf8')
+  const promptSource = readFileSync('lib/prompts.ts', 'utf8')
+
+  expect(layoutSource).toContain('Nexdo - Early-Access Task Workspace')
+  expect(layoutSource).toContain('review bounded AI assistance')
+  expect(layoutSource).not.toContain('The AI-Native Task Manager')
+  expect(layoutSource).not.toContain("'automation'")
+
+  expect(promptSource).toContain(
+    'Generate bounded, reviewable outputs for research, drafting, and preparation tasks'
+  )
+  expect(promptSource).toContain(
+    'When a task needs external side effects or judgment'
+  )
+  expect(promptSource).not.toContain('tasks that can be automated')
+  expect(promptSource).not.toContain("complete a task automatically")
 })
 
 test('demo task capture, briefing, prioritization, and agent output work', async ({
