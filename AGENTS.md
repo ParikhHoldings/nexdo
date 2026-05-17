@@ -52,10 +52,9 @@ Current local verification from 2026-05-17:
 
 Current PR verification:
 - PR #3 Web rails passed in GitHub Actions on 2026-05-17 after the workflow action-runtime update
-- an earlier PR #3 Vercel preview deployment completed on 2026-05-16
-- the latest Vercel status is blocked by Vercel's build-rate limit and reports: "Deployment rate limited - retry in 24 hours"
+- the latest PR #3 Vercel deployment completed on 2026-05-17 after an earlier preview deployment completed on 2026-05-16
 
-Production environment, Supabase migrations, OpenAI provider calls, Stripe test-mode flows, scoped MCP/API-key execution, idempotency replay against real task data, agent audit writes, and deployment rails remain unverified in this pass.
+Production environment, Supabase migrations, OpenAI provider calls, Stripe test-mode flows, scoped MCP/API-key execution, idempotency replay against real task data, agent audit writes, and production deployment rails remain unverified in this pass.
 
 ## ICP And Positioning
 - Primary ICP: founders, operators, and AI power users with too many moving priorities and too much task context trapped in notes, chat, email, and other tools.
