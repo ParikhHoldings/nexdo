@@ -51,9 +51,9 @@ Current local verification from 2026-05-17:
 - `npm run verify:env` failed because `.env.local` is absent; only `.env.local.example` exists in this workspace
 
 Current PR verification:
-- PR #3 Web rails passed in GitHub Actions for commit `36bbf1b` on 2026-05-17
+- PR #3 Web rails passed in GitHub Actions on 2026-05-17 after the workflow action-runtime update
 - an earlier PR #3 Vercel preview deployment completed on 2026-05-16
-- the latest Vercel status for commit `36bbf1b` is blocked by Vercel's build-rate limit and reports: "Deployment rate limited - retry in 24 hours"
+- the latest Vercel status is blocked by Vercel's build-rate limit and reports: "Deployment rate limited - retry in 24 hours"
 
 Production environment, Supabase migrations, OpenAI provider calls, Stripe test-mode flows, scoped MCP/API-key execution, idempotency replay against real task data, agent audit writes, and deployment rails remain unverified in this pass.
 
