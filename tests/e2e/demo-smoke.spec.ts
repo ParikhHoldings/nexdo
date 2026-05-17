@@ -1096,6 +1096,9 @@ test('all tasks filters reviewable agent outputs', async ({ page }) => {
 
   await page.goto('/all')
   await expect(page.getByRole('heading', { name: 'All Tasks' })).toBeVisible()
+  await expect(page.getByText('unreviewed output', { exact: true })).toBeVisible()
+  await expect(page.getByText('needs revision', { exact: true })).toBeVisible()
+  await expect(page.getByText('verified output', { exact: true })).toBeVisible()
   await page.getByRole('button', { name: 'Filters' }).click()
 
   const reviewFilter = page.getByRole('group', {

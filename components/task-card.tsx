@@ -18,6 +18,10 @@ import {
 } from 'lucide-react'
 import { cn, formatDueTime, formatRelativeDate, getPriorityColor } from '@/lib/utils'
 import { agentTraceLabel, hasAgentTrace } from '@/lib/agent-trace'
+import {
+  agentOutputReviewStatus,
+  type AgentReviewStatus,
+} from '@/lib/agent-output'
 import { useTaskStore } from '@/lib/store'
 import { isExecutableActionType } from '@/lib/task-actions'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -45,6 +49,21 @@ const STATUS_BADGE: Partial<Record<TaskStatus, { label: string; className: strin
   cancelled: {
     label: 'cancelled',
     className: 'border-zinc-700 bg-zinc-800/50 text-zinc-400',
+  },
+}
+
+const REVIEW_BADGE: Record<AgentReviewStatus, { label: string; className: string }> = {
+  unreviewed: {
+    label: 'unreviewed output',
+    className: 'border-amber-500/20 bg-amber-500/10 text-amber-300',
+  },
+  needs_revision: {
+    label: 'needs revision',
+    className: 'border-orange-500/20 bg-orange-500/10 text-orange-300',
+  },
+  verified: {
+    label: 'verified output',
+    className: 'border-emerald-500/20 bg-emerald-500/10 text-emerald-300',
   },
 }
 
@@ -86,6 +105,8 @@ export const TaskCard = forwardRef<HTMLDivElement, TaskCardProps>(function TaskC
   const isCancelled = task.status === 'cancelled'
   const isActive = !isDone && !isCancelled
   const statusBadge = STATUS_BADGE[task.status]
+  const reviewStatus = agentOutputReviewStatus(task.agent_output, task.action_type)
+  const reviewBadge = reviewStatus ? REVIEW_BADGE[reviewStatus] : null
   const showAgentTrace = hasAgentTrace(task)
   const agentLabel = agentTraceLabel(task, 20)
 
@@ -186,6 +207,12 @@ export const TaskCard = forwardRef<HTMLDivElement, TaskCardProps>(function TaskC
               {statusBadge && (
                 <Badge variant="outline" className={statusBadge.className}>
                   {statusBadge.label}
+                </Badge>
+              )}
+
+              {reviewBadge && (
+                <Badge variant="outline" className={reviewBadge.className}>
+                  {reviewBadge.label}
                 </Badge>
               )}
 
