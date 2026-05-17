@@ -107,7 +107,7 @@
 - tightened `npm run smoke:mcp -- --write` so real endpoint verification checks `complete_task` returns persisted source-agent trace fields
 - added a labeled task-capture submit button and demo smoke coverage for click-submit behavior
 - fixed deterministic fallback parsing so relative-date phrases such as `by tomorrow` and `due today` do not leave dangling connector words in task titles
-- refreshed repo-facing verification summaries for the latest 100-test local rail
+- refreshed repo-facing verification summaries for the latest 101-test local rail
 - strengthened Connect AI connection testing so pasted full keys must initialize MCP and return available tools through `tools/list`
 - expanded `npm run smoke:app` so real app-session verification covers seeded agent-review validation and save behavior
 - expanded `npm run smoke:stripe -- --write --webhook` so protected-preview runs use Vercel bypass headers and verify authenticated checkout/portal app routes
@@ -147,6 +147,7 @@
 - revoked direct browser profile inserts so missing profile rows cannot be self-created with spoofed entitlement, API-key, Stripe, or quota state
 - kept Stripe webhook idempotency records service-owned so browser clients cannot read or spoof processed billing events
 - kept usage-event mutations and rate-limit buckets service-owned so browser clients cannot spoof quota history or inspect/reset rate gates
+- kept cached daily briefing writes service-owned so browser clients cannot spoof provider-generated briefing cache rows
 - made the MCP settings tool list reflect the current API key scopes
 - made the MCP settings setup flow prerequisite-aware so free/no-key profiles cannot test a connection and users are told to use the full one-time key, not the stored key hint
 - added an MCP settings activity list backed by `/api/mcp/events`
@@ -213,7 +214,7 @@
 ## High priority
 - configure and verify the real production deploy target
 - provide `VERCEL_AUTOMATION_BYPASS_SECRET` locally or use an unprotected preview URL so remote route smoke can verify the latest Vercel preview instead of stopping at Vercel Deployment Protection
-- run `npm run smoke:supabase -- --write` against a real Supabase project after applying migrations, including hashed API-key columns, profile column read/update grants, profile insert/content-bound denials, direct task and task-note column-grant denials, audit-event privacy, Stripe event record privacy/write denial, usage-event mutation denial, rate-limit bucket privacy, and agent external-ref uniqueness
+- run `npm run smoke:supabase -- --write` against a real Supabase project after applying migrations, including hashed API-key columns, profile column read/update grants, profile insert/content-bound denials, direct task and task-note column-grant denials, audit-event privacy, Stripe event record privacy/write denial, usage-event mutation denial, rate-limit bucket privacy, daily briefing cache write denial, and agent external-ref uniqueness
 - run `npm run smoke:app` with real Supabase env and the target app URL to verify authenticated app task CRUD, task-note routes, and agent-review persistence
 - run `npm run smoke:openai -- --app` with real OpenAI, Supabase, and target app env
 - run `npm run smoke:stripe -- --write --webhook` with Stripe test-mode keys and target Supabase/app env to verify authenticated checkout, portal, webhook events, quota plan-state boundaries, authenticated task-create quota behavior, and idempotency

@@ -547,6 +547,30 @@ test('quota telemetry and rate-limit buckets stay service-mutated', () => {
   expect(supabaseSmoke).toContain('browser client could read rate-limit buckets directly')
 })
 
+test('daily briefing cache writes stay service-owned', () => {
+  const migration = readFileSync(
+    'supabase/migrations/015_daily_briefing_grants.sql',
+    'utf8'
+  )
+  const supabaseSmoke = readFileSync('scripts/smoke-supabase.mjs', 'utf8')
+  const briefingRoute = readFileSync('app/api/briefing/route.ts', 'utf8')
+
+  expect(migration).toContain(
+    'revoke insert, update, delete on table daily_briefings from anon'
+  )
+  expect(migration).toContain(
+    'revoke insert, update, delete on table daily_briefings from authenticated'
+  )
+  expect(migration).not.toContain('grant insert')
+  expect(migration).not.toContain('grant update')
+
+  expect(supabaseSmoke).toContain('daily_briefings schema')
+  expect(supabaseSmoke).toContain('daily briefing cache requires service-owned writes')
+  expect(supabaseSmoke).toContain('browser client could insert daily briefing cache rows directly')
+
+  expect(briefingRoute).not.toContain(".from('daily_briefings')")
+})
+
 test('Connect AI no-key guidance deep-links to API settings', () => {
   const source = readFileSync('app/(app)/settings/mcp/page.tsx', 'utf8')
 

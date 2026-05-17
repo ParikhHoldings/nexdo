@@ -1,5 +1,15 @@
 # Decisions
 
+## 2026-05-17 - Daily briefing cache writes are service-owned
+### Decision
+Direct browser inserts, updates, and deletes on `daily_briefings` are revoked. Users may read their own cached briefing rows if this table is wired into the product later, but cache writes should come from service-owned provider/fallback routes.
+
+### Why
+Daily briefings are an AI/provider-facing product surface. If browser clients can write cached briefing content directly, future cache reads could present spoofed summaries as product-generated guidance.
+
+### Impact
+Before wiring `daily_briefings` into runtime reads, use a service-owned write path and keep real Supabase smoke coverage for direct browser write denial. Future briefing cache invalidation should not reopen client mutation grants.
+
 ## 2026-05-17 - Quota telemetry and rate-limit buckets are service-mutated
 ### Decision
 Browser clients cannot insert, update, or delete `usage_events`, and cannot read or mutate `rate_limits` directly. Quota and rate-limit state changes should go through service-role RPCs such as `increment_usage` and `consume_rate_limit`.

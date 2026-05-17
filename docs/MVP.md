@@ -226,7 +226,7 @@ Monday is not credible if:
 - the product is described as autonomous beyond bounded research/draft/prep output
 
 ## Launch blockers
-- Real Supabase migrations, auth, RLS, task CRUD, task-note CRUD, profile insert/read/update grants and content bounds, task/task-note column grants and content bounds, Stripe event record privacy/write denial, usage-event mutation denial, rate-limit bucket privacy, quota, uniqueness, and audit smoke.
+- Real Supabase migrations, auth, RLS, task CRUD, task-note CRUD, profile insert/read/update grants and content bounds, task/task-note column grants and content bounds, Stripe event record privacy/write denial, usage-event mutation denial, rate-limit bucket privacy, daily briefing cache write denial, quota, uniqueness, and audit smoke.
 - Real authenticated app API task CRUD, task-note, and agent-review route smoke with `npm run smoke:app`.
 - Real OpenAI parse, prioritize, briefing, and execution smoke. `npm run smoke:openai -- --app` can verify the authenticated app routes against a disposable Supabase user once real OpenAI/Supabase/app env is loaded.
 - Stripe test-mode checkout, portal, signed webhook, entitlement, quota, and idempotency smoke. `npm run smoke:stripe -- --write --webhook` now covers authenticated checkout and portal routes, signed webhook delivery, unknown-price fail-closed behavior, free/pro/power tier transitions, payment-failure downgrade to Free, quota plan-state boundaries, authenticated `POST /api/tasks` quota behavior under those tiers, and duplicate webhook replay.

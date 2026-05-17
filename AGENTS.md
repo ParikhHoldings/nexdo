@@ -20,7 +20,7 @@ The product promise should be grounded in what the code actually supports:
 - natural-language task capture with AI parsing, including due-date and due-time extraction; local fallback parsing should keep titles concise by moving schedule, priority, and estimate phrases into structured metadata
 - priority, due date, context, people, tags, action type, estimate, and energy metadata
 - task-detail notes for human context, decisions, links, and future agent handoff context, with demo localStorage persistence, authenticated owned-task note routes, and MCP/ChatGPT Actions support for external agents to append reviewable task notes
-- daily briefing and prioritization generated from task context
+- daily briefing and prioritization generated from task context, with cached briefing rows kept service-owned if the cache table is used
 - limited agent execution for owned `research`, `draft`, and `prep` task records, with server-side output persistence, run history, and user verification notes; `manual` and `remind` tasks are not executable AI-agent tasks
 - localStorage-backed demo-mode task and profile data when Supabase is unavailable or the visitor is logged out, so logged-out changes survive reloads
 - persistent dark/light appearance preferences for the app workspace
@@ -49,7 +49,7 @@ Current local verification from 2026-05-17:
 - `npm run lint` passed
 - `npm run typecheck` passed
 - `npm run build` passed with strict TypeScript and ESLint checks enabled
-- `npm run test:e2e` passed for 100 tests covering public landing/signup demo CTA smoke, logged-out demo workflows, task workspace lifecycle, task-detail notes save/reload behavior, Today focus/sidebar/briefing alignment for undated active tasks and cancelled-only work, mobile navigation open/close behavior, local-date due-today behavior, file-import preview/confirm flow, agent output history/review notes, persistent appearance and browser reminder settings, task/agent auth guards, shared executable action-type rails that keep `manual`/`remind` tasks out of AI execution controls, owned task-note route guardrails, authenticated app smoke source coverage for task CRUD and notes, profile/task/task-note/Stripe event/usage/rate-limit grant source coverage, MCP/OpenAPI/action auth smoke tests, API-to-Connect-AI handoff coverage, DB-backed MCP handler and API-key validation coverage including audit preflight failure behavior and `add_task_note` append/readback behavior, agent-completed trace visibility, billing guardrails, deterministic task-intelligence coverage including relative-date title cleanup, import parser coverage, Stripe entitlement mapping, task route validation, local validation helper contracts, invalid date/time rails, MCP/OpenAPI `cancelled` status contract alignment, and cancelled-task UI review/restore coverage
+- `npm run test:e2e` passed for 101 tests covering public landing/signup demo CTA smoke, logged-out demo workflows, task workspace lifecycle, task-detail notes save/reload behavior, Today focus/sidebar/briefing alignment for undated active tasks and cancelled-only work, mobile navigation open/close behavior, local-date due-today behavior, file-import preview/confirm flow, agent output history/review notes, persistent appearance and browser reminder settings, task/agent auth guards, shared executable action-type rails that keep `manual`/`remind` tasks out of AI execution controls, owned task-note route guardrails, authenticated app smoke source coverage for task CRUD and notes, profile/task/task-note/Stripe event/usage/rate-limit/daily-briefing grant source coverage, MCP/OpenAPI/action auth smoke tests, API-to-Connect-AI handoff coverage, DB-backed MCP handler and API-key validation coverage including audit preflight failure behavior and `add_task_note` append/readback behavior, agent-completed trace visibility, billing guardrails, deterministic task-intelligence coverage including relative-date title cleanup, import parser coverage, Stripe entitlement mapping, task route validation, local validation helper contracts, invalid date/time rails, MCP/OpenAPI `cancelled` status contract alignment, and cancelled-task UI review/restore coverage
 - `npm audit --audit-level=moderate` passed with 0 vulnerabilities after the Next.js 16 / ESLint 9 upgrade
 - `npm run smoke:launch -- --skip-local --skip-providers --technical-only` passed; provider smokes, public-copy approval, and production deploy approval remain separate manual gates
 - `npm run verify:env` failed because `.env.local` is absent; only `.env.local.example` exists in this workspace
@@ -148,8 +148,8 @@ column grants, direct task and task-note column-grant denials for
 server-managed fields, task-source spoofing, task content bounds, agent
 external-ref uniqueness, private audit-event reads, browser audit-event insert
 denial, service-owned Stripe webhook event records, quota increments/no-ops,
-usage-event mutation denial, rate-limit bucket privacy, and rate-limit
-allow/block behavior.
+usage-event mutation denial, rate-limit bucket privacy, daily briefing cache
+write denial, and rate-limit allow/block behavior.
 
 `npm run smoke:routes -- --url=https://preview.example` verifies the
 launch-facing marketing, app, auth, import, settings, MCP setup, privacy, and

@@ -5,7 +5,7 @@ Nexdo is an AI-native task manager focused on moving work from capture to forwar
 ## Current Product Shape
 This repo currently contains a Next.js app with:
 - marketing, auth, task workspace, settings, import, and MCP setup routes
-- Supabase-backed profiles, tasks, notes, daily briefings, usage events, and rate-limit tables
+- Supabase-backed profiles, tasks, notes, daily briefings, usage events, and rate-limit tables, with control/cache rows kept behind service-owned write paths where needed
 - natural-language task parsing with due-date/due-time extraction, concise fallback titles, daily briefing, prioritization, and limited agent execution through OpenAI
 - bounded validation for OpenAI JSON output before parsed tasks, briefings, prioritization, or agent results are returned or saved
 - shared task-create and task-patch validation that rejects protected/server-managed fields before quota or database mutation
@@ -32,7 +32,7 @@ Last checked on 2026-05-17:
 - `npm run lint` passed
 - `npm run typecheck` passed
 - `npm run build` passed
-- `npm run test:e2e` passed 100 tests covering public landing/signup demo CTA smoke, logged-out demo workflows, task workspace lifecycle, task-detail notes save/reload behavior, Today focus/sidebar/briefing alignment for undated active tasks and cancelled-only work, mobile navigation open/close behavior, local-date due-today behavior, file-import preview/confirm flow, agent output history/review notes, persistent appearance and browser reminder settings, shared executable action-type rails for non-executable reminder/manual tasks, owned task-note route guardrails, authenticated app smoke source coverage for task CRUD and notes, profile/task/task-note/Stripe event/usage/rate-limit grant source coverage, MCP/OpenAPI/action auth smoke tests, API-to-Connect-AI handoff coverage, DB-backed MCP handler and API-key validation coverage including audit preflight failure behavior and `add_task_note` append/readback behavior, MCP/OpenAPI `cancelled` status contract alignment plus cancelled-task UI review/restore coverage, agent-completed trace visibility, billing guardrails, deterministic task-intelligence coverage including relative-date title cleanup, import parser coverage, Stripe entitlement mapping, task route validation, and local validation helper contracts
+- `npm run test:e2e` passed 101 tests covering public landing/signup demo CTA smoke, logged-out demo workflows, task workspace lifecycle, task-detail notes save/reload behavior, Today focus/sidebar/briefing alignment for undated active tasks and cancelled-only work, mobile navigation open/close behavior, local-date due-today behavior, file-import preview/confirm flow, agent output history/review notes, persistent appearance and browser reminder settings, shared executable action-type rails for non-executable reminder/manual tasks, owned task-note route guardrails, authenticated app smoke source coverage for task CRUD and notes, profile/task/task-note/Stripe event/usage/rate-limit/daily-briefing grant source coverage, MCP/OpenAPI/action auth smoke tests, API-to-Connect-AI handoff coverage, DB-backed MCP handler and API-key validation coverage including audit preflight failure behavior and `add_task_note` append/readback behavior, MCP/OpenAPI `cancelled` status contract alignment plus cancelled-task UI review/restore coverage, agent-completed trace visibility, billing guardrails, deterministic task-intelligence coverage including relative-date title cleanup, import parser coverage, Stripe entitlement mapping, task route validation, and local validation helper contracts
 - `npm audit --audit-level=moderate` passed with 0 vulnerabilities
 - `npm run smoke:launch -- --skip-local --skip-providers --technical-only` passed; provider smokes, copy approval, and production deploy approval remain separate gates
 - GitHub Actions Web rails include install, lint, typecheck, build, dependency audit, and Playwright smoke testing
@@ -42,7 +42,7 @@ Last checked on 2026-05-17:
 
 `npm run verify:env` currently fails because `.env.local` is absent; only `.env.local.example` exists in this workspace. Still unverified: production env, Supabase migrations/auth/profile plus task and task-note column grants against a real project, OpenAI provider calls, Stripe test-mode flows, scoped MCP/API-key execution, idempotency replay against real task data, agent audit writes, and production deployment rails.
 
-The Supabase provider smoke now includes profile insert denial, task source-spoof denial, task content-bound denial, task and task-note column-grant denial, audit-event privacy, audit insert denial, service-owned Stripe webhook event records, usage-event mutation denial, rate-limit bucket privacy, and agent external-ref uniqueness checks, but it still needs to be run against a real migrated project.
+The Supabase provider smoke now includes profile insert denial, task source-spoof denial, task content-bound denial, task and task-note column-grant denial, audit-event privacy, audit insert denial, service-owned Stripe webhook event records, usage-event mutation denial, rate-limit bucket privacy, daily briefing cache write denial, and agent external-ref uniqueness checks, but it still needs to be run against a real migrated project.
 
 ## Stack
 - Next.js 16 app router

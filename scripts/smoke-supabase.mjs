@@ -86,6 +86,14 @@ async function readSmoke() {
     'stripe_events schema',
     service.from('stripe_events').select('id, type, processed_at').limit(1)
   )
+
+  await assertQuery(
+    'daily_briefings schema',
+    service
+      .from('daily_briefings')
+      .select('id, user_id, briefing_date, content, created_at')
+      .limit(1)
+  )
 }
 
 async function waitForProfile(userId) {
@@ -290,6 +298,18 @@ async function writeSmoke() {
       .eq('id', userId)
     if (!apiScopeUpdateError) fail('direct api_key_scopes update was unexpectedly allowed')
     console.log('ok API key scopes require server route')
+
+    const { error: briefingInsertError } = await userClient
+      .from('daily_briefings')
+      .insert({
+        user_id: userId,
+        briefing_date: new Date().toISOString().slice(0, 10),
+        content: { spoofed: true },
+      })
+    if (!briefingInsertError) {
+      fail('browser client could insert daily briefing cache rows directly')
+    }
+    console.log('ok daily briefing cache requires service-owned writes')
 
     const { error: protectedInsertError } = await userClient
       .from('tasks')
