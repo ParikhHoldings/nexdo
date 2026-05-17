@@ -165,6 +165,12 @@ test('authenticated task mutations surface server failure messages', () => {
   expect(source).toContain('Could not delete task:')
 })
 
+test('authenticated imports surface server failure messages before generic errors', () => {
+  const source = readFileSync('app/(app)/import/page.tsx', 'utf8')
+
+  expect(source).toContain("result.message || result.error || 'Import failed'")
+})
+
 test('demo file import adds tasks without configured auth', async ({ page }) => {
   await page.goto('/import')
 

@@ -22,6 +22,7 @@
 - Kept authenticated app boot coherent when profile rows are missing or delayed by using a safe fallback profile and visible load errors.
 - Surfaced authenticated task-capture server messages for profile, quota, and save failures.
 - Surfaced authenticated task edit/delete server messages while preserving optimistic rollback.
+- Surfaced authenticated import server messages before generic import errors.
 
 ### In progress
 - Provider-backed Supabase, OpenAI, Stripe, and MCP smokes remain the main launch-readiness gap.

@@ -215,7 +215,7 @@ export default function ImportPage() {
       const result = await response.json()
 
       if (!response.ok) {
-        throw new Error(result.error || 'Import failed')
+        throw new Error(result.message || result.error || 'Import failed')
       }
 
       // Add imported tasks to store if in demo mode
